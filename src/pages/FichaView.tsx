@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFicha } from '../hooks/useFicha';
-import { Leaf, Edit2, Check, X } from 'lucide-react';
+import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -67,49 +67,91 @@ export function FichaView() {
           <div className="absolute top-0 left-0 w-2 h-full bg-[#CB997E]"></div>
           
           {!editing ? (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div className="flex justify-between items-start">
-                <h2 className="text-2xl font-serif text-[#4A4E4D]">{displayFicha?.nombre}</h2>
+                <h2 className="text-3xl font-serif text-[#4A4E4D]">{displayFicha?.nombre}</h2>
                 <button
                   onClick={() => setEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span className="text-sm font-medium">Editar</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10 pt-2">
+                
+                {/* 1. Identidad base */}
+                <div className="space-y-4 md:col-span-2">
+                  <div className="flex items-center gap-2 text-[#CB997E] border-b border-[#EAE2D6] pb-2">
+                    <Fingerprint className="w-5 h-5" />
+                    <h3 className="text-lg font-serif">Identidad base</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h4>
+                      <p className="text-stone-700">{displayFicha?.fechaNacimiento} a las {displayFicha?.horaNacimiento}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Lugar</h4>
+                      <p className="text-stone-700">{displayFicha?.lugarNacimiento}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h4>
+                      <p className="text-stone-700">{displayFicha?.genero}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Ikigai comunitario */}
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h3>
-                    <p className="text-stone-700">{displayFicha?.fechaNacimiento} a las {displayFicha?.horaNacimiento}</p>
-                    <p className="text-stone-700">{displayFicha?.lugarNacimiento}</p>
+                  <div className="flex items-center gap-2 text-[#8A817C] border-b border-[#EAE2D6] pb-2">
+                    <Sparkles className="w-5 h-5" />
+                    <h3 className="text-lg font-serif">Ikigai comunitario</h3>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h3>
-                    <p className="text-stone-700">{displayFicha?.genero}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Estudios</h3>
+                    <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Estudios</h4>
                     <p className="text-stone-700">{displayFicha?.nivelEstudios}</p>
                   </div>
                 </div>
 
+                {/* 3. Rol y convivencia */}
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Rol en Kanarii</h3>
-                    <p className="text-stone-700">{displayFicha?.rolProyecto}</p>
+                  <div className="flex items-center gap-2 text-[#6B705C] border-b border-[#EAE2D6] pb-2">
+                    <Users className="w-5 h-5" />
+                    <h3 className="text-lg font-serif">Rol y convivencia</h3>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h3>
-                    <p className="text-stone-700">{displayFicha?.antiguedad}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Estado de tensión conviviencia</h3>
-                    <p className="text-stone-700">{displayFicha?.estadoTension}</p>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Participación en Kanarii</h4>
+                      <p className="text-stone-700">{displayFicha?.rolProyecto}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>
+                      <p className="text-stone-700">{displayFicha?.antiguedad}</p>
+                    </div>
                   </div>
                 </div>
+
+                {/* 4. Estado de tensión y cuidado */}
+                <div className="space-y-4 md:col-span-2">
+                  <div className="flex items-center gap-2 text-[#B58368] border-b border-[#EAE2D6] pb-2">
+                    <HeartPulse className="w-5 h-5" />
+                    <h3 className="text-lg font-serif">Estado de tensión y cuidado</h3>
+                  </div>
+                  <div className="bg-[#F9F7F1] p-5 rounded-2xl border border-[#EAE2D6]">
+                    <p className="text-stone-700 italic text-lg leading-relaxed">{displayFicha?.estadoTension}</p>
+                  </div>
+                </div>
+
+                {/* 5. Revisión viva con fecha */}
+                <div className="space-y-4 md:col-span-2 pt-6">
+                  <div className="flex items-center gap-2 text-stone-400 justify-center text-sm">
+                    <History className="w-4 h-4" />
+                    <span>Ficha actualizada el {displayFicha?.updatedAt ? new Date(displayFicha.updatedAt.toDate ? displayFicha.updatedAt.toDate() : displayFicha.updatedAt).toLocaleDateString() : 'hoy'}</span>
+                  </div>
+                </div>
+
               </div>
             </div>
           ) : (

@@ -81,7 +81,7 @@ service cloud.firestore {
                     
       allow update: if isVerified() && isValidFicha(incoming()) &&
                     (
-                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasAny(['nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension', 'updatedAt'])) ||
+                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension', 'updatedAt'])) ||
                       isAdmin()
                     ) &&
                     incoming().userId == existing().userId &&

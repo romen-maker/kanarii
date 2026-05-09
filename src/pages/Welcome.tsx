@@ -17,7 +17,7 @@ export function Welcome() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 flex flex-col items-center justify-center p-6 font-sans">
-      <div className="max-w-md w-full text-center space-y-8">
+      <div className="max-w-xl w-full text-center space-y-8">
         <div className="flex justify-center mb-4">
           <div className="bg-[#EAE2D6] p-4 rounded-full">
             <Leaf className="w-12 h-12 text-[#6B705C]" />
@@ -26,16 +26,25 @@ export function Welcome() {
         <h1 className="text-4xl md:text-5xl font-serif text-[#4A4E4D]">Kanarii</h1>
         <h2 className="text-xl md:text-2xl font-light text-[#8A817C] tracking-wide">Tawăzawazt</h2>
         
-        <p className="text-lg text-stone-600 leading-relaxed mt-6">
-          Un espacio de encuentro, cuidado mutuo y escucha para nuestra comunidad.
-        </p>
+        <div className="text-lg text-stone-600 leading-relaxed mt-6 space-y-4">
+          <p className="font-medium text-[#6B705C]">
+            Esto no es un evento, es una forma de vida.
+          </p>
+          <p>
+            Un espacio que congrega a nuestra tribu. Una red que sostiene, cuida
+            y hace crecer nuestra revolución interna para expandirla de adentro hacia afuera.
+          </p>
+          <p className="text-[#CB997E] font-medium font-serif text-xl mt-4">
+            Las personas solas pueden llegar a ser poderosas, pero juntas somos invencibles.
+          </p>
+        </div>
 
         <div className="pt-8">
           <button
             onClick={login}
             className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors duration-300 py-4 px-6 rounded-2xl text-lg font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-3"
           >
-            Entrar a la comunidad
+            Unirse a la tribu
           </button>
         </div>
       </div>

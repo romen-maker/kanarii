@@ -16,15 +16,15 @@ interface Message {
 }
 
 const STEPS = [
-  { key: 'nombre', q: '¡Hola! Qué alegría que te unas. Para empezar a tejer nuestra red, ¿cómo te llamas o cómo prefieres que te llamemos?' },
-  { key: 'fechaNacimiento', q: 'Gracias. Para entender nuestros ciclos vitales, ¿cuál es tu fecha de nacimiento? (ej: 14/05/1990)' },
-  { key: 'horaNacimiento', q: '¿Y sabes la hora exacta o aproximada de tu nacimiento?' },
-  { key: 'lugarNacimiento', q: 'Qué interesante. ¿En qué lugar naciste? (ciudad o región)' },
-  { key: 'genero', q: '¿Con qué género te identificas?' },
-  { key: 'nivelEstudios', q: '¿Cuál es tu nivel de estudios o formación?' },
-  { key: 'rolProyecto', q: '¿Cuál es tu rol, participación o situación actual dentro del proyecto y la comunidad?' },
-  { key: 'antiguedad', q: '¿Desde cuándo formas parte de la comunidad o cuánto tiempo llevas vinculado/a?' },
-  { key: 'estadoTension', q: 'Por último, en cuanto a tu sentir: ¿cómo describirías tu estado actual de tensión o bienestar en la convivencia comunitaria?' }
+  { key: 'nombre', q: '¡Bienvenida, bienvenido a esta linda tribu! Qué alegría sentir tu energía aquí. Para empezar a tejer nuestra red, ¿cómo te llamas o cómo sientes que te llamemos?' },
+  { key: 'fechaNacimiento', q: 'Tanemmirt (gracias). Para conectar con nuestros ciclos vitales y entender tu momento en esta experiencia, ¿cuál es tu fecha de nacimiento? (ej: 14/05/1990)' },
+  { key: 'horaNacimiento', q: 'El instante en que llegaste tiene su propia magia. ¿Conoces la hora, aunque sea aproximada, en la que naciste?' },
+  { key: 'lugarNacimiento', q: 'Nuestras raíces nos conectan con la tierra. ¿En qué rincón del mundo, ciudad o región naciste?' },
+  { key: 'genero', q: 'En esta búsqueda de equilibrio entre nuestras energías femeninas y masculinas, ¿con qué género te identificas y habitas el mundo?' },
+  { key: 'nivelEstudios', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido de estudios que te acompañan hoy?' },
+  { key: 'rolProyecto', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?' },
+  { key: 'antiguedad', q: 'El tiempo caminando juntos fortalece nuestros cimientos. ¿Desde cuándo formas parte de la comunidad o sientes tu vinculación a esta red?' },
+  { key: 'estadoTension', q: 'Por último, para poder cuidarnos y sostenernos desde el respeto: ¿cómo describirías tu estado interno actual, tu paz o tu nivel de tensión en la convivencia de la tribu?' }
 ];
 
 export function OnboardingChat() {
