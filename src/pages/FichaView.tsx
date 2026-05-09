@@ -32,6 +32,7 @@ export function FichaView() {
   const [editing, setEditing] = useState(false);
   const [localFicha, setLocalFicha] = useState(ficha);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [fichaEditadaDesdeGeneracion, setFichaEditadaDesdeGeneracion] = useState(false);
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
     resolver: zodResolver(fichaSchema),
@@ -56,6 +57,9 @@ export function FichaView() {
     await saveFicha(appUser.uid, data, displayFicha.id);
     setLocalFicha({ ...displayFicha, datosOnboarding: data });
     setEditing(false);
+    if (displayFicha?.manualGenerado) {
+      setFichaEditadaDesdeGeneracion(true);
+    }
   };
 
   const handleRegenerateManual = async () => {
@@ -65,6 +69,7 @@ export function FichaView() {
       const manualText = await generateUserManual(datos);
       await saveManual(appUser.uid, manualText, displayFicha.id);
       setLocalFicha(prev => prev ? { ...prev, manualGenerado: manualText, fechaGeneracion: new Date() } : prev);
+      setFichaEditadaDesdeGeneracion(false);
     } catch (e) {
       console.error("Failed to generate manual:", e);
     } finally {
@@ -229,7 +234,7 @@ export function FichaView() {
         </div>
 
         {/* Manual Galáctico Section */}
-        {displayFicha?.manualGenerado && (
+        {displayFicha?.manualGenerado ? (
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
              
@@ -239,14 +244,16 @@ export function FichaView() {
                   <h2 className="text-2xl font-serif">Manual de Usuario Humano</h2>
                 </div>
                 
-                <button
-                  onClick={handleRegenerateManual}
-                  disabled={isGenerating}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
-                >
-                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                  <span className="text-sm font-medium">Regenerar mi manual</span>
-                </button>
+                {fichaEditadaDesdeGeneracion && (
+                  <button
+                    onClick={handleRegenerateManual}
+                    disabled={isGenerating}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    <span className="text-sm font-medium">Regenerar mi manual</span>
+                  </button>
+                )}
              </div>
 
              <ManualViewer content={displayFicha.manualGenerado || ""} />
@@ -259,6 +266,33 @@ export function FichaView() {
                   </span>
                 </div>
              )}
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
+            
+            <div className="w-16 h-16 bg-[#F9F7F1] rounded-full flex items-center justify-center mb-4">
+              <Sparkles className="w-8 h-8 text-[#8A817C]" />
+            </div>
+            
+            <h2 className="text-2xl font-serif text-[#4A4E4D] mb-2">Tu Manual Galáctico está listo para nacer</h2>
+            <p className="text-stone-500 max-w-md mx-auto mb-8">
+              El Facilitador Galáctico analizará tu carta astral y creará tu Manual de Usuario personalizado para Arteara.
+            </p>
+            
+            {isGenerating ? (
+              <div className="flex items-center gap-3 px-6 py-3 bg-[#F9F7F1] text-stone-500 rounded-full font-medium">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>El Facilitador Galáctico está tejiendo tu manual...</span>
+              </div>
+            ) : (
+              <button
+                onClick={handleRegenerateManual}
+                className="bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3 px-8 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
+              >
+                <span>✨ Generar mi Manual</span>
+              </button>
+            )}
           </div>
         )}
       </div>
