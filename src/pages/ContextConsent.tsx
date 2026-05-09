@@ -1,13 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { Leaf, HeartHandshake } from 'lucide-react';
 
 export function ContextConsent() {
-  const { updateConsent } = useAuth();
   const navigate = useNavigate();
 
-  const handleAccept = async () => {
-    await updateConsent();
+  const handleAccept = () => {
     navigate('/onboarding');
   };
 

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFicha } from '../hooks/useFicha';
-import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History } from 'lucide-react';
+import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha } from '../lib/appService';
+import { saveFicha, saveManual } from '../lib/appService';
+import { generateUserManual } from '../lib/gemini';
+import Markdown from 'react-markdown';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -28,26 +30,45 @@ export function FichaView() {
   const { ficha, loadingFicha } = useFicha();
   const [editing, setEditing] = useState(false);
   const [localFicha, setLocalFicha] = useState(ficha);
+  const [isGenerating, setIsGenerating] = useState(false);
   
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
     resolver: zodResolver(fichaSchema),
-    defaultValues: ficha || {}
+    defaultValues: ficha?.datosOnboarding || {}
   });
 
   useEffect(() => {
     if (!loadingFicha && !ficha && !localFicha) {
       navigate('/onboarding');
+    } else if (ficha && !localFicha) {
+      setLocalFicha(ficha);
+      reset(ficha.datosOnboarding);
     }
-  }, [ficha, localFicha, loadingFicha, navigate]);
+  }, [ficha, localFicha, loadingFicha, navigate, reset]);
 
   if (loadingFicha || (!ficha && !localFicha)) return null;
   const displayFicha = localFicha || ficha;
+  const datos = displayFicha?.datosOnboarding;
 
   const onSubmit = async (data: FichaFormData) => {
     if (!appUser || !displayFicha?.id) return;
     await saveFicha(appUser.uid, data, displayFicha.id);
-    setLocalFicha({ ...displayFicha, ...data });
+    setLocalFicha({ ...displayFicha, datosOnboarding: data });
     setEditing(false);
+  };
+
+  const handleRegenerateManual = async () => {
+    if (!appUser || !displayFicha?.id || !datos) return;
+    setIsGenerating(true);
+    try {
+      const manualText = await generateUserManual(datos);
+      await saveManual(appUser.uid, manualText, displayFicha.id);
+      setLocalFicha(prev => prev ? { ...prev, manualGenerado: manualText, fechaGeneracion: new Date() } : prev);
+    } catch (e) {
+      console.error("Failed to generate manual:", e);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -63,13 +84,13 @@ export function FichaView() {
           </button>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden mb-8">
           <div className="absolute top-0 left-0 w-2 h-full bg-[#CB997E]"></div>
           
           {!editing ? (
             <div className="space-y-8">
               <div className="flex justify-between items-start">
-                <h2 className="text-3xl font-serif text-[#4A4E4D]">{displayFicha?.nombre}</h2>
+                <h2 className="text-3xl font-serif text-[#4A4E4D]">{datos?.nombre}</h2>
                 <button
                   onClick={() => setEditing(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm"
@@ -90,15 +111,15 @@ export function FichaView() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h4>
-                      <p className="text-stone-700">{displayFicha?.fechaNacimiento} a las {displayFicha?.horaNacimiento}</p>
+                      <p className="text-stone-700">{datos?.fechaNacimiento} a las {datos?.horaNacimiento}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Lugar</h4>
-                      <p className="text-stone-700">{displayFicha?.lugarNacimiento}</p>
+                      <p className="text-stone-700">{datos?.lugarNacimiento}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h4>
-                      <p className="text-stone-700">{displayFicha?.genero}</p>
+                      <p className="text-stone-700">{datos?.genero}</p>
                     </div>
                   </div>
                 </div>
@@ -111,7 +132,7 @@ export function FichaView() {
                   </div>
                   <div>
                     <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Estudios</h4>
-                    <p className="text-stone-700">{displayFicha?.nivelEstudios}</p>
+                    <p className="text-stone-700">{datos?.nivelEstudios}</p>
                   </div>
                 </div>
 
@@ -124,11 +145,11 @@ export function FichaView() {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Participación en Kanarii</h4>
-                      <p className="text-stone-700">{displayFicha?.rolProyecto}</p>
+                      <p className="text-stone-700">{datos?.rolProyecto}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>
-                      <p className="text-stone-700">{displayFicha?.antiguedad}</p>
+                      <p className="text-stone-700">{datos?.antiguedad}</p>
                     </div>
                   </div>
                 </div>
@@ -140,7 +161,7 @@ export function FichaView() {
                     <h3 className="text-lg font-serif">Estado de tensión y cuidado</h3>
                   </div>
                   <div className="bg-[#F9F7F1] p-5 rounded-2xl border border-[#EAE2D6]">
-                    <p className="text-stone-700 italic text-lg leading-relaxed">{displayFicha?.estadoTension}</p>
+                    <p className="text-stone-700 italic text-lg leading-relaxed">{datos?.estadoTension}</p>
                   </div>
                 </div>
 
@@ -198,6 +219,44 @@ export function FichaView() {
             </form>
           )}
         </div>
+
+        {/* Manual Galáctico Section */}
+        {displayFicha?.manualGenerado && (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
+             
+             <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3 text-[#4A4E4D]">
+                  <Sparkles className="w-7 h-7 text-[#8A817C]" />
+                  <h2 className="text-2xl font-serif">Manual de Usuario Humano</h2>
+                </div>
+                
+                <button
+                  onClick={handleRegenerateManual}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  <span className="text-sm font-medium">Regenerar mi manual</span>
+                </button>
+             </div>
+
+             <div className="prose prose-stone max-w-none">
+                <div className="markdown-body">
+                  <Markdown>{displayFicha.manualGenerado}</Markdown>
+                </div>
+             </div>
+             
+             {displayFicha.fechaGeneracion && (
+                <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">
+                  <span>Generado por el Facilitador Galáctico</span>
+                  <span>
+                    El {new Date(displayFicha.fechaGeneracion.toDate ? displayFicha.fechaGeneracion.toDate() : displayFicha.fechaGeneracion).toLocaleDateString()}
+                  </span>
+                </div>
+             )}
+          </div>
+        )}
       </div>
     </div>
   );

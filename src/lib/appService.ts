@@ -1,10 +1,8 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, orderBy, addDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
 
-export interface Ficha {
-  id?: string;
-  userId: string;
+export interface DatosOnboarding {
   nombre: string;
   fechaNacimiento: string;
   horaNacimiento: string;
@@ -14,6 +12,15 @@ export interface Ficha {
   rolProyecto: string;
   antiguedad: string;
   estadoTension: string;
+}
+
+export interface Ficha {
+  id?: string;
+  userId: string;
+  datosOnboarding: DatosOnboarding;
+  manualGenerado?: string;
+  fechaGeneracion?: any;
+  versionesAnteriores?: any[];
   createdAt?: any;
   updatedAt?: any;
 }
@@ -33,7 +40,7 @@ export async function getUserFicha(userId: string): Promise<Ficha | null> {
   }
 }
 
-export async function saveFicha(userId: string, data: Partial<Ficha>, existingId?: string) {
+export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string) {
   const isUpdate = !!existingId;
   try {
     const docRef = isUpdate ? doc(db, 'fichas', existingId) : doc(collection(db, 'fichas'));
@@ -50,19 +57,11 @@ export async function saveFicha(userId: string, data: Partial<Ficha>, existingId
           createdAt: serverTimestamp()
         });
       }
-      await updateDoc(docRef, { ...data, updatedAt: serverTimestamp() });
+      await updateDoc(docRef, { datosOnboarding, updatedAt: serverTimestamp() });
     } else {
-      const completeData = {
+      const completeData: Ficha = {
         userId,
-        nombre: data.nombre || '',
-        fechaNacimiento: data.fechaNacimiento || '',
-        horaNacimiento: data.horaNacimiento || '',
-        lugarNacimiento: data.lugarNacimiento || '',
-        genero: data.genero || '',
-        nivelEstudios: data.nivelEstudios || '',
-        rolProyecto: data.rolProyecto || '',
-        antiguedad: data.antiguedad || '',
-        estadoTension: data.estadoTension || '',
+        datosOnboarding,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -72,4 +71,62 @@ export async function saveFicha(userId: string, data: Partial<Ficha>, existingId
   } catch (err) {
     handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'fichas');
   }
+}
+
+export async function saveManual(userId: string, manualGenerado: string, existingId: string) {
+  try {
+    const docRef = doc(db, 'fichas', existingId);
+    const oldDoc = await getDoc(docRef);
+    if (oldDoc.exists()) {
+      const data = oldDoc.data() as Ficha;
+      const prevManual = data.manualGenerado;
+      const prevFecha = data.fechaGeneracion;
+      
+      const versionesAnteriores = data.versionesAnteriores || [];
+      if (prevManual) {
+        versionesAnteriores.push({
+          manualGenerado: prevManual,
+          fechaGeneracion: prevFecha
+        });
+      }
+
+      await updateDoc(docRef, {
+        manualGenerado,
+        fechaGeneracion: serverTimestamp(),
+        versionesAnteriores,
+        updatedAt: serverTimestamp()
+      });
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'fichas');
+  }
+}
+
+export async function syncPendingOnboarding(userId: string) {
+  const fichaData = JSON.parse(localStorage.getItem('kanarii_pendingFicha') || 'null');
+  const responsesData = JSON.parse(localStorage.getItem('kanarii_pendingResponses') || '[]');
+
+  let fichaId = null;
+  if (fichaData) {
+    fichaId = await saveFicha(userId, fichaData);
+  }
+  
+  for (const res of responsesData) {
+    try {
+      await addDoc(collection(db, 'responses'), {
+        userId,
+        step: res.step,
+        message: res.message,
+        sender: res.sender,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, 'responses');
+    }
+  }
+
+  localStorage.removeItem('kanarii_pendingFicha');
+  localStorage.removeItem('kanarii_pendingResponses');
+  
+  return fichaId;
 }

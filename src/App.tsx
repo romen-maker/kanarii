@@ -4,6 +4,7 @@ import { Welcome } from './pages/Welcome';
 import { ContextConsent } from './pages/ContextConsent';
 import { OnboardingChat } from './pages/OnboardingChat';
 import { FichaView } from './pages/FichaView';
+import { FichaPreview } from './pages/FichaPreview';
 import { AdminPanel } from './pages/AdminPanel';
 
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) {
@@ -23,8 +24,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Welcome />} />
-          <Route path="/contexto" element={<ProtectedRoute><ContextConsent /></ProtectedRoute>} />
-          <Route path="/onboarding" element={<ProtectedRoute><OnboardingChat /></ProtectedRoute>} />
+          <Route path="/contexto" element={<ContextConsent />} />
+          <Route path="/onboarding" element={<OnboardingChat />} />
+          <Route path="/ficha-preview" element={<FichaPreview />} />
           <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
         </Routes>

@@ -52,10 +52,9 @@ service cloud.firestore {
                     incoming().email == existing().email;
     }
 
-    function isValidFicha(data) {
-      return data.keys().hasAll(['userId', 'nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension', 'createdAt', 'updatedAt']) &&
-             data.keys().size() == 12 &&
-             data.userId is string && data.userId.size() <= 128 &&
+    function isValidDatosOnboarding(data) {
+      return data.keys().hasAll(['nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension']) &&
+             data.keys().size() == 9 &&
              data.nombre is string && data.nombre.size() <= 200 &&
              data.fechaNacimiento is string && data.fechaNacimiento.size() <= 100 &&
              data.horaNacimiento is string && data.horaNacimiento.size() <= 100 &&
@@ -64,9 +63,18 @@ service cloud.firestore {
              data.nivelEstudios is string && data.nivelEstudios.size() <= 100 &&
              data.rolProyecto is string && data.rolProyecto.size() <= 200 &&
              data.antiguedad is string && data.antiguedad.size() <= 100 &&
-             data.estadoTension is string && data.estadoTension.size() <= 100 &&
+             data.estadoTension is string && data.estadoTension.size() <= 1000;
+    }
+
+    function isValidFicha(data) {
+      return data.keys().hasAll(['userId', 'datosOnboarding', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.datosOnboarding is map && isValidDatosOnboarding(data.datosOnboarding) &&
              data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+             data.updatedAt is timestamp &&
+             (!('manualGenerado' in data) || data.manualGenerado is string) &&
+             (!('fechaGeneracion' in data) || data.fechaGeneracion is timestamp) &&
+             (!('versionesAnteriores' in data) || data.versionesAnteriores is list);
     }
 
     match /fichas/{fichaId} {
@@ -81,7 +89,7 @@ service cloud.firestore {
                     
       allow update: if isVerified() && isValidFicha(incoming()) &&
                     (
-                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension', 'updatedAt'])) ||
+                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['datosOnboarding', 'manualGenerado', 'fechaGeneracion', 'versionesAnteriores', 'updatedAt'])) ||
                       isAdmin()
                     ) &&
                     incoming().userId == existing().userId &&

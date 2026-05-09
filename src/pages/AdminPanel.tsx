@@ -27,10 +27,14 @@ export function AdminPanel() {
     load();
   }, []);
 
-  const filteredFichas = fichas.filter(f => 
-    f.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.rolProyecto.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFichas = fichas.filter(f => {
+    const datos = f.datosOnboarding;
+    if (!datos) return false;
+    return (
+      datos.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      datos.rolProyecto.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center">
@@ -87,19 +91,23 @@ export function AdminPanel() {
                     <td colSpan={5} className="py-8 text-center text-stone-400">No se encontraron fichas.</td>
                   </tr>
                 ) : (
-                  filteredFichas.map(ficha => (
-                    <tr key={ficha.id} className="hover:bg-[#F9F7F1] transition-colors">
-                      <td className="px-6 py-4 font-medium text-stone-700">{ficha.nombre}</td>
-                      <td className="px-6 py-4">{ficha.rolProyecto}</td>
-                      <td className="px-6 py-4">{ficha.antiguedad}</td>
-                      <td className="px-6 py-4">{ficha.nivelEstudios}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]">
-                          {ficha.estadoTension}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
+                  filteredFichas.map(ficha => {
+                    const datos = ficha.datosOnboarding;
+                    if (!datos) return null;
+                    return (
+                      <tr key={ficha.id} className="hover:bg-[#F9F7F1] transition-colors">
+                        <td className="px-6 py-4 font-medium text-stone-700">{datos.nombre}</td>
+                        <td className="px-6 py-4">{datos.rolProyecto}</td>
+                        <td className="px-6 py-4">{datos.antiguedad}</td>
+                        <td className="px-6 py-4">{datos.nivelEstudios}</td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]">
+                            {datos.estadoTension}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

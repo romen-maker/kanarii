@@ -39,12 +39,19 @@ export function Welcome() {
           </p>
         </div>
 
-        <div className="pt-8">
+        <div className="pt-8 space-y-4">
           <button
-            onClick={login}
+            onClick={() => navigate('/contexto')}
             className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors duration-300 py-4 px-6 rounded-2xl text-lg font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-3"
           >
             Unirse a la tribu
+          </button>
+          
+          <button
+            onClick={login}
+            className="w-full py-4 px-6 text-[#A5A58D] hover:text-[#6B705C] transition-colors rounded-2xl text-lg font-medium"
+          >
+            Ya soy parte (Iniciar sesión)
           </button>
         </div>
       </div>

@@ -1,13 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { saveFicha } from '../lib/appService';
-import { useFicha } from '../hooks/useFicha';
 import { Send, User as UserIcon, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { handleFirestoreError, OperationType } from '../lib/error-handler';
 
 interface Message {
   id: string;
@@ -28,13 +22,12 @@ const STEPS = [
 ];
 
 export function OnboardingChat() {
-  const { appUser } = useAuth();
-  const { ficha, loadingFicha } = useFicha();
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState<Message[]>([
     { id: 'initial', sender: 'bot', text: STEPS[0].q }
   ]);
+  const [pendingResponses, setPendingResponses] = useState<any[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [input, setInput] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -43,28 +36,11 @@ export function OnboardingChat() {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loadingFicha && ficha) {
-      navigate('/ficha');
-    }
-  }, [ficha, loadingFicha, navigate]);
-
-  useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const saveResponse = async (step: string, message: string, sender: 'bot'|'user') => {
-    if (!appUser) return;
-    try {
-      await addDoc(collection(db, 'responses'), {
-        userId: appUser.uid,
-        step,
-        message,
-        sender,
-        createdAt: serverTimestamp()
-      });
-    } catch(err) {
-      handleFirestoreError(err, OperationType.CREATE, 'responses');
-    }
+  const saveResponseLocal = (step: string, message: string, sender: 'bot' | 'user') => {
+    setPendingResponses(prev => [...prev, { step, message, sender }]);
   };
 
   const handleSend = async () => {
@@ -80,8 +56,7 @@ export function OnboardingChat() {
     const newData = { ...formData, [stepKey]: userText };
     setFormData(newData);
     
-    // Save to firestore async
-    saveResponse(stepKey, userText, 'user');
+    saveResponseLocal(stepKey, userText, 'user');
 
     if (currentStepIndex < STEPS.length - 1) {
       const nextStepIndex = currentStepIndex + 1;
@@ -91,22 +66,21 @@ export function OnboardingChat() {
       
       setTimeout(() => {
         setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: botMsgText }]);
-        saveResponse(STEPS[nextStepIndex].key, botMsgText, 'bot');
+        saveResponseLocal(STEPS[nextStepIndex].key, botMsgText, 'bot');
       }, 600);
       
     } else {
       // Done!
       setSaving(true);
-      setTimeout(async () => {
-        setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: '¡Gracias por compartir! Generando tu ficha comunitaria...' }]);
+      setTimeout(() => {
+        setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: '¡Tanemmirt (gracias) por tu tiempo y energía! Estamos trazando tu ficha comunitaria...' }]);
         
-        await saveFicha(appUser!.uid, newData);
-        navigate('/ficha');
+        localStorage.setItem('kanarii_pendingFicha', JSON.stringify(newData));
+        localStorage.setItem('kanarii_pendingResponses', JSON.stringify([...pendingResponses, { step: stepKey, message: userText, sender: 'user' }]));
+        navigate('/ficha-preview');
       }, 1000);
     }
   };
-
-  if (loadingFicha || ficha) return null;
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center">
