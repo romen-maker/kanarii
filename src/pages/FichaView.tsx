@@ -1,0 +1,162 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useFicha } from '../hooks/useFicha';
+import { Leaf, Edit2, Check, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { saveFicha } from '../lib/appService';
+
+const fichaSchema = z.object({
+  nombre: z.string().min(1, 'Requerido'),
+  fechaNacimiento: z.string().min(1, 'Requerido'),
+  horaNacimiento: z.string().min(1, 'Requerido'),
+  lugarNacimiento: z.string().min(1, 'Requerido'),
+  genero: z.string().min(1, 'Requerido'),
+  nivelEstudios: z.string().min(1, 'Requerido'),
+  rolProyecto: z.string().min(1, 'Requerido'),
+  antiguedad: z.string().min(1, 'Requerido'),
+  estadoTension: z.string().min(1, 'Requerido')
+});
+
+type FichaFormData = z.infer<typeof fichaSchema>;
+
+export function FichaView() {
+  const { appUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const { ficha, loadingFicha } = useFicha();
+  const [editing, setEditing] = useState(false);
+  const [localFicha, setLocalFicha] = useState(ficha);
+  
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
+    resolver: zodResolver(fichaSchema),
+    defaultValues: ficha || {}
+  });
+
+  useEffect(() => {
+    if (!loadingFicha && !ficha && !localFicha) {
+      navigate('/onboarding');
+    }
+  }, [ficha, localFicha, loadingFicha, navigate]);
+
+  if (loadingFicha || (!ficha && !localFicha)) return null;
+  const displayFicha = localFicha || ficha;
+
+  const onSubmit = async (data: FichaFormData) => {
+    if (!appUser || !displayFicha?.id) return;
+    await saveFicha(appUser.uid, data, displayFicha.id);
+    setLocalFicha({ ...displayFicha, ...data });
+    setEditing(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center">
+      <div className="w-full max-w-3xl">
+        <div className="flex justify-between items-center mb-10">
+          <div className="flex items-center gap-3">
+            <Leaf className="text-[#6B705C] w-8 h-8" />
+            <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
+          </div>
+          <button onClick={logout} className="text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
+            Cerrar sesión
+          </button>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-2 h-full bg-[#CB997E]"></div>
+          
+          {!editing ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-start">
+                <h2 className="text-2xl font-serif text-[#4A4E4D]">{displayFicha?.nombre}</h2>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  <span className="text-sm font-medium">Editar</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h3>
+                    <p className="text-stone-700">{displayFicha?.fechaNacimiento} a las {displayFicha?.horaNacimiento}</p>
+                    <p className="text-stone-700">{displayFicha?.lugarNacimiento}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h3>
+                    <p className="text-stone-700">{displayFicha?.genero}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Estudios</h3>
+                    <p className="text-stone-700">{displayFicha?.nivelEstudios}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Rol en Kanarii</h3>
+                    <p className="text-stone-700">{displayFicha?.rolProyecto}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h3>
+                    <p className="text-stone-700">{displayFicha?.antiguedad}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-stone-400 uppercase tracking-wider mb-1">Estado de tensión conviviencia</h3>
+                    <p className="text-stone-700">{displayFicha?.estadoTension}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-serif text-[#4A4E4D]">Editar Ficha</h2>
+                <button type="button" onClick={() => setEditing(false)} className="text-stone-500 hover:text-stone-800">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.keys(fichaSchema.shape).map((key) => {
+                  const labelMap: Record<string, string> = {
+                    nombre: 'Nombre', fechaNacimiento: 'Fecha de Nacimiento', horaNacimiento: 'Hora de Nacimiento',
+                    lugarNacimiento: 'Lugar de Nacimiento', genero: 'Género', nivelEstudios: 'Nivel de Estudios',
+                    rolProyecto: 'Rol en Proyecto', antiguedad: 'Antigüedad', estadoTension: 'Estado de Tensión'
+                  };
+
+                  return (
+                    <div key={key} className="space-y-1">
+                      <label className="text-sm font-medium text-stone-600">{labelMap[key]}</label>
+                      <input
+                        {...register(key as keyof FichaFormData)}
+                        className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
+                      />
+                      {errors[key as keyof FichaFormData] && (
+                        <p className="text-red-500 text-xs">{errors[key as keyof FichaFormData]?.message}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-6 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3 px-8 rounded-xl font-medium transition-colors flex items-center gap-2"
+                >
+                  {isSubmitting ? 'Guardando...' : <><Check className="w-5 h-5"/> Guardar Cambios</>}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

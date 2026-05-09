@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user in the Kanarii community",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "hasConsented": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "createdAt", "updatedAt"]
+    },
+    "Ficha": {
+      "title": "Ficha",
+      "description": "A user's personal community profile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "nombre": { "type": "string" },
+        "fechaNacimiento": { "type": "string" },
+        "horaNacimiento": { "type": "string" },
+        "lugarNacimiento": { "type": "string" },
+        "genero": { "type": "string" },
+        "nivelEstudios": { "type": "string" },
+        "rolProyecto": { "type": "string" },
+        "antiguedad": { "type": "string" },
+        "estadoTension": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId", "nombre", "fechaNacimiento", "horaNacimiento", "lugarNacimiento",
+        "genero", "nivelEstudios", "rolProyecto", "antiguedad", "estadoTension",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "FichaVersion": {
+      "title": "FichaVersion",
+      "description": "Historical version of a Ficha",
+      "type": "object",
+      "properties": {
+        "fichaId": { "type": "string" },
+        "userId": { "type": "string" },
+        "data": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fichaId", "userId", "data", "createdAt"]
+    },
+    "Response": {
+      "title": "Response",
+      "description": "Answers to onboarding conversational steps",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "step": { "type": "string" },
+        "message": { "type": "string" },
+        "sender": { "type": "string", "enum": ["user", "bot"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "step", "message", "sender", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user core info and role"
+    },
+    "fichas/{fichaId}": {
+      "schema": { "$ref": "#/entities/Ficha" },
+      "description": "Stores the community profiles"
+    },
+    "fichaVersions/{versionId}": {
+      "schema": { "$ref": "#/entities/FichaVersion" },
+      "description": "Stores versions of the profiles for history tracking"
+    },
+    "responses/{responseId}": {
+      "schema": { "$ref": "#/entities/Response" },
+      "description": "Onboarding chat messages"
+    }
+  }
+}

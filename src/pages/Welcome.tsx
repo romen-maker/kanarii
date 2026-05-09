@@ -1,0 +1,44 @@
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from 'react';
+import { Leaf } from 'lucide-react';
+
+export function Welcome() {
+  const { appUser, login } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (appUser) {
+      if (appUser.role === 'admin') navigate('/admin');
+      else if (!appUser.hasConsented) navigate('/contexto');
+      else navigate('/ficha'); // We need logic to check if onboarded
+    }
+  }, [appUser, navigate]);
+
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 flex flex-col items-center justify-center p-6 font-sans">
+      <div className="max-w-md w-full text-center space-y-8">
+        <div className="flex justify-center mb-4">
+          <div className="bg-[#EAE2D6] p-4 rounded-full">
+            <Leaf className="w-12 h-12 text-[#6B705C]" />
+          </div>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-serif text-[#4A4E4D]">Kanarii</h1>
+        <h2 className="text-xl md:text-2xl font-light text-[#8A817C] tracking-wide">Tawăzawazt</h2>
+        
+        <p className="text-lg text-stone-600 leading-relaxed mt-6">
+          Un espacio de encuentro, cuidado mutuo y escucha para nuestra comunidad.
+        </p>
+
+        <div className="pt-8">
+          <button
+            onClick={login}
+            className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors duration-300 py-4 px-6 rounded-2xl text-lg font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-3"
+          >
+            Entrar a la comunidad
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

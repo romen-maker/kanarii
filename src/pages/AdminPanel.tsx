@@ -1,0 +1,111 @@
+import { useEffect, useState } from 'react';
+import { collection, query, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { Ficha } from '../lib/appService';
+import { handleFirestoreError, OperationType } from '../lib/error-handler';
+import { Leaf, Users, Search } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+
+export function AdminPanel() {
+  const { logout } = useAuth();
+  const [fichas, setFichas] = useState<Ficha[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const q = query(collection(db, 'fichas'));
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+        setFichas(data);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'fichas');
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  const filteredFichas = fichas.filter(f => 
+    f.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.rolProyecto.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center">
+      <div className="w-full max-w-5xl">
+        <div className="flex justify-between items-center mb-10">
+          <div className="flex items-center gap-3">
+            <Leaf className="text-[#6B705C] w-8 h-8" />
+            <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel Comunitario</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={logout} className="text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
+          <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#F9F7F1]">
+            <div className="flex items-center gap-2 text-stone-600 font-medium">
+              <Users className="w-5 h-5 text-[#A5A58D]" />
+              <span>{fichas.length} Fichas registradas</span>
+            </div>
+            
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input 
+                type="text"
+                placeholder="Buscar por nombre o rol..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D] w-64"
+              />
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-stone-600">
+              <thead className="bg-white border-b border-[#EAE2D6] text-stone-400 font-medium tracking-wider uppercase text-xs">
+                <tr>
+                  <th className="px-6 py-4">Nombre</th>
+                  <th className="px-6 py-4">Rol</th>
+                  <th className="px-6 py-4">Antigüedad</th>
+                  <th className="px-6 py-4">Estudios</th>
+                  <th className="px-6 py-4">Tensión</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EAE2D6]">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-stone-400">Cargando fichas...</td>
+                  </tr>
+                ) : filteredFichas.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-stone-400">No se encontraron fichas.</td>
+                  </tr>
+                ) : (
+                  filteredFichas.map(ficha => (
+                    <tr key={ficha.id} className="hover:bg-[#F9F7F1] transition-colors">
+                      <td className="px-6 py-4 font-medium text-stone-700">{ficha.nombre}</td>
+                      <td className="px-6 py-4">{ficha.rolProyecto}</td>
+                      <td className="px-6 py-4">{ficha.antiguedad}</td>
+                      <td className="px-6 py-4">{ficha.nivelEstudios}</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]">
+                          {ficha.estadoTension}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
