@@ -259,7 +259,7 @@ export function FichaPreview() {
                 <h2 className="text-3xl font-serif text-[#4A4E4D]">Este será tu perfil en la comunidad</h2>
               </div>
               
-              <ManualViewer manualText={generatedManual || ""} />
+              <ManualViewer content={generatedManual || ""} />
             </div>
 
             <div className="flex flex-col md:flex-row justify-end gap-4 mt-8">

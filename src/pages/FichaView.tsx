@@ -249,7 +249,7 @@ export function FichaView() {
                 </button>
              </div>
 
-             <ManualViewer manualText={displayFicha.manualGenerado} />
+             <ManualViewer content={displayFicha.manualGenerado || ""} />
              
              {displayFicha.fechaGeneracion && (
                 <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">

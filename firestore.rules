@@ -82,10 +82,10 @@ service cloud.firestore {
       allow get: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
       allow list: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
       
-      allow create: if isVerified() && isValidId(fichaId) && isValidFicha(incoming()) &&
+      allow create: if (isVerified() && isValidId(fichaId) && isValidFicha(incoming()) &&
                     incoming().userId == request.auth.uid &&
                     incoming().createdAt == request.time &&
-                    incoming().updatedAt == request.time;
+                    incoming().updatedAt == request.time) || isAdmin();
                     
       allow update: if isVerified() && isValidFicha(incoming()) &&
                     (
@@ -112,11 +112,11 @@ service cloud.firestore {
       allow get: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
       allow list: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
       
-      allow create: if isVerified() && isValidId(versionId) && isValidFichaVersion(incoming()) &&
+      allow create: if (isVerified() && isValidId(versionId) && isValidFichaVersion(incoming()) &&
                     incoming().userId == request.auth.uid &&
                     exists(/databases/$(database)/documents/fichas/$(incoming().fichaId)) &&
                     get(/databases/$(database)/documents/fichas/$(incoming().fichaId)).data.userId == request.auth.uid &&
-                    incoming().createdAt == request.time;
+                    incoming().createdAt == request.time) || isAdmin();
     }
 
     function isValidResponse(data) {
@@ -133,10 +133,10 @@ service cloud.firestore {
       allow get: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
       allow list: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
       
-      allow create: if isVerified() && isValidId(responseId) && isValidResponse(incoming()) &&
+      allow create: if (isVerified() && isValidId(responseId) && isValidResponse(incoming()) &&
                     incoming().userId == request.auth.uid &&
                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-                    incoming().createdAt == request.time;
+                    incoming().createdAt == request.time) || isAdmin();
     }
   }
 }

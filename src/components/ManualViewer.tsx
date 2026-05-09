@@ -3,7 +3,7 @@ import Markdown from 'react-markdown';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ManualViewerProps {
-  manualText: string;
+  content: string;
 }
 
 const TABS = [
@@ -14,45 +14,58 @@ const TABS = [
   { id: 4, label: '🛠️ Mantenimiento' }
 ];
 
-export function ManualViewer({ manualText }: ManualViewerProps) {
+export function ManualViewer({ content }: ManualViewerProps) {
   const [activeTab, setActiveTab] = useState(0);
 
   const parsedSections = useMemo(() => {
-    // A regex that attempts to match "1. ", "2. ", etc., up to 5 sections
-    // Captures the whole text of the block.
-    // It finds points like \n1. or ^1. and looks forward.
-    const splitRegex = /(?:^|\n)(#{0,3}\s*[1-5]\.\s+.*?)(?=(?:\n#{0,3}\s*[1-5]\.\s+)|$)/gs;
-    const matches = Array.from(manualText.matchAll(splitRegex)).map(m => m[1].trim());
+    if (!content) return null;
 
-    // Check if we found exactly 5 blocks and they begin with standard increments
-    const hasAllFive = matches.length === 5 && 
-      matches[0].match(/^#{0,3}\s*1\./) &&
-      matches[1].match(/^#{0,3}\s*2\./) &&
-      matches[2].match(/^#{0,3}\s*3\./) &&
-      matches[3].match(/^#{0,3}\s*4\./) &&
-      matches[4].match(/^#{0,3}\s*5\./);
+    // Busca las cabeceras de cada sección, ignorando espacios, almohadillas o asteriscos iniciales
+    const reg1 = /(?:^|\n)[\s#\*]*1\.\s+/;
+    const reg2 = /(?:^|\n)[\s#\*]*2\.\s+/;
+    const reg3 = /(?:^|\n)[\s#\*]*3\.\s+/;
+    const reg4 = /(?:^|\n)[\s#\*]*4\.\s+/;
+    const reg5 = /(?:^|\n)[\s#\*]*5\.\s+/;
 
-    if (hasAllFive) {
-      // Find intro if it exists before the first match
-      const firstMatch = manualText.match(/(?:^|\n)#{0,3}\s*1\.\s+/);
-      let intro = "";
-      if (firstMatch && firstMatch.index !== undefined && firstMatch.index > 0) {
-        intro = manualText.substring(0, firstMatch.index).trim();
+    const m1 = content.match(reg1);
+    const m2 = content.match(reg2);
+    const m3 = content.match(reg3);
+    const m4 = content.match(reg4);
+    const m5 = content.match(reg5);
+
+    if (m1 && m2 && m3 && m4 && m5) {
+      // Ajustamos los índices por si la cabecera empieza con \n
+      const idx1 = m1.index! + (m1[0].startsWith('\n') ? 1 : 0);
+      const idx2 = m2.index! + (m2[0].startsWith('\n') ? 1 : 0);
+      const idx3 = m3.index! + (m3[0].startsWith('\n') ? 1 : 0);
+      const idx4 = m4.index! + (m4[0].startsWith('\n') ? 1 : 0);
+      const idx5 = m5.index! + (m5[0].startsWith('\n') ? 1 : 0);
+
+      if (idx1 < idx2 && idx2 < idx3 && idx3 < idx4 && idx4 < idx5) {
+        const intro = content.substring(0, idx1).trim();
+        const sec1 = content.substring(idx1, idx2).trim();
+        const sec2 = content.substring(idx2, idx3).trim();
+        const sec3 = content.substring(idx3, idx4).trim();
+        const sec4 = content.substring(idx4, idx5).trim();
+        const sec5 = content.substring(idx5).trim();
+
+        return [
+          intro ? `${intro}\n\n${sec1}` : sec1,
+          sec2,
+          sec3,
+          sec4,
+          sec5
+        ];
       }
-
-      if (intro) {
-        matches[0] = intro + "\n\n" + matches[0];
-      }
-      return matches;
     }
     
     return null;
-  }, [manualText]);
+  }, [content]);
 
   if (!parsedSections) {
     return (
       <div className="manual-prose px-5 sm:px-0">
-        <Markdown>{manualText}</Markdown>
+        <Markdown>{content}</Markdown>
       </div>
     );
   }
