@@ -21,6 +21,7 @@ export interface Ficha {
   manualGenerado?: string;
   fechaGeneracion?: any;
   versionesAnteriores?: any[];
+  isSeedData?: boolean;
   createdAt?: any;
   updatedAt?: any;
 }

@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Ficha } from '../lib/appService';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
 import { Leaf, Users, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+const SEED_DATA = [
+  { nombre: "Tamarit Benchara", rolProyecto: "bioconstrucción", antiguedad: "3 años", genero: "hombre", nivelEstudios: "FP", estadoTension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugarNacimiento: "Gran Canaria" },
+  { nombre: "Yurena Doramas", rolProyecto: "huerta y semillas", antiguedad: "1 año", genero: "mujer", nivelEstudios: "universitarios", estadoTension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugarNacimiento: "Tenerife" },
+  { nombre: "Aythami Guayarmina", rolProyecto: "cuidados y espacio común", antiguedad: "2 años", genero: "no binario", nivelEstudios: "bachillerato", estadoTension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugarNacimiento: "Norte de África" },
+  { nombre: "Nakima Tigoraf", rolProyecto: "facilitación y sociocracia", antiguedad: "4 años", genero: "mujer", nivelEstudios: "universitarios", estadoTension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugarNacimiento: "Lanzarote" },
+  { nombre: "Bentor Achaman", rolProyecto: "música y ritual", antiguedad: "6 meses", genero: "hombre", nivelEstudios: "secundaria", estadoTension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugarNacimiento: "Fuerteventura" }
+];
+
 export function AdminPanel() {
-  const { logout } = useAuth();
+  const { appUser, logout } = useAuth();
   const [fichas, setFichas] = useState<Ficha[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,7 +25,45 @@ export function AdminPanel() {
       try {
         const q = query(collection(db, 'fichas'));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+        let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+        
+        const realDocs = data.filter(doc => !doc.isSeedData);
+        
+        if (realDocs.length < 3 && appUser) {
+          const promises = SEED_DATA.map(async (seed, index) => {
+            const seedId = `seed-${appUser.uid}-${index}`;
+            const existing = data.find(d => d.id === seedId);
+            if (!existing) {
+              const seedFicha = {
+                userId: appUser.uid,
+                datosOnboarding: {
+                  nombre: seed.nombre,
+                  fechaNacimiento: seed.fechaNacimiento,
+                  horaNacimiento: "12:00",
+                  lugarNacimiento: seed.lugarNacimiento,
+                  genero: seed.genero,
+                  nivelEstudios: seed.nivelEstudios,
+                  rolProyecto: seed.rolProyecto,
+                  antiguedad: seed.antiguedad,
+                  estadoTension: seed.estadoTension
+                },
+                manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.estadoTension}".`,
+                isSeedData: true,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              };
+              await setDoc(doc(db, 'fichas', seedId), seedFicha);
+              return { id: seedId, ...seedFicha, createdAt: new Date(), updatedAt: new Date() } as Ficha;
+            }
+            return null;
+          });
+          
+          const newSeeds = (await Promise.all(promises)).filter(Boolean) as Ficha[];
+          if (newSeeds.length > 0) {
+            data = [...data, ...newSeeds];
+          }
+        }
+        
         setFichas(data);
       } catch (err) {
         handleFirestoreError(err, OperationType.LIST, 'fichas');
@@ -25,7 +71,7 @@ export function AdminPanel() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [appUser]);
 
   const filteredFichas = fichas.filter(f => {
     const datos = f.datosOnboarding;

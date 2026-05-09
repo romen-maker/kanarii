@@ -79,9 +79,16 @@ export function FichaView() {
             <Leaf className="text-[#6B705C] w-8 h-8" />
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
           </div>
-          <button onClick={logout} className="text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
-            Cerrar sesión
-          </button>
+          <div className="flex items-center gap-4">
+            {appUser?.role === 'admin' && (
+              <button onClick={() => navigate('/admin')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
+                Panel Admin
+              </button>
+            )}
+            <button onClick={logout} className="text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
+              Cerrar sesión
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden mb-8">

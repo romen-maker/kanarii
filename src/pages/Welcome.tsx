@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
 import { Leaf } from 'lucide-react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export function Welcome() {
   const { appUser, login } = useAuth();
@@ -9,9 +11,30 @@ export function Welcome() {
 
   useEffect(() => {
     if (appUser) {
-      if (appUser.role === 'admin') navigate('/admin');
-      else if (!appUser.hasConsented) navigate('/contexto');
-      else navigate('/ficha'); // We need logic to check if onboarded
+      const pendingFicha = localStorage.getItem('kanarii_pendingFicha');
+      if (pendingFicha) {
+        navigate('/ficha');
+        return;
+      }
+      
+      const checkFicha = async () => {
+        try {
+          const q = query(collection(db, 'fichas'), where('userId', '==', appUser.uid));
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            navigate('/ficha');
+          } else {
+            if (appUser.role === 'admin') navigate('/admin');
+            else if (!appUser.hasConsented) navigate('/contexto');
+            else navigate('/ficha'); // Fallback
+          }
+        } catch (e) {
+          navigate('/ficha');
+        }
+      };
+      
+      checkFicha();
     }
   }, [appUser, navigate]);
 

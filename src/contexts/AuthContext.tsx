@@ -36,7 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
-            setAppUser({ uid: firebaseUser.uid, ...userDoc.data() } as AppUser);
+            const data = userDoc.data();
+            let finalRole = data.role;
+            if (firebaseUser.email === 'romenusabo3@gmail.com' && finalRole !== 'admin') {
+               finalRole = 'admin';
+               await updateDoc(userDocRef, { role: 'admin' });
+            }
+            setAppUser({ uid: firebaseUser.uid, ...data, role: finalRole } as AppUser);
           } else {
             // Create user
             const role = firebaseUser.email === 'romenusabo3@gmail.com' ? 'admin' : 'user';
@@ -63,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithPopup(auth, provider);
   };
 

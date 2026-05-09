@@ -74,7 +74,8 @@ service cloud.firestore {
              data.updatedAt is timestamp &&
              (!('manualGenerado' in data) || data.manualGenerado is string) &&
              (!('fechaGeneracion' in data) || data.fechaGeneracion is timestamp) &&
-             (!('versionesAnteriores' in data) || data.versionesAnteriores is list);
+             (!('versionesAnteriores' in data) || data.versionesAnteriores is list) &&
+             (!('isSeedData' in data) || data.isSeedData is bool);
     }
 
     match /fichas/{fichaId} {
