@@ -6,7 +6,7 @@ service cloud.firestore {
     }
 
     function isSignedIn() { return request.auth != null; }
-    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isVerified() { return isSignedIn() && request.auth.token.email != null; }
     function isAdmin() { 
       return isVerified() && (
         request.auth.token.email == 'romenusabo3@gmail.com' ||
@@ -79,8 +79,8 @@ service cloud.firestore {
     }
 
     match /fichas/{fichaId} {
-      allow get: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
-      allow list: if isVerified() && (existing().userId == request.auth.uid || isAdmin());
+      allow get: if isVerified();
+      allow list: if isVerified();
       
       allow create: if (isVerified() && isValidId(fichaId) && isValidFicha(incoming()) &&
                     incoming().userId == request.auth.uid &&
@@ -89,10 +89,9 @@ service cloud.firestore {
                     
       allow update: if isVerified() && isValidFicha(incoming()) &&
                     (
-                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['datosOnboarding', 'manualGenerado', 'fechaGeneracion', 'versionesAnteriores', 'updatedAt'])) ||
+                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['datosOnboarding', 'manualGenerado', 'fechaGeneracion', 'versionesAnteriores', 'updatedAt']) && incoming().userId == existing().userId) ||
                       isAdmin()
                     ) &&
-                    incoming().userId == existing().userId &&
                     incoming().createdAt == existing().createdAt &&
                     incoming().updatedAt == request.time;
       
@@ -137,6 +136,83 @@ service cloud.firestore {
                     incoming().userId == request.auth.uid &&
                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
                     incoming().createdAt == request.time) || isAdmin();
+    }
+
+    function isValidTarea(data) {
+      return data.keys().hasAll(['titulo', 'creadaPor', 'estado', 'createdAt', 'updatedAt']) &&
+             data.keys().size() >= 5 && data.keys().size() <= 8 &&
+             data.titulo is string && data.titulo.size() <= 200 &&
+             data.creadaPor is string && data.creadaPor.size() <= 128 &&
+             data.estado in ['pendiente', 'en_progreso', 'completada', 'archivada'] &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (!('descripcion' in data) || (data.descripcion is string && data.descripcion.size() <= 2000)) &&
+             (!('asignadaA' in data) || (data.asignadaA is string && data.asignadaA.size() <= 128)) &&
+             (!('fechaLimite' in data) || data.fechaLimite is timestamp);
+    }
+
+    match /tareas/{tareaId} {
+      // Anyone verified can read tasks since they are community tasks
+      allow get: if isVerified();
+      allow list: if isVerified();
+
+      allow create: if isVerified() && isValidId(tareaId) && isValidTarea(incoming()) &&
+                    incoming().creadaPor == request.auth.uid &&
+                    incoming().createdAt == request.time &&
+                    incoming().updatedAt == request.time;
+
+      allow update: if isVerified() && isValidTarea(incoming()) &&
+                    // Solo podemos cambiar el estado o la asignación, o descripción etc si somos creadores
+                    (
+                      (request.auth.uid == existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['titulo', 'descripcion', 'asignadaA', 'estado', 'fechaLimite', 'updatedAt', 'creadaPor'])) ||
+                      (request.auth.uid != existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['estado', 'updatedAt'])) ||
+                      isAdmin()
+                    ) &&
+                    incoming().creadaPor == existing().creadaPor &&
+                    incoming().createdAt == existing().createdAt &&
+                    incoming().updatedAt == request.time;
+
+      allow delete: if isVerified() && (request.auth.uid == existing().creadaPor || isAdmin());
+    }
+
+    function isValidActa(data) {
+      return data.keys().hasAll(['titulo', 'fecha', 'facilitador', 'participantes', 'contexto', 'decisiones', 'creadaPor', 'createdAt', 'updatedAt']) &&
+             data.keys().size() >= 9 && data.keys().size() <= 12 &&
+             data.titulo is string && data.titulo.size() <= 200 &&
+             data.fecha is timestamp &&
+             data.facilitador is string && data.facilitador.size() <= 128 &&
+             data.participantes is list && data.participantes.size() <= 50 &&
+             data.contexto is string && data.contexto.size() <= 4000 &&
+             data.decisiones is list && data.decisiones.size() <= 50 &&
+             data.creadaPor is string && data.creadaPor.size() <= 128 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (!('tareasDerivadas' in data) || (data.tareasDerivadas is list && data.tareasDerivadas.size() <= 50)) &&
+             (!('proximaReunion' in data) || data.proximaReunion is timestamp) &&
+             (!('lastEditedBy' in data) || (data.lastEditedBy is string && data.lastEditedBy.size() <= 128));
+    }
+
+    match /actas/{actaId} {
+      allow get: if isVerified();
+      allow list: if isVerified();
+
+      allow create: if isVerified() && isValidId(actaId) && isValidActa(incoming()) &&
+                    incoming().creadaPor == request.auth.uid &&
+                    incoming().createdAt == request.time &&
+                    incoming().updatedAt == request.time &&
+                    (!('lastEditedBy' in incoming()));
+
+      allow update: if isVerified() && isValidActa(incoming()) &&
+                    (
+                      (request.auth.uid == existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['titulo', 'fecha', 'facilitador', 'participantes', 'contexto', 'decisiones', 'tareasDerivadas', 'proximaReunion', 'updatedAt', 'lastEditedBy', 'creadaPor'])) ||
+                      isAdmin()
+                    ) &&
+                    incoming().creadaPor == existing().creadaPor &&
+                    incoming().createdAt == existing().createdAt &&
+                    incoming().updatedAt == request.time &&
+                    (!('lastEditedBy' in incoming()) || incoming().lastEditedBy == request.auth.uid);
+
+      allow delete: if isVerified() && (request.auth.uid == existing().creadaPor || isAdmin());
     }
   }
 }

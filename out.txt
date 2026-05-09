@@ -1,0 +1,6 @@
+387-                   onClick={async () => {
+388:                     if(window.confirm('¿ELiminar acta?')) {
+389-                       await deleteActa(acta.id!);
+390-                       setActaSeleccionada(null);
+391-                     }
+392-                   }}

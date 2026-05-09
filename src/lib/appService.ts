@@ -26,6 +26,34 @@ export interface Ficha {
   updatedAt?: any;
 }
 
+export interface Tarea {
+  id?: string;
+  titulo: string;
+  descripcion?: string;
+  asignadaA?: string;
+  creadaPor: string;
+  estado: 'pendiente' | 'en_progreso' | 'completada' | 'archivada';
+  fechaLimite?: any;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export interface Acta {
+  id?: string;
+  titulo: string;
+  fecha: any;
+  facilitador: string;
+  participantes: string[];
+  contexto: string;
+  decisiones: string[];
+  tareasDerivadas?: string[];
+  proximaReunion?: any;
+  creadaPor: string;
+  createdAt?: any;
+  updatedAt?: any;
+  lastEditedBy?: string;
+}
+
 export async function getUserFicha(userId: string): Promise<Ficha | null> {
   try {
     const q = query(collection(db, 'fichas'), where('userId', '==', userId));
@@ -130,4 +158,79 @@ export async function syncPendingOnboarding(userId: string) {
   localStorage.removeItem('kanarii_pendingResponses');
   
   return fichaId;
+}
+
+export async function saveTarea(tareaData: Partial<Tarea>, existingId?: string) {
+  const isUpdate = !!existingId;
+  const { deleteField } = await import('firebase/firestore');
+  const cleanData = Object.fromEntries(
+    Object.entries(tareaData).map(([k, v]) => [k, v === undefined && isUpdate ? deleteField() : v]).filter(([_, v]) => v !== undefined)
+  );
+  try {
+    const docRef = isUpdate ? doc(db, 'tareas', existingId) : doc(collection(db, 'tareas'));
+    if (isUpdate) {
+      await updateDoc(docRef, { ...cleanData, updatedAt: serverTimestamp() });
+    } else {
+      await setDoc(docRef, {
+        ...cleanData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'tareas');
+  }
+}
+
+export async function updateTareaEstado(id: string, nuevoEstado: Tarea['estado']) {
+  try {
+    const docRef = doc(db, 'tareas', id);
+    await updateDoc(docRef, { estado: nuevoEstado, updatedAt: serverTimestamp() });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'tareas');
+  }
+}
+
+export async function deleteTarea(id: string) {
+  const { deleteDoc } = await import('firebase/firestore');
+  try {
+    const docRef = doc(db, 'tareas', id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, 'tareas');
+  }
+}
+
+export async function saveActa(actaData: Partial<Acta>, existingId?: string) {
+  const isUpdate = !!existingId;
+  const { deleteField } = await import('firebase/firestore');
+  const cleanData = Object.fromEntries(
+    Object.entries(actaData).map(([k, v]) => [k, v === undefined && isUpdate ? deleteField() : v]).filter(([_, v]) => v !== undefined)
+  );
+  try {
+    const docRef = isUpdate ? doc(db, 'actas', existingId) : doc(collection(db, 'actas'));
+    if (isUpdate) {
+      await updateDoc(docRef, { ...cleanData, updatedAt: serverTimestamp() });
+    } else {
+      await setDoc(docRef, {
+        ...cleanData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'actas');
+  }
+}
+
+export async function deleteActa(id: string) {
+  const { deleteDoc } = await import('firebase/firestore');
+  try {
+    const docRef = doc(db, 'actas', id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, 'actas');
+  }
 }

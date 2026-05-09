@@ -61,6 +61,22 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "step", "message", "sender", "createdAt"]
+    },
+    "Tarea": {
+      "title": "Tarea",
+      "description": "Community task",
+      "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "descripcion": { "type": "string" },
+        "asignadaA": { "type": "string" },
+        "creadaPor": { "type": "string" },
+        "estado": { "type": "string", "enum": ["pendiente", "en_progreso", "completada"] },
+        "fechaLimite": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["titulo", "creadaPor", "estado", "createdAt", "updatedAt"]
     }
   },
   "firestore": {

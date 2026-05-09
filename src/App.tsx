@@ -6,6 +6,8 @@ import { OnboardingChat } from './pages/OnboardingChat';
 import { FichaView } from './pages/FichaView';
 import { FichaPreview } from './pages/FichaPreview';
 import { AdminPanel } from './pages/AdminPanel';
+import { TareasPanel } from './pages/TareasPanel';
+import { ActasPanel } from './pages/ActasPanel';
 
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) {
   const { appUser, loading } = useAuth();
@@ -38,6 +40,8 @@ export default function App() {
           <Route path="/ficha-preview" element={<FichaPreview />} />
           <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
+          <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
+          <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

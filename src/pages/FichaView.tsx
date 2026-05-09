@@ -86,6 +86,12 @@ export function FichaView() {
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
           </div>
           <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/tareas')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
+              Tareas
+            </button>
+            <button onClick={() => navigate('/actas')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
+              Actas
+            </button>
             {appUser?.role === 'admin' && (
               <button onClick={() => navigate('/admin')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
                 Panel Admin

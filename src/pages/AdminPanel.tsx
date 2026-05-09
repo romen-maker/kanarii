@@ -31,6 +31,18 @@ export function AdminPanel() {
         const snapshot = await getDocs(q);
         let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
         
+        // One-time cleanup for old seed data
+        const oldSeedsToFix = data.filter(doc => doc.isSeedData && !doc.userId.startsWith('seed_'));
+        if (oldSeedsToFix.length > 0) {
+          const { updateDoc, serverTimestamp } = await import('firebase/firestore');
+          for (const oldDoc of oldSeedsToFix) {
+            try {
+              await updateDoc(doc(db, 'fichas', oldDoc.id), { userId: `seed_${oldDoc.id.replace('seed-', '')}`, updatedAt: serverTimestamp() });
+              oldDoc.userId = `seed_${oldDoc.id.replace('seed-', '')}`;
+            } catch(e) { console.error(e) }
+          }
+        }
+        
         const realDocs = data.filter(doc => !doc.isSeedData);
         
         if (realDocs.length < 3 && appUser) {
@@ -39,7 +51,7 @@ export function AdminPanel() {
             const existing = data.find(d => d.id === seedId);
             if (!existing) {
               const seedFicha = {
-                userId: appUser.uid,
+                userId: seedId,
                 datosOnboarding: {
                   nombre: seed.nombre,
                   fechaNacimiento: seed.fechaNacimiento,
