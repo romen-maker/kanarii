@@ -5,3 +5,72 @@
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Besley", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
+
+.manual-prose {
+  color: #4A4E4D;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.manual-prose p {
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+}
+
+.manual-prose h1, 
+.manual-prose h2, 
+.manual-prose h3, 
+.manual-prose h4 {
+  color: #4A4E4D;
+  line-height: 1.4;
+}
+
+/* Emojis in headings logic: Since we can't easily target just emojis, 
+   the headings themselves act as the visual differentiator, 
+   we scale up the font size of the first-level and second-level headings slightly. */
+.manual-prose h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.manual-prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.manual-prose h3, 
+.manual-prose h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.manual-prose ul, 
+.manual-prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.manual-prose ul {
+  list-style-type: disc;
+}
+
+.manual-prose ol {
+  list-style-type: decimal;
+}
+
+.manual-prose li {
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+
+.manual-prose strong {
+  font-weight: 600;
+  color: #2D302F;
+}

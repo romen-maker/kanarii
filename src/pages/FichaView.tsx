@@ -9,6 +9,7 @@ import * as z from 'zod';
 import { saveFicha, saveManual } from '../lib/appService';
 import { generateUserManual } from '../lib/gemini';
 import Markdown from 'react-markdown';
+import { ManualViewer } from '../components/ManualViewer';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -248,11 +249,7 @@ export function FichaView() {
                 </button>
              </div>
 
-             <div className="prose prose-stone max-w-none">
-                <div className="markdown-body">
-                  <Markdown>{displayFicha.manualGenerado}</Markdown>
-                </div>
-             </div>
+             <ManualViewer manualText={displayFicha.manualGenerado} />
              
              {displayFicha.fechaGeneracion && (
                 <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">

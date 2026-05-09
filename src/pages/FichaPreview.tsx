@@ -8,6 +8,7 @@ import Markdown from 'react-markdown';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { ManualViewer } from '../components/ManualViewer';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -258,11 +259,7 @@ export function FichaPreview() {
                 <h2 className="text-3xl font-serif text-[#4A4E4D]">Este será tu perfil en la comunidad</h2>
               </div>
               
-              <div className="prose prose-stone max-w-none">
-                <div className="markdown-body">
-                  <Markdown>{generatedManual || ""}</Markdown>
-                </div>
-              </div>
+              <ManualViewer manualText={generatedManual || ""} />
             </div>
 
             <div className="flex flex-col md:flex-row justify-end gap-4 mt-8">
