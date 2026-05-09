@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
 
 interface AppUser {
@@ -9,6 +9,7 @@ interface AppUser {
   email: string;
   role: 'user' | 'admin';
   hasConsented?: boolean;
+  hasFicha?: boolean;
 }
 
 interface AuthContextType {
@@ -42,7 +43,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                finalRole = 'admin';
                await updateDoc(userDocRef, { role: 'admin' });
             }
-            setAppUser({ uid: firebaseUser.uid, ...data, role: finalRole } as AppUser);
+
+            // Check if user has a ficha
+            const fichasQuery = query(collection(db, 'fichas'), where('userId', '==', firebaseUser.uid));
+            const fichasSnapshot = await getDocs(fichasQuery);
+            const hasFicha = !fichasSnapshot.empty;
+
+            setAppUser({ uid: firebaseUser.uid, ...data, role: finalRole, hasFicha } as AppUser);
           } else {
             // Create user
             const role = firebaseUser.email === 'romenusabo3@gmail.com' ? 'admin' : 'user';
@@ -53,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               updatedAt: serverTimestamp(),
             };
             await setDoc(userDocRef, newUser);
-            setAppUser({ uid: firebaseUser.uid, ...newUser } as AppUser);
+            setAppUser({ uid: firebaseUser.uid, ...newUser, hasFicha: false } as AppUser);
           }
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);

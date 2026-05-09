@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { Leaf, HeartHandshake } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Leaf, HeartHandshake, ArrowLeft } from 'lucide-react';
 
 export function ContextConsent() {
   const navigate = useNavigate();
@@ -9,8 +9,15 @@ export function ContextConsent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center py-12">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 flex flex-col items-center">
+      <header className="w-full max-w-4xl px-4 py-4 md:px-8">
+         <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Volver al inicio
+         </Link>
+      </header>
+
+      <div className="max-w-2xl w-full px-6 pb-12">
         <div className="flex items-center gap-3 mb-8">
           <Leaf className="text-[#6B705C] w-8 h-8" />
           <h1 className="text-3xl font-serif text-[#4A4E4D]">Nuestra Puesta e Intención</h1>

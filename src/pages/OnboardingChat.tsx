@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Send, User as UserIcon, Leaf } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Send, User as UserIcon, Leaf, ArrowLeft, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Message {
   id: string;
@@ -23,6 +24,7 @@ const STEPS = [
 
 export function OnboardingChat() {
   const navigate = useNavigate();
+  const { user, login } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([
     { id: 'initial', sender: 'bot', text: STEPS[0].q }
@@ -84,10 +86,26 @@ export function OnboardingChat() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center">
-      <header className="w-full bg-white border-b border-[#EAE2D6] p-4 flex justify-center sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-2">
+      <header className="w-full bg-white border-b border-[#EAE2D6] p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm relative">
+        <div className="flex-1">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
+             <ArrowLeft className="w-4 h-4" />
+             <span className="hidden sm:inline">Volver al inicio</span>
+          </Link>
+        </div>
+        
+        <div className="flex items-center gap-2 justify-center absolute left-1/2 -translate-x-1/2">
           <Leaf className="w-6 h-6 text-[#6B705C]" />
           <h1 className="text-xl font-serif text-[#4A4E4D]">Conversación de Acogida</h1>
+        </div>
+
+        <div className="flex-1 flex justify-end">
+          {user === null && (
+            <button onClick={login} className="inline-flex items-center gap-2 text-sm font-medium text-stone-500 hover:text-[#CB997E] transition-colors">
+              <span className="hidden sm:inline">Iniciar sesión</span>
+              <LogIn className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </header>
       

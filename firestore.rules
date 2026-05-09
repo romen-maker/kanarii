@@ -55,15 +55,15 @@ service cloud.firestore {
     function isValidDatosOnboarding(data) {
       return data.keys().hasAll(['nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension']) &&
              data.keys().size() == 9 &&
-             data.nombre is string && data.nombre.size() <= 200 &&
-             data.fechaNacimiento is string && data.fechaNacimiento.size() <= 100 &&
-             data.horaNacimiento is string && data.horaNacimiento.size() <= 100 &&
-             data.lugarNacimiento is string && data.lugarNacimiento.size() <= 200 &&
-             data.genero is string && data.genero.size() <= 100 &&
-             data.nivelEstudios is string && data.nivelEstudios.size() <= 100 &&
-             data.rolProyecto is string && data.rolProyecto.size() <= 200 &&
-             data.antiguedad is string && data.antiguedad.size() <= 100 &&
-             data.estadoTension is string && data.estadoTension.size() <= 1000;
+             data.nombre is string && data.nombre.size() <= 10000 &&
+             data.fechaNacimiento is string && data.fechaNacimiento.size() <= 10000 &&
+             data.horaNacimiento is string && data.horaNacimiento.size() <= 10000 &&
+             data.lugarNacimiento is string && data.lugarNacimiento.size() <= 10000 &&
+             data.genero is string && data.genero.size() <= 10000 &&
+             data.nivelEstudios is string && data.nivelEstudios.size() <= 10000 &&
+             data.rolProyecto is string && data.rolProyecto.size() <= 10000 &&
+             data.antiguedad is string && data.antiguedad.size() <= 10000 &&
+             data.estadoTension is string && data.estadoTension.size() <= 20000;
     }
 
     function isValidFicha(data) {

@@ -1,40 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
-import { Leaf } from 'lucide-react';
+import { Leaf, User } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export function Welcome() {
-  const { appUser, login } = useAuth();
+  const { user, appUser, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Solo manejamos el login después de generar una ficha (flujo de onboarding)
     if (appUser) {
       const pendingFicha = localStorage.getItem('kanarii_pendingFicha');
       if (pendingFicha) {
-        navigate('/ficha');
-        return;
+        navigate('/ficha-preview');
       }
-      
-      const checkFicha = async () => {
-        try {
-          const q = query(collection(db, 'fichas'), where('userId', '==', appUser.uid));
-          const querySnapshot = await getDocs(q);
-          
-          if (!querySnapshot.empty) {
-            navigate('/ficha');
-          } else {
-            if (appUser.role === 'admin') navigate('/admin');
-            else if (!appUser.hasConsented) navigate('/contexto');
-            else navigate('/ficha'); // Fallback
-          }
-        } catch (e) {
-          navigate('/ficha');
-        }
-      };
-      
-      checkFicha();
     }
   }, [appUser, navigate]);
 
@@ -63,19 +44,56 @@ export function Welcome() {
         </div>
 
         <div className="pt-8 space-y-4">
-          <button
-            onClick={() => navigate('/contexto')}
-            className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors duration-300 py-4 px-6 rounded-2xl text-lg font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-3"
-          >
-            Unirse a la tribu
-          </button>
-          
-          <button
-            onClick={login}
-            className="w-full py-4 px-6 text-[#A5A58D] hover:text-[#6B705C] transition-colors rounded-2xl text-lg font-medium"
-          >
-            Ya soy parte (Iniciar sesión)
-          </button>
+          {appUser ? (
+            <div className="flex flex-col items-center gap-4 border border-[#EAE2D6] bg-white p-6 rounded-3xl shadow-sm">
+               <div className="flex items-center gap-3 mb-2">
+                 {user?.photoURL ? (
+                   <img src={user.photoURL} alt={user.displayName || 'Avatar'} className="w-12 h-12 rounded-full" />
+                 ) : (
+                   <div className="w-12 h-12 rounded-full bg-[#EAE2D6] flex items-center justify-center text-[#6B705C]">
+                     <User className="w-6 h-6" />
+                   </div>
+                 )}
+                 <div className="text-left">
+                   <p className="font-medium text-stone-800">{user?.displayName || appUser.email}</p>
+                   <p className="text-sm text-stone-500">Sesión iniciada</p>
+                 </div>
+               </div>
+
+               <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <button
+                    onClick={() => navigate('/ficha')}
+                    className="flex-1 bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors py-3 px-4 rounded-xl font-medium"
+                  >
+                    Ver mi ficha
+                  </button>
+                  {appUser.role === 'admin' && (
+                    <button
+                      onClick={() => navigate('/admin')}
+                      className="flex-1 border border-[#A5A58D] text-[#A5A58D] hover:bg-[#F9F7F1] transition-colors py-3 px-4 rounded-xl font-medium"
+                    >
+                      Panel admin
+                    </button>
+                  )}
+               </div>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/contexto')}
+                className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors duration-300 py-4 px-6 rounded-2xl text-lg font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-3"
+              >
+                Unirse a la tribu
+              </button>
+              
+              <button
+                onClick={login}
+                className="w-full py-4 px-6 text-[#A5A58D] hover:text-[#6B705C] transition-colors rounded-2xl text-lg font-medium"
+              >
+                Ya soy parte (Iniciar sesión)
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

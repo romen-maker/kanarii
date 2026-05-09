@@ -13,7 +13,16 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: React.Re
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div></div>;
   if (!appUser) return <Navigate to="/" />;
   if (requireAdmin && appUser.role !== 'admin') return <Navigate to="/ficha" />;
-  if (!appUser.hasConsented && !requireAdmin) return <Navigate to="/contexto" />;
+  
+  if (!requireAdmin) {
+    if (appUser.hasFicha) {
+      // Deja pasar (ej. a /ficha), no redirige a /contexto
+    } else if (appUser.hasConsented && !appUser.hasFicha) {
+      return <Navigate to="/onboarding" />;
+    } else if (!appUser.hasConsented) {
+      return <Navigate to="/contexto" />;
+    }
+  }
   
   return <>{children}</>;
 }
