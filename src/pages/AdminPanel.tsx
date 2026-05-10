@@ -99,14 +99,14 @@ export function AdminPanel() {
   });
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
       <div className="w-full max-w-5xl">
         <div className="flex justify-between items-center mb-10">
           <div className="flex items-center gap-3">
             <Leaf className="text-[#6B705C] w-8 h-8" />
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel Comunitario</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4">
             <button onClick={() => navigate('/ficha')} className="px-4 py-2 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-medium transition-colors">
               Ver mi ficha
             </button>
@@ -117,25 +117,25 @@ export function AdminPanel() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
-          <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#F9F7F1]">
+          <div className="p-6 border-b border-[#EAE2D6] flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center bg-[#F9F7F1]">
             <div className="flex items-center gap-2 text-stone-600 font-medium">
               <Users className="w-5 h-5 text-[#A5A58D]" />
               <span>{fichas.length} Fichas registradas</span>
             </div>
             
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
               <input 
                 type="text"
                 placeholder="Buscar por nombre o rol..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D] w-64"
+                className="pl-9 pr-4 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D] w-full sm:w-64"
               />
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-left text-sm text-stone-600">
               <thead className="bg-white border-b border-[#EAE2D6] text-stone-400 font-medium tracking-wider uppercase text-xs">
                 <tr>
@@ -174,7 +174,7 @@ export function AdminPanel() {
                         <td className="px-6 py-4">{datos.antiguedad}</td>
                         <td className="px-6 py-4">{datos.nivelEstudios}</td>
                         <td className="px-6 py-4">
-                          <span className="inline-block truncate max-w-[150px] inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]" title={datos.estadoTension}>
+                          <span className="inline-block truncate max-w-[150px] items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]" title={datos.estadoTension}>
                             {datos.estadoTension}
                           </span>
                         </td>
@@ -192,6 +192,46 @@ export function AdminPanel() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile view */}
+          <div className="md:hidden p-4 space-y-3">
+            {loading ? (
+              <div className="text-center text-stone-400 py-8">Cargando fichas...</div>
+            ) : filteredFichas.length === 0 ? (
+              <div className="text-center text-stone-400 py-8">No se encontraron fichas.</div>
+            ) : (
+              filteredFichas.map(ficha => {
+                const datos = ficha.datosOnboarding;
+                if (!datos) return null;
+                return (
+                  <div key={ficha.id} className="bg-white rounded-2xl border border-[#EAE2D6] p-4 flex flex-col gap-2 relative">
+                    <div className="pr-20">
+                      <h3 className="font-serif text-lg text-stone-700 leading-tight">
+                        {datos.nombre}
+                        {ficha.isSeedData && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C] align-middle">
+                            Demo
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-stone-500 mt-1">
+                        {datos.rolProyecto} · {datos.antiguedad}
+                      </p>
+                      <p className="text-xs text-stone-400 italic mt-2 line-clamp-2">
+                        {datos.estadoTension}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedFicha(ficha)}
+                      className="absolute top-4 right-4 text-sm font-medium text-[#CB997E] hover:text-[#B58368]"
+                    >
+                      Ver ficha
+                    </button>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

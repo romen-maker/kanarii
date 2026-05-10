@@ -78,14 +78,14 @@ export function FichaView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
       <div className="w-full max-w-3xl">
         <div className="flex justify-between items-center mb-10">
           <div className="flex items-center gap-3">
             <Leaf className="text-[#6B705C] w-8 h-8" />
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4">
             <button onClick={() => navigate('/tareas')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
               Tareas
             </button>

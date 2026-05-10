@@ -240,13 +240,13 @@ export function TareasPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]">
+    <div className="min-h-screen bg-[#FDFBF7] pb-20 md:pb-0">
       <header className="bg-white border-b border-[#EAE2D6] sticky top-0 z-10 shadow-sm py-4 px-6 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Leaf className="w-6 h-6 text-[#6B705C]" />
           <span className="font-serif text-xl text-[#4A4E4D]">Tareas Comunitarias</span>
         </div>
-        <div className="flex gap-4">
+        <div className="hidden md:flex gap-4">
           <button 
             onClick={() => navigate('/actas')} 
             className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
@@ -261,7 +261,7 @@ export function TareasPanel() {
           </button>
           <button 
             onClick={logout} 
-            className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors hidden sm:block"
+            className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
           >
             Cerrar sesión
           </button>

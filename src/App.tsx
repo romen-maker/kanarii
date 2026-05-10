@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Welcome } from './pages/Welcome';
 import { ContextConsent } from './pages/ContextConsent';
@@ -8,6 +8,30 @@ import { FichaPreview } from './pages/FichaPreview';
 import { AdminPanel } from './pages/AdminPanel';
 import { TareasPanel } from './pages/TareasPanel';
 import { ActasPanel } from './pages/ActasPanel';
+import { BottomNav } from './components/BottomNav';
+
+function AppContent() {
+  const { appUser } = useAuth();
+  const location = useLocation();
+  const hideNavRoutes = ['/', '/contexto', '/onboarding'];
+  const showNav = appUser !== null && !hideNavRoutes.includes(location.pathname);
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Welcome />} />
+        <Route path="/contexto" element={<ContextConsent />} />
+        <Route path="/onboarding" element={<OnboardingChat />} />
+        <Route path="/ficha-preview" element={<FichaPreview />} />
+        <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
+        <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
+        <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
+      </Routes>
+      {showNav && <BottomNav />}
+    </>
+  );
+}
 
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) {
   const { appUser, loading } = useAuth();
@@ -33,16 +57,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Welcome />} />
-          <Route path="/contexto" element={<ContextConsent />} />
-          <Route path="/onboarding" element={<OnboardingChat />} />
-          <Route path="/ficha-preview" element={<FichaPreview />} />
-          <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
-          <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
-          <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </AuthProvider>
   );
