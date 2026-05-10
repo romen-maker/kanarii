@@ -9,6 +9,7 @@ import { AdminPanel } from './pages/AdminPanel';
 import { TareasPanel } from './pages/TareasPanel';
 import { ActasPanel } from './pages/ActasPanel';
 import { BottomNav } from './components/BottomNav';
+import { CruceView } from './pages/CruceView';
 
 function AppContent() {
   const { appUser } = useAuth();
@@ -25,6 +26,7 @@ function AppContent() {
         <Route path="/ficha-preview" element={<FichaPreview />} />
         <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
+        <Route path="/cruce" element={<ProtectedRoute requireAdmin><CruceView /></ProtectedRoute>} />
         <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
         <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
       </Routes>

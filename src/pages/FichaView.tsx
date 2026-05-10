@@ -19,10 +19,10 @@ const fichaSchema = z.object({
   genero: z.string().min(1, 'Requerido'),
   saberes: z.string().min(1, 'Requerido'),
   rol_arteara: z.string().min(1, 'Requerido'),
-  antiguedad_anos: z.number(),
+  antiguedad_anos: z.preprocess((val) => Number(val), z.number()),
   tension: z.string().min(1, 'Requerido'),
-  latitud: z.number().optional(),
-  longitud: z.number().optional(),
+  latitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+  longitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
   timezone: z.string().optional()
 });
 
@@ -44,6 +44,7 @@ export function FichaView() {
   }
 
   const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
+    // @ts-ignore
     resolver: zodResolver(fichaSchema),
     defaultValues: getDatosPersona(ficha) as any
   });
@@ -224,7 +225,7 @@ export function FichaView() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-serif text-[#4A4E4D]">Editar Ficha</h2>
                 <button type="button" onClick={() => setEditing(false)} className="text-stone-500 hover:text-stone-800">

@@ -75,3 +75,41 @@ Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de
 
   return response.text;
 }
+
+export async function generarAnalisisCruce(perfil1: any, perfil2: any, resultadoDeterminista: any): Promise<string> {
+   const prompt = `Eres un experto en Astrología Psicológica, Diseño Humano y Sociocracia aplicados a comunidades intencionales.
+Analiza la sinergia y dinámica entre estos dos miembros de la comunidad de Arteara.
+
+Toma en cuenta sus perfiles:
+Perfil Persona 1 (${perfil1.datosPersona?.nombre || 'Miembro 1'}): ${JSON.stringify({
+  datosBrutos: perfil1.datosBrutos,
+  datosPersona: perfil1.datosPersona,
+  perfilVisual: perfil1.perfilVisual
+}, null, 2)}
+
+Perfil Persona 2 (${perfil2.datosPersona?.nombre || 'Miembro 2'}): ${JSON.stringify({
+  datosBrutos: perfil2.datosBrutos,
+  datosPersona: perfil2.datosPersona,
+  perfilVisual: perfil2.perfilVisual
+}, null, 2)}
+
+Resultados del cruce determinista:
+${JSON.stringify(resultadoDeterminista, null, 2)}
+
+Escribe 2-3 párrafos con el siguiente contenido (en formato Markdown):
+- Qué pueden construir juntos en la comunidad de Arteara
+- Dónde puede aparecer fricción y cómo navegarla con Comunicación No Violenta (CNV)
+- Una recomendación sociocrática concreta para este par (¿Cómo podrían colaborar en roles, tareas o toma de decisiones?)
+`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+  });
+
+  if (!response.text) {
+    throw new Error('No response from Gemini');
+  }
+
+  return response.text;
+}

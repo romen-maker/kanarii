@@ -492,3 +492,94 @@ export async function deleteActa(id: string) {
     handleFirestoreError(err, OperationType.DELETE, 'actas');
   }
 }
+
+export interface AnalisisCruce {
+  puntuacion: number;
+  compatibilidades: string[];
+  tensiones: string[];
+}
+
+export function cruzarMiembros(perfil1: any, perfil2: any): AnalisisCruce {
+  let puntuacion = 50; // base score
+  const compatibilidades: string[] = [];
+  const tensiones: string[] = [];
+
+  if (!perfil1 || !perfil2) return { puntuacion: 0, compatibilidades, tensiones };
+
+  const hd1 = perfil1.datosBrutos?.tipo_hd ? { tipo: perfil1.datosBrutos.tipo_hd, autoridad: perfil1.datosBrutos.autoridad, perfil: perfil1.datosBrutos.perfil } : null;
+  const hd1Full = hd1 || perfil1.datosBrutos?.diseno_humano || (perfil1.tipo_hd ? { tipo: perfil1.tipo_hd, autoridad: perfil1.autoridad_hd } : null);
+  const hd2 = perfil2.datosBrutos?.tipo_hd ? { tipo: perfil2.datosBrutos.tipo_hd, autoridad: perfil2.datosBrutos.autoridad, perfil: perfil2.datosBrutos.perfil } : null;
+  const hd2Full = hd2 || perfil2.datosBrutos?.diseno_humano || (perfil2.tipo_hd ? { tipo: perfil2.tipo_hd, autoridad: perfil2.autoridad_hd } : null);
+  
+  const dim1 = perfil1.perfilVisual?.dimensiones || perfil1.dimensiones || perfil1.perfilVisual;
+  const dim2 = perfil2.perfilVisual?.dimensiones || perfil2.dimensiones || perfil2.perfilVisual;
+
+  // COMPATIBILIDADES
+  if (hd1Full && hd2Full) {
+    const tipos = [hd1Full.tipo?.toLowerCase(), hd2Full.tipo?.toLowerCase()];
+    const hasProyector = tipos.some((t: string) => t?.includes('proyector') || t?.includes('projector'));
+    const hasGenerador = tipos.some((t: string) => t?.includes('generador') || t?.includes('generator'));
+    if (hasProyector && hasGenerador) {
+      compatibilidades.push("La guía del Proyector encuentra la energía del Generador");
+      puntuacion += 25;
+    }
+
+    const hasManifestador = tipos.some((t: string) => t?.includes('manifestador') || t?.includes('manifestor'));
+    if (hasProyector && hasManifestador) {
+      compatibilidades.push("Visión y ejecución — cuando el Manifestador informa");
+      puntuacion += 20;
+    }
+
+    const hasReflector = tipos.some((t: string) => t?.includes('reflector'));
+    if (hasReflector) {
+      compatibilidades.push("El Reflector aporta perspectiva de entorno único");
+      puntuacion += 15;
+    }
+
+    const p1 = hd1Full.perfil?.split('/')[0];
+    const p2 = hd2Full.perfil?.split('/')[0];
+    if (p1 && p2 && p1 === p2) {
+      compatibilidades.push("Ritmo de investigación compartido");
+      puntuacion += 15;
+    }
+
+    // TENSIONES
+    if (tipos[0]?.includes('manifestador') && tipos[1]?.includes('manifestador') && !tipos[0]?.includes('generador') && !tipos[1]?.includes('generador')) {
+      tensiones.push("Dos iniciadores — fundamental que ambos informen antes de actuar");
+    }
+
+    const auths = [hd1Full.autoridad?.toLowerCase(), hd2Full.autoridad?.toLowerCase()];
+    const hasEmocional = auths.some((a: string) => a?.includes('emocional') || a?.includes('emotional'));
+    const hasSacral = auths.some((a: string) => a?.includes('sacral'));
+    if (hasEmocional && hasSacral) {
+      tensiones.push("Tiempos de decisión muy distintos: uno necesita esperar su ola, el otro responde en el momento");
+    }
+
+    if (hd1Full.tipo && hd2Full.tipo && hd1Full.tipo === hd2Full.tipo) {
+      tensiones.push("Espejo directo — pueden proyectar sus sombras mutuamente");
+    }
+  }
+
+  // Dimensiones
+  if (dim1 && dim2) {
+    const escucha1 = dim1.escucha || 0;
+    const accion1 = dim1.accion || 0;
+    const escucha2 = dim2.escucha || 0;
+    const accion2 = dim2.accion || 0;
+
+    if ((escucha1 > 60 && accion2 > 60) || (escucha2 > 60 && accion1 > 60)) {
+       compatibilidades.push("Roles que se equilibran: uno escucha, otro activa");
+       puntuacion += 20;
+    }
+
+    const estructura1 = dim1.estructura || 0;
+    const estructura2 = dim2.estructura || 0;
+    if (estructura1 < 30 && estructura2 < 30) {
+      tensiones.push("Posible dificultad sosteniendo acuerdos a largo plazo");
+    }
+  }
+
+  puntuacion = Math.min(100, Math.max(0, puntuacion));
+
+  return { puntuacion, compatibilidades, tensiones };
+}

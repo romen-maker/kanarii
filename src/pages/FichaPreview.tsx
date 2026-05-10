@@ -19,10 +19,10 @@ const fichaSchema = z.object({
   genero: z.string().min(1, 'Requerido'),
   saberes: z.string().min(1, 'Requerido'),
   rol_arteara: z.string().min(1, 'Requerido'),
-  antiguedad_anos: z.number(),
+  antiguedad_anos: z.preprocess((val) => Number(val), z.number()),
   tension: z.string().min(1, 'Requerido'),
-  latitud: z.number().optional(),
-  longitud: z.number().optional(),
+  latitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+  longitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
   timezone: z.string().optional()
 });
 
@@ -45,6 +45,7 @@ export function FichaPreview() {
   const [geoMessage, setGeoMessage] = useState('');
 
   const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
+    // @ts-ignore
     resolver: zodResolver(fichaSchema),
     defaultValues: pendingFicha || {}
   });
@@ -173,7 +174,7 @@ export function FichaPreview() {
             <div className="absolute top-0 left-0 w-2 h-full bg-[#CB997E]"></div>
             
             {isEditing ? (
-              <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(onEditSubmit as any)} className="space-y-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-serif text-[#4A4E4D]">Editar Datos</h2>
                   <button type="button" onClick={() => setIsEditing(false)} className="text-stone-500 hover:text-stone-800">

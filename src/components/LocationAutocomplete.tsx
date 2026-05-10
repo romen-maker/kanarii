@@ -9,7 +9,7 @@ interface NominatimResult {
   address: any;
 }
 
-export function LocationAutocomplete({ onSelect }: { onSelect: (data: { ciudad: string, latitud: number, longitud: number, timezone: string }) => void }) {
+export function LocationAutocomplete({ onSelect, onEnter, disabled }: { onSelect: (data: { ciudad: string, latitud: number, longitud: number, timezone: string, lugarNormalizado?: string }) => void, onEnter?: (query: string) => void, disabled?: boolean }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,13 @@ export function LocationAutocomplete({ onSelect }: { onSelect: (data: { ciudad: 
       <input
         type="text"
         value={query}
+        disabled={disabled}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            onEnter?.(query);
+          }
+        }}
         placeholder="Escribe tu ciudad o región..."
         className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-6 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
       />

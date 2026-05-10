@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Send, User as UserIcon, Leaf, ArrowLeft, LogIn } from 'lucide-react';
+import { Send, User as UserIcon, Leaf, ArrowLeft, LogIn, Undo2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { LocationAutocomplete } from '../components/LocationAutocomplete';
@@ -14,8 +14,8 @@ interface Message {
 
 const STEPS = [
   { key: 'nombre', q: '¡Bienvenida, bienvenido a esta linda tribu! Qué alegría sentir tu energía aquí. Para empezar a tejer nuestra red, ¿cómo te llamas o cómo sientes que te llamemos?' },
-  { key: 'fechaNacimiento', q: 'Tanemmirt (gracias). Para conectar con nuestros ciclos vitales y entender tu momento en esta experiencia, ¿cuál es tu fecha de nacimiento? (ej: 1990-05-14)' },
-  { key: 'hora', q: 'El instante en que llegaste tiene su propia magia. ¿Conoces la hora, aunque sea aproximada, en la que naciste? Si no la sabes, escribe 00:00. Puedes buscarla en tu partida de nacimiento. (ej: 14:30)' },
+  { key: 'fechaNacimiento', type: 'date', q: 'Tanemmirt (gracias). Para conectar con nuestros ciclos vitales y entender tu momento en esta experiencia, ¿cuál es tu fecha de nacimiento? (ej: 1990-05-14)' },
+  { key: 'hora', type: 'time', q: 'El instante en que llegaste tiene su propia magia. ¿Conoces la hora, aunque sea aproximada, en la que naciste? Si no la sabes, escribe 00:00. Puedes buscarla en tu partida de nacimiento. (ej: 14:30)' },
   { key: 'lugar', q: 'Nuestras raíces nos conectan con la tierra. ¿En qué rincón del mundo, ciudad o región naciste?' },
   { key: 'genero', q: 'En esta búsqueda de equilibrio entre nuestras energías femeninas y masculinas, ¿con qué género te identificas y habitas el mundo?',
     options: [
@@ -25,8 +25,8 @@ const STEPS = [
       { label: 'Prefiero no decir', value: 'prefiero_no_decir' }
     ]
   },
-  { key: 'saberes', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido vital que te acompañan hoy?' },
-  { key: 'rol_arteara', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?' },
+  { key: 'saberes', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido vital que te acompañan hoy?', example: 'Ejemplos: Sé de agricultura ecológica, me encanta tejer, estuve 10 años como electricista, toco la guitarra, cocino para multitudes...' },
+  { key: 'rol_arteara', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?', example: 'Ejemplos: Colaboro en el huerto, asisto a los círculos de escucha, ayudo con la contabilidad, hago los diseños gráficos...' },
   { key: 'antiguedad_anos', q: 'El tiempo caminando juntos fortalece nuestros cimientos. ¿Desde cuándo formas parte de la comunidad o sientes tu vinculación a esta red?',
     options: [
       { label: 'Recién llegado/a (menos de 6 meses)', value: '0' },
@@ -36,7 +36,7 @@ const STEPS = [
       { label: 'Más de 5 años', value: '5' }
     ]
   },
-  { key: 'tension', q: 'Por último, para poder cuidarnos y sostenernos desde el respeto: ¿cómo describirías tu estado interno actual, tu paz o tu nivel de tensión en la convivencia de la tribu?' }
+  { key: 'tension', q: 'Por último, para poder cuidarnos y sostenernos desde el respeto: ¿cómo describirías tu estado interno actual, tu paz o tu nivel de tensión en la convivencia de la tribu?', example: 'Ejemplos: Me siento en paz y con energía, a veces me estresan las asambleas largas, tengo poco tiempo disponible úlitmamente, me cuesta expresarme en grupo...' }
 ];
 
 export function OnboardingChat() {
@@ -62,6 +62,30 @@ export function OnboardingChat() {
     setPendingResponses(prev => [...prev, { step, message, sender }]);
   };
 
+  const handleBack = () => {
+    if (currentStepIndex === 0 || saving) return;
+    const prevIndex = currentStepIndex - 1;
+    setCurrentStepIndex(prevIndex);
+    
+    setInput('');
+    const rebuiltMessages: Message[] = [
+      { id: 'initial', sender: 'bot', text: STEPS[0].q }
+    ];
+    const newPending = pendingResponses.slice(0, prevIndex);
+    
+    newPending.forEach((resp, i) => {
+      if (resp.sender === 'user') {
+        rebuiltMessages.push({ id: `user_${i}`, sender: 'user', text: resp.message });
+      }
+      if (STEPS[i + 1]) {
+         rebuiltMessages.push({ id: `bot_${i+1}`, sender: 'bot', text: STEPS[i + 1].q });
+      }
+    });
+
+    setPendingResponses(newPending);
+    setMessages(rebuiltMessages);
+  };
+
   const handleSend = async () => {
     if (!input.trim() || saving) return;
     const userText = input.trim();
@@ -74,21 +98,6 @@ export function OnboardingChat() {
     const stepKey = STEPS[currentStepIndex].key;
     const newData = { ...formData, [stepKey]: userText };
     setFormData(newData);
-    
-    // START GEOCODING IN BG if local
-    if (stepKey === 'lugar') {
-      geocodeLugar(userText).then(res => {
-         setFormData(current => ({
-           ...current, 
-           lugar: res.lugarNormalizado,
-           latitud: res.latitud.toString(), // will be parsed as float later
-           longitud: res.longitud.toString(),
-           timezone: res.timezone
-         }));
-      }).catch(err => {
-         console.warn("Geocoding failed for initial input", err);
-      });
-    }
 
     saveResponseLocal(stepKey, userText, 'user');
 
@@ -184,52 +193,95 @@ export function OnboardingChat() {
             </div>
           ) : null}
           {STEPS[currentStepIndex]?.key === 'lugar' ? (
-            <LocationAutocomplete onSelect={(data) => {
-              // we store the JSON string to parse it later, or just mock typing it
-              const val = JSON.stringify(data);
-              setFormData(prev => ({ ...prev, [STEPS[currentStepIndex].key]: val }));
-              // Then artificially send message
-              const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: data.ciudad };
-              setMessages(prev => [...prev, userMsg]);
-              saveResponseLocal(STEPS[currentStepIndex].key, data.ciudad, 'user');
-              
-              if (currentStepIndex < STEPS.length - 1) {
-                const nextStepIndex = currentStepIndex + 1;
-                const botMsgText = STEPS[nextStepIndex].q;
-                setCurrentStepIndex(nextStepIndex);
-                setTimeout(() => {
-                  setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: botMsgText }]);
-                  saveResponseLocal(STEPS[nextStepIndex].key, botMsgText, 'bot');
-                }, 600);
-              } else {
+            <LocationAutocomplete 
+              disabled={saving}
+              onEnter={() => {
+                setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: 'Por favor, selecciona tu lugar desde la lista para obtener las coordenadas correctas.' }]);
+              }}
+              onSelect={async (data) => {
                 setSaving(true);
-                setTimeout(() => {
-                  setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: '¡Tanemmirt (gracias) por tu tiempo y energía! Estamos trazando tu ficha comunitaria...' }]);
-                  const finalData = { ...formData, [STEPS[currentStepIndex].key]: val };
-                  localStorage.setItem('kanarii_pendingFicha', JSON.stringify(finalData));
-                  localStorage.setItem('kanarii_pendingResponses', JSON.stringify([...pendingResponses, { step: STEPS[currentStepIndex].key, message: data.ciudad, sender: 'user' }]));
-                  navigate('/ficha-preview');
-                }, 1000);
-              }
+                
+                const waitMsgId = Date.now().toString() + "_wait";
+                setMessages(prev => [...prev, 
+                  { id: Date.now().toString(), sender: 'user', text: data.ciudad },
+                  { id: waitMsgId, sender: 'bot', text: 'Un momento, obteniendo coordenadas... 🌍' }
+                ]);
+
+                try {
+                  const newDataFields = {
+                    lugar: data.lugarNormalizado || data.ciudad,
+                    latitud: data.latitud.toString(),
+                    longitud: data.longitud.toString(),
+                    timezone: data.timezone
+                  };
+                  setFormData(prev => ({ ...prev, ...newDataFields }));
+                  
+                  saveResponseLocal(STEPS[currentStepIndex].key, data.ciudad, 'user');
+
+                  // Replace temporary wait message and let the user proceed
+                  setMessages(prev => prev.filter(m => m.id !== waitMsgId));
+
+                  if (currentStepIndex < STEPS.length - 1) {
+                    const nextStepIndex = currentStepIndex + 1;
+                    const botMsgText = STEPS[nextStepIndex].q;
+                    setCurrentStepIndex(nextStepIndex);
+                    setTimeout(() => {
+                      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: botMsgText }]);
+                      saveResponseLocal(STEPS[nextStepIndex].key, botMsgText, 'bot');
+                      setSaving(false);
+                    }, 600);
+                  } else {
+                    setTimeout(() => {
+                      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: '¡Tanemmirt (gracias) por tu tiempo y energía! Estamos trazando tu ficha comunitaria...' }]);
+                      const finalData = { ...formData, ...newDataFields };
+                      localStorage.setItem('kanarii_pendingFicha', JSON.stringify(finalData));
+                      localStorage.setItem('kanarii_pendingResponses', JSON.stringify([...pendingResponses, { step: STEPS[currentStepIndex].key, message: data.ciudad, sender: 'user' }]));
+                      navigate('/ficha-preview');
+                    }, 1000);
+                  }
+                } catch (err) {
+                  setMessages(prev => [
+                    ...prev.filter(m => m.id !== waitMsgId), 
+                    { id: Date.now().toString() + "_err", sender: 'bot', text: 'No pudimos guardar las coordenadas. Por favor, inténtalo de nuevo.' }
+                  ]);
+                  setSaving(false);
+                }
             }} />
           ) : (
-            <div className="relative flex items-center w-full">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={STEPS[currentStepIndex]?.options ? "O selecciona una opción arriba..." : "Escribe tu respuesta aquí..."}
-                disabled={saving}
-                className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-14 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
-              />
-              <button
-                onClick={() => handleSend()}
-                disabled={saving || !input.trim()}
-                className="absolute right-2 p-2 bg-[#6B705C] text-white rounded-full hover:bg-[#4A4E4D] transition-colors disabled:opacity-50"
-              >
-                <Send className="w-5 h-5" />
-              </button>
+            <div className="relative flex items-center w-full gap-2">
+              {currentStepIndex > 0 && (
+                <button
+                  onClick={handleBack}
+                  disabled={saving}
+                  title="Volver al paso anterior"
+                  className="flex-shrink-0 p-3 bg-white border border-[#EAE2D6] text-stone-500 rounded-full hover:bg-[#F9F7F1] hover:text-stone-800 transition-colors disabled:opacity-50"
+                >
+                  <Undo2 className="w-5 h-5" />
+                </button>
+              )}
+              <div className="relative flex-1 flex flex-col gap-1">
+                {(STEPS[currentStepIndex] as any)?.example && (
+                  <p className="text-xs text-stone-500 pl-4">{(STEPS[currentStepIndex] as any).example}</p>
+                )}
+                <div className="relative w-full">
+                  <input
+                    type={(STEPS[currentStepIndex] as any)?.type || "text"}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder={STEPS[currentStepIndex]?.options ? "O selecciona una opción arriba..." : "Escribe tu respuesta aquí..."}
+                    disabled={saving}
+                    className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-14 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
+                  />
+                  <button
+                    onClick={() => handleSend()}
+                    disabled={saving || !input.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#6B705C] text-white rounded-full hover:bg-[#4A4E4D] transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

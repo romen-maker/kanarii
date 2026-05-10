@@ -46,6 +46,38 @@ export function AdminPanel() {
           } catch(e) { console.error(e) }
         }
       }
+
+      // Add missing datosBrutos to existing seeds
+      const seedsMissingData = data.filter(doc => doc.isSeedData && !doc.datosBrutos);
+      if (seedsMissingData.length > 0) {
+        const { updateDoc, serverTimestamp } = await import('firebase/firestore');
+        const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
+        const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
+        for (let index = 0; index < seedsMissingData.length; index++) {
+          const oldDoc = seedsMissingData[index];
+          const newDatos = {
+            estado: 'completo',
+            updatedAt: serverTimestamp(),
+            datosBrutos: {
+              tipo_hd: tiposHD[index % tiposHD.length],
+              autoridad: autoridades[index % autoridades.length],
+              perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`
+            },
+            perfilVisual: {
+              dimensiones: {
+                escucha: 30 + (index * 15) % 70,
+                accion: 40 + (index * 20) % 60,
+                estructura: 20 + (index * 25) % 80,
+                cuidado: 50 + (index * 10) % 50
+              }
+            }
+          };
+          try {
+            await updateDoc(doc(db, 'fichas', oldDoc.id), newDatos);
+            Object.assign(oldDoc, newDatos);
+          } catch(e) { console.error(e) }
+        }
+      }
       
       const realDocs = data.filter(doc => !doc.isSeedData);
       
@@ -54,8 +86,11 @@ export function AdminPanel() {
           const seedId = `seed-${appUser.uid}-${index}`;
           const existing = data.find(d => d.id === seedId);
           if (!existing) {
+            const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
+            const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
             const seedFicha = {
               userId: seedId,
+              estado: 'completo',
               datosOnboarding: {
                 nombre: seed.nombre,
                 fechaNacimiento: seed.fechaNacimiento,
@@ -66,6 +101,19 @@ export function AdminPanel() {
                 rol_arteara: seed.rol_arteara,
                 antiguedad_anos: seed.antiguedad_anos,
                 tension: seed.tension
+              },
+              datosBrutos: {
+                tipo_hd: tiposHD[index % tiposHD.length],
+                autoridad: autoridades[index % autoridades.length],
+                perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`
+              },
+              perfilVisual: {
+                dimensiones: {
+                  escucha: 30 + (index * 15) % 70,
+                  accion: 40 + (index * 20) % 60,
+                  estructura: 20 + (index * 25) % 80,
+                  cuidado: 50 + (index * 10) % 50
+                }
               },
               manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.tension}".`,
               isSeedData: true,
@@ -128,6 +176,9 @@ export function AdminPanel() {
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel Comunitario</h1>
           </div>
           <div className="hidden md:flex items-center gap-4">
+            <button onClick={() => navigate('/cruce')} className="px-4 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
+              Cruce de Perfiles
+            </button>
             <button onClick={() => navigate('/ficha')} className="px-4 py-2 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-medium transition-colors">
               Ver mi ficha
             </button>
@@ -138,6 +189,15 @@ export function AdminPanel() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
+          {/* Mobile view top action */}
+          <div className="md:hidden p-4 border-b border-[#EAE2D6] flex justify-between gap-3">
+             <button onClick={() => navigate('/cruce')} className="flex-1 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
+              Cruce de Perfiles
+            </button>
+             <button onClick={() => navigate('/ficha')} className="flex-1 py-2 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-medium transition-colors">
+              Mi ficha
+            </button>
+          </div>
           <div className="p-6 border-b border-[#EAE2D6] flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center bg-[#F9F7F1]">
             <div className="flex items-center gap-2 text-stone-600 font-medium">
               <Users className="w-5 h-5 text-[#A5A58D]" />
@@ -347,8 +407,10 @@ export function AdminPanel() {
                 </div>
               )}
 
-              {getManualContent() ? (
-                <ManualViewer content={getManualContent()!} />
+              {selectedFicha.manualMarkdown ? (
+                <ManualViewer content={selectedFicha.manualMarkdown} />
+              ) : selectedFicha.manualGenerado ? (
+                <ManualViewer content={selectedFicha.manualGenerado} />
               ) : (
                 <p className="text-stone-500 italic">Esta ficha no tiene un manual generado.</p>
               )}
