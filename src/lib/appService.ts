@@ -20,6 +20,7 @@ export interface Ficha {
   userId: string;
   datosOnboarding: DatosOnboarding;
   manualGenerado?: string;
+  manualMarkdown?: string;
   fechaGeneracion?: any;
   versionesAnteriores?: any[];
   isSeedData?: boolean;
@@ -28,6 +29,7 @@ export interface Ficha {
   estado?: string;
   datosBrutos?: any;
   datosPersona?: any;
+  perfilVisual?: any;
 }
 
 export interface Tarea {

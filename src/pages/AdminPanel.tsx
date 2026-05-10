@@ -8,12 +8,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 
+function getDatosPersona(ficha: Ficha) {
+  return ficha.datosPersona ?? ficha.datosOnboarding ?? {};
+}
+
 const SEED_DATA = [
-  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: "3 años", genero: "hombre", estudios: "FP", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria" },
-  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: "1 año", genero: "mujer", estudios: "universitarios", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife" },
-  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad: "2 años", genero: "no binario", estudios: "bachillerato", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África" },
-  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad: "4 años", genero: "mujer", nivelEstudios: "universitarios", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugarNacimiento: "Lanzarote" },
-  { nombre: "Bentor Achaman", rolProyecto: "música y ritual", antiguedad: "6 meses", genero: "hombre", nivelEstudios: "secundaria", estadoTension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugarNacimiento: "Fuerteventura" }
+  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", estudios: "FP", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria" },
+  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", estudios: "universitarios", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife" },
+  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", estudios: "bachillerato", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África" },
+  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", estudios: "universitarios", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote" },
+  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", estudios: "secundaria", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura" }
 ];
 
 export function AdminPanel() {
@@ -107,11 +111,11 @@ export function AdminPanel() {
   };
 
   const filteredFichas = fichas.filter(f => {
-    const datos = f.datosOnboarding;
-    if (!datos) return false;
+    const datos = getDatosPersona(f);
+    if (!datos || !datos.nombre) return false;
     return (
-      datos.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      datos.rol_arteara.toLowerCase().includes(searchTerm.toLowerCase())
+      (datos.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (datos.rol_arteara?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
   });
 
@@ -175,8 +179,8 @@ export function AdminPanel() {
                   </tr>
                 ) : (
                   filteredFichas.map(ficha => {
-                    const datos = ficha.datosOnboarding;
-                    if (!datos) return null;
+                    const datos = getDatosPersona(ficha);
+                    if (!datos || !datos.nombre) return null;
                     return (
                       <tr key={ficha.id} className="hover:bg-[#F9F7F1] transition-colors">
                         <td className="px-6 py-4 font-medium text-stone-700">
@@ -228,8 +232,8 @@ export function AdminPanel() {
               <div className="text-center text-stone-400 py-8">No se encontraron fichas.</div>
             ) : (
               filteredFichas.map(ficha => {
-                const datos = ficha.datosOnboarding;
-                if (!datos) return null;
+                const datos = getDatosPersona(ficha);
+                if (!datos || !datos.nombre) return null;
                 return (
                   <div key={ficha.id} className="bg-white rounded-2xl border border-[#EAE2D6] p-4 flex flex-col gap-2 relative">
                     <div className="pr-20">
@@ -277,7 +281,7 @@ export function AdminPanel() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-xl">
             <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#FDFBF7]">
-              <h2 className="text-2xl font-serif text-[#4A4E4D]">Ficha de {selectedFicha.datosOnboarding?.nombre}</h2>
+              <h2 className="text-2xl font-serif text-[#4A4E4D]">Ficha de {getDatosPersona(selectedFicha).nombre}</h2>
               <button 
                 onClick={() => setSelectedFicha(null)}
                 className="p-2 hover:bg-[#EAE2D6] rounded-full transition-colors"
@@ -286,8 +290,65 @@ export function AdminPanel() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto">
-              {selectedFicha.manualGenerado ? (
-                <ManualViewer content={selectedFicha.manualGenerado} />
+              {selectedFicha.perfilVisual && (
+                <div className="mb-8 p-6 bg-[#F9F7F1] rounded-2xl border border-[#EAE2D6]">
+                  <div className="mb-6">
+                    <h3 className="text-3xl font-serif text-[#4A4E4D] mb-2">{selectedFicha.perfilVisual.arquetipo}</h3>
+                    <p className="text-stone-600 text-lg">{selectedFicha.perfilVisual.descripcion_arquetipo}</p>
+                  </div>
+                  
+                  {selectedFicha.perfilVisual.dimensiones && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Escucha</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.escucha}%</span></div>
+                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
+                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.escucha)}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Acción</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.accion}%</span></div>
+                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
+                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.accion)}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Estructura</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.estructura}%</span></div>
+                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
+                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.estructura)}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Cuidado</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.cuidado}%</span></div>
+                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
+                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.cuidado)}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-medium text-stone-700 mb-2">Fortalezas</h4>
+                      <ul className="list-disc list-inside text-sm text-stone-600 space-y-1">
+                        {(selectedFicha.perfilVisual.fortalezas || []).map((f: string, i: number) => (
+                          <li key={'f-'+i}>{f}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-stone-700 mb-2">Sombras</h4>
+                      <ul className="list-disc list-inside text-sm text-stone-600 space-y-1">
+                        {(selectedFicha.perfilVisual.sombras || []).map((s: string, i: number) => (
+                          <li key={'s-'+i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {getManualContent() ? (
+                <ManualViewer content={getManualContent()!} />
               ) : (
                 <p className="text-stone-500 italic">Esta ficha no tiene un manual generado.</p>
               )}

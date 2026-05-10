@@ -33,28 +33,34 @@ export function FichaView() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [fichaEditadaDesdeGeneracion, setFichaEditadaDesdeGeneracion] = useState(false);
   
+  function getDatosPersona(ficha: any) {
+    return ficha?.datosPersona ?? ficha?.datosOnboarding ?? {};
+  }
+
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
     resolver: zodResolver(fichaSchema),
-    defaultValues: (ficha?.datosOnboarding as any) || {}
+    defaultValues: getDatosPersona(ficha) as any
   });
 
   useEffect(() => {
     if (!loadingFicha && !ficha && !localFicha) {
       navigate('/onboarding');
-    } else if (ficha && !localFicha) {
-      setLocalFicha(ficha);
-      reset(ficha.datosOnboarding);
+    } else if (ficha) {
+      if (!localFicha || localFicha.id !== ficha.id) {
+        setLocalFicha(ficha);
+        reset(getDatosPersona(ficha));
+      }
     }
-  }, [ficha, localFicha, loadingFicha, navigate, reset]);
+  }, [ficha, loadingFicha, navigate, reset]);
 
   if (loadingFicha || (!ficha && !localFicha)) return null;
   const displayFicha = localFicha || ficha;
-  const datos = displayFicha?.datosOnboarding;
+  const datos = getDatosPersona(displayFicha);
 
   const onSubmit = async (data: FichaFormData) => {
     if (!appUser || !displayFicha?.id) return;
     await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id);
-    setLocalFicha({ ...displayFicha, datosOnboarding: data as DatosOnboarding });
+    setLocalFicha({ ...displayFicha, datosPersona: data, datosOnboarding: undefined });
     setEditing(false);
     if (displayFicha?.manualGenerado) {
       setFichaEditadaDesdeGeneracion(true);
