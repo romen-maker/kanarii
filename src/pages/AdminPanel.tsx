@@ -13,11 +13,11 @@ function getDatosPersona(ficha: Ficha) {
 }
 
 const SEED_DATA = [
-  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", estudios: "FP", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria" },
-  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", estudios: "universitarios", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife" },
-  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", estudios: "bachillerato", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África" },
-  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", estudios: "universitarios", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote" },
-  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", estudios: "secundaria", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura" }
+  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria" },
+  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife" },
+  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África" },
+  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote" },
+  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura" }
 ];
 
 export function AdminPanel() {
@@ -62,7 +62,7 @@ export function AdminPanel() {
                 hora: "12:00",
                 lugar: seed.lugar,
                 genero: seed.genero,
-                estudios: seed.estudios,
+                saberes: seed.saberes,
                 rol_arteara: seed.rol_arteara,
                 antiguedad_anos: seed.antiguedad_anos,
                 tension: seed.tension
@@ -193,7 +193,7 @@ export function AdminPanel() {
                         </td>
                         <td className="px-6 py-4">{datos.rol_arteara}</td>
                         <td className="px-6 py-4">{datos.antiguedad_anos}</td>
-                        <td className="px-6 py-4">{datos.estudios}</td>
+                        <td className="px-6 py-4">{datos.saberes}</td>
                         <td className="px-6 py-4">
                           <span className="inline-block truncate max-w-[150px] items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]" title={datos.tension}>
                             {datos.tension}

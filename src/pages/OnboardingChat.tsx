@@ -4,6 +4,7 @@ import { Send, User as UserIcon, Leaf, ArrowLeft, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { LocationAutocomplete } from '../components/LocationAutocomplete';
+import { geocodeLugar } from '../lib/geocoding';
 
 interface Message {
   id: string;
@@ -24,22 +25,8 @@ const STEPS = [
       { label: 'Prefiero no decir', value: 'prefiero_no_decir' }
     ]
   },
-  { key: 'estudios', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido de estudios que te acompañan hoy?',
-    options: [
-      { label: 'Sin Estudios', value: 'sin_estudios' },
-      { label: 'ESO', value: 'eso' },
-      { label: 'Bachillerato', value: 'bachillerato' },
-      { label: 'FP', value: 'fp' },
-      { label: 'Universitarios', value: 'universitarios' },
-      { label: 'Posgrado', value: 'posgrado' },
-    ]
-  },
-  { key: 'rol_arteara', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?',
-    options: [
-      { label: 'Propietario', value: 'propietario' },
-      { label: 'Recién Llegado', value: 'recien_llegado' }
-    ]
-  },
+  { key: 'saberes', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido vital que te acompañan hoy?' },
+  { key: 'rol_arteara', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?' },
   { key: 'antiguedad_anos', q: 'El tiempo caminando juntos fortalece nuestros cimientos. ¿Desde cuándo formas parte de la comunidad o sientes tu vinculación a esta red?',
     options: [
       { label: 'Recién llegado/a (menos de 6 meses)', value: '0' },
@@ -88,6 +75,21 @@ export function OnboardingChat() {
     const newData = { ...formData, [stepKey]: userText };
     setFormData(newData);
     
+    // START GEOCODING IN BG if local
+    if (stepKey === 'lugar') {
+      geocodeLugar(userText).then(res => {
+         setFormData(current => ({
+           ...current, 
+           lugar: res.lugarNormalizado,
+           latitud: res.latitud.toString(), // will be parsed as float later
+           longitud: res.longitud.toString(),
+           timezone: res.timezone
+         }));
+      }).catch(err => {
+         console.warn("Geocoding failed for initial input", err);
+      });
+    }
+
     saveResponseLocal(stepKey, userText, 'user');
 
     if (currentStepIndex < STEPS.length - 1) {

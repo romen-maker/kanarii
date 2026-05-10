@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Fingerprint, Sparkles, Users, HeartPulse, Leaf, Loader2, Edit2, Check, X } from 'lucide-react';
+import { Fingerprint, Sparkles, Users, HeartPulse, Leaf, Loader2, Edit2, Check, X, MapPin } from 'lucide-react';
 import { syncPendingOnboarding, saveManual, calcularDatosBrutos, calcularDimensiones } from '../lib/appService';
 import { generarPerfilVisual, generarManual } from '../lib/gemini';
 import Markdown from 'react-markdown';
@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ManualViewer } from '../components/ManualViewer';
+import { geocodeLugar } from '../lib/geocoding';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -16,10 +17,13 @@ const fichaSchema = z.object({
   hora: z.string().min(1, 'Requerido'),
   lugar: z.string().min(1, 'Requerido'),
   genero: z.string().min(1, 'Requerido'),
-  estudios: z.string().min(1, 'Requerido'),
+  saberes: z.string().min(1, 'Requerido'),
   rol_arteara: z.string().min(1, 'Requerido'),
-  antiguedad_anos: z.string().min(1, 'Requerido'),
-  tension: z.string().min(1, 'Requerido')
+  antiguedad_anos: z.number(),
+  tension: z.string().min(1, 'Requerido'),
+  latitud: z.number().optional(),
+  longitud: z.number().optional(),
+  timezone: z.string().optional()
 });
 
 type FichaFormData = z.infer<typeof fichaSchema>;
@@ -27,7 +31,7 @@ type FichaFormData = z.infer<typeof fichaSchema>;
 export function FichaPreview() {
   const { appUser, login, updateConsent } = useAuth();
   const navigate = useNavigate();
-  const [pendingFicha, setPendingFicha] = useState(() => JSON.parse(localStorage.getItem('kanarii_pendingFicha') || 'null'));
+  const [pendingFicha, setPendingFicha] = useState<any>(() => JSON.parse(localStorage.getItem('kanarii_pendingFicha') || 'null'));
   
   const [estadoVista, setEstadoVista] = useState<'datos' | 'manual'>('datos');
   const [generatedManual, setGeneratedManual] = useState<string | null>(null);
@@ -37,7 +41,10 @@ export function FichaPreview() {
   const [isEditing, setIsEditing] = useState(false);
   const syncInProgress = useRef(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [geoMessage, setGeoMessage] = useState('');
+
+  const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
     resolver: zodResolver(fichaSchema),
     defaultValues: pendingFicha || {}
   });
@@ -48,11 +55,34 @@ export function FichaPreview() {
     setIsEditing(false);
   };
 
+  const handleVerificarUbicacion = async () => {
+    const lugarStr = getValues("lugar");
+    if (!lugarStr) return;
+    
+    setGeoStatus('loading');
+    setGeoMessage('');
+    try {
+      const geoResult = await geocodeLugar(lugarStr);
+      setValue('latitud', geoResult.latitud);
+      setValue('longitud', geoResult.longitud);
+      setValue('timezone', geoResult.timezone);
+      setValue('lugar', geoResult.lugarNormalizado);
+      setGeoStatus('success');
+      setGeoMessage(`✓ ${geoResult.lugarNormalizado} (${geoResult.latitud}, ${geoResult.longitud})`);
+    } catch (e: any) {
+      setGeoStatus('error');
+      setGeoMessage(e.message || "No se encontró esta ubicación, intenta ser más específico");
+    }
+  };
+
   const handleGenerateManual = async () => {
     setIsGenerating(true);
     try {
-      let latitud = 0; let longitud = 0; let timezone = 'UTC';
-      if (pendingFicha.lugar) {
+      let latitud = pendingFicha.latitud ? parseFloat(pendingFicha.latitud.toString()) : 0;
+      let longitud = pendingFicha.longitud ? parseFloat(pendingFicha.longitud.toString()) : 0;
+      let timezone = pendingFicha.timezone || 'UTC';
+      
+      if (!latitud && !longitud && pendingFicha.lugar) {
         try {
           const parsed = JSON.parse(pendingFicha.lugar);
           latitud = parsed.latitud; longitud = parsed.longitud; timezone = parsed.timezone;
@@ -71,7 +101,7 @@ export function FichaPreview() {
       const manualText = await generarManual(rawData, datosPersona, perfilVisual);
 
       // Save previewed state locally so sync doesn't have to re-fetch if we decide to
-      const updatedFicha = { ...pendingFicha, preview_perfilVisual: perfilVisual, preview_manual: manualText };
+      const updatedFicha = { ...pendingFicha, preview_perfilVisual: perfilVisual, preview_manual: manualText, preview_dimensiones: dimensiones };
       setPendingFicha(updatedFicha);
       localStorage.setItem('kanarii_pendingFicha', JSON.stringify(updatedFicha));
 
@@ -152,26 +182,79 @@ export function FichaPreview() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Object.keys(fichaSchema.shape).map((key) => {
-                    const labelMap: Record<string, string> = {
-                      nombre: 'Nombre', fechaNacimiento: 'Fecha de Nacimiento', hora: 'Hora de Nacimiento',
-                      lugar: 'Lugar de Nacimiento', genero: 'Género', estudios: 'Nivel de Estudios',
-                      rol_arteara: 'Rol en Proyecto', antiguedad_anos: 'Antigüedad', tension: 'Estado de Tensión'
-                    };
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Nombre</label>
+                    <input {...register("nombre")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.nombre && <p className="text-red-500 text-xs">{errors.nombre.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Fecha de Nacimiento</label>
+                    <input type="date" {...register("fechaNacimiento")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.fechaNacimiento && <p className="text-red-500 text-xs">{errors.fechaNacimiento.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Hora de Nacimiento</label>
+                    <input type="time" {...register("hora")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.hora && <p className="text-red-500 text-xs">{errors.hora.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Lugar de Nacimiento</label>
+                    <div className="relative">
+                      <input type="text" placeholder="Ej: Las Palmas de Gran Canaria, España" {...register("lugar", { onBlur: handleVerificarUbicacion })} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 pr-12 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                      <button type="button" onClick={handleVerificarUbicacion} disabled={geoStatus === 'loading'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 bg-transparent rounded-lg">
+                        {geoStatus === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : <MapPin className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    {geoMessage && (
+                      <p className={`text-xs mt-1 ${geoStatus === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                        {geoMessage}
+                      </p>
+                    )}
+                    {errors.lugar && <p className="text-red-500 text-xs">{errors.lugar.message}</p>}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Género</label>
+                    <select {...register("genero")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]">
+                      <option value="hombre">hombre</option>
+                      <option value="mujer">mujer</option>
+                      <option value="no binario">no binario</option>
+                      <option value="prefiero no decirlo">prefiero no decirlo</option>
+                    </select>
+                    {errors.genero && <p className="text-red-500 text-xs">{errors.genero.message}</p>}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Antigüedad (años)</label>
+                    <select {...register("antiguedad_anos", { valueAsNumber: true })} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]">
+                      <option value={0}>Recién llegado/a (menos de 3 meses)</option>
+                      <option value={0.5}>Menos de 1 año</option>
+                      <option value={1}>1 año</option>
+                      <option value={2}>2 años</option>
+                      <option value={3}>3 años</option>
+                      <option value={4}>4 años</option>
+                      <option value={5}>5 años o más</option>
+                    </select>
+                    {errors.antiguedad_anos && <p className="text-red-500 text-xs">{errors.antiguedad_anos.message}</p>}
+                  </div>
 
-                    return (
-                      <div key={key} className="space-y-1">
-                        <label className="text-sm font-medium text-stone-600">{labelMap[key]}</label>
-                        <input
-                          {...register(key as keyof FichaFormData)}
-                          className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
-                        />
-                        {errors[key as keyof FichaFormData] && (
-                          <p className="text-red-500 text-xs">{errors[key as keyof FichaFormData]?.message}</p>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-sm font-medium text-stone-600">Saberes y recorrido vital</label>
+                    <textarea {...register("saberes")} rows={4} placeholder="Tu formación, experiencias, oficios, proyectos... todo cuenta" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.saberes && <p className="text-red-500 text-xs">{errors.saberes.message}</p>}
+                  </div>
+
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-sm font-medium text-stone-600">Estado de tensión</label>
+                    <textarea {...register("tension")} rows={4} placeholder="¿Qué estás sintiendo hoy en la convivencia?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.tension && <p className="text-red-500 text-xs">{errors.tension.message}</p>}
+                  </div>
+
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-sm font-medium text-stone-600">Participación en Kanarii</label>
+                    <textarea {...register("rol_arteara")} rows={4} placeholder="¿Cómo contribuyes o te gustaría contribuir al proyecto?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.rol_arteara && <p className="text-red-500 text-xs">{errors.rol_arteara.message}</p>}
+                  </div>
                 </div>
 
                 <div className="pt-6 flex justify-end">
@@ -210,11 +293,11 @@ export function FichaPreview() {
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h4>
-                        <p className="text-stone-700">{pendingFicha.fechaNacimiento} a las {pendingFicha.horaNacimiento}</p>
+                        <p className="text-stone-700">{pendingFicha.fechaNacimiento} a las {pendingFicha.hora}</p>
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Lugar</h4>
-                        <p className="text-stone-700">{pendingFicha.lugarNacimiento}</p>
+                        <p className="text-stone-700">{pendingFicha.lugar}</p>
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h4>
@@ -229,8 +312,8 @@ export function FichaPreview() {
                       <h3 className="text-lg font-serif">Ikigai comunitario</h3>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Estudios</h4>
-                      <p className="text-stone-700">{pendingFicha.nivelEstudios}</p>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Recorrido Vital</h4>
+                      <p className="text-stone-700">{pendingFicha.saberes}</p>
                     </div>
                   </div>
 
@@ -246,7 +329,7 @@ export function FichaPreview() {
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>
-                        <p className="text-stone-700">{pendingFicha.antiguedad}</p>
+                        <p className="text-stone-700">{pendingFicha.antiguedad_anos}</p>
                       </div>
                     </div>
                   </div>

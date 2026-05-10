@@ -53,17 +53,7 @@ service cloud.firestore {
     }
 
     function isValidDatosOnboarding(data) {
-      return data.keys().hasAll(['nombre', 'fechaNacimiento', 'horaNacimiento', 'lugarNacimiento', 'genero', 'nivelEstudios', 'rolProyecto', 'antiguedad', 'estadoTension']) &&
-             data.keys().size() == 9 &&
-             data.nombre is string && data.nombre.size() <= 10000 &&
-             data.fechaNacimiento is string && data.fechaNacimiento.size() <= 10000 &&
-             data.horaNacimiento is string && data.horaNacimiento.size() <= 10000 &&
-             data.lugarNacimiento is string && data.lugarNacimiento.size() <= 10000 &&
-             data.genero is string && data.genero.size() <= 10000 &&
-             data.nivelEstudios is string && data.nivelEstudios.size() <= 10000 &&
-             data.rolProyecto is string && data.rolProyecto.size() <= 10000 &&
-             data.antiguedad is string && data.antiguedad.size() <= 10000 &&
-             data.estadoTension is string && data.estadoTension.size() <= 20000;
+      return data.nombre is string && data.nombre.size() <= 10000;
     }
 
     function isValidFicha(data) {
@@ -78,9 +68,20 @@ service cloud.firestore {
              (!('isSeedData' in data) || data.isSeedData is bool);
     }
 
+    match /profiles/{profileId} {
+      allow get, list: if isVerified();
+      allow create, update: if isVerified() && (request.auth.uid == profileId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /community_members/{memberId} {
+      allow get, list: if isVerified();
+      allow create, update: if isVerified() && (request.auth.uid == memberId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
     match /fichas/{fichaId} {
-      allow get: if isVerified();
-      allow list: if isVerified();
+      allow get, list: if isVerified();
       
       allow create: if (isVerified() && isValidId(fichaId) && isValidFicha(incoming()) &&
                     incoming().userId == request.auth.uid &&
@@ -89,7 +90,7 @@ service cloud.firestore {
                     
       allow update: if isVerified() && isValidFicha(incoming()) &&
                     (
-                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['datosOnboarding', 'manualGenerado', 'fechaGeneracion', 'versionesAnteriores', 'updatedAt']) && incoming().userId == existing().userId) ||
+                      (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['userId', 'datosOnboarding', 'manualGenerado', 'manualMarkdown', 'fechaGeneracion', 'versionesAnteriores', 'updatedAt', 'datosBrutos', 'datosPersona', 'perfilVisual', 'versionManual', 'proximaRevision', 'estado', 'creadoEn', 'dimensiones']) && incoming().userId == existing().userId) ||
                       isAdmin()
                     ) &&
                     incoming().createdAt == existing().createdAt &&

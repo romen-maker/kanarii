@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFicha } from '../hooks/useFicha';
-import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2 } from 'lucide-react';
+import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { saveFicha, saveManual, DatosOnboarding } from '../lib/appService';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
+import { geocodeLugar } from '../lib/geocoding';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -16,10 +17,13 @@ const fichaSchema = z.object({
   hora: z.string().min(1, 'Requerido'),
   lugar: z.string().min(1, 'Requerido'),
   genero: z.string().min(1, 'Requerido'),
-  estudios: z.string().min(1, 'Requerido'),
+  saberes: z.string().min(1, 'Requerido'),
   rol_arteara: z.string().min(1, 'Requerido'),
-  antiguedad_anos: z.union([z.string(), z.number()]),
-  tension: z.string().min(1, 'Requerido')
+  antiguedad_anos: z.number(),
+  tension: z.string().min(1, 'Requerido'),
+  latitud: z.number().optional(),
+  longitud: z.number().optional(),
+  timezone: z.string().optional()
 });
 
 type FichaFormData = z.infer<typeof fichaSchema>;
@@ -32,26 +36,46 @@ export function FichaView() {
   const [localFicha, setLocalFicha] = useState(ficha);
   const [isGenerating, setIsGenerating] = useState(false);
   const [fichaEditadaDesdeGeneracion, setFichaEditadaDesdeGeneracion] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [geoMessage, setGeoMessage] = useState('');
   
   function getDatosPersona(ficha: any) {
     return ficha?.datosPersona ?? ficha?.datosOnboarding ?? {};
   }
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
+  const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
     resolver: zodResolver(fichaSchema),
     defaultValues: getDatosPersona(ficha) as any
   });
+
+  const handleVerificarUbicacion = async () => {
+    const lugarStr = getValues("lugar");
+    if (!lugarStr) return;
+    
+    setGeoStatus('loading');
+    setGeoMessage('');
+    try {
+      const geoResult = await geocodeLugar(lugarStr);
+      setValue('latitud', geoResult.latitud);
+      setValue('longitud', geoResult.longitud);
+      setValue('timezone', geoResult.timezone);
+      setValue('lugar', geoResult.lugarNormalizado);
+      setGeoStatus('success');
+      setGeoMessage(`✓ ${geoResult.lugarNormalizado} (${geoResult.latitud}, ${geoResult.longitud})`);
+    } catch (e: any) {
+      setGeoStatus('error');
+      setGeoMessage(e.message || "No se encontró esta ubicación, intenta ser más específico");
+    }
+  };
 
   useEffect(() => {
     if (!loadingFicha && !ficha && !localFicha) {
       navigate('/onboarding');
     } else if (ficha) {
-      if (!localFicha || localFicha.id !== ficha.id) {
-        setLocalFicha(ficha);
-        reset(getDatosPersona(ficha));
-      }
+      setLocalFicha(ficha);
+      reset(getDatosPersona(ficha) as any);
     }
-  }, [ficha, loadingFicha, navigate, reset]);
+  }, [ficha, loadingFicha]);
 
   if (loadingFicha || (!ficha && !localFicha)) return null;
   const displayFicha = localFicha || ficha;
@@ -59,7 +83,7 @@ export function FichaView() {
 
   const onSubmit = async (data: FichaFormData) => {
     if (!appUser || !displayFicha?.id) return;
-    await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id);
+    await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id, true);
     setLocalFicha({ ...displayFicha, datosPersona: data, datosOnboarding: undefined });
     setEditing(false);
     if (displayFicha?.manualGenerado) {
@@ -79,6 +103,8 @@ export function FichaView() {
       setIsGenerating(false);
     }
   };
+
+  const contenidoManual = displayFicha?.manualMarkdown ?? displayFicha?.manualGenerado ?? null;
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
@@ -153,8 +179,8 @@ export function FichaView() {
                     <h3 className="text-lg font-serif">Ikigai comunitario</h3>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Estudios</h4>
-                    <p className="text-stone-700">{datos?.estudios}</p>
+                    <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Recorrido Vital</h4>
+                    <p className="text-stone-700">{datos?.saberes}</p>
                   </div>
                 </div>
 
@@ -207,26 +233,79 @@ export function FichaView() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Object.keys(fichaSchema.shape).map((key) => {
-                  const labelMap: Record<string, string> = {
-                    nombre: 'Nombre', fechaNacimiento: 'Fecha de Nacimiento', horaNacimiento: 'Hora de Nacimiento',
-                    lugar: 'Lugar de Nacimiento', genero: 'Género', estudios: 'Nivel de Estudios',
-                    rol_arteara: 'Rol en Proyecto', antiguedad_anos: 'Antigüedad', tension: 'Estado de Tensión'
-                  };
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-stone-600">Nombre</label>
+                  <input {...register("nombre")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                  {errors.nombre && <p className="text-red-500 text-xs">{errors.nombre.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-stone-600">Fecha de Nacimiento</label>
+                  <input type="date" {...register("fechaNacimiento")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                  {errors.fechaNacimiento && <p className="text-red-500 text-xs">{errors.fechaNacimiento.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-stone-600">Hora de Nacimiento</label>
+                  <input type="time" {...register("hora")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                  {errors.hora && <p className="text-red-500 text-xs">{errors.hora.message}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-stone-600">Lugar de Nacimiento</label>
+                  <div className="relative">
+                    <input type="text" placeholder="Ej: Las Palmas de Gran Canaria, España" {...register("lugar", { onBlur: handleVerificarUbicacion })} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 pr-12 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    <button type="button" onClick={handleVerificarUbicacion} disabled={geoStatus === 'loading'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 bg-transparent rounded-lg">
+                      {geoStatus === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : <MapPin className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {geoMessage && (
+                    <p className={`text-xs mt-1 ${geoStatus === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                      {geoMessage}
+                    </p>
+                  )}
+                  {errors.lugar && <p className="text-red-500 text-xs">{errors.lugar.message}</p>}
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-stone-600">Género</label>
+                  <select {...register("genero")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]">
+                    <option value="hombre">hombre</option>
+                    <option value="mujer">mujer</option>
+                    <option value="no binario">no binario</option>
+                    <option value="prefiero no decirlo">prefiero no decirlo</option>
+                  </select>
+                  {errors.genero && <p className="text-red-500 text-xs">{errors.genero.message}</p>}
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-stone-600">Antigüedad (años)</label>
+                  <select {...register("antiguedad_anos", { valueAsNumber: true })} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]">
+                    <option value={0}>Recién llegado/a (menos de 3 meses)</option>
+                    <option value={0.5}>Menos de 1 año</option>
+                    <option value={1}>1 año</option>
+                    <option value={2}>2 años</option>
+                    <option value={3}>3 años</option>
+                    <option value={4}>4 años</option>
+                    <option value={5}>5 años o más</option>
+                  </select>
+                  {errors.antiguedad_anos && <p className="text-red-500 text-xs">{errors.antiguedad_anos.message}</p>}
+                </div>
 
-                  return (
-                    <div key={key} className="space-y-1">
-                      <label className="text-sm font-medium text-stone-600">{labelMap[key]}</label>
-                      <input
-                        {...register(key as keyof FichaFormData)}
-                        className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
-                      />
-                      {errors[key as keyof FichaFormData] && (
-                        <p className="text-red-500 text-xs">{errors[key as keyof FichaFormData]?.message}</p>
-                      )}
-                    </div>
-                  );
-                })}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-medium text-stone-600">Saberes y recorrido vital</label>
+                  <textarea {...register("saberes")} rows={4} placeholder="Tu formación, experiencias, oficios, proyectos... todo cuenta" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                  {errors.saberes && <p className="text-red-500 text-xs">{errors.saberes.message}</p>}
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-medium text-stone-600">Estado de tensión</label>
+                  <textarea {...register("tension")} rows={4} placeholder="¿Qué estás sintiendo hoy en la convivencia?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                  {errors.tension && <p className="text-red-500 text-xs">{errors.tension.message}</p>}
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-medium text-stone-600">Participación en Kanarii</label>
+                  <textarea {...register("rol_arteara")} rows={4} placeholder="¿Cómo contribuyes o te gustaría contribuir al proyecto?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                  {errors.rol_arteara && <p className="text-red-500 text-xs">{errors.rol_arteara.message}</p>}
+                </div>
               </div>
 
               <div className="pt-6 flex justify-end">
@@ -243,7 +322,7 @@ export function FichaView() {
         </div>
 
         {/* Manual Galáctico Section */}
-        {displayFicha?.manualGenerado ? (
+        {contenidoManual ? (
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
              
@@ -265,7 +344,7 @@ export function FichaView() {
                 )}
              </div>
 
-             <ManualViewer content={displayFicha.manualGenerado || ""} />
+             <ManualViewer content={contenidoManual} />
              
              {displayFicha.fechaGeneracion && (
                 <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">

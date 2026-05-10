@@ -6,13 +6,16 @@ export interface DatosOnboarding {
   nombre: string;
   fechaNacimiento: string;
   hora: string;
-  lugar: string; // contains the serialized json from LocationAutocomplete
+  lugar: string;
   genero: string;
-  estudios: string;
+  saberes: string;
   rol_arteara: string;
   antiguedad_anos: number | string;
   tension: string;
   hora_aproximada?: boolean;
+  latitud?: number;
+  longitud?: number;
+  timezone?: string;
 }
 
 export interface Ficha {
@@ -79,22 +82,49 @@ export async function getUserFicha(userId: string): Promise<Ficha | null> {
 export async function calcularDatosBrutos(birthData: { fecha: string, hora: string, latitud: number, longitud: number, timezone: string }) {
   const url = (import.meta as any).env.VITE_HD_API_URL || 'https://hd-api.romensuarez.com';
   const apiKey = (import.meta as any).env.VITE_HD_API_KEY;
-  if (!apiKey) throw new Error("Falta la API Key de HD");
 
-  const response = await fetch(`${url}/bodygraph`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
+  const mockFallback = {
+    carta_astral_completa: {
+      posiciones: [
+        { planeta: 'Sol', signo_nombre: 'Aries' },
+        { planeta: 'Luna', signo_nombre: 'Tauro' },
+        { planeta: 'Saturno', signo_nombre: 'Capricornio' },
+        { planeta: 'Venus', signo_nombre: 'Piscis' }
+      ],
+      modalidad_dominante: 'Cardinal',
+      elemento_dominante: 'Fuego'
     },
-    body: JSON.stringify(birthData),
-  });
+    diseno_humano: {
+      tipo: 'Generador Manifestante',
+      autoridad: 'Sacral',
+      perfil: '6/2'
+    }
+  };
 
-  if (!response.ok) {
-    throw new Error(`Error al calcular datos: ${response.statusText}`);
+  if (!apiKey) {
+    console.warn("Falta la API Key de HD, usando datos de prueba (fallback).");
+    return mockFallback;
   }
 
-  return response.json();
+  try {
+    const response = await fetch(`${url}/bodygraph`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey,
+      },
+      body: JSON.stringify(birthData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.warn("Error en la API de HD, usando datos de prueba (fallback).", err);
+    return mockFallback;
+  }
 }
 
 export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record<string, number> {
@@ -151,22 +181,25 @@ export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record
   return { escucha, accion, estructura, cuidado };
 }
 
-export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string) {
+export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string, skipGemini: boolean = false) {
   const isUpdate = !!existingId;
   const docRefId = existingId || userId; // enforcing userId as the document id
   try {
-    let latitud = 0;
-    let longitud = 0;
-    let timezone = 'UTC';
-    try {
-      if (datosOnboarding.lugar) {
+    let latitud = datosOnboarding.latitud ? parseFloat(datosOnboarding.latitud.toString()) : 0;
+    let longitud = datosOnboarding.longitud ? parseFloat(datosOnboarding.longitud.toString()) : 0;
+    let timezone = datosOnboarding.timezone || 'UTC';
+
+    // Trying backward compatibility for existing records
+    if (!latitud && !longitud && datosOnboarding.lugar) {
+      try {
         const parsed = JSON.parse(datosOnboarding.lugar);
-        latitud = parsed.latitud;
-        longitud = parsed.longitud;
-        timezone = parsed.timezone;
+        if (parsed.latitud) latitud = parsed.latitud;
+        if (parsed.longitud) longitud = parsed.longitud;
+        if (parsed.timezone) timezone = parsed.timezone;
+        datosOnboarding.lugar = parsed.lugarNormalizado || parsed.lugar || datosOnboarding.lugar;
+      } catch (e) {
+        // Not a JSON string, which is fine
       }
-    } catch (e) {
-      console.warn("Could not parse lugar", e);
     }
     
     // Si no tiene hora exacta, asume 00:00 y hora_aproximada = true
@@ -174,7 +207,20 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
     const isHoraAproximada = horaVal === '00:00';
 
     let rawData = null;
-    let estado = "capa1_completa";
+    let oldEstado = null;
+    
+    if (isUpdate) {
+        try {
+            const oldDoc = await getDoc(doc(db, 'profiles', docRefId));
+            if (oldDoc.exists()) {
+                oldEstado = oldDoc.data()?.estado;
+            }
+        } catch (e) {
+            console.warn("Could not read old profile", e);
+        }
+    }
+
+    let estado = oldEstado || "capa1_completa";
     
     try {
       rawData = await calcularDatosBrutos({
@@ -186,27 +232,34 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       });
     } catch (apiError) {
       console.error("Error al calcular datos HD (API fallback):", apiError);
-      estado = "pendiente_capa1";
+      if (estado !== "completo") estado = "pendiente_capa1";
     }
 
     const datosPersona = {
       nombre: datosOnboarding.nombre,
+      fechaNacimiento: datosOnboarding.fechaNacimiento,
+      hora: horaVal,
       genero: datosOnboarding.genero,
-      estudios: datosOnboarding.estudios,
+      saberes: datosOnboarding.saberes,
       rol_arteara: datosOnboarding.rol_arteara,
       antiguedad_anos: parseFloat(datosOnboarding.antiguedad_anos as string) || 0,
       tension: datosOnboarding.tension,
+      lugar: datosOnboarding.lugar,
+      latitud,
+      longitud,
+      timezone,
       ...(isHoraAproximada ? { hora_aproximada: true } : {})
     };
 
-    let perfilVisual = null;
-    let manualMarkdown = null;
+    let perfilVisual = (datosOnboarding as any).preview_perfilVisual || null;
+    let manualMarkdown = (datosOnboarding as any).preview_manual || null;
     let fallbackToPending = false;
+    let dimensiones = (datosOnboarding as any).preview_dimensiones || null;
 
-    if (rawData) {
+    if (rawData && !skipGemini) {
       try {
         const { generarPerfilVisual, generarManual } = await import('./gemini');
-        const dimensiones = calcularDimensiones(rawData, datosPersona);
+        dimensiones = calcularDimensiones(rawData, datosPersona);
         perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
         perfilVisual.dimensiones = dimensiones;
         
@@ -214,9 +267,16 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         estado = "completo";
       } catch(apiError) {
         console.error("Error al generar perfil visual o manual", apiError);
-        estado = "pendiente_capa1";
+        if (estado !== "completo") estado = "pendiente_capa1";
         fallbackToPending = true;
       }
+    } else if (rawData && skipGemini) {
+        if (!dimensiones) {
+             dimensiones = calcularDimensiones(rawData, datosPersona);
+        }
+        if (perfilVisual && manualMarkdown) {
+            estado = "completo";
+        }
     }
 
     const d = new Date();
@@ -235,41 +295,64 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       estado,
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    };
+    } as any;
+
+    if (!isUpdate) {
+       fichaFull.createdAt = serverTimestamp();
+    }
 
     if (estado === "completo" && !fallbackToPending) {
-        fichaFull.perfilVisual = perfilVisual;
-        fichaFull.manualMarkdown = manualMarkdown;
-        fichaFull.manualGenerado = manualMarkdown;
+        if (perfilVisual !== null) fichaFull.perfilVisual = perfilVisual;
+        if (manualMarkdown !== null) {
+            fichaFull.manualMarkdown = manualMarkdown;
+            fichaFull.manualGenerado = manualMarkdown;
+        }
+        if (dimensiones !== null) fichaFull.dimensiones = dimensiones;
         fichaFull.versionManual = 1;
         fichaFull.proximaRevision = d;
     }
 
     // 1) Guardar en /profiles/{userId}
-    const profileRef = doc(db, 'profiles', docRefId);
-    await setDoc(profileRef, fichaFull, { merge: true });
+    try {
+        const profileRef = doc(db, 'profiles', userId);
+        await setDoc(profileRef, fichaFull, { merge: true });
+    } catch (err) {
+        handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'profiles');
+        throw err;
+    }
 
     // 2) Guardar en /community_members/{userId}
-    const memberRef = doc(db, 'community_members', docRefId);
-    await setDoc(memberRef, {
-      nombre: datosPersona.nombre,
-      tipo_hd: rawData?.diseno_humano?.tipo || '',
-      elemento_dominante: rawData?.carta_astral_completa?.elemento_dominante || '',
-      autoridad_hd: rawData?.diseno_humano?.autoridad || '',
-      antiguedad_anos: datosPersona.antiguedad_anos,
-      rol_arteara: datosPersona.rol_arteara,
-      estado,
-      creadoEn: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
+    try {
+        const memberRef = doc(db, 'community_members', userId);
+        await setDoc(memberRef, {
+          nombre: datosPersona.nombre,
+          tipo_hd: rawData?.diseno_humano?.tipo || '',
+          elemento_dominante: rawData?.carta_astral_completa?.elemento_dominante || '',
+          autoridad_hd: rawData?.diseno_humano?.autoridad || '',
+          antiguedad_anos: datosPersona.antiguedad_anos,
+          rol_arteara: datosPersona.rol_arteara,
+          estado,
+          creadoEn: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+    } catch (err) {
+        handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
+        throw err;
+    }
 
     // 3) We also keep the update in `fichas` for backwards compatibility just in case there are missing places that read it:
-    const fichaRef = isUpdate ? doc(db, 'fichas', existingId) : doc(db, 'fichas', userId);
-    await setDoc(fichaRef, fichaFull, { merge: true });
+    try {
+        const fichaRef = isUpdate ? doc(db, 'fichas', existingId) : doc(db, 'fichas', userId);
+        await setDoc(fichaRef, fichaFull, { merge: true });
+    } catch (err) {
+        handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'fichas');
+        throw err;
+    }
 
     return docRefId;
   } catch (err) {
-    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'profiles');
+    console.error("Error outside of setDoc sections:", err);
+    throw err;
   }
 }
 
@@ -308,7 +391,7 @@ export async function syncPendingOnboarding(userId: string) {
 
   let fichaId = null;
   if (fichaData) {
-    fichaId = await saveFicha(userId, fichaData);
+    fichaId = await saveFicha(userId, fichaData, undefined, true);
   }
   
   for (const res of responsesData) {

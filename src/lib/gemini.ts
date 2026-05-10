@@ -19,6 +19,7 @@ export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, d
    }
    
    Datos del usuario:
+   (Nota: "saberes" se refiere a los saberes, formación y recorrido vital de la persona)
    ${JSON.stringify({datosBrutos, datosPersona, dimensiones}, null, 2)}
    `;
 
