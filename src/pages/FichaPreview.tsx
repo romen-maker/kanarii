@@ -2,8 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Fingerprint, Sparkles, Users, HeartPulse, Leaf, Loader2, Edit2, Check, X } from 'lucide-react';
-import { syncPendingOnboarding, saveManual } from '../lib/appService';
-import { generateUserManual } from '../lib/gemini';
+import { syncPendingOnboarding, saveManual, calcularDatosBrutos, calcularDimensiones } from '../lib/appService';
+import { generarPerfilVisual, generarManual } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,11 +51,35 @@ export function FichaPreview() {
   const handleGenerateManual = async () => {
     setIsGenerating(true);
     try {
-      const manualText = await generateUserManual(pendingFicha);
+      let latitud = 0; let longitud = 0; let timezone = 'UTC';
+      if (pendingFicha.lugar) {
+        try {
+          const parsed = JSON.parse(pendingFicha.lugar);
+          latitud = parsed.latitud; longitud = parsed.longitud; timezone = parsed.timezone;
+        } catch (e) {}
+      }
+      const horaVal = !pendingFicha.hora || pendingFicha.hora.trim() === '00:00' ? '00:00' : pendingFicha.hora;
+      
+      const rawData = await calcularDatosBrutos({
+        fecha: pendingFicha.fechaNacimiento,
+        hora: horaVal,
+        latitud, longitud, timezone
+      });
+      const datosPersona = { ...pendingFicha, hora: horaVal };
+      const dimensiones = calcularDimensiones(rawData, datosPersona);
+      const perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
+      const manualText = await generarManual(rawData, datosPersona, perfilVisual);
+
+      // Save previewed state locally so sync doesn't have to re-fetch if we decide to
+      const updatedFicha = { ...pendingFicha, preview_perfilVisual: perfilVisual, preview_manual: manualText };
+      setPendingFicha(updatedFicha);
+      localStorage.setItem('kanarii_pendingFicha', JSON.stringify(updatedFicha));
+
       setGeneratedManual(manualText);
       setEstadoVista('manual');
     } catch (e) {
       console.error("Failed to generate manual", e);
+      alert("Hubo un error al generar tu perfil. ¡Inténtalo más tarde o guarda tus datos sin generarlo ahora!");
     } finally {
       setIsGenerating(false);
     }

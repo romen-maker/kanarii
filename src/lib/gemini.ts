@@ -2,47 +2,66 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-export async function generateUserManual(userData: Record<string, any>): Promise<string> {
-  const prompt = `
-Eres el "Facilitador Galáctico de Arteara". Tu función es ser un consultor experto que fusiona la Astrología Psicológica y el Diseño Humano con herramientas operativas de Sociocracia 3.0, Trabajo de Procesos (Arnold Mindell) y Comunicación No Violenta (CNV). Tu objetivo es transformar la identidad astral en un Manual de Usuario Humano que blinde a la comunidad Arteara contra patrones inconscientes y el patriarcado.
+export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any): Promise<any> {
+    const prompt = `
+   Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.
+   Responde SOLO con JSON válido, sin markdown ni backticks ni texto extra.
+   Schema de salida:
+   {
+     "arquetipo": "string (2-4 palabras evocadoras)",
+     "descripcion_arquetipo": "string (1 frase, contexto comunitario)",
+     "fortalezas": ["string (3 fortalezas concretas para Arteara)"],
+     "sombras": ["string (2 patrones inconscientes basados en la carta)"],
+     "aportaComunidad": ["string (2-3 dones concretos para la finca)"],
+     "necesitaComunidad": ["string (2-3 necesidades innegociables)"],
+     "rol_sociocratico": "Coordinador" | "Secretario" | "Facilitador",
+     "justificacion_rol": "string (1 frase basada en Mercurio y Saturno)"
+   }
+   
+   Datos del usuario:
+   ${JSON.stringify({datosBrutos, datosPersona, dimensiones}, null, 2)}
+   `;
 
-Tienes todos los datos necesarios del miembro. Genera el manual completo con este formato:
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+  });
 
-🌀 MANUAL DE USUARIO: ${userData.nombre}
+  if (!response.text) throw new Error('No response from Gemini');
 
-1. 🎯 ADN Astral e Ikigai Comunitario
-✨ Esencia: Traduce Sol/Luna/Ascendente a comportamientos en la finca.
-🌱 Tu Ikigai en Arteara: Talentos específicos (ej. bioconstrucción, huerta, cuidados).
-⚙️ Rol Sociocrático Ideal: ¿Coordinador, Secretario o Facilitador? Justifica según su estilo de comunicación (Mercurio) y capacidad de sostener estructura (Saturno).
+  try {
+      const match = response.text.match(/\{[\s\S]*\}/);
+      if (match) {
+        return JSON.parse(match[0]);
+      }
+      return JSON.parse(response.text);
+  } catch(e) {
+      console.error("Error parsing AI response", response.text);
+      throw e;
+  }
+}
 
-2. ⚖️ Anatomía del Poder (Democracia Profunda)
-🌍 Tus 4 Tipos de Rango: Social (privilegios), Psicológico (resiliencia), Contextual (papel en Arteara) y Espiritual (conexión con el propósito).
-💪 Uso del "Poder-con": Instrucciones para usar el rango para empoderar, no para dominar.
+export async function generarManual(datosBrutos: any, datosPersona: any, perfilVisual: any): Promise<string> {
+   const d = new Date();
+   d.setMonth(d.getMonth() + 6);
+   const formattedDate = d.toLocaleDateString();
+   
+   const prompt = `Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.
+Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de Arteara.
 
-3. 🌓 El Espejo de la Tribu (Sombra y Procesos)
-☀️ Proceso Primario: Con qué se identifica y qué muestra a la tribu.
-🌑 Proceso Secundario (Sombra): Rasgos que rechaza y proyecta en otros.
-🪞 Retirada de Proyecciones: Qué comportamientos le "disparan" y qué sombra debe integrar.
+   1. ADN Astral e Ikigai Comunitario
+   2. Anatomía del Poder (Democracia Profunda) — con los 4 tipos de rango: Social, Psicológico, Contextual, Espiritual
+   3. El Espejo de la Tribu (Sombra y Procesos)
+   4. Sintonía y Comunicación (CNV)
+   5. Guía de Mantenimiento y Crisis — con instrucciones "Si me ves X, haz Y"
 
-4. 🗣️ Sintonía y Comunicación (CNV)
-💎 Necesidades Innegociables.
-⚠️ Señales y Dobles Señales: cuando su cuerpo dice "no" pero su boca dice "sí".
-💬 Protocolo de Feedback: cómo darle una objeción sociocrática como un regalo.
+   Al final del manual añade exactamente y literalmente: "*Revisión recomendada: ${formattedDate}*"
 
-5. 🛠️ Guía de Mantenimiento y Crisis
-🧨 Puntos Calientes: situaciones que le hacen entrar en conflicto.
-🆘 Instrucciones de Emergencia: "Si me ves X, por favor haz Y".
-📜 Acuerdo Vivo: este manual es suficientemente bueno por ahora y debe revisarse en 6 meses.
-
-Datos del miembro:
-Nombre: ${userData.nombre}
-Fecha, hora y lugar de nacimiento: ${userData.fechaNacimiento}, ${userData.hora}, ${userData.lugar}
-Género: ${userData.genero}
-Saberes y estudios: ${userData.estudios}
-Rol en el proyecto: ${userData.rol_arteara}
-Antigüedad: ${userData.antiguedad_anos}
-Estado de tensión actual: ${userData.tension}
-`;
+   Datos del miembro:
+   Perfil Visual/Arquetipo/Sombras: ${JSON.stringify(perfilVisual, null, 2)}
+   Datos Persona: ${JSON.stringify(datosPersona, null, 2)}
+   Datos Brutos (diseño humano y astrología): ${JSON.stringify(datosBrutos, null, 2)}
+   `;
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',

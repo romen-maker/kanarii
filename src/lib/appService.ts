@@ -95,6 +95,60 @@ export async function calcularDatosBrutos(birthData: { fecha: string, hora: stri
   return response.json();
 }
 
+export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record<string, number> {
+  let escucha = 0;
+  let accion = 0;
+  let estructura = 0;
+  let cuidado = 0;
+
+  if (!datosBrutos) return { escucha: 0, accion: 0, estructura: 0, cuidado: 0 };
+
+  const lunaSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Moon' || p.planeta === 'Luna')?.signo_nombre || '';
+  const solSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Sun' || p.planeta === 'Sol')?.signo_nombre || '';
+  const saturnoSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Saturn' || p.planeta === 'Saturno')?.signo_nombre || '';
+  const venusSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Venus')?.signo_nombre || '';
+  
+  const fuego = ['Aries', 'Leo', 'Sagitario', 'Sagittarius'];
+  const tierra = ['Tauro', 'Taurus', 'Virgo', 'Capricornio', 'Capricorn'];
+  const aire = ['Géminis', 'Gemini', 'Libra', 'Acuario', 'Aquarius']; 
+  const agua = ['Cáncer', 'Cancer', 'Escorpio', 'Scorpio', 'Piscis', 'Pisces'];
+
+  const isFuego = (s: string) => fuego.includes(s);
+  const isTierra = (s: string) => tierra.includes(s);
+  const isAgua = (s: string) => agua.includes(s);
+
+  const tipo = datosBrutos.diseno_humano?.tipo || '';
+  const autoridad = datosBrutos.diseno_humano?.autoridad || '';
+  const perfil = datosBrutos.diseno_humano?.perfil || '';
+  const modalidad = datosBrutos.carta_astral_completa?.modalidad_dominante || '';
+
+  // ESCUCHA (max 100):
+  if (isAgua(lunaSigno) || isTierra(lunaSigno)) escucha += 30;
+  if (autoridad.toLowerCase().includes('emocional') || autoridad.toLowerCase().includes('esplénica') || autoridad.toLowerCase().includes('esplenica') || autoridad.toLowerCase().includes('splenic')) escucha += 30;
+  if (tipo.toLowerCase().includes('proyector') || tipo.toLowerCase().includes('reflector') || tipo.toLowerCase().includes('projector')) escucha += 25;
+  if (perfil.includes('2') || perfil.includes('6')) escucha += 15;
+
+  // ACCIÓN (max 100):
+  if (isFuego(solSigno)) accion += 30;
+  if (tipo.toLowerCase().includes('generador') || tipo.toLowerCase().includes('manifestador') || tipo.toLowerCase().includes('generator') || tipo.toLowerCase().includes('manifestor')) accion += 30;
+  if (autoridad.toLowerCase().includes('sacral')) accion += 25;
+  if (modalidad.toLowerCase().includes('cardinal')) accion += 15;
+
+  // ESTRUCTURA (max 100):
+  if (isTierra(saturnoSigno)) estructura += 30;
+  if (perfil.startsWith('1') || perfil.includes('/4')) estructura += 30;
+  if (modalidad.toLowerCase().includes('fija') || modalidad.toLowerCase().includes('fixed')) estructura += 25;
+  if (datosPersona?.antiguedad_anos && parseFloat(datosPersona.antiguedad_anos) >= 2) estructura += 15;
+
+  // CUIDADO (max 100):
+  if (isAgua(lunaSigno)) cuidado += 30;
+  if (isAgua(venusSigno) || isTierra(venusSigno)) cuidado += 25;
+  if (perfil.includes('2/4') || perfil.includes('6/2') || perfil.includes('4/6')) cuidado += 25; 
+  if (datosPersona?.rol_arteara && datosPersona.rol_arteara.toLowerCase().includes('cuidad')) cuidado += 20;
+
+  return { escucha, accion, estructura, cuidado };
+}
+
 export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string) {
   const isUpdate = !!existingId;
   const docRefId = existingId || userId; // enforcing userId as the document id
@@ -143,7 +197,30 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       ...(isHoraAproximada ? { hora_aproximada: true } : {})
     };
 
-    const fichaFull = {
+    let perfilVisual = null;
+    let manualMarkdown = null;
+    let fallbackToPending = false;
+
+    if (rawData) {
+      try {
+        const { generarPerfilVisual, generarManual } = await import('./gemini');
+        const dimensiones = calcularDimensiones(rawData, datosPersona);
+        perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
+        perfilVisual.dimensiones = dimensiones;
+        
+        manualMarkdown = await generarManual(rawData, datosPersona, perfilVisual);
+        estado = "completo";
+      } catch(apiError) {
+        console.error("Error al generar perfil visual o manual", apiError);
+        estado = "pendiente_capa1";
+        fallbackToPending = true;
+      }
+    }
+
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+
+    const fichaFull: any = {
       userId,
       datosBrutos: rawData || null,
       datosPersona,
@@ -157,6 +234,14 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
+
+    if (estado === "completo" && !fallbackToPending) {
+        fichaFull.perfilVisual = perfilVisual;
+        fichaFull.manualMarkdown = manualMarkdown;
+        fichaFull.manualGenerado = manualMarkdown;
+        fichaFull.versionManual = 1;
+        fichaFull.proximaRevision = d;
+    }
 
     // 1) Guardar en /profiles/{userId}
     const profileRef = doc(db, 'profiles', docRefId);

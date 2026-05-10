@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { saveFicha, saveManual, DatosOnboarding } from '../lib/appService';
-import { generateUserManual } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
 
@@ -66,10 +65,8 @@ export function FichaView() {
     if (!appUser || !displayFicha?.id || !datos) return;
     setIsGenerating(true);
     try {
-      const manualText = await generateUserManual(datos);
-      await saveManual(appUser.uid, manualText, displayFicha.id);
-      setLocalFicha(prev => prev ? { ...prev, manualGenerado: manualText, fechaGeneracion: new Date() } : prev);
-      setFichaEditadaDesdeGeneracion(false);
+      await saveFicha(appUser.uid, datos as any, displayFicha.id);
+      window.location.reload(); // Simple way to reload the updated ficha
     } catch (e) {
       console.error("Failed to generate manual:", e);
     } finally {
