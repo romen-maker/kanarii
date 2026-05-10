@@ -28,6 +28,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.15.0",
     "tailwind-merge": "^3.5.0",
+    "tz-lookup": "^6.1.25",
+    "tzlookup": "^1.4.0",
     "vite": "^6.2.3",
     "zod": "^4.4.3"
   },

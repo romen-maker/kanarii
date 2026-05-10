@@ -13,13 +13,13 @@ import { ManualViewer } from '../components/ManualViewer';
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
   fechaNacimiento: z.string().min(1, 'Requerido'),
-  horaNacimiento: z.string().min(1, 'Requerido'),
-  lugarNacimiento: z.string().min(1, 'Requerido'),
+  hora: z.string().min(1, 'Requerido'),
+  lugar: z.string().min(1, 'Requerido'),
   genero: z.string().min(1, 'Requerido'),
-  nivelEstudios: z.string().min(1, 'Requerido'),
-  rolProyecto: z.string().min(1, 'Requerido'),
-  antiguedad: z.string().min(1, 'Requerido'),
-  estadoTension: z.string().min(1, 'Requerido')
+  estudios: z.string().min(1, 'Requerido'),
+  rol_arteara: z.string().min(1, 'Requerido'),
+  antiguedad_anos: z.string().min(1, 'Requerido'),
+  tension: z.string().min(1, 'Requerido')
 });
 
 type FichaFormData = z.infer<typeof fichaSchema>;
@@ -130,9 +130,9 @@ export function FichaPreview() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.keys(fichaSchema.shape).map((key) => {
                     const labelMap: Record<string, string> = {
-                      nombre: 'Nombre', fechaNacimiento: 'Fecha de Nacimiento', horaNacimiento: 'Hora de Nacimiento',
-                      lugarNacimiento: 'Lugar de Nacimiento', genero: 'Género', nivelEstudios: 'Nivel de Estudios',
-                      rolProyecto: 'Rol en Proyecto', antiguedad: 'Antigüedad', estadoTension: 'Estado de Tensión'
+                      nombre: 'Nombre', fechaNacimiento: 'Fecha de Nacimiento', hora: 'Hora de Nacimiento',
+                      lugar: 'Lugar de Nacimiento', genero: 'Género', estudios: 'Nivel de Estudios',
+                      rol_arteara: 'Rol en Proyecto', antiguedad_anos: 'Antigüedad', tension: 'Estado de Tensión'
                     };
 
                     return (
@@ -218,7 +218,7 @@ export function FichaPreview() {
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Participación en Kanarii</h4>
-                        <p className="text-stone-700">{pendingFicha.rolProyecto}</p>
+                        <p className="text-stone-700">{pendingFicha.rol_arteara}</p>
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>
@@ -233,7 +233,7 @@ export function FichaPreview() {
                       <h3 className="text-lg font-serif">Estado de tensión y cuidado</h3>
                     </div>
                     <div className="bg-[#F9F7F1] p-5 rounded-2xl border border-[#EAE2D6]">
-                      <p className="text-stone-700 italic text-lg leading-relaxed">{pendingFicha.estadoTension}</p>
+                      <p className="text-stone-700 italic text-lg leading-relaxed">{pendingFicha.tension}</p>
                     </div>
                   </div>
                 </div>

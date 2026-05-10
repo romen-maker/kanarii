@@ -36,12 +36,12 @@ Tienes todos los datos necesarios del miembro. Genera el manual completo con est
 
 Datos del miembro:
 Nombre: ${userData.nombre}
-Fecha, hora y lugar de nacimiento: ${userData.fechaNacimiento}, ${userData.horaNacimiento}, ${userData.lugarNacimiento}
+Fecha, hora y lugar de nacimiento: ${userData.fechaNacimiento}, ${userData.hora}, ${userData.lugar}
 Género: ${userData.genero}
-Saberes y estudios: ${userData.nivelEstudios}
-Rol en el proyecto: ${userData.rolProyecto}
-Antigüedad: ${userData.antiguedad}
-Estado de tensión actual: ${userData.estadoTension}
+Saberes y estudios: ${userData.estudios}
+Rol en el proyecto: ${userData.rol_arteara}
+Antigüedad: ${userData.antiguedad_anos}
+Estado de tensión actual: ${userData.tension}
 `;
 
   const response = await ai.models.generateContent({

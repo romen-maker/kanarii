@@ -5,13 +5,14 @@ import { handleFirestoreError, OperationType } from './error-handler';
 export interface DatosOnboarding {
   nombre: string;
   fechaNacimiento: string;
-  horaNacimiento: string;
-  lugarNacimiento: string;
+  hora: string;
+  lugar: string; // contains the serialized json from LocationAutocomplete
   genero: string;
-  nivelEstudios: string;
-  rolProyecto: string;
-  antiguedad: string;
-  estadoTension: string;
+  estudios: string;
+  rol_arteara: string;
+  antiguedad_anos: number | string;
+  tension: string;
+  hora_aproximada?: boolean;
 }
 
 export interface Ficha {
@@ -24,6 +25,9 @@ export interface Ficha {
   isSeedData?: boolean;
   createdAt?: any;
   updatedAt?: any;
+  estado?: string;
+  datosBrutos?: any;
+  datosPersona?: any;
 }
 
 export interface Tarea {
@@ -70,36 +74,115 @@ export async function getUserFicha(userId: string): Promise<Ficha | null> {
   }
 }
 
+export async function calcularDatosBrutos(birthData: { fecha: string, hora: string, latitud: number, longitud: number, timezone: string }) {
+  const url = (import.meta as any).env.VITE_HD_API_URL || 'https://hd-api.romensuarez.com';
+  const apiKey = (import.meta as any).env.VITE_HD_API_KEY;
+  if (!apiKey) throw new Error("Falta la API Key de HD");
+
+  const response = await fetch(`${url}/bodygraph`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+    },
+    body: JSON.stringify(birthData),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error al calcular datos: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string) {
   const isUpdate = !!existingId;
+  const docRefId = existingId || userId; // enforcing userId as the document id
   try {
-    const docRef = isUpdate ? doc(db, 'fichas', existingId) : doc(collection(db, 'fichas'));
-    
-    if (isUpdate) {
-      // Create version of CURRENT state before updating
-      const oldDoc = await getDoc(docRef);
-      if (oldDoc.exists()) {
-        const versionRef = doc(collection(db, 'fichaVersions'));
-        await setDoc(versionRef, {
-          fichaId: existingId,
-          userId,
-          data: oldDoc.data(),
-          createdAt: serverTimestamp()
-        });
+    let latitud = 0;
+    let longitud = 0;
+    let timezone = 'UTC';
+    try {
+      if (datosOnboarding.lugar) {
+        const parsed = JSON.parse(datosOnboarding.lugar);
+        latitud = parsed.latitud;
+        longitud = parsed.longitud;
+        timezone = parsed.timezone;
       }
-      await updateDoc(docRef, { datosOnboarding, updatedAt: serverTimestamp() });
-    } else {
-      const completeData: Ficha = {
-        userId,
-        datosOnboarding,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      await setDoc(docRef, completeData);
+    } catch (e) {
+      console.warn("Could not parse lugar", e);
     }
-    return docRef.id;
+    
+    // Si no tiene hora exacta, asume 00:00 y hora_aproximada = true
+    const horaVal = !datosOnboarding.hora || datosOnboarding.hora.trim() === '00:00' ? '00:00' : datosOnboarding.hora;
+    const isHoraAproximada = horaVal === '00:00';
+
+    let rawData = null;
+    let estado = "capa1_completa";
+    
+    try {
+      rawData = await calcularDatosBrutos({
+        fecha: datosOnboarding.fechaNacimiento,
+        hora: horaVal,
+        latitud,
+        longitud,
+        timezone
+      });
+    } catch (apiError) {
+      console.error("Error al calcular datos HD (API fallback):", apiError);
+      estado = "pendiente_capa1";
+    }
+
+    const datosPersona = {
+      nombre: datosOnboarding.nombre,
+      genero: datosOnboarding.genero,
+      estudios: datosOnboarding.estudios,
+      rol_arteara: datosOnboarding.rol_arteara,
+      antiguedad_anos: parseFloat(datosOnboarding.antiguedad_anos as string) || 0,
+      tension: datosOnboarding.tension,
+      ...(isHoraAproximada ? { hora_aproximada: true } : {})
+    };
+
+    const fichaFull = {
+      userId,
+      datosBrutos: rawData || null,
+      datosPersona,
+      // Keeping original for backward compatibility
+      datosOnboarding: {
+        ...datosOnboarding,
+        hora: horaVal,
+        hora_aproximada: isHoraAproximada
+      },
+      estado,
+      creadoEn: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    // 1) Guardar en /profiles/{userId}
+    const profileRef = doc(db, 'profiles', docRefId);
+    await setDoc(profileRef, fichaFull, { merge: true });
+
+    // 2) Guardar en /community_members/{userId}
+    const memberRef = doc(db, 'community_members', docRefId);
+    await setDoc(memberRef, {
+      nombre: datosPersona.nombre,
+      tipo_hd: rawData?.diseno_humano?.tipo || '',
+      elemento_dominante: rawData?.carta_astral_completa?.elemento_dominante || '',
+      autoridad_hd: rawData?.diseno_humano?.autoridad || '',
+      antiguedad_anos: datosPersona.antiguedad_anos,
+      rol_arteara: datosPersona.rol_arteara,
+      estado,
+      creadoEn: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
+    // 3) We also keep the update in `fichas` for backwards compatibility just in case there are missing places that read it:
+    const fichaRef = isUpdate ? doc(db, 'fichas', existingId) : doc(db, 'fichas', userId);
+    await setDoc(fichaRef, fichaFull, { merge: true });
+
+    return docRefId;
   } catch (err) {
-    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'fichas');
+    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'profiles');
   }
 }
 

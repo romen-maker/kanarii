@@ -6,7 +6,7 @@ import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, Histor
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha, saveManual } from '../lib/appService';
+import { saveFicha, saveManual, DatosOnboarding } from '../lib/appService';
 import { generateUserManual } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
@@ -14,13 +14,13 @@ import { ManualViewer } from '../components/ManualViewer';
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
   fechaNacimiento: z.string().min(1, 'Requerido'),
-  horaNacimiento: z.string().min(1, 'Requerido'),
-  lugarNacimiento: z.string().min(1, 'Requerido'),
+  hora: z.string().min(1, 'Requerido'),
+  lugar: z.string().min(1, 'Requerido'),
   genero: z.string().min(1, 'Requerido'),
-  nivelEstudios: z.string().min(1, 'Requerido'),
-  rolProyecto: z.string().min(1, 'Requerido'),
-  antiguedad: z.string().min(1, 'Requerido'),
-  estadoTension: z.string().min(1, 'Requerido')
+  estudios: z.string().min(1, 'Requerido'),
+  rol_arteara: z.string().min(1, 'Requerido'),
+  antiguedad_anos: z.union([z.string(), z.number()]),
+  tension: z.string().min(1, 'Requerido')
 });
 
 type FichaFormData = z.infer<typeof fichaSchema>;
@@ -36,7 +36,7 @@ export function FichaView() {
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
     resolver: zodResolver(fichaSchema),
-    defaultValues: ficha?.datosOnboarding || {}
+    defaultValues: (ficha?.datosOnboarding as any) || {}
   });
 
   useEffect(() => {
@@ -54,8 +54,8 @@ export function FichaView() {
 
   const onSubmit = async (data: FichaFormData) => {
     if (!appUser || !displayFicha?.id) return;
-    await saveFicha(appUser.uid, data, displayFicha.id);
-    setLocalFicha({ ...displayFicha, datosOnboarding: data });
+    await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id);
+    setLocalFicha({ ...displayFicha, datosOnboarding: data as DatosOnboarding });
     setEditing(false);
     if (displayFicha?.manualGenerado) {
       setFichaEditadaDesdeGeneracion(true);
@@ -130,11 +130,11 @@ export function FichaView() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h4>
-                      <p className="text-stone-700">{datos?.fechaNacimiento} a las {datos?.horaNacimiento}</p>
+                      <p className="text-stone-700">{datos?.fechaNacimiento} a las {datos?.hora}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Lugar</h4>
-                      <p className="text-stone-700">{datos?.lugarNacimiento}</p>
+                      <p className="text-stone-700">{datos?.lugar}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h4>
@@ -151,7 +151,7 @@ export function FichaView() {
                   </div>
                   <div>
                     <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Estudios</h4>
-                    <p className="text-stone-700">{datos?.nivelEstudios}</p>
+                    <p className="text-stone-700">{datos?.estudios}</p>
                   </div>
                 </div>
 
@@ -164,11 +164,11 @@ export function FichaView() {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Participación en Kanarii</h4>
-                      <p className="text-stone-700">{datos?.rolProyecto}</p>
+                      <p className="text-stone-700">{datos?.rol_arteara}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>
-                      <p className="text-stone-700">{datos?.antiguedad}</p>
+                      <p className="text-stone-700">{datos?.antiguedad_anos}</p>
                     </div>
                   </div>
                 </div>
@@ -180,7 +180,7 @@ export function FichaView() {
                     <h3 className="text-lg font-serif">Estado de tensión y cuidado</h3>
                   </div>
                   <div className="bg-[#F9F7F1] p-5 rounded-2xl border border-[#EAE2D6]">
-                    <p className="text-stone-700 italic text-lg leading-relaxed">{datos?.estadoTension}</p>
+                    <p className="text-stone-700 italic text-lg leading-relaxed">{datos?.tension}</p>
                   </div>
                 </div>
 
@@ -207,8 +207,8 @@ export function FichaView() {
                 {Object.keys(fichaSchema.shape).map((key) => {
                   const labelMap: Record<string, string> = {
                     nombre: 'Nombre', fechaNacimiento: 'Fecha de Nacimiento', horaNacimiento: 'Hora de Nacimiento',
-                    lugarNacimiento: 'Lugar de Nacimiento', genero: 'Género', nivelEstudios: 'Nivel de Estudios',
-                    rolProyecto: 'Rol en Proyecto', antiguedad: 'Antigüedad', estadoTension: 'Estado de Tensión'
+                    lugar: 'Lugar de Nacimiento', genero: 'Género', estudios: 'Nivel de Estudios',
+                    rol_arteara: 'Rol en Proyecto', antiguedad_anos: 'Antigüedad', tension: 'Estado de Tensión'
                   };
 
                   return (

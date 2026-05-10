@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Send, User as UserIcon, Leaf, ArrowLeft, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
+import { LocationAutocomplete } from '../components/LocationAutocomplete';
 
 interface Message {
   id: string;
@@ -12,14 +13,43 @@ interface Message {
 
 const STEPS = [
   { key: 'nombre', q: '¡Bienvenida, bienvenido a esta linda tribu! Qué alegría sentir tu energía aquí. Para empezar a tejer nuestra red, ¿cómo te llamas o cómo sientes que te llamemos?' },
-  { key: 'fechaNacimiento', q: 'Tanemmirt (gracias). Para conectar con nuestros ciclos vitales y entender tu momento en esta experiencia, ¿cuál es tu fecha de nacimiento? (ej: 14/05/1990)' },
-  { key: 'horaNacimiento', q: 'El instante en que llegaste tiene su propia magia. ¿Conoces la hora, aunque sea aproximada, en la que naciste?' },
-  { key: 'lugarNacimiento', q: 'Nuestras raíces nos conectan con la tierra. ¿En qué rincón del mundo, ciudad o región naciste?' },
-  { key: 'genero', q: 'En esta búsqueda de equilibrio entre nuestras energías femeninas y masculinas, ¿con qué género te identificas y habitas el mundo?' },
-  { key: 'nivelEstudios', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido de estudios que te acompañan hoy?' },
-  { key: 'rolProyecto', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?' },
-  { key: 'antiguedad', q: 'El tiempo caminando juntos fortalece nuestros cimientos. ¿Desde cuándo formas parte de la comunidad o sientes tu vinculación a esta red?' },
-  { key: 'estadoTension', q: 'Por último, para poder cuidarnos y sostenernos desde el respeto: ¿cómo describirías tu estado interno actual, tu paz o tu nivel de tensión en la convivencia de la tribu?' }
+  { key: 'fechaNacimiento', q: 'Tanemmirt (gracias). Para conectar con nuestros ciclos vitales y entender tu momento en esta experiencia, ¿cuál es tu fecha de nacimiento? (ej: 1990-05-14)' },
+  { key: 'hora', q: 'El instante en que llegaste tiene su propia magia. ¿Conoces la hora, aunque sea aproximada, en la que naciste? Si no la sabes, escribe 00:00. Puedes buscarla en tu partida de nacimiento. (ej: 14:30)' },
+  { key: 'lugar', q: 'Nuestras raíces nos conectan con la tierra. ¿En qué rincón del mundo, ciudad o región naciste?' },
+  { key: 'genero', q: 'En esta búsqueda de equilibrio entre nuestras energías femeninas y masculinas, ¿con qué género te identificas y habitas el mundo?',
+    options: [
+      { label: 'Hombre', value: 'hombre' },
+      { label: 'Mujer', value: 'mujer' },
+      { label: 'No Binario', value: 'no_binario' },
+      { label: 'Prefiero no decir', value: 'prefiero_no_decir' }
+    ]
+  },
+  { key: 'estudios', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido de estudios que te acompañan hoy?',
+    options: [
+      { label: 'Sin Estudios', value: 'sin_estudios' },
+      { label: 'ESO', value: 'eso' },
+      { label: 'Bachillerato', value: 'bachillerato' },
+      { label: 'FP', value: 'fp' },
+      { label: 'Universitarios', value: 'universitarios' },
+      { label: 'Posgrado', value: 'posgrado' },
+    ]
+  },
+  { key: 'rol_arteara', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?',
+    options: [
+      { label: 'Propietario', value: 'propietario' },
+      { label: 'Recién Llegado', value: 'recien_llegado' }
+    ]
+  },
+  { key: 'antiguedad_anos', q: 'El tiempo caminando juntos fortalece nuestros cimientos. ¿Desde cuándo formas parte de la comunidad o sientes tu vinculación a esta red?',
+    options: [
+      { label: 'Recién llegado/a (menos de 6 meses)', value: '0' },
+      { label: 'Entre 6 meses y 1 año', value: '0.5' },
+      { label: 'Entre 1 y 2 años', value: '1' },
+      { label: 'Entre 2 y 5 años', value: '3' },
+      { label: 'Más de 5 años', value: '5' }
+    ]
+  },
+  { key: 'tension', q: 'Por último, para poder cuidarnos y sostenernos desde el respeto: ¿cómo describirías tu estado interno actual, tu paz o tu nivel de tensión en la convivencia de la tribu?' }
 ];
 
 export function OnboardingChat() {
@@ -133,23 +163,73 @@ export function OnboardingChat() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#EAE2D6] p-4 flex justify-center">
-        <div className="max-w-2xl w-full relative flex items-center">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Escribe tu respuesta aquí..."
-            disabled={saving}
-            className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-14 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
-          />
-          <button
-            onClick={handleSend}
-            disabled={saving || !input.trim()}
-            className="absolute right-2 p-2 bg-[#6B705C] text-white rounded-full hover:bg-[#4A4E4D] transition-colors disabled:opacity-50"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+        <div className="max-w-2xl w-full relative flex flex-col gap-2">
+          {STEPS[currentStepIndex]?.options ? (
+            <div className="flex flex-wrap gap-2 justify-center mb-2">
+              {STEPS[currentStepIndex].options.map((opt: any) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    setInput(opt.value);
+                    // use setTimeout to ensure state isn't batched wrongly, or just call handleSend directly with value:
+                    // Actually handleSend uses input state, better let it be or pass param
+                  }}
+                  className="bg-white border border-[#CB997E] text-[#CB997E] hover:bg-[#CB997E] hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {STEPS[currentStepIndex]?.key === 'lugar' ? (
+            <LocationAutocomplete onSelect={(data) => {
+              // we store the JSON string to parse it later, or just mock typing it
+              const val = JSON.stringify(data);
+              setFormData(prev => ({ ...prev, [STEPS[currentStepIndex].key]: val }));
+              // Then artificially send message
+              const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: data.ciudad };
+              setMessages(prev => [...prev, userMsg]);
+              saveResponseLocal(STEPS[currentStepIndex].key, data.ciudad, 'user');
+              
+              if (currentStepIndex < STEPS.length - 1) {
+                const nextStepIndex = currentStepIndex + 1;
+                const botMsgText = STEPS[nextStepIndex].q;
+                setCurrentStepIndex(nextStepIndex);
+                setTimeout(() => {
+                  setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: botMsgText }]);
+                  saveResponseLocal(STEPS[nextStepIndex].key, botMsgText, 'bot');
+                }, 600);
+              } else {
+                setSaving(true);
+                setTimeout(() => {
+                  setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: '¡Tanemmirt (gracias) por tu tiempo y energía! Estamos trazando tu ficha comunitaria...' }]);
+                  const finalData = { ...formData, [STEPS[currentStepIndex].key]: val };
+                  localStorage.setItem('kanarii_pendingFicha', JSON.stringify(finalData));
+                  localStorage.setItem('kanarii_pendingResponses', JSON.stringify([...pendingResponses, { step: STEPS[currentStepIndex].key, message: data.ciudad, sender: 'user' }]));
+                  navigate('/ficha-preview');
+                }, 1000);
+              }
+            }} />
+          ) : (
+            <div className="relative flex items-center w-full">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={STEPS[currentStepIndex]?.options ? "O selecciona una opción arriba..." : "Escribe tu respuesta aquí..."}
+                disabled={saving}
+                className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-14 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={saving || !input.trim()}
+                className="absolute right-2 p-2 bg-[#6B705C] text-white rounded-full hover:bg-[#4A4E4D] transition-colors disabled:opacity-50"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import { collection, query, getDocs, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Ficha } from '../lib/appService';
+import { Ficha, saveFicha } from '../lib/appService';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
-import { Leaf, Users, Search, X } from 'lucide-react';
+import { Leaf, Users, Search, X, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 
 const SEED_DATA = [
-  { nombre: "Tamarit Benchara", rolProyecto: "bioconstrucción", antiguedad: "3 años", genero: "hombre", nivelEstudios: "FP", estadoTension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugarNacimiento: "Gran Canaria" },
-  { nombre: "Yurena Doramas", rolProyecto: "huerta y semillas", antiguedad: "1 año", genero: "mujer", nivelEstudios: "universitarios", estadoTension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugarNacimiento: "Tenerife" },
-  { nombre: "Aythami Guayarmina", rolProyecto: "cuidados y espacio común", antiguedad: "2 años", genero: "no binario", nivelEstudios: "bachillerato", estadoTension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugarNacimiento: "Norte de África" },
-  { nombre: "Nakima Tigoraf", rolProyecto: "facilitación y sociocracia", antiguedad: "4 años", genero: "mujer", nivelEstudios: "universitarios", estadoTension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugarNacimiento: "Lanzarote" },
+  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: "3 años", genero: "hombre", estudios: "FP", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria" },
+  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: "1 año", genero: "mujer", estudios: "universitarios", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife" },
+  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad: "2 años", genero: "no binario", estudios: "bachillerato", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África" },
+  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad: "4 años", genero: "mujer", nivelEstudios: "universitarios", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugarNacimiento: "Lanzarote" },
   { nombre: "Bentor Achaman", rolProyecto: "música y ritual", antiguedad: "6 meses", genero: "hombre", nivelEstudios: "secundaria", estadoTension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugarNacimiento: "Fuerteventura" }
 ];
 
@@ -24,77 +24,94 @@ export function AdminPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const q = query(collection(db, 'fichas'));
-        const snapshot = await getDocs(q);
-        let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
-        
-        // One-time cleanup for old seed data
-        const oldSeedsToFix = data.filter(doc => doc.isSeedData && !doc.userId.startsWith('seed_'));
-        if (oldSeedsToFix.length > 0) {
-          const { updateDoc, serverTimestamp } = await import('firebase/firestore');
-          for (const oldDoc of oldSeedsToFix) {
-            try {
-              await updateDoc(doc(db, 'fichas', oldDoc.id), { userId: `seed_${oldDoc.id.replace('seed-', '')}`, updatedAt: serverTimestamp() });
-              oldDoc.userId = `seed_${oldDoc.id.replace('seed-', '')}`;
-            } catch(e) { console.error(e) }
-          }
+  const fetchFichas = async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'fichas'));
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+      
+      // One-time cleanup for old seed data
+      const oldSeedsToFix = data.filter(doc => doc.isSeedData && !doc.userId.startsWith('seed_'));
+      if (oldSeedsToFix.length > 0) {
+        const { updateDoc, serverTimestamp } = await import('firebase/firestore');
+        for (const oldDoc of oldSeedsToFix) {
+          try {
+            await updateDoc(doc(db, 'fichas', oldDoc.id), { userId: `seed_${oldDoc.id.replace('seed-', '')}`, updatedAt: serverTimestamp() });
+            oldDoc.userId = `seed_${oldDoc.id.replace('seed-', '')}`;
+          } catch(e) { console.error(e) }
         }
-        
-        const realDocs = data.filter(doc => !doc.isSeedData);
-        
-        if (realDocs.length < 3 && appUser) {
-          const promises = SEED_DATA.map(async (seed, index) => {
-            const seedId = `seed-${appUser.uid}-${index}`;
-            const existing = data.find(d => d.id === seedId);
-            if (!existing) {
-              const seedFicha = {
-                userId: seedId,
-                datosOnboarding: {
-                  nombre: seed.nombre,
-                  fechaNacimiento: seed.fechaNacimiento,
-                  horaNacimiento: "12:00",
-                  lugarNacimiento: seed.lugarNacimiento,
-                  genero: seed.genero,
-                  nivelEstudios: seed.nivelEstudios,
-                  rolProyecto: seed.rolProyecto,
-                  antiguedad: seed.antiguedad,
-                  estadoTension: seed.estadoTension
-                },
-                manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.estadoTension}".`,
-                isSeedData: true,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              };
-              await setDoc(doc(db, 'fichas', seedId), seedFicha);
-              return { id: seedId, ...seedFicha, createdAt: new Date(), updatedAt: new Date() } as Ficha;
-            }
-            return null;
-          });
-          
-          const newSeeds = (await Promise.all(promises)).filter(Boolean) as Ficha[];
-          if (newSeeds.length > 0) {
-            data = [...data, ...newSeeds];
-          }
-        }
-        
-        setFichas(data);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.LIST, 'fichas');
       }
+      
+      const realDocs = data.filter(doc => !doc.isSeedData);
+      
+      if (realDocs.length < 3 && appUser) {
+        const promises = SEED_DATA.map(async (seed, index) => {
+          const seedId = `seed-${appUser.uid}-${index}`;
+          const existing = data.find(d => d.id === seedId);
+          if (!existing) {
+            const seedFicha = {
+              userId: seedId,
+              datosOnboarding: {
+                nombre: seed.nombre,
+                fechaNacimiento: seed.fechaNacimiento,
+                hora: "12:00",
+                lugar: seed.lugar,
+                genero: seed.genero,
+                estudios: seed.estudios,
+                rol_arteara: seed.rol_arteara,
+                antiguedad_anos: seed.antiguedad_anos,
+                tension: seed.tension
+              },
+              manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.tension}".`,
+              isSeedData: true,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            };
+            await setDoc(doc(db, 'fichas', seedId), seedFicha);
+            return { id: seedId, ...seedFicha, createdAt: new Date(), updatedAt: new Date() } as Ficha;
+          }
+          return null;
+        });
+        
+        const newSeeds = (await Promise.all(promises)).filter(Boolean) as Ficha[];
+        if (newSeeds.length > 0) {
+          data = [...data, ...newSeeds];
+        }
+      }
+      
+      setFichas(data);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, 'fichas');
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (appUser) {
+      fetchFichas();
+    }
+  }, [appUser]);
+
+  const handleRetryCapa1 = async (ficha: Ficha) => {
+    if (!ficha.id) return;
+    setLoading(true);
+    try {
+      await saveFicha(ficha.userId, ficha.datosOnboarding, ficha.id);
+      await fetchFichas();
+    } catch (err) {
+      console.error(err);
+      alert("Error al intentar de nuevo");
       setLoading(false);
     }
-    load();
-  }, [appUser]);
+  };
 
   const filteredFichas = fichas.filter(f => {
     const datos = f.datosOnboarding;
     if (!datos) return false;
     return (
       datos.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      datos.rolProyecto.toLowerCase().includes(searchTerm.toLowerCase())
+      datos.rol_arteara.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -170,15 +187,24 @@ export function AdminPanel() {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4">{datos.rolProyecto}</td>
-                        <td className="px-6 py-4">{datos.antiguedad}</td>
-                        <td className="px-6 py-4">{datos.nivelEstudios}</td>
+                        <td className="px-6 py-4">{datos.rol_arteara}</td>
+                        <td className="px-6 py-4">{datos.antiguedad_anos}</td>
+                        <td className="px-6 py-4">{datos.estudios}</td>
                         <td className="px-6 py-4">
-                          <span className="inline-block truncate max-w-[150px] items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]" title={datos.estadoTension}>
-                            {datos.estadoTension}
+                          <span className="inline-block truncate max-w-[150px] items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]" title={datos.tension}>
+                            {datos.tension}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex items-center gap-3">
+                          {ficha.estado === 'pendiente_capa1' && (
+                            <button
+                              onClick={() => handleRetryCapa1(ficha)}
+                              title="Reintentar obtención de datos"
+                              className="text-stone-400 hover:text-[#CB997E] transition-colors"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </button>
+                          )}
                           <button 
                             onClick={() => setSelectedFicha(ficha)}
                             className="text-sm font-medium text-[#CB997E] hover:text-[#B58368]"
@@ -216,18 +242,29 @@ export function AdminPanel() {
                         )}
                       </h3>
                       <p className="text-sm text-stone-500 mt-1">
-                        {datos.rolProyecto} · {datos.antiguedad}
+                        {datos.rol_arteara} · {datos.antiguedad_anos}
                       </p>
                       <p className="text-xs text-stone-400 italic mt-2 line-clamp-2">
-                        {datos.estadoTension}
+                        {datos.tension}
                       </p>
                     </div>
-                    <button 
-                      onClick={() => setSelectedFicha(ficha)}
-                      className="absolute top-4 right-4 text-sm font-medium text-[#CB997E] hover:text-[#B58368]"
-                    >
-                      Ver ficha
-                    </button>
+                    <div className="absolute top-4 right-4 flex items-center gap-3">
+                      {ficha.estado === 'pendiente_capa1' && (
+                        <button
+                          onClick={() => handleRetryCapa1(ficha)}
+                          title="Reintentar obtención de datos"
+                          className="text-stone-400 hover:text-[#CB997E] transition-colors"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setSelectedFicha(ficha)}
+                        className="text-sm font-medium text-[#CB997E] hover:text-[#B58368]"
+                      >
+                        Ver ficha
+                      </button>
+                    </div>
                   </div>
                 );
               })
