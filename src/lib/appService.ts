@@ -33,6 +33,7 @@ export interface Tarea {
   asignadaA?: string;
   creadaPor: string;
   estado: 'pendiente' | 'en_progreso' | 'completada' | 'archivada';
+  estadoPrevio?: 'pendiente' | 'en_progreso' | 'completada';
   fechaLimite?: any;
   createdAt?: any;
   updatedAt?: any;
@@ -183,10 +184,14 @@ export async function saveTarea(tareaData: Partial<Tarea>, existingId?: string) 
   }
 }
 
-export async function updateTareaEstado(id: string, nuevoEstado: Tarea['estado']) {
+export async function updateTareaEstado(id: string, nuevoEstado: Tarea['estado'], estadoActual?: Tarea['estado']) {
   try {
     const docRef = doc(db, 'tareas', id);
-    await updateDoc(docRef, { estado: nuevoEstado, updatedAt: serverTimestamp() });
+    const updateData: any = { estado: nuevoEstado, updatedAt: serverTimestamp() };
+    if (nuevoEstado === 'archivada' && estadoActual && estadoActual !== 'archivada') {
+      updateData.estadoPrevio = estadoActual;
+    }
+    await updateDoc(docRef, updateData);
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, 'tareas');
   }

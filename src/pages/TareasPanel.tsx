@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { saveTarea, updateTareaEstado, deleteTarea, Tarea } from '../lib/appService';
-import { Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, Clock, Trash2, ArrowRight, Edit } from 'lucide-react';
+import { Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, Clock, Trash2, ArrowRight, Edit, Archive, ChevronLeft } from 'lucide-react';
 
 export function TareasPanel() {
   const { appUser, logout } = useAuth();
@@ -62,7 +62,7 @@ export function TareasPanel() {
   const filteredTareas = tareas.filter(t => {
     if (filter === 'archivadas') return t.estado === 'archivada';
     if (t.estado === 'archivada') return false; // Hide from other views
-    if (filter === 'mis_tareas') return t.asignadaA === appUser?.uid || t.creadaPor === appUser?.uid;
+    if (filter === 'mis_tareas') return t.asignadaA === appUser?.uid;
     if (filter === 'sin_asignar') return !t.asignadaA;
     return true; // 'todas'
   });
@@ -136,9 +136,14 @@ export function TareasPanel() {
         </div>
 
         <div className="flex flex-col gap-2 mt-4 text-xs font-medium text-stone-500">
-           <div className="flex items-center gap-1.5 bg-[#FDFBF7] px-2 py-1 rounded w-fit">
-             <UserIcon className="w-3.5 h-3.5 text-[#A5A58D]" />
-             <span>A: {hasAssignee ? getMemberName(tarea.asignadaA!) : 'Sin asignar'}</span>
+           <div className="flex items-center gap-2 flex-wrap">
+             <div className="flex items-center gap-1.5 bg-[#FDFBF7] px-2 py-1 rounded w-fit">
+               <UserIcon className="w-3.5 h-3.5 text-[#A5A58D]" />
+               <span>A: {hasAssignee ? getMemberName(tarea.asignadaA!) : 'Sin asignar'}</span>
+             </div>
+             <div className="flex items-center gap-1.5 bg-[#FDFBF7] px-2 py-1 rounded w-fit">
+               <span>De: {getMemberName(tarea.creadaPor)}</span>
+             </div>
            </div>
            
            {dateStr && (
@@ -150,52 +155,64 @@ export function TareasPanel() {
         </div>
 
         <div className="mt-5 pt-4 border-t border-[#FDFBF7] flex justify-between items-center">
-           {tarea.estado !== 'pendiente' && tarea.estado !== 'archivada' && (
-             <button 
-               onClick={() => updateTareaEstado(tarea.id!, getPrevState(tarea.estado))}
-               className="flex items-center gap-1.5 text-xs font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors"
-               title="Retroceder"
-             >
-               Retroceder
-             </button>
-           )}
-           {tarea.estado !== 'completada' && tarea.estado !== 'archivada' ? (
-             <button 
-               onClick={() => updateTareaEstado(tarea.id!, getNextState(tarea.estado))}
-               className="flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors"
-             >
-               Avanzar
-               <ArrowRight className="w-3.5 h-3.5" />
-             </button>
-           ) : tarea.estado === 'completada' ? (
-             <button
-               onClick={() => updateTareaEstado(tarea.id!, 'archivada')}
-               className="text-xs font-medium text-stone-400 hover:text-stone-600 transition-colors"
-             >
-               Archivar
-             </button>
-           ) : (
-             <div className="text-xs font-medium text-stone-400">Archivada</div>
-           )}
+           <div className="flex items-center gap-1">
+             {tarea.estado !== 'pendiente' && tarea.estado !== 'archivada' && (
+               <button 
+                 onClick={() => updateTareaEstado(tarea.id!, getPrevState(tarea.estado))}
+                 className="flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors p-3 -ml-3"
+                 title="Retroceder"
+               >
+                 <ChevronLeft className="w-4 h-4" />
+               </button>
+             )}
+             {tarea.estado !== 'completada' && tarea.estado !== 'archivada' && (
+               <button 
+                 onClick={() => updateTareaEstado(tarea.id!, getNextState(tarea.estado))}
+                 className="flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3"
+               >
+                 Avanzar
+                 <ArrowRight className="w-3.5 h-3.5" />
+               </button>
+             )}
+             {tarea.estado === 'archivada' && (
+               <button
+                 onClick={() => updateTareaEstado(tarea.id!, tarea.estadoPrevio || 'completada')}
+                 className="text-xs font-medium text-stone-400 hover:text-stone-600 transition-colors p-3 -ml-3"
+               >
+                 Desarchivar
+               </button>
+             )}
+           </div>
 
-           {isOwner && (
-             <div className="flex items-center gap-2">
-               <button 
-                 onClick={() => openEditModal(tarea)}
-                 className="text-[#6B705C] hover:text-[#4A4E4D] transition-colors opacity-0 group-hover:opacity-100"
-                 title="Editar tarea"
+           <div className="flex items-center gap-1">
+             {tarea.estado !== 'archivada' && isOwner && (
+               <button
+                 onClick={() => updateTareaEstado(tarea.id!, 'archivada', tarea.estado)}
+                 className="flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors p-3"
+                 title="Archivar"
                >
-                 <Edit className="w-4 h-4" />
+                 <Archive className="w-4 h-4" />
                </button>
-               <button 
-                 onClick={() => deleteTarea(tarea.id!)}
-                 className="text-[#6B705C] hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                 title="Eliminar tarea"
-               >
-                 <Trash2 className="w-4 h-4" />
-               </button>
-             </div>
-           )}
+             )}
+             {isOwner && (
+               <>
+                 <button 
+                   onClick={() => openEditModal(tarea)}
+                   className="flex items-center justify-center text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3"
+                   title="Editar tarea"
+                 >
+                   <Edit className="w-4 h-4" />
+                 </button>
+                 <button 
+                   onClick={() => deleteTarea(tarea.id!)}
+                   className="flex items-center justify-center text-[#6B705C] hover:text-red-600 transition-colors p-3 -mr-3"
+                   title="Eliminar tarea"
+                 >
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+               </>
+             )}
+           </div>
         </div>
       </div>
     );

@@ -140,7 +140,7 @@ service cloud.firestore {
 
     function isValidTarea(data) {
       return data.keys().hasAll(['titulo', 'creadaPor', 'estado', 'createdAt', 'updatedAt']) &&
-             data.keys().size() >= 5 && data.keys().size() <= 8 &&
+             data.keys().size() >= 5 && data.keys().size() <= 9 &&
              data.titulo is string && data.titulo.size() <= 200 &&
              data.creadaPor is string && data.creadaPor.size() <= 128 &&
              data.estado in ['pendiente', 'en_progreso', 'completada', 'archivada'] &&
@@ -148,7 +148,8 @@ service cloud.firestore {
              data.updatedAt is timestamp &&
              (!('descripcion' in data) || (data.descripcion is string && data.descripcion.size() <= 2000)) &&
              (!('asignadaA' in data) || (data.asignadaA is string && data.asignadaA.size() <= 128)) &&
-             (!('fechaLimite' in data) || data.fechaLimite is timestamp);
+             (!('fechaLimite' in data) || data.fechaLimite is timestamp) &&
+             (!('estadoPrevio' in data) || data.estadoPrevio in ['pendiente', 'en_progreso', 'completada']);
     }
 
     match /tareas/{tareaId} {
@@ -164,8 +165,8 @@ service cloud.firestore {
       allow update: if isVerified() && isValidTarea(incoming()) &&
                     // Solo podemos cambiar el estado o la asignación, o descripción etc si somos creadores
                     (
-                      (request.auth.uid == existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['titulo', 'descripcion', 'asignadaA', 'estado', 'fechaLimite', 'updatedAt', 'creadaPor'])) ||
-                      (request.auth.uid != existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['estado', 'updatedAt'])) ||
+                      (request.auth.uid == existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['titulo', 'descripcion', 'asignadaA', 'estado', 'estadoPrevio', 'fechaLimite', 'updatedAt', 'creadaPor'])) ||
+                      (request.auth.uid != existing().creadaPor && incoming().diff(existing()).affectedKeys().hasOnly(['estado', 'estadoPrevio', 'updatedAt'])) ||
                       isAdmin()
                     ) &&
                     incoming().creadaPor == existing().creadaPor &&
