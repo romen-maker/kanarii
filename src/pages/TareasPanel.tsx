@@ -246,26 +246,7 @@ export function TareasPanel() {
           <Leaf className="w-6 h-6 text-[#6B705C]" />
           <span className="font-serif text-xl text-[#4A4E4D]">Tareas Comunitarias</span>
         </div>
-        <div className="hidden md:flex gap-4">
-          <button 
-            onClick={() => navigate('/actas')} 
-            className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
-          >
-            Actas
-          </button>
-          <button 
-            onClick={() => navigate('/ficha')} 
-            className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
-          >
-            Mi Ficha
-          </button>
-          <button 
-            onClick={logout} 
-            className="text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
-          >
-            Cerrar sesión
-          </button>
-        </div>
+        {/* Navegación eliminada (unificada en Sidebar/BottomNav) */}
       </header>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">

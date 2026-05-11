@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, CheckSquare, FileText, Briefcase, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { navigationConfig } from '../config/navigation';
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -9,14 +10,12 @@ export function BottomNav() {
   const { appUser, logout } = useAuth();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
-  // Hidden on non-authenticated or onboarding screens. Conditionally rendered in App.tsx
-  // But we also control paths there according to the prompt.
-
-  const navItems = [
-    { label: 'Mi Ficha', icon: User, path: '/ficha' },
-    { label: 'Tareas', icon: CheckSquare, path: '/tareas' },
-    { label: 'Actas', icon: FileText, path: '/actas' },
-    { label: 'Proyectos', icon: Briefcase, path: '/proyectos' },
+  // Seleccionamos los primeros 4 items para la barra principal (excluyendo adminOnly)
+  const mainNavItems = navigationConfig.filter(item => !item.adminOnly).slice(0, 4);
+  // El resto van al menú "Más"
+  const moreNavItems = [
+    ...navigationConfig.filter(item => !item.adminOnly).slice(4),
+    ...navigationConfig.filter(item => item.adminOnly && appUser?.role === 'admin')
   ];
 
   const handleNav = (path: string) => {
@@ -29,13 +28,13 @@ export function BottomNav() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFBF7] border-t border-[#EAE2D6] flex items-center justify-around"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '56px' }}
       >
-        {navItems.map((item, idx) => {
-          const isReallyActive = location.pathname === item.path;
+        {mainNavItems.map((item, idx) => {
+          const isReallyActive = location.pathname === item.href;
           
           return (
             <button
               key={idx}
-              onClick={() => handleNav(item.path)}
+              onClick={() => handleNav(item.href)}
               className={`flex flex-col items-center justify-center flex-1 h-full min-h-[56px] space-y-1 relative transition-colors ${
                 isReallyActive ? 'text-[#6B705C]' : 'text-stone-400'
               }`}
@@ -67,18 +66,21 @@ export function BottomNav() {
           <div className="relative bg-[#FDFBF7] rounded-t-3xl pt-2 pb-6 px-4 shadow-xl z-10" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
             <div className="w-8 h-1 bg-stone-300 rounded-full mx-auto mb-6" />
             <div className="flex flex-col space-y-2">
-              {appUser?.role === 'admin' && (
+              {moreNavItems.map((item, idx) => (
                 <button
-                  onClick={() => { setIsMoreMenuOpen(false); navigate('/admin'); }}
-                  className="w-full text-left px-5 py-4 rounded-2xl font-medium text-[#4A4E4D] hover:bg-[#EAE2D6] transition-colors"
+                  key={idx}
+                  onClick={() => { setIsMoreMenuOpen(false); navigate(item.href); }}
+                  className="w-full text-left px-5 py-4 rounded-2xl font-medium text-[#4A4E4D] hover:bg-[#EAE2D6] transition-colors flex items-center gap-3"
                 >
-                  Panel Admin
+                  <item.icon className="w-5 h-5 text-stone-400" />
+                  {item.label}
                 </button>
-              )}
+              ))}
               <button
                 onClick={() => { setIsMoreMenuOpen(false); logout(); }}
-                className="w-full text-left px-5 py-4 rounded-2xl font-medium text-red-600 hover:bg-red-50 transition-colors"
+                className="w-full text-left px-5 py-4 rounded-2xl font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
               >
+                <LogOut className="w-5 h-5" />
                 Cerrar sesión
               </button>
               <button

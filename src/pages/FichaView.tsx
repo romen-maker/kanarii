@@ -121,22 +121,7 @@ export function FichaView() {
             <Leaf className="text-[#6B705C] w-8 h-8" />
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
           </div>
-          <div className="hidden md:flex items-center gap-4">
-            <button onClick={() => navigate('/tareas')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
-              Tareas
-            </button>
-            <button onClick={() => navigate('/actas')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
-              Actas
-            </button>
-            {appUser?.role === 'admin' && (
-              <button onClick={() => navigate('/admin')} className="text-sm font-medium text-[#A5A58D] hover:text-[#6B705C] transition-colors">
-                Panel Admin
-              </button>
-            )}
-            <button onClick={logout} className="text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
-              Cerrar sesión
-            </button>
-          </div>
+          {/* Navegación eliminada (unificada en Sidebar/BottomNav) */}
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden mb-8">
