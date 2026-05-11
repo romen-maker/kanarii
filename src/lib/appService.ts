@@ -69,6 +69,79 @@ export interface Acta {
   lastEditedBy?: string;
 }
 
+export interface Proyecto {
+  id?: string;
+  titulo: string;
+  descripcion: string;
+  lider_uid: string;
+  colaboradores_uid: string[];
+  habilidadesNecesarias: string[];
+  estado: "activo" | "buscando_colaboradores" | "completado" | "pausado";
+  fechaInicio?: string;
+  fechaFin?: string;
+  creadoEn?: any;
+  updatedAt?: any;
+}
+
+export async function crearProyecto(proyecto: Proyecto): Promise<string> {
+  try {
+    const cleanData = { ...proyecto };
+    delete cleanData.id;
+    const docRef = await addDoc(collection(db, 'proyectos'), {
+      ...cleanData,
+      creadoEn: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'proyectos');
+    throw err;
+  }
+}
+
+export async function actualizarProyecto(id: string, cambios: Partial<Proyecto>): Promise<void> {
+  try {
+    const docRef = doc(db, 'proyectos', id);
+    await updateDoc(docRef, {
+      ...cambios,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
+    throw err;
+  }
+}
+
+export async function obtenerProyectos(): Promise<Proyecto[]> {
+  try {
+    const q = query(collection(db, 'proyectos'), orderBy('creadoEn', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Proyecto));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, 'proyectos');
+    throw err;
+  }
+}
+
+export async function solicitarColaboracion(proyectoId: string, uid: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'proyectos', proyectoId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) throw new Error('Proyecto no encontrado');
+    const data = snap.data() as Proyecto;
+    const colaboradores = data.colaboradores_uid || [];
+    if (!colaboradores.includes(uid)) {
+      await updateDoc(docRef, {
+        colaboradores_uid: [...colaboradores, uid],
+        updatedAt: serverTimestamp()
+      });
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
+    throw err;
+  }
+}
+
 export async function getUserFicha(userId: string): Promise<Ficha | null> {
   try {
     const q = query(collection(db, 'fichas'), where('userId', '==', userId));
