@@ -51,6 +51,7 @@ export interface Tarea {
   fechaLimite?: any;
   createdAt?: any;
   updatedAt?: any;
+  proyectoId?: string;
 }
 
 export interface Acta {
@@ -629,6 +630,17 @@ export async function updateTareaEstado(id: string, nuevoEstado: Tarea['estado']
     await updateDoc(docRef, updateData);
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, 'tareas');
+  }
+}
+
+export async function obtenerTareas(): Promise<Tarea[]> {
+  try {
+    const q = query(collection(db, 'tareas'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tarea));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.LIST, 'tareas');
+    return [];
   }
 }
 

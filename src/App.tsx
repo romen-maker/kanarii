@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Welcome } from './pages/Welcome';
@@ -13,10 +14,17 @@ import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { CruceView } from './pages/CruceView';
 import { Activity, ArrowRight } from 'lucide-react';
+import { ToastProvider, useToast } from './components/Toaster';
 
 function AppContent() {
   const { appUser } = useAuth();
+  const { success } = useToast();
   const location = useLocation();
+  
+  useEffect(() => {
+    success("¡Sistema de feedback activo! ✨");
+  }, []);
+
   const hideNavRoutes = ['/', '/contexto', '/onboarding'];
   const showNav = appUser !== null && !hideNavRoutes.includes(location.pathname);
 
@@ -80,9 +88,11 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: React.Re
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

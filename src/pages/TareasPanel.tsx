@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { saveTarea, updateTareaEstado, deleteTarea, Tarea } from '../lib/appService';
-import { Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, Clock, Trash2, ArrowRight, Edit, Archive, ChevronLeft } from 'lucide-react';
+import { saveTarea, updateTareaEstado, deleteTarea, Tarea, obtenerProyectos, Proyecto } from '../lib/appService';
+import { Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, Clock, Trash2, ArrowRight, Edit, Archive, ChevronLeft, Briefcase } from 'lucide-react';
+import { useToast } from '../components/Toaster';
 
 export function TareasPanel() {
   const { appUser, logout } = useAuth();
@@ -21,8 +22,12 @@ export function TareasPanel() {
     titulo: '',
     descripcion: '',
     asignadaA: '',
-    fechaLimite: ''
+    fechaLimite: '',
+    proyectoId: ''
   });
+
+  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const { success, error: toastError } = useToast();
 
   const openEditModal = (t: Tarea) => {
     let dateStr = '';
@@ -34,14 +39,15 @@ export function TareasPanel() {
       titulo: t.titulo,
       descripcion: t.descripcion || '',
       asignadaA: t.asignadaA || '',
-      fechaLimite: dateStr
+      fechaLimite: dateStr,
+      proyectoId: t.proyectoId || ''
     });
     setTareaToEdit(t);
     setIsModalOpen(true);
   };
   
   const openCreateModal = () => {
-    setFormData({ titulo: '', descripcion: '', asignadaA: '', fechaLimite: '' });
+    setFormData({ titulo: '', descripcion: '', asignadaA: '', fechaLimite: '', proyectoId: '' });
     setTareaToEdit(null);
     setIsModalOpen(true);
   };
@@ -50,6 +56,27 @@ export function TareasPanel() {
     setIsModalOpen(false);
     setTareaToEdit(null);
   };
+
+  React.useEffect(() => {
+    const fetchProyectos = async () => {
+      try {
+        const all = await obtenerProyectos();
+        console.log("Todos los proyectos:", all.length);
+        // Filtrar solo donde el usuario participa activamente
+        const userUid = appUser?.uid;
+        const filtered = all.filter(p => {
+          const isLider = p.lider_uid === userUid;
+          const isColaborador = p.colaboradores_uid && Array.isArray(p.colaboradores_uid) && p.colaboradores_uid.includes(userUid || '');
+          return isLider || isColaborador;
+        });
+        console.log("Proyectos filtrados para el usuario:", filtered.length);
+        setProyectos(filtered);
+      } catch (err) {
+        console.error("Error cargando proyectos:", err);
+      }
+    };
+    if (appUser) fetchProyectos();
+  }, [appUser]);
 
   if (loadingTareas || loadingMembers) {
     return (
@@ -76,18 +103,44 @@ export function TareasPanel() {
     e.preventDefault();
     if (!formData.titulo.trim() || !appUser) return;
     setIsSubmitting(true);
-    
-    await saveTarea({
-      titulo: formData.titulo.trim(),
-      descripcion: formData.descripcion.trim() || undefined,
-      asignadaA: formData.asignadaA || undefined,
-      creadaPor: tareaToEdit ? tareaToEdit.creadaPor : appUser.uid,
-      estado: tareaToEdit ? tareaToEdit.estado : 'pendiente',
-      fechaLimite: formData.fechaLimite ? new Date(formData.fechaLimite) : undefined
-    }, tareaToEdit?.id);
 
-    setIsSubmitting(false);
-    closeModal();
+    try {
+      await saveTarea({
+        titulo: formData.titulo.trim(),
+        descripcion: formData.descripcion.trim() || undefined,
+        asignadaA: formData.asignadaA || undefined,
+        creadaPor: tareaToEdit ? tareaToEdit.creadaPor : appUser.uid,
+        estado: tareaToEdit ? tareaToEdit.estado : 'pendiente',
+        fechaLimite: formData.fechaLimite ? new Date(formData.fechaLimite) : undefined,
+        proyectoId: formData.proyectoId || undefined
+      }, tareaToEdit?.id);
+
+      success(tareaToEdit ? "Tarea actualizada" : "Tarea creada correctamente");
+      closeModal();
+    } catch (err) {
+      toastError("Error al guardar la tarea");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateEstado = async (id: string, nuevoEstado: Tarea['estado'], previo?: Tarea['estado']) => {
+    try {
+      await updateTareaEstado(id, nuevoEstado, previo);
+      success("Estado actualizado");
+    } catch (err) {
+      toastError("Error al actualizar estado");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("¿Estás seguro de eliminar esta tarea?")) return;
+    try {
+      await deleteTarea(id);
+      success("Tarea eliminada");
+    } catch (err) {
+      toastError("Error al eliminar");
+    }
   };
 
   const getNextState = (estado: Tarea['estado']) => {
@@ -110,6 +163,8 @@ export function TareasPanel() {
     if (tarea.estado === 'en_progreso') badgeColor = 'bg-[#A8DADC] text-[#1D3557]';
     if (tarea.estado === 'completada') badgeColor = 'bg-[#C1E1C1] text-[#2C4C3B]';
     
+    const proyectoAsociado = proyectos.find(p => p.id === tarea.proyectoId);
+    
     // Extract date string from firebase timestamp or Date object
     let dateStr = '';
     if (tarea.fechaLimite) {
@@ -129,6 +184,12 @@ export function TareasPanel() {
            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-2 ${badgeColor}`}>
              {tarea.estado.replace('_', ' ')}
            </span>
+           {proyectoAsociado && (
+             <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#A5A58D] uppercase tracking-tighter mb-1">
+               <Briefcase className="w-3 h-3" />
+               <span>{proyectoAsociado.titulo}</span>
+             </div>
+           )}
            <h3 className="text-lg font-medium text-stone-800 leading-tight">{tarea.titulo}</h3>
            {tarea.descripcion && (
              <p className="text-sm text-stone-500 mt-2 line-clamp-2">{tarea.descripcion}</p>
@@ -158,25 +219,25 @@ export function TareasPanel() {
            <div className="flex items-center gap-1">
              {tarea.estado !== 'pendiente' && tarea.estado !== 'archivada' && (
                <button 
-                 onClick={() => updateTareaEstado(tarea.id!, getPrevState(tarea.estado))}
+                 onClick={() => handleUpdateEstado(tarea.id!, getPrevState(tarea.estado))}
                  className="flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors p-3 -ml-3"
                  title="Retroceder"
                >
                  <ChevronLeft className="w-4 h-4" />
                </button>
              )}
-             {tarea.estado !== 'completada' && tarea.estado !== 'archivada' && (
+              {tarea.estado !== 'completada' && tarea.estado !== 'archivada' && (
                <button 
-                 onClick={() => updateTareaEstado(tarea.id!, getNextState(tarea.estado))}
+                 onClick={() => handleUpdateEstado(tarea.id!, getNextState(tarea.estado))}
                  className="flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3"
                >
                  Avanzar
                  <ArrowRight className="w-3.5 h-3.5" />
                </button>
              )}
-             {tarea.estado === 'archivada' && (
+              {tarea.estado === 'archivada' && (
                <button
-                 onClick={() => updateTareaEstado(tarea.id!, tarea.estadoPrevio || 'completada')}
+                 onClick={() => handleUpdateEstado(tarea.id!, tarea.estadoPrevio || 'completada')}
                  className="text-xs font-medium text-stone-400 hover:text-stone-600 transition-colors p-3 -ml-3"
                >
                  Desarchivar
@@ -185,9 +246,9 @@ export function TareasPanel() {
            </div>
 
            <div className="flex items-center gap-1">
-             {tarea.estado !== 'archivada' && isOwner && (
+              {tarea.estado !== 'archivada' && isOwner && (
                <button
-                 onClick={() => updateTareaEstado(tarea.id!, 'archivada', tarea.estado)}
+                 onClick={() => handleUpdateEstado(tarea.id!, 'archivada', tarea.estado)}
                  className="flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors p-3"
                  title="Archivar"
                >
@@ -203,11 +264,11 @@ export function TareasPanel() {
                  >
                    <Edit className="w-4 h-4" />
                  </button>
-                 <button 
-                   onClick={() => deleteTarea(tarea.id!)}
-                   className="flex items-center justify-center text-[#6B705C] hover:text-red-600 transition-colors p-3 -mr-3"
-                   title="Eliminar tarea"
-                 >
+                  <button 
+                    onClick={() => handleDelete(tarea.id!)}
+                    className="flex items-center justify-center text-[#6B705C] hover:text-red-600 transition-colors p-3 -mr-3"
+                    title="Eliminar tarea"
+                  >
                    <Trash2 className="w-4 h-4" />
                  </button>
                </>
@@ -348,6 +409,23 @@ export function TareasPanel() {
                   onChange={e => setFormData({ ...formData, fechaLimite: e.target.value })}
                   className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Vincular a Proyecto</label>
+                <select
+                  value={formData.proyectoId}
+                  onChange={e => setFormData({ ...formData, proyectoId: e.target.value })}
+                  className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors bg-white"
+                >
+                  <option value="">-- Sin vincular --</option>
+                  {proyectos.map(p => (
+                    <option key={p.id} value={p.id}>{p.titulo}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-stone-400 mt-1 italic">
+                  Solo aparecen proyectos donde eres líder o colaborador.
+                </p>
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
