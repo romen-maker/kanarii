@@ -72,12 +72,12 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
   const getVariantClasses = (variant: EntityVariant) => {
     const classes = {
-      success: 'bg-[var(--color-success-highlight)] text-[var(--color-success)]',
-      warning: 'bg-[var(--color-warning-highlight)] text-[var(--color-warning)]',
-      info: 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]',
-      primary: 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]',
-      danger: 'bg-[var(--color-error-highlight)] text-[var(--color-error)]',
-      neutral: 'bg-[var(--color-surface-offset)] text-[var(--color-text-muted)]',
+      success: 'bg-[#C1E1C1] text-[#2C4C3B]',
+      warning: 'bg-[#F9E2AF] text-[#81651D]',
+      info: 'bg-[#A8DADC] text-[#1D3557]',
+      primary: 'bg-[#A8DADC] text-[#1D3557]',
+      danger: 'bg-[#F9C0C0] text-[#7C1D1D]',
+      neutral: 'bg-[#EAE2D6] text-stone-700',
     };
     return classes[variant] || classes.neutral;
   };
@@ -86,8 +86,8 @@ export const EntityCard: React.FC<EntityCardProps> = ({
     <div 
       onClick={onClick}
       className={`
-        group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-5 shadow-sm
-        hover:border-stone-300 hover:shadow-md transition-all duration-200 cursor-pointer
+        group relative bg-white border border-[#EAE2D6] rounded-3xl p-5 shadow-sm
+        hover:border-[#D4C3A3] hover:shadow-md transition-all duration-200 cursor-pointer
         ${className}
       `}
     >
@@ -105,20 +105,20 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           <div className="relative" ref={actionsRef}>
             <button 
               onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
-              className="p-1.5 text-[var(--color-text-faint)] hover:text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] rounded-md transition-colors"
+              className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-md transition-colors"
             >
               <MoreVertical className="w-4 h-4" />
             </button>
             
             {showActions && (
-              <div className="absolute right-0 mt-1 w-44 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl z-10 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute right-0 mt-1 w-44 bg-white border border-[#EAE2D6] rounded-xl shadow-xl z-10 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                 {actions.map((action, idx) => (
                   <button
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); action.onClick(); setShowActions(false); }}
                     className={`
                       w-full flex items-center gap-2 px-4 py-2.5 text-xs text-left transition-colors
-                      ${action.variant === 'danger' ? 'text-[var(--color-error)] hover:bg-[var(--color-error)]/5' : 'text-[var(--color-text)] hover:bg-[var(--color-surface-2)]'}
+                      ${action.variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-stone-700 hover:bg-stone-50'}
                     `}
                   >
                     <action.icon className="w-3.5 h-3.5" />
@@ -133,11 +133,11 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
       {/* Body: Title & Subtitle */}
       <div className="mb-4">
-        <h3 className="text-lg font-medium text-[var(--color-text)] leading-tight group-hover:text-[var(--color-primary)] transition-colors">
+        <h3 className="text-lg font-medium text-stone-800 leading-tight transition-colors">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-sm text-[var(--color-text-muted)] mt-2 line-clamp-2 leading-relaxed">
+          <p className="text-sm text-stone-500 mt-2 line-clamp-2 leading-relaxed">
             {subtitle}
           </p>
         )}
@@ -148,35 +148,56 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         {metadata.map((item, idx) => (
           <div 
             key={idx} 
-            className="flex items-center gap-1 bg-[var(--color-surface-2)] px-2 py-1 rounded text-xs font-medium text-[var(--color-text-muted)]" 
+            className="flex items-center gap-1 bg-[#FDFBF7] px-2 py-1 rounded text-xs font-medium text-stone-500" 
             title={item.tooltip}
           >
-            <item.icon className="w-3.5 h-3.5 text-[var(--color-text-faint)]" />
+            <item.icon className="w-3.5 h-3.5 text-[#A5A58D]" />
             <span>{item.text}</span>
           </div>
         ))}
       </div>
 
-      {/* Quick Actions Bar */}
+      {/* Quick Actions Bar - Unified TareaCard Layout */}
       {quickActions.length > 0 && (
-        <div className="mt-5 pt-4 border-t border-[var(--color-surface-2)] flex justify-between items-center">
-          <div className="flex items-center gap-1 w-full">
-            {quickActions.map((action, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => { e.stopPropagation(); action.onClick(); }}
-                className={`
-                  flex items-center gap-1.5 transition-all active:scale-95
-                  ${action.showLabel ? 'text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]' : 'p-3 text-[var(--color-text-faint)] hover:text-[var(--color-text-muted)]'}
-                  ${action.variant === 'danger' && !action.showLabel ? 'text-[var(--color-error)]/70 hover:text-[var(--color-error)]' : ''}
-                `}
-                title={action.label}
-              >
-                <action.icon className="w-3.5 h-3.5" />
-                {action.showLabel && <span>{action.label}</span>}
-              </button>
+        <div className="mt-5 pt-4 border-t border-[#FDFBF7] flex justify-between items-center">
+          
+          {/* Izquierda: acciones primarias (showLabel=true) */}
+          <div className="flex items-center gap-1">
+            {quickActions
+              .filter(a => a.showLabel)
+              .map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+                  className="flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3"
+                  title={action.label}
+                >
+                  <action.icon className="w-3.5 h-3.5" />
+                  <span>{action.label}</span>
+                </button>
             ))}
           </div>
+
+          {/* Derecha: acciones icono (showLabel=false/undefined) */}
+          <div className="flex items-center gap-1">
+            {quickActions
+              .filter(a => !a.showLabel)
+              .map((action, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+                  className={`flex items-center justify-center transition-colors p-3
+                    ${action.variant === 'danger' 
+                      ? 'text-[#6B705C] hover:text-red-600' 
+                      : 'text-[#6B705C] hover:text-[#4A4E4D]'}
+                  `}
+                  title={action.label}
+                >
+                  <action.icon className="w-4 h-4" />
+                </button>
+            ))}
+          </div>
+
         </div>
       )}
 
