@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo, actualizarEstadoProyecto } from '../lib/appService';
-import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus } from 'lucide-react';
+import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus, Star } from 'lucide-react';
 
 export function ProyectosView() {
   const { appUser } = useAuth();
@@ -27,8 +27,9 @@ export function ProyectosView() {
   }, [appUser]);
 
   useEffect(() => {
-    if (selectedProject && appUser && selectedProject.lider_uid === appUser.uid) {
+    if (selectedProject && appUser) {
       const allUids = [
+        selectedProject.lider_uid,
         ...(selectedProject.solicitudes_uid || []),
         ...(selectedProject.colaboradores_uid || [])
       ];
@@ -528,28 +529,38 @@ export function ProyectosView() {
                       </div>
                     )}
 
-                    {/* Equipo Actual */}
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                      <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <Users className="w-4 h-4" /> Equipo actual ({(selectedProject.colaboradores_uid?.length || 0)})
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between bg-white/50 p-2 rounded-lg text-xs">
-                          <span className="text-stone-500 italic">Tú (Líder)</span>
-                        </div>
-                        {selectedProject.colaboradores_uid?.map(uid => (
-                          <div key={uid} className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-stone-100">
-                            <span className="text-sm text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
-                            <CheckCircle2 className="w-4 h-4 text-teal-500" />
-                          </div>
-                        ))}
-                        {(!selectedProject.colaboradores_uid || selectedProject.colaboradores_uid.length === 0) && (
-                          <p className="text-xs text-stone-400 text-center py-2">Aún no hay colaboradores aceptados</p>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 )}
+
+                {/* Equipo Actual (Visible para todos) */}
+                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                  <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4" /> Equipo ({ (selectedProject.colaboradores_uid?.length || 0) + 1 })
+                  </h4>
+                  <div className="space-y-2">
+                    {/* Líder */}
+                    <div className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-stone-200">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-stone-800">
+                          {selectedProject.lider_uid === appUser?.uid ? 'Tú (Líder)' : (pendingMembers[selectedProject.lider_uid] || 'Cargando líder...')}
+                        </span>
+                        <span className="text-[10px] text-stone-500 uppercase tracking-tighter">Fundador / Líder</span>
+                      </div>
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    </div>
+
+                    {/* Colaboradores */}
+                    {selectedProject.colaboradores_uid?.map(uid => (
+                      <div key={uid} className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-stone-100">
+                        <span className="text-sm text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
+                        <CheckCircle2 className="w-4 h-4 text-teal-500" />
+                      </div>
+                    ))}
+                    {(!selectedProject.colaboradores_uid || selectedProject.colaboradores_uid.length === 0) && (
+                      <p className="text-xs text-stone-400 text-center py-2">Aún no hay más colaboradores</p>
+                    )}
+                  </div>
+                </div>
 
                 {appUser && selectedProject.lider_uid !== appUser.uid && (
                   <div>
