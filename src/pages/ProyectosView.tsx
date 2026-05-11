@@ -179,11 +179,11 @@ export function ProyectosView() {
   };
 
   const renderProjectCard = (proyecto: Proyecto) => {
-    const statusMap = {
-      'buscando_colaboradores': { label: 'Buscando Ayuda', variant: 'info' as const, icon: Search },
-      'en_marcha': { label: 'En Marcha', variant: 'success' as const, icon: Play },
-      'pausado': { label: 'Pausado', variant: 'warning' as const, icon: Pause },
-      'completado': { label: 'Completado', variant: 'neutral' as const, icon: CheckCircle2 }
+    const statusMap: Record<string, { label: string, variant: EntityVariant, icon: any }> = {
+      'buscando_colaboradores': { label: 'Buscando Ayuda', variant: 'warning', icon: Search },
+      'en_marcha': { label: 'En Marcha', variant: 'primary', icon: Play },
+      'pausado': { label: 'Pausado', variant: 'neutral', icon: Pause },
+      'completado': { label: 'Completado', variant: 'success', icon: CheckCircle2 }
     };
 
     const status = statusMap[proyecto.estado] || { label: proyecto.estado, variant: 'neutral' as const };
@@ -201,11 +201,11 @@ export function ProyectosView() {
         ]}
         tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
         quickActions={[
-          { label: 'Ver detalles', icon: Activity, onClick: () => setSelectedProject(proyecto), showLabel: true },
+          { label: 'Gestionar', icon: Activity, onClick: () => setSelectedProject(proyecto), showLabel: true },
+          { label: 'Eliminar', icon: Trash2, onClick: () => startDelete(proyecto.id!), variant: 'danger' }
         ]}
         actions={[
-          { label: 'Gestionar equipo', icon: UserPlus, onClick: () => setSelectedProject(proyecto) },
-          { label: 'Eliminar', icon: Trash2, onClick: () => startDelete(proyecto.id!), variant: 'danger' }
+          { label: 'Editar proyecto', icon: UserPlus, onClick: () => setSelectedProject(proyecto) },
         ]}
         onClick={() => setSelectedProject(proyecto)}
       />
@@ -232,9 +232,9 @@ export function ProyectosView() {
               {/* Mobile FAB */}
               <button 
                 onClick={() => setShowCreateMenu(true)}
-                className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-[#4A4E4D] text-[#F9F7F1] rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 border-4 border-[#F9F7F1]"
+                className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
               >
-                <Plus className="w-8 h-8" />
+                <Plus className="w-7 h-7" />
               </button>
             </>
           )}

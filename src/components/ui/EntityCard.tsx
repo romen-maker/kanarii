@@ -1,7 +1,7 @@
 import React from 'react';
 import { MoreVertical } from 'lucide-react';
 
-export type EntityVariant = 'success' | 'warning' | 'info' | 'danger' | 'neutral';
+export type EntityVariant = 'success' | 'warning' | 'info' | 'danger' | 'neutral' | 'primary';
 
 export interface EntityMetadata {
   icon: React.ElementType;
@@ -25,8 +25,8 @@ export interface EntityQuickAction {
   label: string;
   icon: React.ElementType;
   onClick: () => void;
-  variant?: 'default' | 'danger' | 'success' | 'warning' | 'info';
-  showLabel?: boolean; // Soporte para botones con texto
+  variant?: 'default' | 'danger' | 'success' | 'warning' | 'info' | 'primary';
+  showLabel?: boolean;
 }
 
 interface EntityCardProps {
@@ -60,7 +60,6 @@ export const EntityCard: React.FC<EntityCardProps> = ({
   const [showActions, setShowActions] = React.useState(false);
   const actionsRef = React.useRef<HTMLDivElement>(null);
 
-  // Close actions menu on click outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
@@ -73,11 +72,12 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
   const getVariantClasses = (variant: EntityVariant) => {
     const classes = {
-      success: 'bg-[var(--color-success-highlight)] text-[var(--color-success)] border-[var(--color-success)]/10',
-      warning: 'bg-[var(--color-warning-highlight)] text-[var(--color-warning)] border-[var(--color-warning)]/10',
-      info: 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)] border-[var(--color-primary)]/10',
-      danger: 'bg-[var(--color-error-highlight)] text-[var(--color-error)] border-[var(--color-error)]/10',
-      neutral: 'bg-[var(--color-surface-offset)] text-[var(--color-text-muted)] border-[var(--color-border)]',
+      success: 'bg-[var(--color-success-highlight)] text-[var(--color-success)]',
+      warning: 'bg-[var(--color-warning-highlight)] text-[var(--color-warning)]',
+      info: 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]',
+      primary: 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]',
+      danger: 'bg-[var(--color-error-highlight)] text-[var(--color-error)]',
+      neutral: 'bg-[var(--color-surface-offset)] text-[var(--color-text-muted)]',
     };
     return classes[variant] || classes.neutral;
   };
@@ -86,7 +86,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
     <div 
       onClick={onClick}
       className={`
-        group relative bg-[var(--color-surface)] p-5 rounded-2xl border border-[var(--color-border)] 
+        group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-5 shadow-sm
         hover:border-stone-300 hover:shadow-md transition-all duration-200 cursor-pointer
         ${className}
       `}
@@ -94,7 +94,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
       {/* Header: Status & Actions */}
       <div className="flex justify-between items-start mb-4">
         <div className={`
-          flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider
+          flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider
           ${getVariantClasses(status.variant)}
         `}>
           {status.icon && <status.icon className="w-3.5 h-3.5" />}
@@ -105,7 +105,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           <div className="relative" ref={actionsRef}>
             <button 
               onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
-              className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)] rounded-md transition-colors"
+              className="p-1.5 text-[var(--color-text-faint)] hover:text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] rounded-md transition-colors"
             >
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -118,7 +118,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                     onClick={(e) => { e.stopPropagation(); action.onClick(); setShowActions(false); }}
                     className={`
                       w-full flex items-center gap-2 px-4 py-2.5 text-xs text-left transition-colors
-                      ${action.variant === 'danger' ? 'text-[var(--color-error)] hover:bg-[var(--color-error)]/5' : 'text-[var(--color-text)] hover:bg-[var(--color-surface-offset)]'}
+                      ${action.variant === 'danger' ? 'text-[var(--color-error)] hover:bg-[var(--color-error)]/5' : 'text-[var(--color-text)] hover:bg-[var(--color-surface-2)]'}
                     `}
                   >
                     <action.icon className="w-3.5 h-3.5" />
@@ -143,39 +143,36 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         )}
       </div>
 
-      {/* Metadata Chips - bg-[#FDFBF7] equivalente semántico */}
+      {/* Metadata Chips */}
       <div className="flex flex-wrap gap-2 mb-4">
         {metadata.map((item, idx) => (
           <div 
             key={idx} 
-            className="flex items-center gap-1.5 bg-[var(--color-surface-offset-2)] px-2.5 py-1 rounded-lg text-[11px] font-medium text-[var(--color-text-muted)]" 
+            className="flex items-center gap-1 bg-[var(--color-surface-2)] px-2 py-1 rounded text-xs font-medium text-[var(--color-text-muted)]" 
             title={item.tooltip}
           >
-            <item.icon className="w-3.5 h-3.5 opacity-70 text-[var(--color-primary)]" />
+            <item.icon className="w-3.5 h-3.5 text-[var(--color-text-faint)]" />
             <span>{item.text}</span>
           </div>
         ))}
       </div>
 
-      {/* Quick Actions Bar - Soporte para texto e iconos */}
+      {/* Quick Actions Bar */}
       {quickActions.length > 0 && (
-        <div className="mt-5 pt-4 border-t border-[var(--color-surface-offset-2)] flex justify-between items-center">
-          <div className="flex items-center gap-1">
+        <div className="mt-5 pt-4 border-t border-[var(--color-surface-2)] flex justify-between items-center">
+          <div className="flex items-center gap-1 w-full">
             {quickActions.map((action, idx) => (
               <button
                 key={idx}
                 onClick={(e) => { e.stopPropagation(); action.onClick(); }}
                 className={`
-                  flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95
-                  ${action.showLabel ? 'pr-4' : 'w-11 h-11 justify-center'}
-                  ${action.variant === 'danger' ? 'text-[var(--color-error)] hover:bg-[var(--color-error)]/5' : 
-                    action.variant === 'success' ? 'text-[var(--color-success)] hover:bg-[var(--color-success)]/5' :
-                    action.variant === 'warning' ? 'text-[var(--color-warning)] hover:bg-[var(--color-warning)]/5' :
-                    'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)]'}
+                  flex items-center gap-1.5 transition-all active:scale-95
+                  ${action.showLabel ? 'text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]' : 'p-3 text-[var(--color-text-faint)] hover:text-[var(--color-text-muted)]'}
+                  ${action.variant === 'danger' && !action.showLabel ? 'text-[var(--color-error)]/70 hover:text-[var(--color-error)]' : ''}
                 `}
                 title={action.label}
               >
-                <action.icon className={`${action.showLabel ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+                <action.icon className="w-3.5 h-3.5" />
                 {action.showLabel && <span>{action.label}</span>}
               </button>
             ))}
@@ -190,7 +187,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
             <span 
               key={idx}
               className={`
-                px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tighter border
+                px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
                 ${getVariantClasses(tag.variant)}
               `}
             >
