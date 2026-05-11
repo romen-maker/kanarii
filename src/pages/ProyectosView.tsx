@@ -187,7 +187,6 @@ export function ProyectosView() {
     };
 
     const status = statusMap[proyecto.estado] || { label: proyecto.estado, variant: 'neutral' as const };
-    const solicitudesCount = (proyecto.solicitudes_uid || []).length;
     const isLider = appUser?.uid === proyecto.lider_uid;
 
     return (
@@ -201,13 +200,14 @@ export function ProyectosView() {
           { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" }
         ]}
         tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
+        quickActions={[
+          { label: 'Ver detalles', icon: Activity, onClick: () => setSelectedProject(proyecto), showLabel: true },
+        ]}
         actions={[
-          { label: 'Ver detalles', icon: Activity, onClick: () => setSelectedProject(proyecto) },
           { label: 'Gestionar equipo', icon: UserPlus, onClick: () => setSelectedProject(proyecto) },
           { label: 'Eliminar', icon: Trash2, onClick: () => startDelete(proyecto.id!), variant: 'danger' }
         ]}
         onClick={() => setSelectedProject(proyecto)}
-        className={solicitudesCount > 0 && isLider ? 'ring-2 ring-amber-400' : ''}
       />
     );
   };
