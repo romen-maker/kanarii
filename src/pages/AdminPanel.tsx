@@ -261,12 +261,7 @@ export function AdminPanel() {
             <button onClick={() => navigate('/cruce')} className="px-4 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
               Cruce de Perfiles
             </button>
-            <button onClick={() => navigate('/ficha')} className="px-4 py-2 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-medium transition-colors">
-              Ver mi ficha
-            </button>
-            <button onClick={logout} className="text-sm font-medium text-stone-500 hover:text-stone-800 transition-colors">
-              Cerrar sesión
-            </button>
+            {/* Navegación unificada en Sidebar/BottomNav */}
           </div>
         </div>
 
@@ -275,9 +270,6 @@ export function AdminPanel() {
           <div className="md:hidden p-4 border-b border-[#EAE2D6] flex justify-between gap-3">
              <button onClick={() => navigate('/cruce')} className="flex-1 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
               Cruce de Perfiles
-            </button>
-             <button onClick={() => navigate('/ficha')} className="flex-1 py-2 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-medium transition-colors">
-              Mi ficha
             </button>
           </div>
           <div className="p-6 border-b border-[#EAE2D6] flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center bg-[#F9F7F1]">
