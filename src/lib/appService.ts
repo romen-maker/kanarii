@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
 
@@ -78,7 +78,7 @@ export interface Proyecto {
   colaboradores_uid: string[];
   solicitudes_uid?: string[]; // Para marcar solicitudes como pendientes
   habilidadesNecesarias: string[]; // tags libres
-  estado: "activo" | "buscando_colaboradores" | "completado" | "pausado";
+  estado: "en_marcha" | "buscando_colaboradores" | "completado" | "pausado";
   fechaInicio?: string; // YYYY-MM-DD
   fechaFin?: string;
   creadoEn?: any; // timestamp
@@ -183,6 +183,16 @@ export async function actualizarEstadoProyecto(proyectoId: string, nuevoEstado: 
     });
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
+    throw err;
+  }
+}
+
+export async function deleteProyecto(id: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'proyectos', id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, 'proyectos');
     throw err;
   }
 }
