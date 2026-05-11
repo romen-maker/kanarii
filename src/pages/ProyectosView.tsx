@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo, actualizarEstadoProyecto } from '../lib/appService';
-import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus, Star } from 'lucide-react';
+import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo, actualizarEstadoProyecto, obtenerTareas, Tarea } from '../lib/appService';
+import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus, Star, ListChecks, Target } from 'lucide-react';
+import { useToast } from '../components/Toaster';
 
 export function ProyectosView() {
   const { appUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'proyectos' | 'tablon'>('proyectos');
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [tareas, setTareas] = useState<Tarea[]>([]);
   const [loading, setLoading] = useState(true);
   const [fichaUser, setFichaUser] = useState<Ficha | null>(null);
+  const { success, error: toastError } = useToast();
   
   // Create form state
   const [showCreateMenu, setShowCreateMenu] = useState(false);
@@ -59,6 +62,8 @@ export function ProyectosView() {
       }
       const data = await obtenerProyectos();
       setProyectos(data);
+      const allTareas = await obtenerTareas();
+      setTareas(allTareas);
     } catch(e) {
       console.error(e);
     } finally {
@@ -94,6 +99,7 @@ export function ProyectosView() {
         estado: (newProject.estado as any) || 'buscando_colaboradores'
       };
       await crearProyecto(proj);
+      success("Proyecto creado correctamente 🚀");
       setShowCreateMenu(false);
       setNewProject({
         titulo: '',
@@ -129,35 +135,39 @@ export function ProyectosView() {
     if (!appUser) return;
     try {
       await solicitarColaboracion(pid, appUser.uid);
+      success("Solicitud enviada correctamente ✨");
       loadData(); // reload
     } catch(e) {
       console.error("Error soliciting collaboration:", e);
+      toastError("Error al enviar la solicitud");
     }
   };
 
   const handleAprobar = async (pid: string, uid: string) => {
     try {
       await aprobarColaborador(pid, uid);
+      success("Colaborador aprobado ✨");
       const updated = await obtenerProyectos();
       setProyectos(updated);
       const proj = updated.find(p => p.id === pid);
       if (proj) setSelectedProject(proj);
     } catch(e) {
       console.error(e);
-      alert("Error al aprobar colaborador");
+      toastError("Error al aprobar colaborador");
     }
   };
 
   const handleRechazar = async (pid: string, uid: string) => {
     try {
       await rechazarSolicitud(pid, uid);
+      success("Solicitud rechazada");
       const updated = await obtenerProyectos();
       setProyectos(updated);
       const proj = updated.find(p => p.id === pid);
       if (proj) setSelectedProject(proj);
     } catch(e) {
       console.error(e);
-      alert("Error al rechazar solicitud");
+      toastError("Error al rechazar solicitud");
     }
   };
 
@@ -473,6 +483,68 @@ export function ProyectosView() {
                   </div>
                 </section>
               )}
+
+              {/* BARRA DE PROGRESO */}
+              {(() => {
+                const proyectoTareas = tareas.filter(t => t.proyectoId === selectedProject.id);
+                const total = proyectoTareas.length;
+                const completadas = proyectoTareas.filter(t => t.estado === 'completada').length;
+                const porcentaje = total > 0 ? Math.round((completadas / total) * 100) : 0;
+
+                return (
+                  <section className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold text-stone-400 uppercase tracking-widest flex items-center gap-1">
+                        <Target className="w-3 h-3" /> Progreso del Proyecto
+                      </span>
+                      <span className="text-sm font-bold text-stone-700">{porcentaje}%</span>
+                    </div>
+                    <div className="h-2 bg-stone-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-teal-500 transition-all duration-1000" 
+                        style={{ width: `${porcentaje}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-stone-400 mt-2 italic">
+                      {total === 0 ? 'Sin tareas vinculadas' : `${completadas} de ${total} tareas completadas`}
+                    </p>
+                  </section>
+                );
+              })()}
+
+              {/* LISTADO DE TAREAS */}
+              <section className="pt-4 border-t border-stone-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <ListChecks className="w-4 h-4 text-stone-400" />
+                  <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Tareas del Proyecto</h4>
+                </div>
+                <div className="space-y-2">
+                  {(() => {
+                    const pTareas = tareas.filter(t => t.proyectoId === selectedProject.id);
+                    if (pTareas.length === 0) return (
+                      <p className="text-xs text-stone-400 italic bg-stone-50/50 p-3 rounded-xl border border-dashed border-stone-200">
+                        No hay tareas creadas para este proyecto. Puedes crearlas desde el panel de Tareas.
+                      </p>
+                    );
+                    return pTareas.map(tarea => (
+                      <div key={tarea.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-stone-100 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            tarea.estado === 'completada' ? 'bg-teal-500' : 
+                            tarea.estado === 'en_progreso' ? 'bg-blue-400' : 'bg-amber-400'
+                          }`} />
+                          <span className={`text-sm ${tarea.estado === 'completada' ? 'line-through text-stone-400' : 'text-stone-700 font-medium'}`}>
+                            {tarea.titulo}
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-bold uppercase text-stone-400 px-2 py-0.5 bg-stone-50 rounded-full border border-stone-100">
+                          {tarea.estado.replace('_', ' ')}
+                        </span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </section>
 
               <section className="flex flex-col gap-4 pt-4 border-t border-stone-100">
                 <div className="flex items-center justify-between text-sm">
