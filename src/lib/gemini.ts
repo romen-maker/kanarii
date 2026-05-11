@@ -11,6 +11,63 @@ if (!geminiKey) {
 
 const ai = new GoogleGenAI({ apiKey: geminiKey || '' });
 
+/**
+ * Wrapper resiliente para llamadas a Gemini.
+ * Maneja el fallback automático de 2.5 a 1.5 en caso de saturación.
+ */
+async function callGeminiWithFallback(prompt: string): Promise<string> {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+
+    if (!response.text) throw new Error('No response text from Gemini 2.5');
+    return response.text;
+  } catch (err: any) {
+    const errStr = JSON.stringify(err);
+    const isRetryable = 
+      errStr.includes('503') || 
+      errStr.includes('429') || 
+      err.message?.includes('503') || 
+      err.message?.includes('429');
+
+    if (isRetryable) {
+      console.log("⚠️ Gemini 2.5 no disponible (saturación/cuota), usando 1.5 como fallback");
+      try {
+        const fallbackResponse = await ai.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        });
+
+        if (!fallbackResponse.text) throw new Error('No response text from Gemini 1.5');
+        return fallbackResponse.text;
+      } catch (fallbackErr) {
+        console.error("❌ Falló también el fallback de Gemini 1.5:", fallbackErr);
+        throw new Error("Servicio de IA no disponible, inténtalo en unos minutos");
+      }
+    }
+    
+    // Si no es un error de reintento (503/429), lanzamos el error original
+    console.error("❌ Error no recuperable en Gemini 2.5:", err);
+    throw err;
+  }
+}
+
+// Función auxiliar para parsear el JSON de la respuesta
+function parsearRespuestaIA(text: string): any {
+  try {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        return JSON.parse(match[0]);
+      }
+      return JSON.parse(text);
+  } catch(e) {
+      console.error("❌ Error parseando respuesta JSON de IA:", text);
+      throw e;
+  }
+}
+
 export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any): Promise<any> {
     const prompt = `
    Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.
@@ -32,23 +89,9 @@ export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, d
    ${JSON.stringify({datosBrutos, datosPersona, dimensiones}, null, 2)}
    `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
-
-  if (!response.text) throw new Error('No response from Gemini');
-
-  try {
-      const match = response.text.match(/\{[\s\S]*\}/);
-      if (match) {
-        return JSON.parse(match[0]);
-      }
-      return JSON.parse(response.text);
-  } catch(e) {
-      console.error("Error parsing AI response", response.text);
-      throw e;
-  }
+  console.log("🤖 Gemini: Iniciando generación de Perfil Visual...");
+  const textResponse = await callGeminiWithFallback(prompt);
+  return parsearRespuestaIA(textResponse);
 }
 
 export async function generarManual(datosBrutos: any, datosPersona: any, perfilVisual: any): Promise<string> {
@@ -78,16 +121,8 @@ Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de
    Datos Brutos (diseño humano y astrología): ${JSON.stringify(datosBrutos, null, 2)}
    `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
-
-  if (!response.text) {
-    throw new Error('No response from Gemini');
-  }
-
-  return response.text;
+  console.log("🤖 Gemini: Iniciando generación de Manual...");
+  return await callGeminiWithFallback(prompt);
 }
 
 export async function generarAnalisisCruce(perfil1: any, perfil2: any, resultadoDeterminista: any): Promise<string> {
@@ -153,14 +188,6 @@ SIEMPRE responde exactamente con la siguiente estructura (reemplazando los corch
 ---
 `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-  });
-
-  if (!response.text) {
-    throw new Error('No response from Gemini');
-  }
-
-  return response.text;
+  console.log("🤖 Gemini: Iniciando generación de Análisis de Cruce...");
+  return await callGeminiWithFallback(prompt);
 }

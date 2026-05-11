@@ -67,7 +67,7 @@ export function ProyectosView() {
   };
 
   const role = fichaUser?.datosPersona?.rol || fichaUser?.datosOnboarding?.rol;
-  const canCreate = appUser && (role === 'propietario' || role === 'miembro' || appUser.role === 'admin');
+  const canCreate = appUser !== null;
 
   // Helper to extract user skills
   const getUserSkills = () => {
@@ -89,6 +89,7 @@ export function ProyectosView() {
         descripcion: newProject.descripcion,
         lider_uid: appUser.uid,
         colaboradores_uid: [],
+        solicitudes_uid: [],
         habilidadesNecesarias: newProject.habilidadesNecesarias || [],
         estado: (newProject.estado as any) || 'buscando_colaboradores'
       };
@@ -101,9 +102,9 @@ export function ProyectosView() {
         habilidadesNecesarias: []
       });
       loadData();
-    } catch(e) {
-      console.error("Error creating project:", e);
-      alert("Error al crear el proyecto.");
+    } catch(err: any) {
+      console.error("Error creating project:", err);
+      alert(`Error al crear el proyecto: ${err.message || 'Error desconocido'}`);
     }
   };
 
