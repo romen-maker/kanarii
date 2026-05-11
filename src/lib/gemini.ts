@@ -47,7 +47,12 @@ export async function generarManual(datosBrutos: any, datosPersona: any, perfilV
    d.setMonth(d.getMonth() + 6);
    const formattedDate = d.toLocaleDateString();
    
-   const prompt = `Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.
+   const isVoluntario = datosPersona?.rol === 'voluntario';
+   const voluntarioContext = isVoluntario 
+      ? "\nEsta persona viene como voluntaria con estancia temporal. Adapta el tono para dar la bienvenida a alguien que viene a aportar por un período concreto, destacando cómo puede contribuir desde sus habilidades durante su estancia.\n"
+      : "";
+
+   const prompt = `Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.${voluntarioContext}
 Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de Arteara.
 
    1. ADN Astral e Ikigai Comunitario
@@ -81,25 +86,62 @@ export async function generarAnalisisCruce(perfil1: any, perfil2: any, resultado
 Analiza la sinergia y dinámica entre estos dos miembros de la comunidad de Arteara.
 
 Toma en cuenta sus perfiles:
-Perfil Persona 1 (${perfil1.datosPersona?.nombre || 'Miembro 1'}): ${JSON.stringify({
+Perfil Persona 1 (${perfil1.datosPersona?.nombre || perfil1.datosOnboarding?.nombre || 'Miembro 1'}): ${JSON.stringify({
   datosBrutos: perfil1.datosBrutos,
   datosPersona: perfil1.datosPersona,
+  datosOnboarding: perfil1.datosOnboarding,
   perfilVisual: perfil1.perfilVisual
 }, null, 2)}
 
-Perfil Persona 2 (${perfil2.datosPersona?.nombre || 'Miembro 2'}): ${JSON.stringify({
+Perfil Persona 2 (${perfil2.datosPersona?.nombre || perfil2.datosOnboarding?.nombre || 'Miembro 2'}): ${JSON.stringify({
   datosBrutos: perfil2.datosBrutos,
   datosPersona: perfil2.datosPersona,
+  datosOnboarding: perfil2.datosOnboarding,
   perfilVisual: perfil2.perfilVisual
 }, null, 2)}
 
 Resultados del cruce determinista:
 ${JSON.stringify(resultadoDeterminista, null, 2)}
 
-Escribe 2-3 párrafos con el siguiente contenido (en formato Markdown):
-- Qué pueden construir juntos en la comunidad de Arteara
-- Dónde puede aparecer fricción y cómo navegarla con Comunicación No Violenta (CNV)
-- Una recomendación sociocrática concreta para este par (¿Cómo podrían colaborar en roles, tareas o toma de decisiones?)
+ESTRUCTURA Y FORMATO DE TU RESPUESTA OBLIGATORIA:
+- Máximo 4-5 líneas por bloque antes de un salto visual
+- Las frases CNV siempre como blockquote (> "...")
+- Los roles en negrita con " — " separando nombre y descripción
+- Usa los nombres reales de los miembros, nunca digas "Persona 1" o "Persona 2"
+- No uses lenguaje académico — emplea un tono cálido y directo, como una facilitadora que conoce a ambas personas
+- IMPORTANTE: Si el cruce determinista incluye canales electromagnéticos (canalesConexion.electromagneticos), menciona explícitamente 1-2 de ellos en la sección "Lo que pueden construir juntos", ya que son profundamente significativos energéticamente.
+
+SIEMPRE responde exactamente con la siguiente estructura (reemplazando los corchetes con contenido):
+
+---
+
+## 🌱 Lo que pueden construir juntos
+
+[2-3 frases máximo por párrafo, con salto de línea entre párrafos]
+
+---
+
+## ⚡ Dónde puede aparecer fricción
+
+[Máximo 1 párrafo de contexto, luego dos bloques CNV separados:]
+
+**Cuando [Nombre del Miembro 1] [situación, ej: siente presión de decidir rápido]:**
+> "[frase CNV en primera persona]"
+
+**Cuando [Nombre del Miembro 2] [situación, ej: quiere ofrecer guía sin invitación]:**
+> "[frase CNV en primera persona]"
+
+---
+
+## 🔵 Recomendación Sociocrática
+
+**Rol sugerido para [Nombre del Miembro 1]:** [nombre del rol] — [1 línea explicando qué hace]
+
+**Rol sugerido para [Nombre del Miembro 2]:** [nombre del rol] — [1 línea explicando qué hace]
+
+**Acuerdo de doble enlace:** [1-2 frases concretas]
+
+---
 `;
 
   const response = await ai.models.generateContent({

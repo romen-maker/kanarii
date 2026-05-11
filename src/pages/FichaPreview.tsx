@@ -23,7 +23,11 @@ const fichaSchema = z.object({
   tension: z.string().min(1, 'Requerido'),
   latitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
   longitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
-  timezone: z.string().optional()
+  timezone: z.string().optional(),
+  rol: z.string().optional(),
+  fechaLlegada: z.string().optional(),
+  fechaSalida: z.string().optional(),
+  habilidadesVoluntario: z.string().optional()
 });
 
 type FichaFormData = z.infer<typeof fichaSchema>;
@@ -44,11 +48,13 @@ export function FichaPreview() {
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [geoMessage, setGeoMessage] = useState('');
 
-  const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
+  const { register, handleSubmit, getValues, setValue, watch, formState: { errors, isSubmitting } } = useForm<FichaFormData>({
     // @ts-ignore
     resolver: zodResolver(fichaSchema),
     defaultValues: pendingFicha || {}
   });
+
+  const watchRol = watch("rol");
 
   const onEditSubmit = (data: FichaFormData) => {
     setPendingFicha(data);
@@ -251,11 +257,28 @@ export function FichaPreview() {
                     {errors.tension && <p className="text-red-500 text-xs">{errors.tension.message}</p>}
                   </div>
 
-                  <div className="space-y-1 md:col-span-2">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-stone-600">Participación en Kanarii</label>
                     <textarea {...register("rol_arteara")} rows={4} placeholder="¿Cómo contribuyes o te gustaría contribuir al proyecto?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
                     {errors.rol_arteara && <p className="text-red-500 text-xs">{errors.rol_arteara.message}</p>}
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-stone-600">Rol</label>
+                    <select {...register("rol")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]">
+                      <option value="propietario">Propietario / Núcleo</option>
+                      <option value="miembro">Miembro</option>
+                      <option value="voluntario">Voluntario</option>
+                    </select>
+                    {errors.rol && <p className="text-red-500 text-xs">{errors.rol.message}</p>}
+                  </div>
+
+                  {watchRol === 'voluntario' && (
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-stone-600">Fecha de salida (opcional)</label>
+                      <input type="date" {...register("fechaSalida")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-6 flex justify-end">
@@ -271,7 +294,30 @@ export function FichaPreview() {
             ) : (
               <div className="space-y-8">
                 <div className="flex justify-between items-start">
-                  <h2 className="text-3xl font-serif text-[#4A4E4D]">Tus datos de registro</h2>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-3xl font-serif text-[#4A4E4D]">Tus datos de registro</h2>
+                      {pendingFicha?.rol && (
+                        <div className="flex">
+                          {pendingFicha.rol === 'propietario' && <span className="px-3 py-1 bg-green-800 text-white rounded-full text-xs font-medium">Propietario/a</span>}
+                          {pendingFicha.rol === 'miembro' && <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium">Miembro</span>}
+                          {pendingFicha.rol === 'voluntario' && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              pendingFicha.fechaSalida && new Date(pendingFicha.fechaSalida) < new Date() 
+                                ? 'bg-teal-50 text-teal-700 border border-teal-200 opacity-80'
+                                : 'bg-teal-600 text-white'
+                            }`}>
+                              Voluntario/a {pendingFicha.fechaSalida ? (
+                                new Date(pendingFicha.fechaSalida) < new Date()
+                                  ? '· ya partió'
+                                  : `· hasta ${new Date(pendingFicha.fechaSalida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                              ) : ''}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <button
                     onClick={() => setIsEditing(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm cursor-pointer"

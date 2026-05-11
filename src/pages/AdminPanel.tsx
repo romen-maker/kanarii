@@ -13,11 +13,11 @@ function getDatosPersona(ficha: Ficha) {
 }
 
 const SEED_DATA = [
-  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria" },
-  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife" },
-  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África" },
-  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote" },
-  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura" }
+  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria", rol: "propietario" },
+  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife", rol: "miembro" },
+  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África", rol: "voluntario", fechaSalida: "2026-11-20" },
+  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote", rol: "voluntario", fechaSalida: "2024-01-10" },
+  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura", rol: "miembro" }
 ];
 
 export function AdminPanel() {
@@ -26,6 +26,7 @@ export function AdminPanel() {
   const [fichas, setFichas] = useState<Ficha[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'todos' | 'propietario' | 'miembro' | 'voluntario'>('todos');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
 
   const fetchFichas = async () => {
@@ -47,23 +48,43 @@ export function AdminPanel() {
         }
       }
 
-      // Add missing datosBrutos to existing seeds
-      const seedsMissingData = data.filter(doc => doc.isSeedData && !doc.datosBrutos);
+      // Add missing datosBrutos/canales to existing seeds
+      const seedsMissingData = data.filter(doc => doc.isSeedData && (!doc.datosBrutos || !doc.datosBrutos.puertas_activas));
       if (seedsMissingData.length > 0) {
         const { updateDoc, serverTimestamp } = await import('firebase/firestore');
         const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
         const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
+        
+        // Mock data for doors and channels to generate some connections
+        const mockPuertas = [
+          [1, 8, 2, 14, 3, 20], // Has 1-8, plus door 20
+          [8, 2, 14, 60, 4, 63, 10], // Has 2-14, plus door 10
+          [14, 60, 15, 6, 59, 3, 20], // Has 3-60, 6-59, plus door 20
+          [4, 5, 15, 7, 31, 63, 10], // Has 5-15, 4-63, plus door 10
+          [63, 6, 31, 9, 52, 7, 20]  // Has 9-52, plus door 20
+        ];
+        const mockCanales = [
+          [{nombre: "1-8", puertas: [1,8]}],
+          [{nombre: "2-14", puertas: [2,14]}],
+          [{nombre: "3-60", puertas: [3,60]}, {nombre: "6-59", puertas: [6,59]}],
+          [{nombre: "5-15", puertas: [5,15]}, {nombre: "4-63", puertas: [4,63]}],
+          [{nombre: "9-52", puertas: [9,52]}]
+        ];
+
         for (let index = 0; index < seedsMissingData.length; index++) {
           const oldDoc = seedsMissingData[index];
           const newDatos = {
             estado: 'completo',
             updatedAt: serverTimestamp(),
             datosBrutos: {
+              ...(oldDoc.datosBrutos || {}),
               tipo_hd: tiposHD[index % tiposHD.length],
               autoridad: autoridades[index % autoridades.length],
-              perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`
+              perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`,
+              puertas_activas: mockPuertas[index % mockPuertas.length],
+              canales: mockCanales[index % mockCanales.length]
             },
-            perfilVisual: {
+            perfilVisual: oldDoc.perfilVisual || {
               dimensiones: {
                 escucha: 30 + (index * 15) % 70,
                 accion: 40 + (index * 20) % 60,
@@ -85,6 +106,36 @@ export function AdminPanel() {
         const promises = SEED_DATA.map(async (seed, index) => {
           const seedId = `seed-${appUser.uid}-${index}`;
           const existing = data.find(d => d.id === seedId);
+          if (existing) {
+             const datosP = getDatosPersona(existing);
+             if (!datosP.rol) {
+                 try {
+                    const { updateDoc, serverTimestamp } = await import('firebase/firestore');
+                    
+                    const updates: any = {};
+                    if (existing.datosPersona) {
+                      updates["datosPersona.rol"] = seed.rol;
+                      if (seed.fechaSalida) updates["datosPersona.fechaSalida"] = seed.fechaSalida;
+                    }
+                    if (existing.datosOnboarding) {
+                      updates["datosOnboarding.rol"] = seed.rol;
+                      if (seed.fechaSalida) updates["datosOnboarding.fechaSalida"] = seed.fechaSalida;
+                    }
+                    updates["updatedAt"] = serverTimestamp();
+                    
+                    await updateDoc(doc(db, 'fichas', seedId), updates);
+                    if (existing.datosPersona) {
+                      existing.datosPersona.rol = seed.rol;
+                      existing.datosPersona.fechaSalida = seed.fechaSalida;
+                    }
+                    if (existing.datosOnboarding) {
+                      existing.datosOnboarding.rol = seed.rol;
+                      existing.datosOnboarding.fechaSalida = seed.fechaSalida;
+                    }
+                 } catch(e) { console.error(e) }
+             }
+          }
+
           if (!existing) {
             const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
             const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
@@ -100,7 +151,22 @@ export function AdminPanel() {
                 saberes: seed.saberes,
                 rol_arteara: seed.rol_arteara,
                 antiguedad_anos: seed.antiguedad_anos,
-                tension: seed.tension
+                tension: seed.tension,
+                rol: seed.rol as any,
+                fechaSalida: seed.fechaSalida
+              },
+              datosPersona: {
+                nombre: seed.nombre,
+                fechaNacimiento: seed.fechaNacimiento,
+                hora: "12:00",
+                lugar: seed.lugar,
+                genero: seed.genero,
+                saberes: seed.saberes,
+                rol_arteara: seed.rol_arteara,
+                antiguedad_anos: seed.antiguedad_anos,
+                tension: seed.tension,
+                rol: seed.rol as any,
+                fechaSalida: seed.fechaSalida
               },
               datosBrutos: {
                 tipo_hd: tiposHD[index % tiposHD.length],
@@ -161,6 +227,9 @@ export function AdminPanel() {
   const filteredFichas = fichas.filter(f => {
     const datos = getDatosPersona(f);
     if (!datos || !datos.nombre) return false;
+
+    if (roleFilter !== 'todos' && datos.rol !== roleFilter) return false;
+
     return (
       (datos.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (datos.rol_arteara?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -204,15 +273,27 @@ export function AdminPanel() {
               <span>{fichas.length} Fichas registradas</span>
             </div>
             
-            <div className="relative w-full sm:w-auto">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-              <input 
-                type="text"
-                placeholder="Buscar por nombre o rol..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D] w-full sm:w-64"
-              />
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <select 
+                value={roleFilter}
+                onChange={e => setRoleFilter(e.target.value as any)}
+                className="px-3 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D]"
+              >
+                <option value="todos">Todos los roles</option>
+                <option value="propietario">Propietario/a</option>
+                <option value="miembro">Miembro</option>
+                <option value="voluntario">Voluntario/a</option>
+              </select>
+              <div className="relative w-full sm:w-auto">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input 
+                  type="text"
+                  placeholder="Buscar por nombre o rol..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-4 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D] w-full sm:w-64"
+                />
+              </div>
             </div>
           </div>
           
@@ -244,12 +325,31 @@ export function AdminPanel() {
                     return (
                       <tr key={ficha.id} className="hover:bg-[#F9F7F1] transition-colors">
                         <td className="px-6 py-4 font-medium text-stone-700">
-                          {datos.nombre}
-                          {ficha.isSeedData && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C]">
-                              Demo
+                          <div className="flex flex-col gap-1">
+                            <span className="flex items-center gap-2">
+                              {datos.nombre}
+                              {ficha.isSeedData && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C] align-middle">Demo</span>}
+                              {datos?.rol && (
+                                <div>
+                                  {datos.rol === 'propietario' && <span className="inline-block px-2 py-0.5 bg-green-800 text-white rounded text-[10px] font-medium">Propietario/a</span>}
+                                  {datos.rol === 'miembro' && <span className="inline-block px-2 py-0.5 bg-green-600 text-white rounded text-[10px] font-medium">Miembro</span>}
+                                  {datos.rol === 'voluntario' && (
+                                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${
+                                      datos.fechaSalida && new Date(datos.fechaSalida) < new Date() 
+                                        ? 'bg-teal-50 text-teal-700 border border-teal-200 opacity-80'
+                                        : 'bg-teal-600 text-white'
+                                    }`}>
+                                      Voluntario/a {datos.fechaSalida ? (
+                                        new Date(datos.fechaSalida) < new Date()
+                                          ? '· ya partió'
+                                          : `· hasta ${new Date(datos.fechaSalida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                      ) : ''}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </span>
-                          )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">{datos.rol_arteara}</td>
                         <td className="px-6 py-4">{datos.antiguedad_anos}</td>
@@ -297,12 +397,27 @@ export function AdminPanel() {
                 return (
                   <div key={ficha.id} className="bg-white rounded-2xl border border-[#EAE2D6] p-4 flex flex-col gap-2 relative">
                     <div className="pr-20">
-                      <h3 className="font-serif text-lg text-stone-700 leading-tight">
+                      <h3 className="font-serif text-lg text-stone-700 leading-tight flex items-center gap-2 flex-wrap">
                         {datos.nombre}
-                        {ficha.isSeedData && (
-                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C] align-middle">
-                            Demo
-                          </span>
+                        {ficha.isSeedData && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C] align-middle">Demo</span>}
+                        {datos?.rol && (
+                          <div>
+                            {datos.rol === 'propietario' && <span className="inline-block px-2 py-0.5 bg-green-800 text-white rounded text-[10px] font-medium align-middle">Propietario/a</span>}
+                            {datos.rol === 'miembro' && <span className="inline-block px-2 py-0.5 bg-green-600 text-white rounded text-[10px] font-medium align-middle">Miembro</span>}
+                            {datos.rol === 'voluntario' && (
+                              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium align-middle ${
+                                datos.fechaSalida && new Date(datos.fechaSalida) < new Date() 
+                                  ? 'bg-teal-50 text-teal-700 border border-teal-200 opacity-80'
+                                  : 'bg-teal-600 text-white'
+                              }`}>
+                                Voluntario/a {datos.fechaSalida ? (
+                                  new Date(datos.fechaSalida) < new Date()
+                                    ? '· ya partió'
+                                    : `· hasta ${new Date(datos.fechaSalida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                ) : ''}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </h3>
                       <p className="text-sm text-stone-500 mt-1">

@@ -216,5 +216,26 @@ service cloud.firestore {
 
       allow delete: if isVerified() && (request.auth.uid == existing().creadaPor || isAdmin());
     }
+    function isValidCruce(data) {
+      return data.keys().hasAll(['miembro1_uid', 'miembro2_uid', 'resultado', 'analisisGemini', 'generadoEn', 'perfilHash1', 'perfilHash2']) &&
+             data.miembro1_uid is string &&
+             data.miembro2_uid is string &&
+             data.resultado is map &&
+             data.analisisGemini is string &&
+             data.generadoEn is timestamp &&
+             data.perfilHash1 is string &&
+             data.perfilHash2 is string;
+    }
+
+    match /cruces/{cruceId} {
+      allow get: if isVerified();
+      allow list: if isVerified();
+
+      allow create: if isVerified() && isAdmin() && isValidCruce(incoming());
+
+      allow update: if isVerified() && isAdmin() && isValidCruce(incoming());
+      
+      allow delete: if isAdmin();
+    }
   }
 }

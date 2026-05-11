@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Ficha, cruzarMiembros, AnalisisCruce } from '../lib/appService';
 import { generarAnalisisCruce } from '../lib/gemini';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
-import { Leaf, Users, Search, ArrowLeft, RefreshCw, Layers } from 'lucide-react';
+import { Leaf, Users, Search, ArrowLeft, RefreshCw, Layers, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
@@ -22,6 +22,8 @@ export function CruceView() {
   const [result, setResult] = useState<{
     determinista: AnalisisCruce;
     gemini: string;
+    fromCache: boolean;
+    generadoEn: Date | null;
   } | null>(null);
 
   useEffect(() => {
@@ -35,12 +37,20 @@ export function CruceView() {
     try {
       const q = query(collection(db, 'fichas'));
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Ficha));
       setFichas(data.filter(f => f.datosBrutos || f.estado === 'completo'));
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, 'fichas');
     }
     setLoading(false);
+  };
+
+  const getHash = (ficha: Ficha) => {
+    try {
+      return btoa("v2" + JSON.stringify(ficha.datosBrutos) + JSON.stringify(ficha.perfilVisual)).slice(0, 16);
+    } catch {
+      return 'hash_error';
+    }
   };
 
   const handleAnalisis = async () => {
@@ -63,16 +73,59 @@ export function CruceView() {
       return;
     }
 
+    const sortedIds = [perfil1Id, perfil2Id].sort();
+    const cruceId = `${sortedIds[0]}_${sortedIds[1]}`;
+    
+    // Check cache
     try {
+      const cruceRef = doc(db, 'cruces', cruceId);
+      const cruceSnap = await getDoc(cruceRef);
+      
+      const hash1 = sortedIds[0] === perfil1Id ? getHash(f1) : getHash(f2);
+      const hash2 = sortedIds[1] === perfil2Id ? getHash(f2) : getHash(f1);
+
+      if (cruceSnap.exists()) {
+        const data = cruceSnap.data();
+        if (data.perfilHash1 === hash1 && data.perfilHash2 === hash2) {
+          setResult({
+            determinista: data.resultado,
+            gemini: data.analisisGemini,
+            fromCache: true,
+            generadoEn: data.generadoEn?.toDate() || new Date()
+          });
+          setAnalyzing(false);
+          return;
+        }
+      }
+
       const respDet = cruzarMiembros(f1, f2);
       const geminiTxt = await generarAnalisisCruce(f1, f2, respDet);
-      setResult({ determinista: respDet, gemini: geminiTxt });
+      
+      const newCruceData = {
+        miembro1_uid: sortedIds[0],
+        miembro2_uid: sortedIds[1],
+        resultado: respDet,
+        analisisGemini: geminiTxt,
+        generadoEn: serverTimestamp(),
+        perfilHash1: hash1,
+        perfilHash2: hash2
+      };
+
+      await setDoc(cruceRef, newCruceData);
+
+      setResult({ 
+        determinista: respDet, 
+        gemini: geminiTxt,
+        fromCache: false,
+        generadoEn: new Date()
+      });
     } catch (err) {
       console.error(err);
       alert("Error al generar análisis: " + (err as any).message);
     }
     setAnalyzing(false);
   };
+
 
   const getNombre = (ficha: Ficha) => ficha.datosPersona?.nombre || ficha.datosOnboarding?.nombre || 'Desconocido';
 
@@ -145,8 +198,16 @@ export function CruceView() {
 
         {result && (
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden p-6">
-            <h2 className="text-2xl font-serif text-[#4A4E4D] mb-6 flex justify-between items-center">
-              <span>Resultados del Encuentro</span>
+            <h2 className="text-2xl font-serif text-[#4A4E4D] mb-6 flex justify-between items-center flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <span>Resultados del Encuentro</span>
+                {result.fromCache && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Análisis guardado {result.generadoEn ? result.generadoEn.toLocaleDateString() : ''}
+                  </span>
+                )}
+              </div>
               <span className="text-xl px-4 py-1 bg-[#F9F7F1] border border-[#EAE2D6] rounded-full text-[#6B705C]">
                 Sinergia: {result.determinista.puntuacion}%
               </span>
@@ -174,6 +235,49 @@ export function CruceView() {
                        {t}
                     </span>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {result.determinista.canalesConexion && (
+              <div className="mb-8 p-5 bg-[#F9F7F1] rounded-2xl border border-[#EAE2D6]">
+                <h3 className="text-sm font-bold text-[#6B705C] uppercase tracking-wider mb-4">Canales de Conexión</h3>
+                <div className="flex flex-col gap-3">
+                  {result.determinista.canalesConexion.electromagneticos.length > 0 && (
+                     <div className="flex flex-wrap gap-2">
+                       {result.determinista.canalesConexion.electromagneticos.map((txt, i) => (
+                         <span key={i} className="px-3 py-1.5 bg-yellow-50 text-yellow-800 border border-yellow-400 rounded-full text-sm shadow-sm font-medium flex items-center gap-1">
+                           ✨ {txt}
+                         </span>
+                       ))}
+                     </div>
+                  )}
+                  {result.determinista.canalesConexion.compania.length > 0 && (
+                     <div className="flex flex-wrap gap-2 mt-1">
+                       {result.determinista.canalesConexion.compania.map((txt, i) => (
+                         <span key={i} className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm">
+                           {txt}
+                         </span>
+                       ))}
+                     </div>
+                  )}
+                  {(result.determinista.canalesConexion.dominancia.length > 0 || result.determinista.canalesConexion.compromiso.length > 0) && (
+                     <div className="flex flex-wrap gap-2 mt-1">
+                       {result.determinista.canalesConexion.dominancia.map((txt, i) => (
+                         <span key={`d-${i}`} className="px-3 py-1 bg-orange-50 text-orange-800 border border-orange-200 rounded-full text-sm">
+                           {txt}
+                         </span>
+                       ))}
+                       {result.determinista.canalesConexion.compromiso.map((txt, i) => (
+                         <span key={`c-${i}`} className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-sm">
+                           {txt}
+                         </span>
+                       ))}
+                     </div>
+                  )}
+                  {Object.values(result.determinista.canalesConexion).every(arr => arr.length === 0) && (
+                    <p className="text-sm text-stone-500 italic">No se detectaron canales de conexión adicionales en este cruce.</p>
+                  )}
                 </div>
               </div>
             )}

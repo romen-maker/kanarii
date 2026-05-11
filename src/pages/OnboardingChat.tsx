@@ -12,7 +12,14 @@ interface Message {
   text: string;
 }
 
-const STEPS = [
+const INITIAL_STEPS = [
+  { key: 'rol_tipo', q: '¿Cómo llegas a Arteara?', 
+    options: [
+      { label: 'Soy del núcleo / propietaria o propietario', value: 'propietario' },
+      { label: 'Soy miembro de la comunidad', value: 'miembro' },
+      { label: 'Vengo como voluntario/a (Workaway, HelpX...)', value: 'voluntario' }
+    ]
+  },
   { key: 'nombre', q: '¡Bienvenida, bienvenido a esta linda tribu! Qué alegría sentir tu energía aquí. Para empezar a tejer nuestra red, ¿cómo te llamas o cómo sientes que te llamemos?' },
   { key: 'fechaNacimiento', type: 'date', q: 'Tanemmirt (gracias). Para conectar con nuestros ciclos vitales y entender tu momento en esta experiencia, ¿cuál es tu fecha de nacimiento? (ej: 1990-05-14)' },
   { key: 'hora', type: 'time', q: 'El instante en que llegaste tiene su propia magia. ¿Conoces la hora, aunque sea aproximada, en la que naciste? Si no la sabes, escribe 00:00. Puedes buscarla en tu partida de nacimiento. (ej: 14:30)' },
@@ -42,9 +49,10 @@ const STEPS = [
 export function OnboardingChat() {
   const navigate = useNavigate();
   const { user, login } = useAuth();
+  const [steps, setSteps] = useState(INITIAL_STEPS);
 
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'initial', sender: 'bot', text: STEPS[0].q }
+    { id: 'initial', sender: 'bot', text: INITIAL_STEPS[0].q }
   ]);
   const [pendingResponses, setPendingResponses] = useState<any[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -69,7 +77,7 @@ export function OnboardingChat() {
     
     setInput('');
     const rebuiltMessages: Message[] = [
-      { id: 'initial', sender: 'bot', text: STEPS[0].q }
+      { id: 'initial', sender: 'bot', text: INITIAL_STEPS[0].q }
     ];
     const newPending = pendingResponses.slice(0, prevIndex);
     
@@ -77,8 +85,8 @@ export function OnboardingChat() {
       if (resp.sender === 'user') {
         rebuiltMessages.push({ id: `user_${i}`, sender: 'user', text: resp.message });
       }
-      if (STEPS[i + 1]) {
-         rebuiltMessages.push({ id: `bot_${i+1}`, sender: 'bot', text: STEPS[i + 1].q });
+      if (steps[i + 1]) {
+         rebuiltMessages.push({ id: `bot_${i+1}`, sender: 'bot', text: steps[i + 1].q });
       }
     });
 
@@ -95,21 +103,38 @@ export function OnboardingChat() {
     const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: userText };
     setMessages(prev => [...prev, userMsg]);
     
-    const stepKey = STEPS[currentStepIndex].key;
+    const stepKey = steps[currentStepIndex].key;
     const newData = { ...formData, [stepKey]: userText };
+    
+    let currentSteps = [...steps];
+    if (stepKey === 'rol_tipo') {
+      newData.rol = userText; // Map to the rol property dynamically
+      if (userText === 'voluntario') {
+        const lugarIndex = currentSteps.findIndex(s => s.key === 'lugar');
+        if (lugarIndex !== -1 && !currentSteps.find(s => s.key === 'fechas_voluntario')) {
+          currentSteps.splice(lugarIndex + 1, 0, 
+            { key: 'fechas_voluntario', q: '¿Cuándo planeas llegar y cuándo te irías aproximadamente?' },
+            { key: 'habilidades_voluntario', q: '¿Qué habilidades o saberes traes para compartir con la finca?' }
+          );
+        }
+      } else {
+        currentSteps = currentSteps.filter(s => s.key !== 'fechas_voluntario' && s.key !== 'habilidades_voluntario');
+      }
+      setSteps(currentSteps);
+    }
+    
     setFormData(newData);
-
     saveResponseLocal(stepKey, userText, 'user');
 
-    if (currentStepIndex < STEPS.length - 1) {
+    if (currentStepIndex < currentSteps.length - 1) {
       const nextStepIndex = currentStepIndex + 1;
-      const botMsgText = STEPS[nextStepIndex].q;
+      const botMsgText = currentSteps[nextStepIndex].q;
       
       setCurrentStepIndex(nextStepIndex);
       
       setTimeout(() => {
         setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: botMsgText }]);
-        saveResponseLocal(STEPS[nextStepIndex].key, botMsgText, 'bot');
+        saveResponseLocal(currentSteps[nextStepIndex].key, botMsgText, 'bot');
       }, 600);
       
     } else {
@@ -175,9 +200,9 @@ export function OnboardingChat() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#EAE2D6] p-4 flex justify-center">
         <div className="max-w-2xl w-full relative flex flex-col gap-2">
-          {STEPS[currentStepIndex]?.options ? (
+          {steps[currentStepIndex]?.options ? (
             <div className="flex flex-wrap gap-2 justify-center mb-2">
-              {STEPS[currentStepIndex].options.map((opt: any) => (
+              {steps[currentStepIndex].options?.map((opt: any) => (
                 <button
                   key={opt.value}
                   onClick={() => {
@@ -192,7 +217,7 @@ export function OnboardingChat() {
               ))}
             </div>
           ) : null}
-          {STEPS[currentStepIndex]?.key === 'lugar' ? (
+          {steps[currentStepIndex]?.key === 'lugar' ? (
             <LocationAutocomplete 
               disabled={saving}
               onEnter={() => {
@@ -216,18 +241,18 @@ export function OnboardingChat() {
                   };
                   setFormData(prev => ({ ...prev, ...newDataFields }));
                   
-                  saveResponseLocal(STEPS[currentStepIndex].key, data.ciudad, 'user');
+                  saveResponseLocal(steps[currentStepIndex].key, data.ciudad, 'user');
 
                   // Replace temporary wait message and let the user proceed
                   setMessages(prev => prev.filter(m => m.id !== waitMsgId));
 
-                  if (currentStepIndex < STEPS.length - 1) {
+                  if (currentStepIndex < steps.length - 1) {
                     const nextStepIndex = currentStepIndex + 1;
-                    const botMsgText = STEPS[nextStepIndex].q;
+                    const botMsgText = steps[nextStepIndex].q;
                     setCurrentStepIndex(nextStepIndex);
                     setTimeout(() => {
                       setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: botMsgText }]);
-                      saveResponseLocal(STEPS[nextStepIndex].key, botMsgText, 'bot');
+                      saveResponseLocal(steps[nextStepIndex].key, botMsgText, 'bot');
                       setSaving(false);
                     }, 600);
                   } else {
@@ -235,7 +260,7 @@ export function OnboardingChat() {
                       setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: '¡Tanemmirt (gracias) por tu tiempo y energía! Estamos trazando tu ficha comunitaria...' }]);
                       const finalData = { ...formData, ...newDataFields };
                       localStorage.setItem('kanarii_pendingFicha', JSON.stringify(finalData));
-                      localStorage.setItem('kanarii_pendingResponses', JSON.stringify([...pendingResponses, { step: STEPS[currentStepIndex].key, message: data.ciudad, sender: 'user' }]));
+                      localStorage.setItem('kanarii_pendingResponses', JSON.stringify([...pendingResponses, { step: steps[currentStepIndex].key, message: data.ciudad, sender: 'user' }]));
                       navigate('/ficha-preview');
                     }, 1000);
                   }
@@ -260,16 +285,16 @@ export function OnboardingChat() {
                 </button>
               )}
               <div className="relative flex-1 flex flex-col gap-1">
-                {(STEPS[currentStepIndex] as any)?.example && (
-                  <p className="text-xs text-stone-500 pl-4">{(STEPS[currentStepIndex] as any).example}</p>
+                {(steps[currentStepIndex] as any)?.example && (
+                  <p className="text-xs text-stone-500 pl-4">{(steps[currentStepIndex] as any).example}</p>
                 )}
                 <div className="relative w-full">
                   <input
-                    type={(STEPS[currentStepIndex] as any)?.type || "text"}
+                    type={(steps[currentStepIndex] as any)?.type || "text"}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder={STEPS[currentStepIndex]?.options ? "O selecciona una opción arriba..." : "Escribe tu respuesta aquí..."}
+                    placeholder={steps[currentStepIndex]?.options ? "O selecciona una opción arriba..." : "Escribe tu respuesta aquí..."}
                     disabled={saving}
                     className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-14 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
                   />

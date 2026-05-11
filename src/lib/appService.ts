@@ -16,6 +16,11 @@ export interface DatosOnboarding {
   latitud?: number;
   longitud?: number;
   timezone?: string;
+  rol?: "propietario" | "miembro" | "voluntario";
+  fechaLlegada?: string;
+  fechaSalida?: string;
+  habilidadesVoluntario?: string;
+  plataformaOrigen?: string;
 }
 
 export interface Ficha {
@@ -235,7 +240,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       if (estado !== "completo") estado = "pendiente_capa1";
     }
 
-    const datosPersona = {
+    const datosPersona: any = {
       nombre: datosOnboarding.nombre,
       fechaNacimiento: datosOnboarding.fechaNacimiento,
       hora: horaVal,
@@ -248,8 +253,20 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       latitud,
       longitud,
       timezone,
+      rol: datosOnboarding.rol,
+      fechaLlegada: datosOnboarding.fechaLlegada,
+      fechaSalida: datosOnboarding.fechaSalida,
+      habilidadesVoluntario: datosOnboarding.habilidadesVoluntario,
+      plataformaOrigen: datosOnboarding.plataformaOrigen,
       ...(isHoraAproximada ? { hora_aproximada: true } : {})
     };
+
+    // Remove undefined values to prevent Firestore errors
+    Object.keys(datosPersona).forEach(key => {
+      if (datosPersona[key] === undefined) {
+        delete datosPersona[key];
+      }
+    });
 
     let perfilVisual = (datosOnboarding as any).preview_perfilVisual || null;
     let manualMarkdown = (datosOnboarding as any).preview_manual || null;
@@ -282,13 +299,20 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
     const d = new Date();
     d.setMonth(d.getMonth() + 6);
 
+    const safeDatosOnboarding = { ...datosOnboarding };
+    Object.keys(safeDatosOnboarding).forEach(key => {
+      if ((safeDatosOnboarding as any)[key] === undefined) {
+        delete (safeDatosOnboarding as any)[key];
+      }
+    });
+
     const fichaFull: any = {
       userId,
       datosBrutos: rawData || null,
       datosPersona,
       // Keeping original for backward compatibility
       datosOnboarding: {
-        ...datosOnboarding,
+        ...safeDatosOnboarding,
         hora: horaVal,
         hora_aproximada: isHoraAproximada
       },
@@ -311,6 +335,22 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         fichaFull.versionManual = 1;
         fichaFull.proximaRevision = d;
     }
+
+    function cleanUndefined(obj: any) {
+      if (Array.isArray(obj)) {
+        obj.forEach(cleanUndefined);
+      } else if (obj !== null && typeof obj === 'object') {
+        Object.keys(obj).forEach(key => {
+          if (obj[key] === undefined) {
+            delete obj[key];
+          } else {
+            cleanUndefined(obj[key]);
+          }
+        });
+      }
+    }
+    
+    cleanUndefined(fichaFull);
 
     // 1) Guardar en /profiles/{userId}
     try {
@@ -497,6 +537,92 @@ export interface AnalisisCruce {
   puntuacion: number;
   compatibilidades: string[];
   tensiones: string[];
+  canalesConexion?: {
+    electromagneticos: string[];
+    compania: string[];
+    dominancia: string[];
+    compromiso: string[];
+  };
+}
+
+const ALL_CHANNELS = [
+  [1, 8], [2, 14], [3, 60], [4, 63], [5, 15], [6, 59], [7, 31], [9, 52],
+  [10, 20], [10, 34], [10, 57], [11, 56], [12, 22], [13, 33], [16, 48],
+  [17, 62], [18, 58], [19, 49], [20, 34], [20, 57], [21, 45], [23, 43],
+  [24, 61], [25, 51], [26, 44], [27, 50], [28, 38], [29, 46], [30, 41],
+  [32, 54], [34, 57], [35, 36], [37, 40], [39, 55], [42, 53], [47, 64]
+];
+
+export function clasificarCanales(perfil1: any, perfil2: any) {
+  const result = {
+    electromagneticos: [] as string[],
+    compania: [] as string[],
+    dominancia: [] as string[],
+    compromiso: [] as string[]
+  };
+
+  const db1 = perfil1?.datosBrutos;
+  const db2 = perfil2?.datosBrutos;
+
+  if (!db1 || !db2) return result;
+
+  const getCanales = (db: any) => Array.isArray(db.canales) ? db.canales : [];
+  const getPuertas = (db: any) => Array.isArray(db.puertas_activas) ? db.puertas_activas : [];
+
+  const c1 = getCanales(db1);
+  const c2 = getCanales(db2);
+  const v1 = new Set(getPuertas(db1));
+  const v2 = new Set(getPuertas(db2));
+
+  const hasCanal = (canales: any[], cName: string) => canales.some(c => c.nombre === cName || c.puertas?.join('-') === cName);
+  
+  const nom1 = perfil1.datosPersona?.nombre || perfil1.datosOnboarding?.nombre || 'Persona 1';
+  const nom2 = perfil2.datosPersona?.nombre || perfil2.datosOnboarding?.nombre || 'Persona 2';
+
+  for (const [pA, pB] of ALL_CHANNELS) {
+    const cName = `${pA}-${pB}`;
+    const inC1 = hasCanal(c1, cName);
+    const inC2 = hasCanal(c2, cName);
+
+    // 2. COMPAÑÍA
+    if (inC1 && inC2) {
+      result.compania.push(`Canal ${cName}: energía compartida y estable`);
+      continue;
+    }
+
+    const hasP1A = v1.has(pA) || v1.has(pA.toString());
+    const hasP1B = v1.has(pB) || v1.has(pB.toString());
+    const hasP2A = v2.has(pA) || v2.has(pA.toString());
+    const hasP2B = v2.has(pB) || v2.has(pB.toString());
+
+    // 1. ELECTROMAGNÉTICOS
+    if (!inC1 && !inC2) {
+      if ((hasP1A && hasP2B) || (hasP1B && hasP2A)) {
+        result.electromagneticos.push(`Canal ${cName}: crean juntos energía que ninguno tiene solo`);
+      }
+      continue;
+    }
+
+    // 3 & 4. DOMINANCIA / COMPROMISO desde P1 a P2
+    if (inC1 && !inC2) {
+      if (!hasP2A && !hasP2B) {
+        result.dominancia.push(`${nom1} imprimirá la energía del canal ${cName} sobre ${nom2}`);
+      } else if (hasP2A !== hasP2B) {
+        result.compromiso.push(`Canal ${cName}: ${nom1} lidera, ${nom2} adapta`);
+      }
+    }
+
+    // 3 & 4. DOMINANCIA / COMPROMISO desde P2 a P1
+    if (inC2 && !inC1) {
+      if (!hasP1A && !hasP1B) {
+        result.dominancia.push(`${nom2} imprimirá la energía del canal ${cName} sobre ${nom1}`);
+      } else if (hasP1A !== hasP1B) {
+        result.compromiso.push(`Canal ${cName}: ${nom2} lidera, ${nom1} adapta`);
+      }
+    }
+  }
+
+  return result;
 }
 
 export function cruzarMiembros(perfil1: any, perfil2: any): AnalisisCruce {
@@ -580,6 +706,8 @@ export function cruzarMiembros(perfil1: any, perfil2: any): AnalisisCruce {
   }
 
   puntuacion = Math.min(100, Math.max(0, puntuacion));
+  
+  const canalesConexion = clasificarCanales(perfil1, perfil2);
 
-  return { puntuacion, compatibilidades, tensiones };
+  return { puntuacion, compatibilidades, tensiones, canalesConexion };
 }
