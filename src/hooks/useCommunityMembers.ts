@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
@@ -8,37 +8,49 @@ export interface CommunityMember {
   nombre: string;
 }
 
+/**
+ * Hook para gestionar la lista de miembros de la comunidad con cache eficiente.
+ * Cumple con la regla [MANDATO DRY] al centralizar la resolución de nombres.
+ */
 export function useCommunityMembers() {
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
 
-  useEffect(() => {
-    async function fetchMembers() {
-      try {
-        const q = query(collection(db, 'fichas'));
-        const snapshot = await getDocs(q);
-        const membersData: CommunityMember[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.userId && data.datosOnboarding?.nombre) {
-            if (!membersData.some(m => m.userId === data.userId)) {
-              membersData.push({
-                userId: data.userId,
-                nombre: data.datosOnboarding.nombre
-              });
-            }
-          }
-        });
-        setMembers(membersData);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'fichas');
-      } finally {
-        setLoadingMembers(false);
-      }
-    }
+  const fetchMembers = useCallback(async () => {
+    try {
+      const q = query(collection(db, 'fichas'));
+      const snapshot = await getDocs(q);
+      const membersData: CommunityMember[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        // Intentamos sacar el nombre de varios sitios por si la ficha es parcial
+        const nombre = data.datosOnboarding?.nombre || data.datosPersona?.nombre || data.nombre || 'Miembro';
+        const uid = data.userId || doc.id;
 
-    fetchMembers();
+        if (uid && !membersData.some(m => m.userId === uid)) {
+          membersData.push({ userId: uid, nombre });
+        }
+      });
+      setMembers(membersData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, 'fichas');
+    } finally {
+      setLoadingMembers(false);
+    }
   }, []);
 
-  return { members, loadingMembers };
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  /**
+   * Helper síncrono para obtener un nombre desde el estado cargado.
+   */
+  const getMemberName = useCallback((uid?: string) => {
+    if (!uid) return 'Comunidad';
+    const mem = members.find(m => m.userId === uid);
+    return mem ? mem.nombre : 'Cargando...';
+  }, [members]);
+
+  return { members, loadingMembers, getMemberName, refreshMembers: fetchMembers };
 }

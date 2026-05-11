@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { collection, query, getDocs, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Ficha, saveFicha } from '../lib/appService';
+import { Ficha, saveFicha, obtenerTareas, Tarea } from '../lib/appService';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
-import { Leaf, Users, Search, X, RefreshCw } from 'lucide-react';
+import { Leaf, Users, Search, X, RefreshCw, CheckCircle2, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
+import { useCommunityMembers } from '../hooks/useCommunityMembers';
+import { useToast } from '../components/Toaster';
 
 function getDatosPersona(ficha: Ficha) {
   return ficha.datosPersona ?? ficha.datosOnboarding ?? {};
@@ -41,6 +43,23 @@ export function AdminPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'todos' | RolComunitario>('todos');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
+  const [activeTab, setActiveTab] = useState<'comunidad' | 'tareas'>('comunidad');
+  const [tareas, setTareas] = useState<Tarea[]>([]);
+  const [loadingTareas, setLoadingTareas] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const { getMemberName } = useCommunityMembers();
+  const { success, error: toastError } = useToast();
+
+  const fetchTareas = async () => {
+    setLoadingTareas(true);
+    try {
+      const data = await obtenerTareas();
+      setTareas(data);
+    } catch (err) {
+      toastError("Error al cargar tareas globales");
+    }
+    setLoadingTareas(false);
+  };
 
   const fetchFichas = async () => {
     setLoading(true);
@@ -49,106 +68,13 @@ export function AdminPanel() {
       const snapshot = await getDocs(q);
       let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
       
-      // One-time cleanup for old seed data
-      const oldSeedsToFix = data.filter(doc => doc.isSeedData && !doc.userId.startsWith('seed_'));
-      if (oldSeedsToFix.length > 0) {
-        const { updateDoc, serverTimestamp } = await import('firebase/firestore');
-        for (const oldDoc of oldSeedsToFix) {
-          try {
-            await updateDoc(doc(db, 'fichas', oldDoc.id), { userId: `seed_${oldDoc.id.replace('seed-', '')}`, updatedAt: serverTimestamp() });
-            oldDoc.userId = `seed_${oldDoc.id.replace('seed-', '')}`;
-          } catch(e) { console.error(e) }
-        }
-      }
-
-      // Add missing datosBrutos/canales to existing seeds
-      const seedsMissingData = data.filter(doc => doc.isSeedData && (!doc.datosBrutos || !doc.datosBrutos.puertas_activas));
-      if (seedsMissingData.length > 0) {
-        const { updateDoc, serverTimestamp } = await import('firebase/firestore');
-        const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
-        const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
-        
-        // Mock data for doors and channels to generate some connections
-        const mockPuertas = [
-          [1, 8, 2, 14, 3, 20], // Has 1-8, plus door 20
-          [8, 2, 14, 60, 4, 63, 10], // Has 2-14, plus door 10
-          [14, 60, 15, 6, 59, 3, 20], // Has 3-60, 6-59, plus door 20
-          [4, 5, 15, 7, 31, 63, 10], // Has 5-15, 4-63, plus door 10
-          [63, 6, 31, 9, 52, 7, 20]  // Has 9-52, plus door 20
-        ];
-        const mockCanales = [
-          [{nombre: "1-8", puertas: [1,8]}],
-          [{nombre: "2-14", puertas: [2,14]}],
-          [{nombre: "3-60", puertas: [3,60]}, {nombre: "6-59", puertas: [6,59]}],
-          [{nombre: "5-15", puertas: [5,15]}, {nombre: "4-63", puertas: [4,63]}],
-          [{nombre: "9-52", puertas: [9,52]}]
-        ];
-
-        for (let index = 0; index < seedsMissingData.length; index++) {
-          const oldDoc = seedsMissingData[index];
-          const newDatos = {
-            estado: 'completo',
-            updatedAt: serverTimestamp(),
-            datosBrutos: {
-              ...(oldDoc.datosBrutos || {}),
-              tipo_hd: tiposHD[index % tiposHD.length],
-              autoridad: autoridades[index % autoridades.length],
-              perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`,
-              puertas_activas: mockPuertas[index % mockPuertas.length],
-              canales: mockCanales[index % mockCanales.length]
-            },
-            perfilVisual: oldDoc.perfilVisual || {
-              dimensiones: {
-                escucha: 30 + (index * 15) % 70,
-                accion: 40 + (index * 20) % 60,
-                estructura: 20 + (index * 25) % 80,
-                cuidado: 50 + (index * 10) % 50
-              }
-            }
-          };
-          try {
-            await updateDoc(doc(db, 'fichas', oldDoc.id), newDatos);
-            Object.assign(oldDoc, newDatos);
-          } catch(e) { console.error(e) }
-        }
-      }
-      
       const realDocs = data.filter(doc => !doc.isSeedData);
       
       if (realDocs.length < 3 && appUser) {
         const promises = SEED_DATA.map(async (seed, index) => {
           const seedId = `seed-${appUser.uid}-${index}`;
           const existing = data.find(d => d.id === seedId);
-          if (existing) {
-             const datosP = getDatosPersona(existing);
-             if (!datosP.rol) {
-                 try {
-                    const { updateDoc, serverTimestamp } = await import('firebase/firestore');
-                    
-                    const updates: any = {};
-                    if (existing.datosPersona) {
-                      updates["datosPersona.rol"] = seed.rol;
-                      if (seed.fechaSalida) updates["datosPersona.fechaSalida"] = seed.fechaSalida;
-                    }
-                    if (existing.datosOnboarding) {
-                      updates["datosOnboarding.rol"] = seed.rol;
-                      if (seed.fechaSalida) updates["datosOnboarding.fechaSalida"] = seed.fechaSalida;
-                    }
-                    updates["updatedAt"] = serverTimestamp();
-                    
-                    await updateDoc(doc(db, 'fichas', seedId), updates);
-                    if (existing.datosPersona) {
-                      existing.datosPersona.rol = seed.rol;
-                      existing.datosPersona.fechaSalida = seed.fechaSalida;
-                    }
-                    if (existing.datosOnboarding) {
-                      existing.datosOnboarding.rol = seed.rol;
-                      existing.datosOnboarding.fechaSalida = seed.fechaSalida;
-                    }
-                 } catch(e) { console.error(e) }
-             }
-          }
-
+          
           if (!existing) {
             const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
             const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
@@ -221,28 +147,76 @@ export function AdminPanel() {
   useEffect(() => {
     if (appUser) {
       fetchFichas();
+      if (activeTab === 'tareas') fetchTareas();
     }
-  }, [appUser]);
+  }, [appUser, activeTab]);
 
-  const handleRetryCapa1 = async (ficha: Ficha) => {
-    if (!ficha.id) return;
-    setLoading(true);
-    try {
-      await saveFicha(ficha.userId, ficha.datosOnboarding, ficha.id);
-      await fetchFichas();
-    } catch (err) {
-      console.error(err);
-      alert("Error al intentar de nuevo");
-      setLoading(false);
+  const stats = useMemo(() => {
+    if (tareas.length === 0) return { total: 0, completedPct: 0, topMember: '-', weeklyCompleted: 0 };
+    
+    const total = tareas.length;
+    const completed = tareas.filter(t => t.estado === 'completada').length;
+    const completedPct = Math.round((completed / total) * 100);
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const weeklyCompleted = tareas.filter(t => {
+      if (t.estado !== 'completada' || !t.updatedAt) return false;
+      const updatedDate = t.updatedAt.toDate ? t.updatedAt.toDate() : new Date(t.updatedAt);
+      return updatedDate >= sevenDaysAgo;
+    }).length;
+
+    const loadByMember: Record<string, number> = {};
+    tareas.filter(t => t.estado !== 'completada' && t.asignadaA).forEach(t => {
+      loadByMember[t.asignadaA!] = (loadByMember[t.asignadaA!] || 0) + 1;
+    });
+    
+    let topMemberUid = '-';
+    let maxLoad = 0;
+    Object.entries(loadByMember).forEach(([uid, count]) => {
+      if (count > maxLoad) {
+        maxLoad = count;
+        topMemberUid = uid;
+      }
+    });
+
+    const memberName = getMemberName(topMemberUid);
+
+    return { total, completedPct, topMember: memberName, weeklyCompleted };
+  }, [tareas, getMemberName]);
+
+  const sortedTareas = useMemo(() => {
+    let sortableItems = [...tareas];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+
+        if (sortConfig.key === 'asignadaA') {
+          valA = getMemberName(a.asignadaA);
+          valB = getMemberName(b.asignadaA);
+        }
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
     }
+    return sortableItems;
+  }, [tareas, sortConfig, getMemberName]);
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
   };
 
   const filteredFichas = fichas.filter(f => {
     const datos = getDatosPersona(f);
     if (!datos || !datos.nombre) return false;
-
     if (roleFilter !== 'todos' && datos.rol !== roleFilter) return false;
-
     return (
       (datos.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (datos.rol_arteara?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -252,288 +226,229 @@ export function AdminPanel() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
       <div className="w-full max-w-5xl">
-        <div className="flex justify-between items-center mb-10">
+        <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <Leaf className="text-[#6B705C] w-8 h-8" />
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel Comunitario</h1>
+            <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel de Control Admin</h1>
           </div>
           <div className="hidden md:flex items-center gap-4">
             <button onClick={() => navigate('/cruce')} className="px-4 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
               Cruce de Perfiles
             </button>
-            {/* Navegación unificada en Sidebar/BottomNav */}
+            <button onClick={() => logout()} className="px-4 py-2 text-stone-500 hover:text-stone-800 text-sm font-medium">
+              Cerrar Sesión
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
-          {/* Mobile view top action */}
-          <div className="md:hidden p-4 border-b border-[#EAE2D6] flex justify-between gap-3">
-             <button onClick={() => navigate('/cruce')} className="flex-1 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
-              Cruce de Perfiles
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Tareas Totales</div>
+            <div className="text-2xl font-serif text-[#4A4E4D]">{stats.total}</div>
           </div>
-          <div className="p-6 border-b border-[#EAE2D6] flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center bg-[#F9F7F1]">
-            <div className="flex items-center gap-2 text-stone-600 font-medium">
-              <Users className="w-5 h-5 text-[#A5A58D]" />
-              <span>{fichas.length} Fichas registradas</span>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <select 
-                value={roleFilter}
-                onChange={e => setRoleFilter(e.target.value as any)}
-                className="px-3 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D]"
-              >
-                <option value="todos">Todos los roles</option>
-                <option value="propietario">Propietario/a</option>
-                <option value="miembro">Miembro</option>
-                <option value="voluntario">Voluntario/a</option>
-              </select>
-              <div className="relative w-full sm:w-auto">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                <input 
-                  type="text"
-                  placeholder="Buscar por nombre o rol..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-9 pr-4 py-2 bg-white border border-[#EAE2D6] rounded-full text-sm focus:outline-none focus:border-[#A5A58D] w-full sm:w-64"
-                />
+          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Progreso Global</div>
+            <div className="text-2xl font-serif text-teal-600">{stats.completedPct}%</div>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Top Colaborador</div>
+            <div className="text-lg font-medium text-[#4A4E4D] truncate">{stats.topMember}</div>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Cerradas (7d)</div>
+            <div className="text-2xl font-serif text-[#CB997E]">+{stats.weeklyCompleted}</div>
+          </div>
+        </div>
+
+        <div className="flex rounded-xl bg-stone-100 p-1 mb-8 w-fit mx-auto md:mx-0">
+          <button onClick={() => setActiveTab('comunidad')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'comunidad' ? 'bg-white text-[#4A4E4D] shadow-sm' : 'text-stone-500'}`}>
+            <div className="flex items-center gap-2"><Users className="w-4 h-4" /> Comunidad</div>
+          </button>
+          <button onClick={() => setActiveTab('tareas')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tareas' ? 'bg-white text-[#4A4E4D] shadow-sm' : 'text-stone-500'}`}>
+            <div className="flex items-center gap-2"><LayoutList className="w-4 h-4" /> Tareas Globales</div>
+          </button>
+        </div>
+
+        {activeTab === 'comunidad' ? (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
+            <div className="p-6 border-b border-[#F9F7F1] flex flex-col md:flex-row gap-4 justify-between items-center">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 w-4 h-4" />
+                <input type="text" placeholder="Buscar por nombre o rol..." className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#EAE2D6] outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              </div>
+              <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                <Filter className="w-4 h-4 text-stone-400 shrink-0" />
+                {(['todos', 'propietario', 'miembro', 'voluntario'] as const).map(role => (
+                  <button key={role} onClick={() => setRoleFilter(role)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all whitespace-nowrap ${roleFilter === role ? 'bg-[#4A4E4D] text-white border-[#4A4E4D]' : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}`}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-          
-          <div className="overflow-x-auto hidden md:block">
-            <table className="w-full text-left text-sm text-stone-600">
-              <thead className="bg-white border-b border-[#EAE2D6] text-stone-400 font-medium tracking-wider uppercase text-xs">
-                <tr>
-                  <th className="px-6 py-4">Nombre</th>
-                  <th className="px-6 py-4">Rol</th>
-                  <th className="px-6 py-4">Antigüedad</th>
-                  <th className="px-6 py-4">Estudios</th>
-                  <th className="px-6 py-4">Tensión</th>
-                  <th className="px-6 py-4">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EAE2D6]">
-                {loading ? (
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-stone-50 text-stone-400 text-[10px] uppercase font-bold tracking-widest">
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-stone-400">Cargando fichas...</td>
+                    <th className="px-6 py-4">Nombre / Rol en Arteara</th>
+                    <th className="px-6 py-4">Estado / Rol Comunitario</th>
+                    <th className="px-6 py-4">Antigüedad</th>
+                    <th className="px-6 py-4 text-right">Acciones</th>
                   </tr>
-                ) : filteredFichas.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-stone-400">No se encontraron fichas.</td>
-                  </tr>
-                ) : (
-                  filteredFichas.map(ficha => {
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {loading ? (
+                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando comunidad...</td></tr>
+                  ) : filteredFichas.length === 0 ? (
+                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No se encontraron miembros</td></tr>
+                  ) : filteredFichas.map(ficha => {
                     const datos = getDatosPersona(ficha);
-                    if (!datos || !datos.nombre) return null;
                     return (
-                      <tr key={ficha.id} className="hover:bg-[#F9F7F1] transition-colors">
-                        <td className="px-6 py-4 font-medium text-stone-700">
-                          <div className="flex flex-col gap-1">
-                            <span className="flex items-center gap-2">
-                              {datos.nombre}
-                              {ficha.isSeedData && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C] align-middle">Demo</span>}
-                              {datos?.rol && (
-                                <div>
-                                  {datos.rol === 'propietario' && <span className="inline-block px-2 py-0.5 bg-green-800 text-white rounded text-[10px] font-medium">Propietario/a</span>}
-                                  {datos.rol === 'miembro' && <span className="inline-block px-2 py-0.5 bg-green-600 text-white rounded text-[10px] font-medium">Miembro</span>}
-                                  {datos.rol === 'voluntario' && (
-                                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${
-                                      datos.fechaSalida && new Date(datos.fechaSalida) < new Date() 
-                                        ? 'bg-teal-50 text-teal-700 border border-teal-200 opacity-80'
-                                        : 'bg-teal-600 text-white'
-                                    }`}>
-                                      Voluntario/a {datos.fechaSalida ? (
-                                        new Date(datos.fechaSalida) < new Date()
-                                          ? '· ya partió'
-                                          : `· hasta ${new Date(datos.fechaSalida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
-                                      ) : ''}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </span>
+                      <tr key={ficha.id} className="hover:bg-[#FDFBF7] transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-stone-800">{datos.nombre}</div>
+                          <div className="text-xs text-stone-400">{datos.rol_arteara || 'Sin rol definido'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${ficha.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
+                            <span className="text-xs font-medium text-stone-600 capitalize">{datos.rol || 'Miembro'}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">{datos.rol_arteara}</td>
-                        <td className="px-6 py-4">{datos.antiguedad_anos}</td>
-                        <td className="px-6 py-4">{datos.saberes}</td>
-                        <td className="px-6 py-4">
-                          <span className="inline-block truncate max-w-[150px] items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE2D6] text-[#4A4E4D]" title={datos.tension}>
-                            {datos.tension}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          {ficha.estado === 'pendiente_capa1' && (
-                            <button
-                              onClick={() => handleRetryCapa1(ficha)}
-                              title="Reintentar obtención de datos"
-                              className="text-stone-400 hover:text-[#CB997E] transition-colors"
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => setSelectedFicha(ficha)}
-                            className="text-sm font-medium text-[#CB997E] hover:text-[#B58368]"
-                          >
-                            Ver ficha
+                        <td className="px-6 py-4 text-sm text-stone-500">{datos.antiguedad_anos || 0} años</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => setSelectedFicha(ficha)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all">
+                            <Search className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
                     );
-                  })
-                )}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-
-          {/* Mobile view */}
-          <div className="md:hidden p-4 space-y-3">
-            {loading ? (
-              <div className="text-center text-stone-400 py-8">Cargando fichas...</div>
-            ) : filteredFichas.length === 0 ? (
-              <div className="text-center text-stone-400 py-8">No se encontraron fichas.</div>
-            ) : (
-              filteredFichas.map(ficha => {
-                const datos = getDatosPersona(ficha);
-                if (!datos || !datos.nombre) return null;
-                return (
-                  <div key={ficha.id} className="bg-white rounded-2xl border border-[#EAE2D6] p-4 flex flex-col gap-2 relative">
-                    <div className="pr-20">
-                      <h3 className="font-serif text-lg text-stone-700 leading-tight flex items-center gap-2 flex-wrap">
-                        {datos.nombre}
-                        {ficha.isSeedData && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EAE2D6] text-[#6B705C] align-middle">Demo</span>}
-                        {datos?.rol && (
-                          <div>
-                            {datos.rol === 'propietario' && <span className="inline-block px-2 py-0.5 bg-green-800 text-white rounded text-[10px] font-medium align-middle">Propietario/a</span>}
-                            {datos.rol === 'miembro' && <span className="inline-block px-2 py-0.5 bg-green-600 text-white rounded text-[10px] font-medium align-middle">Miembro</span>}
-                            {datos.rol === 'voluntario' && (
-                              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium align-middle ${
-                                datos.fechaSalida && new Date(datos.fechaSalida) < new Date() 
-                                  ? 'bg-teal-50 text-teal-700 border border-teal-200 opacity-80'
-                                  : 'bg-teal-600 text-white'
-                              }`}>
-                                Voluntario/a {datos.fechaSalida ? (
-                                  new Date(datos.fechaSalida) < new Date()
-                                    ? '· ya partió'
-                                    : `· hasta ${new Date(datos.fechaSalida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
-                                ) : ''}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </h3>
-                      <p className="text-sm text-stone-500 mt-1">
-                        {datos.rol_arteara} · {datos.antiguedad_anos}
-                      </p>
-                      <p className="text-xs text-stone-400 italic mt-2 line-clamp-2">
-                        {datos.tension}
-                      </p>
-                    </div>
-                    <div className="absolute top-4 right-4 flex items-center gap-3">
-                      {ficha.estado === 'pendiente_capa1' && (
-                        <button
-                          onClick={() => handleRetryCapa1(ficha)}
-                          title="Reintentar obtención de datos"
-                          className="text-stone-400 hover:text-[#CB997E] transition-colors"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => setSelectedFicha(ficha)}
-                        className="text-sm font-medium text-[#CB997E] hover:text-[#B58368]"
-                      >
-                        Ver ficha
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+        ) : (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
+            <div className="p-6 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
+              <h2 className="font-serif text-xl text-[#4A4E4D]">Todas las Tareas</h2>
+              <button onClick={fetchTareas} className="p-2 text-stone-400 hover:text-[#4A4E4D] transition-colors">
+                <RefreshCw className={`w-4 h-4 ${loadingTareas ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-stone-50/80 text-stone-400 text-[10px] uppercase font-bold tracking-widest border-b border-stone-100">
+                  <tr>
+                    <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('titulo')}>
+                      <div className="flex items-center gap-1">Título {sortConfig?.key === 'titulo' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <LayoutList className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
+                    </th>
+                    <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('asignadaA')}>
+                      <div className="flex items-center gap-1">Responsable {sortConfig?.key === 'asignadaA' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <Users className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
+                    </th>
+                    <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('estado')}>
+                      <div className="flex items-center gap-1">Estado {sortConfig?.key === 'estado' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <Clock className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
+                    </th>
+                    <th className="px-6 py-4">Prioridad</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {loadingTareas ? (
+                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando...</td></tr>
+                  ) : sortedTareas.length === 0 ? (
+                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No hay tareas registradas</td></tr>
+                  ) : sortedTareas.map(tarea => (
+                    <tr key={tarea.id} className="hover:bg-[#FDFBF7] transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-stone-800">{tarea.titulo}</div>
+                        {tarea.proyectoId && <div className="text-[10px] text-teal-600 font-bold uppercase tracking-tighter mt-0.5">Proyecto vinculado</div>}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-stone-600">
+                        {getMemberName(tarea.asignadaA)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${tarea.estado === 'completada' ? 'bg-teal-50 text-teal-600 border border-teal-100' : tarea.estado === 'en_progreso' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                          {tarea.estado.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                         <span className={`text-xs font-medium ${tarea.prioridad === 'alta' ? 'text-rose-500' : tarea.prioridad === 'media' ? 'text-amber-500' : 'text-stone-400'}`}>
+                           {tarea.prioridad?.toUpperCase() || 'NORMAL'}
+                         </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {selectedFicha && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-xl">
-            <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#FDFBF7]">
-              <h2 className="text-2xl font-serif text-[#4A4E4D]">Ficha de {getDatosPersona(selectedFicha).nombre}</h2>
-              <button 
-                onClick={() => setSelectedFicha(null)}
-                className="p-2 hover:bg-[#EAE2D6] rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-stone-500" />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedFicha(null)}>
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#EAE2D6] rounded-2xl flex items-center justify-center text-[#4A4E4D] font-serif text-xl">
+                  {getDatosPersona(selectedFicha).nombre?.charAt(0)}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-serif text-[#4A4E4D]">{getDatosPersona(selectedFicha).nombre}</h2>
+                  <p className="text-xs text-stone-400 uppercase tracking-widest font-bold">Expediente Comunitario</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedFicha(null)} className="p-2 hover:bg-stone-200 text-stone-400 rounded-full transition-all"><X /></button>
             </div>
-            <div className="p-6 overflow-y-auto">
-              {selectedFicha.perfilVisual && (
-                <div className="mb-8 p-6 bg-[#F9F7F1] rounded-2xl border border-[#EAE2D6]">
-                  <div className="mb-6">
-                    <h3 className="text-3xl font-serif text-[#4A4E4D] mb-2">{selectedFicha.perfilVisual.arquetipo}</h3>
-                    <p className="text-stone-600 text-lg">{selectedFicha.perfilVisual.descripcion_arquetipo}</p>
+            
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-8">
+                  <section className="bg-[#FDFBF7] p-6 rounded-3xl border border-[#EAE2D6]">
+                    <h3 className="text-sm font-bold text-[#CB997E] uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" /> Tensiones y Necesidades
+                    </h3>
+                    <p className="text-stone-700 leading-relaxed italic">
+                      "{getDatosPersona(selectedFicha).tension || 'No hay tensiones registradas.'}"
+                    </p>
+                  </section>
+                  <ManualViewer manual={selectedFicha.manualGenerado || '# Sin manual generado'} />
+                </div>
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm space-y-4">
+                    <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Detalles del Perfil</h3>
+                    <div>
+                      <div className="text-[10px] text-stone-400 font-bold uppercase">Rol en Arteara</div>
+                      <div className="text-stone-800 font-medium">{getDatosPersona(selectedFicha).rol_arteara || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-stone-400 font-bold uppercase">Saberes</div>
+                      <div className="text-stone-800 text-sm leading-relaxed">{getDatosPersona(selectedFicha).saberes || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-stone-400 font-bold uppercase">Antigüedad</div>
+                      <div className="text-stone-800 font-medium">{getDatosPersona(selectedFicha).antiguedad_anos || 0} años</div>
+                    </div>
                   </div>
-                  
-                  {selectedFicha.perfilVisual.dimensiones && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {selectedFicha.datosBrutos && (
+                    <div className="bg-[#4A4E4D] p-6 rounded-3xl text-white space-y-4 shadow-lg shadow-stone-200">
+                      <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Diseño Humano</h3>
                       <div>
-                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Escucha</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.escucha}%</span></div>
-                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
-                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.escucha)}%` }}></div>
-                        </div>
+                        <div className="text-[10px] text-stone-400 font-bold uppercase">Tipo</div>
+                        <div className="text-[#D4C3A3] font-serif text-lg">{selectedFicha.datosBrutos.tipo_hd}</div>
                       </div>
                       <div>
-                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Acción</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.accion}%</span></div>
-                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
-                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.accion)}%` }}></div>
-                        </div>
+                        <div className="text-[10px] text-stone-400 font-bold uppercase">Autoridad</div>
+                        <div className="text-[#EAE2D6] font-medium">{selectedFicha.datosBrutos.autoridad}</div>
                       </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Estructura</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.estructura}%</span></div>
-                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
-                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.estructura)}%` }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1 text-stone-600"><span>Cuidado</span><span className="font-medium">{selectedFicha.perfilVisual.dimensiones.cuidado}%</span></div>
-                        <div className="w-full bg-[#EAE2D6] rounded-full h-2">
-                          <div className="bg-[#CB997E] h-2 rounded-full" style={{ width: `${Math.min(100, selectedFicha.perfilVisual.dimensiones.cuidado)}%` }}></div>
-                        </div>
+                      <div className="pt-2 border-t border-white/10">
+                        <div className="text-[10px] text-stone-400 font-bold uppercase">Perfil</div>
+                        <div className="text-[#F9F7F1]">{selectedFicha.datosBrutos.perfil}</div>
                       </div>
                     </div>
                   )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium text-stone-700 mb-2">Fortalezas</h4>
-                      <ul className="list-disc list-inside text-sm text-stone-600 space-y-1">
-                        {(selectedFicha.perfilVisual.fortalezas || []).map((f: string, i: number) => (
-                          <li key={'f-'+i}>{f}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-stone-700 mb-2">Sombras</h4>
-                      <ul className="list-disc list-inside text-sm text-stone-600 space-y-1">
-                        {(selectedFicha.perfilVisual.sombras || []).map((s: string, i: number) => (
-                          <li key={'s-'+i}>{s}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
                 </div>
-              )}
-
-              {selectedFicha.manualMarkdown ? (
-                <ManualViewer content={selectedFicha.manualMarkdown} />
-              ) : selectedFicha.manualGenerado ? (
-                <ManualViewer content={selectedFicha.manualGenerado} />
-              ) : (
-                <p className="text-stone-500 italic">Esta ficha no tiene un manual generado.</p>
-              )}
+              </div>
             </div>
           </div>
         </div>

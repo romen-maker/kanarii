@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { Acta, saveActa, deleteActa, saveTarea } from '../lib/appService';
-import { Leaf, Plus, Calendar, User as UserIcon, Users, CheckSquare, Trash2, ChevronRight, X, ChevronLeft, ArrowRight, ArrowLeft, Edit } from 'lucide-react';
+import { Leaf, Plus, Calendar, User as UserIcon, Users, CheckSquare, Trash2, ChevronRight, X, ChevronLeft, ArrowRight, ArrowLeft, Edit, Search } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
+import { useUndoableDelete } from '../hooks/useUndoableDelete';
 
 /* Util function to format Firebase timestamp dates safely */
 function formatDateSafely(ts: any) {
@@ -16,6 +18,7 @@ function formatDateSafely(ts: any) {
 
 function CreateActaModal({ onClose, members, actaToEdit }: { onClose: () => void, members: any[], actaToEdit?: Acta }) {
   const { appUser } = useAuth();
+  const { success, error: toastError } = useToast();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -65,9 +68,11 @@ function CreateActaModal({ onClose, members, actaToEdit }: { onClose: () => void
         lastEditedBy: actaToEdit ? appUser.uid : undefined
       }, actaToEdit?.id);
       
+      success(actaToEdit ? "Acta actualizada correctamente" : "Acta creada y tareas generadas");
       onClose();
     } catch (e) {
       console.error(e);
+      toastError("Error al procesar el acta");
       setIsSubmitting(false);
     }
   };
@@ -253,11 +258,32 @@ export function ActasPanel() {
   const navigate = useNavigate();
   const { actas, loadingActas } = useActas();
   const { tareas } = useTareas();
-  const { members, loadingMembers } = useCommunityMembers();
+  const { members, loadingMembers, getMemberName } = useCommunityMembers();
+  const { success, error: toastError, info } = useToast();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [actaSeleccionada, setActaSeleccionada] = useState<Acta | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { startDelete, pendingId } = useUndoableDelete();
+
+  const filteredActas = useMemo(() => {
+    return actas.filter(a => 
+      (a.titulo.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       a.contexto.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      a.id !== pendingId
+    );
+  }, [actas, searchTerm, pendingId]);
+
+  const handleConfirmDelete = (id: string) => {
+    if (actaSeleccionada?.id === id) setActaSeleccionada(null);
+    
+    startDelete(id, {
+      onDelete: async (id) => await deleteActa(id),
+      successMessage: "Acta eliminada definitivamente",
+      errorMessage: "Error al eliminar el acta"
+    });
+  };
 
   if (loadingActas || loadingMembers) {
     return (
@@ -266,11 +292,6 @@ export function ActasPanel() {
       </div>
     );
   }
-
-  const getMemberName = (uid: string) => {
-    const mem = members.find(m => m.userId === uid);
-    return mem ? mem.nombre : 'Comunidad';
-  };
 
   const isRecent = (dateStr: any) => {
     if (!dateStr) return false;
@@ -384,16 +405,7 @@ export function ActasPanel() {
                    <Edit className="w-4 h-4" /> Editar Acta
                  </button>
                  <button 
-                   onClick={async () => {
-                     if(window.confirm('¿Eliminar acta?')) {
-                       try {
-                         await deleteActa(acta.id!);
-                         setActaSeleccionada(null);
-                       } catch(e) {
-                         alert('Error al eliminar. Puede que no tenga permisos.');
-                       }
-                     }
-                   }}
+                   onClick={() => handleConfirmDelete(acta.id!)}
                    className="text-red-500 hover:text-red-700 font-medium text-sm transition-colors flex items-center gap-1"
                  >
                    <Trash2 className="w-4 h-4" /> Eliminar Acta
@@ -419,25 +431,37 @@ export function ActasPanel() {
       <div className="flex-1 flex w-full max-w-[1600px] mx-auto relative overflow-hidden">
         {/* Lado izquierdo: Lista */}
         <div className={`w-full ${actaSeleccionada ? 'hidden md:block md:w-[400px] lg:w-[500px] border-r border-[#EAE2D6]' : 'max-w-4xl mx-auto'} h-full overflow-y-auto px-4 md:px-8 py-8 shrink-0 transition-all duration-500`}>
-          <div className="flex justify-between items-end mb-8">
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Registro Histórico</h1>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
+            <div className="flex-1 w-full">
+              <h1 className="text-3xl font-serif text-[#4A4E4D] mb-4">Registro Histórico</h1>
+              <div className="relative group max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 group-focus-within:text-[#CB997E] transition-colors" />
+                <input 
+                  type="text"
+                  placeholder="Buscar en actas o contexto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white border-[#EAE2D6] rounded-2xl pl-11 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-[#CB997E] focus:border-[#CB997E] transition-all placeholder:text-stone-400 shadow-sm"
+                />
+              </div>
+            </div>
             {appUser?.role === 'admin' && (
-              <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-[#A5A58D] text-white px-4 py-2 rounded-full font-medium hover:bg-[#6B705C] transition-colors shadow-sm">
+              <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-[#A5A58D] text-white px-6 py-2.5 rounded-full font-medium hover:bg-[#6B705C] transition-colors shadow-md">
                 <Plus className="w-4 h-4" /> Nueva Acta
               </button>
             )}
           </div>
 
           <div className="space-y-4">
-            {actas.length === 0 ? (
+            {filteredActas.length === 0 ? (
               <div className="text-center py-16 text-stone-400">
                  <div className="w-16 h-16 bg-[#EAE2D6] rounded-full flex items-center justify-center mx-auto mb-4">
                    <Leaf className="w-8 h-8 text-[#A5A58D]" />
                  </div>
-                 <p className="text-lg">No hay actas registradas aún.</p>
+                 <p className="text-lg">{searchTerm ? 'No se encontraron actas para esta búsqueda.' : 'No hay actas registradas aún.'}</p>
               </div>
             ) : (
-              actas.map(acta => (
+              filteredActas.map(acta => (
                 <div 
                   key={acta.id} 
                   onClick={() => setActaSeleccionada(acta)}

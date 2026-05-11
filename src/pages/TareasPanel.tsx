@@ -6,12 +6,13 @@ import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { saveTarea, updateTareaEstado, deleteTarea, Tarea, obtenerProyectos, Proyecto } from '../lib/appService';
 import { Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, Clock, Trash2, ArrowRight, Edit, Archive, ChevronLeft, Briefcase } from 'lucide-react';
 import { useToast } from '../components/Toaster';
+import { useUndoableDelete } from '../hooks/useUndoableDelete';
 
 export function TareasPanel() {
   const { appUser, logout } = useAuth();
   const navigate = useNavigate();
   const { tareas, loadingTareas } = useTareas();
-  const { members, loadingMembers } = useCommunityMembers();
+  const { members, loadingMembers, getMemberName } = useCommunityMembers();
   
   const [filter, setFilter] = useState<'todas' | 'mis_tareas' | 'sin_asignar' | 'archivadas'>('todas');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +29,7 @@ export function TareasPanel() {
 
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const { success, error: toastError } = useToast();
+  const { startDelete, pendingId } = useUndoableDelete();
 
   const openEditModal = (t: Tarea) => {
     let dateStr = '';
@@ -61,15 +63,12 @@ export function TareasPanel() {
     const fetchProyectos = async () => {
       try {
         const all = await obtenerProyectos();
-        console.log("Todos los proyectos:", all.length);
-        // Filtrar solo donde el usuario participa activamente
         const userUid = appUser?.uid;
         const filtered = all.filter(p => {
           const isLider = p.lider_uid === userUid;
           const isColaborador = p.colaboradores_uid && Array.isArray(p.colaboradores_uid) && p.colaboradores_uid.includes(userUid || '');
           return isLider || isColaborador;
         });
-        console.log("Proyectos filtrados para el usuario:", filtered.length);
         setProyectos(filtered);
       } catch (err) {
         console.error("Error cargando proyectos:", err);
@@ -87,17 +86,13 @@ export function TareasPanel() {
   }
 
   const filteredTareas = tareas.filter(t => {
+    if (t.id === pendingId) return false;
     if (filter === 'archivadas') return t.estado === 'archivada';
-    if (t.estado === 'archivada') return false; // Hide from other views
+    if (t.estado === 'archivada') return false;
     if (filter === 'mis_tareas') return t.asignadaA === appUser?.uid;
     if (filter === 'sin_asignar') return !t.asignadaA;
-    return true; // 'todas'
+    return true;
   });
-
-  const getMemberName = (uid: string) => {
-    const mem = members.find(m => m.userId === uid);
-    return mem ? mem.nombre : 'Comunidad';
-  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,14 +128,12 @@ export function TareasPanel() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta tarea?")) return;
-    try {
-      await deleteTarea(id);
-      success("Tarea eliminada");
-    } catch (err) {
-      toastError("Error al eliminar");
-    }
+  const handleDelete = (id: string) => {
+    startDelete(id, {
+      onDelete: async (id) => await deleteTarea(id),
+      successMessage: "Tarea eliminada definitivamente",
+      errorMessage: "Error al eliminar la tarea"
+    });
   };
 
   const getNextState = (estado: Tarea['estado']) => {

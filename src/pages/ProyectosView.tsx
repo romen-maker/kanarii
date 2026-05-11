@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo, actualizarEstadoProyecto, obtenerTareas, Tarea } from '../lib/appService';
 import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus, Star, ListChecks, Target } from 'lucide-react';
 import { useToast } from '../components/Toaster';
+import { useCommunityMembers } from '../hooks/useCommunityMembers';
+import { useUndoableDelete } from '../hooks/useUndoableDelete';
 
 export function ProyectosView() {
   const { appUser } = useAuth();
@@ -12,6 +14,8 @@ export function ProyectosView() {
   const [loading, setLoading] = useState(true);
   const [fichaUser, setFichaUser] = useState<Ficha | null>(null);
   const { success, error: toastError } = useToast();
+  const { getMemberName, loadingMembers } = useCommunityMembers();
+  const { startDelete, pendingId } = useUndoableDelete();
   
   // Create form state
   const [showCreateMenu, setShowCreateMenu] = useState(false);
@@ -23,35 +27,10 @@ export function ProyectosView() {
     habilidadesNecesarias: []
   });
   const [newHabilidad, setNewHabilidad] = useState('');
-  const [pendingMembers, setPendingMembers] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     loadData();
   }, [appUser]);
-
-  useEffect(() => {
-    if (selectedProject && appUser) {
-      const allUids = [
-        selectedProject.lider_uid,
-        ...(selectedProject.solicitudes_uid || []),
-        ...(selectedProject.colaboradores_uid || [])
-      ];
-      if (allUids.length) resolveMemberNames(allUids);
-    }
-  }, [selectedProject, appUser]);
-
-  const resolveMemberNames = async (uids: string[]) => {
-    const names: {[key: string]: string} = { ...pendingMembers };
-    let changed = false;
-    for (const uid of uids) {
-      if (!names[uid]) {
-        const info = await getMemberInfo(uid);
-        names[uid] = info?.nombre || 'Miembro desconocido';
-        changed = true;
-      }
-    }
-    if (changed) setPendingMembers(names);
-  };
 
   const loadData = async () => {
     setLoading(true);
@@ -581,7 +560,7 @@ export function ProyectosView() {
                         <div className="space-y-3">
                           {selectedProject.solicitudes_uid.map(uid => (
                             <div key={uid} className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-amber-100">
-                              <span className="text-sm font-medium text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
+                              <span className="text-sm font-medium text-stone-700">{getMemberName(uid)}</span>
                               <div className="flex gap-2">
                                 <button 
                                   onClick={() => handleAprobar(selectedProject.id!, uid)}
@@ -615,7 +594,7 @@ export function ProyectosView() {
                     <div className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-stone-200">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-stone-800">
-                          {selectedProject.lider_uid === appUser?.uid ? 'Tú (Líder)' : (pendingMembers[selectedProject.lider_uid] || 'Cargando líder...')}
+                          {selectedProject.lider_uid === appUser?.uid ? 'Tú (Líder)' : getMemberName(selectedProject.lider_uid)}
                         </span>
                         <span className="text-[10px] text-stone-500 uppercase tracking-tighter">Fundador / Líder</span>
                       </div>
@@ -625,7 +604,7 @@ export function ProyectosView() {
                     {/* Colaboradores */}
                     {selectedProject.colaboradores_uid?.map(uid => (
                       <div key={uid} className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-stone-100">
-                        <span className="text-sm text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
+                        <span className="text-sm text-stone-700">{getMemberName(uid)}</span>
                         <CheckCircle2 className="w-4 h-4 text-teal-500" />
                       </div>
                     ))}

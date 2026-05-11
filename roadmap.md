@@ -12,13 +12,23 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 
 ## 🔴 Fase 1 — App operativa mínima (Prioridad Actual)
 - [ ] **1.1 Gestión de tareas comunitarias**
-  - Cada miembro puede crear tareas, asignarlas, ponerles fecha y marcarlas como hechas. El admin ve el estado global.
+  - [x] **CRUD Tareas**: Crear, editar, borrar y cambiar estados (Pendiente/Proceso/Hecho).
+  - [x] **Vínculo Proyectos**: Asociación de tareas a proyectos con cálculo de progreso automático.
+  - [x] **Feedback UI**: Sistema de Toasts para todas las acciones de tareas.
+  - [ ] **Admin Dashboard**: Vista global para administradores con filtros por miembro y estado.
 - [ ] **1.2 Actas de reuniones**
-  - Crear acta con fecha, participantes, decisiones tomadas y tareas derivadas. Archivadas y buscables.
+  - [x] **Estructura Base**: Modelado de actas (título, fecha, facilitador, participantes).
+  - [x] **Generación de Tareas**: Flujo para crear tareas directamente desde los acuerdos del acta.
+  - [ ] **UI Refinement**: Migrar de `alerts` a Toasts y pulir animaciones de pasos.
+  - [ ] **Navegación e Histórico**: Integrar en el menú principal y añadir buscador por texto.
 - [ ] **1.3 Calendario comunitario**
   - Eventos, reuniones, turnos. Vista mensual simple. Cada evento con responsable.
 - [ ] **1.4 Tablón de necesidades/ofertas**
   - "Necesito ayuda con X" / "Ofrezco Y". Posts con respuesta asíncrona.
+- [ ] **1.5 Gestión de Proyectos (Iniciativas)**
+  - [ ] **Dashboard Kanban**: Vista visual de proyectos por estado (Buscando, En Marcha, Pausado, Completado).
+  - [ ] **Controles de Dueño**: Botones de Editar y Borrar (con Deshacer) para líderes de proyecto.
+  - [ ] **Sistema de Colaboración**: Mejorar la UI para aceptar/rechazar colaboradores desde el detalle del proyecto.
 
 ## 🟡 Fase 2 — Inteligencia comunitaria
 - [x] **2.1 Cruce de perfiles**
@@ -49,3 +59,8 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - Encolado de "Generar manual" si no hay conexión, se ejecuta al reconectar.
 - [ ] **4.4 PWA instalable**
   - Soporte `manifest.json` y Service Workers para uso como App Nativa.
+
+## 📋 BACKLOG / FUTURAS MEJORAS (Sprint Post-MVP)
+- [ ] **Kanban de Proyectos**: Vista visual del estado de las iniciativas comunitarias.
+- [ ] **Gestión Proyectos**: Botones de Editar y Eliminar para dueños de proyectos.
+- [ ] **Panel de Carga**: Resumen de tareas por miembro (Admin).
