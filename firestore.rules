@@ -237,5 +237,35 @@ service cloud.firestore {
       
       allow delete: if isAdmin();
     }
+
+    function isValidProyecto(data) {
+      return data.keys().hasAll(['titulo', 'descripcion', 'lider_uid', 'colaboradores_uid', 'habilidadesNecesarias', 'estado', 'creadoEn', 'updatedAt']) &&
+             data.titulo is string && data.titulo.size() <= 200 &&
+             data.descripcion is string && data.descripcion.size() <= 4000 &&
+             data.lider_uid is string &&
+             data.colaboradores_uid is list &&
+             data.habilidadesNecesarias is list &&
+             data.estado in ["activo", "buscando_colaboradores", "completado", "pausado"] &&
+             data.creadoEn is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    match /proyectos/{proyectoId} {
+      allow read: if isVerified();
+      allow create: if isVerified() && isValidId(proyectoId) && isValidProyecto(incoming()) &&
+                    incoming().lider_uid == request.auth.uid &&
+                    incoming().creadoEn == request.time &&
+                    incoming().updatedAt == request.time;
+      allow update: if isVerified() && isValidProyecto(incoming()) &&
+                    (
+                      (existing().lider_uid == request.auth.uid) ||
+                      (incoming().diff(existing()).affectedKeys().hasOnly(['solicitudes_uid', 'colaboradores_uid', 'updatedAt'])) ||
+                      isAdmin()
+                    ) &&
+                    incoming().lider_uid == existing().lider_uid &&
+                    incoming().creadoEn == existing().creadoEn &&
+                    incoming().updatedAt == request.time;
+      allow delete: if isAdmin();
+    }
   }
 }

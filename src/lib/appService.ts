@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, orderBy, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
 
@@ -73,13 +73,14 @@ export interface Proyecto {
   id?: string;
   titulo: string;
   descripcion: string;
-  lider_uid: string;
+  lider_uid: string; // uid del miembro que lo lidera
   colaboradores_uid: string[];
-  habilidadesNecesarias: string[];
+  solicitudes_uid?: string[]; // Para marcar solicitudes como pendientes
+  habilidadesNecesarias: string[]; // tags libres
   estado: "activo" | "buscando_colaboradores" | "completado" | "pausado";
-  fechaInicio?: string;
+  fechaInicio?: string; // YYYY-MM-DD
   fechaFin?: string;
-  creadoEn?: any;
+  creadoEn?: any; // timestamp
   updatedAt?: any;
 }
 
@@ -129,16 +130,58 @@ export async function solicitarColaboracion(proyectoId: string, uid: string): Pr
     const snap = await getDoc(docRef);
     if (!snap.exists()) throw new Error('Proyecto no encontrado');
     const data = snap.data() as Proyecto;
+    
     const colaboradores = data.colaboradores_uid || [];
-    if (!colaboradores.includes(uid)) {
+    const solicitudes = data.solicitudes_uid || [];
+    
+    if (!colaboradores.includes(uid) && !solicitudes.includes(uid)) {
       await updateDoc(docRef, {
-        colaboradores_uid: [...colaboradores, uid],
+        solicitudes_uid: arrayUnion(uid),
         updatedAt: serverTimestamp()
       });
     }
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
     throw err;
+  }
+}
+
+export async function aprobarColaborador(proyectoId: string, uid: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'proyectos', proyectoId);
+    await updateDoc(docRef, {
+      solicitudes_uid: arrayRemove(uid),
+      colaboradores_uid: arrayUnion(uid),
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
+    throw err;
+  }
+}
+
+export async function rechazarSolicitud(proyectoId: string, uid: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'proyectos', proyectoId);
+    await updateDoc(docRef, {
+      solicitudes_uid: arrayRemove(uid),
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
+    throw err;
+  }
+}
+
+export async function getMemberInfo(uid: string): Promise<any | null> {
+  try {
+    const docRef = doc(db, 'community_members', uid);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) return { id: snap.id, ...snap.data() };
+    return null;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, 'community_members');
+    return null;
   }
 }
 

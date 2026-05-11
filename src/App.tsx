@@ -8,6 +8,7 @@ import { FichaPreview } from './pages/FichaPreview';
 import { AdminPanel } from './pages/AdminPanel';
 import { TareasPanel } from './pages/TareasPanel';
 import { ActasPanel } from './pages/ActasPanel';
+import { ProyectosView } from './pages/ProyectosView';
 import { BottomNav } from './components/BottomNav';
 import { CruceView } from './pages/CruceView';
 
@@ -29,6 +30,7 @@ function AppContent() {
         <Route path="/cruce" element={<ProtectedRoute requireAdmin><CruceView /></ProtectedRoute>} />
         <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
         <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
+        <Route path="/proyectos" element={<ProtectedRoute><ProyectosView /></ProtectedRoute>} />
       </Routes>
       {showNav && <BottomNav />}
     </>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha } from '../lib/appService';
-import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight } from 'lucide-react';
+import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo } from '../lib/appService';
+import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus } from 'lucide-react';
 
 export function ProyectosView() {
   const { appUser } = useAuth();
@@ -12,6 +12,7 @@ export function ProyectosView() {
   
   // Create form state
   const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Proyecto | null>(null);
   const [newProject, setNewProject] = useState<Partial<Proyecto>>({
     titulo: '',
     descripcion: '',
@@ -19,10 +20,28 @@ export function ProyectosView() {
     habilidadesNecesarias: []
   });
   const [newHabilidad, setNewHabilidad] = useState('');
+  const [pendingMembers, setPendingMembers] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     loadData();
   }, [appUser]);
+
+  useEffect(() => {
+    if (selectedProject && appUser && selectedProject.lider_uid === appUser.uid && selectedProject.solicitudes_uid?.length) {
+      loadPendingNames(selectedProject.solicitudes_uid);
+    }
+  }, [selectedProject, appUser]);
+
+  const loadPendingNames = async (uids: string[]) => {
+    const names: {[key: string]: string} = { ...pendingMembers };
+    for (const uid of uids) {
+      if (!names[uid]) {
+        const info = await getMemberInfo(uid);
+        names[uid] = info?.nombre || 'Miembro desconocido';
+      }
+    }
+    setPendingMembers(names);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -105,6 +124,30 @@ export function ProyectosView() {
       loadData(); // reload
     } catch(e) {
       console.error("Error soliciting collaboration:", e);
+    }
+  };
+
+  const handleAprobar = async (pid: string, uid: string) => {
+    try {
+      await aprobarColaborador(pid, uid);
+      const updated = await obtenerProyectos();
+      setProyectos(updated);
+      const proj = updated.find(p => p.id === pid);
+      if (proj) setSelectedProject(proj);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const handleRechazar = async (pid: string, uid: string) => {
+    try {
+      await rechazarSolicitud(pid, uid);
+      const updated = await obtenerProyectos();
+      setProyectos(updated);
+      const proj = updated.find(p => p.id === pid);
+      if (proj) setSelectedProject(proj);
+    } catch(e) {
+      console.error(e);
     }
   };
 
@@ -241,14 +284,18 @@ export function ProyectosView() {
                     </div>
                   ) : (
                     proyectos.filter(p => !['completado', 'pausado'].includes(p.estado)).map(p => (
-                      <div key={p.id} className="bg-white p-5 rounded-2xl shadow-sm border border-[#EAE2D6] flex flex-col gap-3 relative overflow-hidden group">
+                      <div 
+                        key={p.id} 
+                        onClick={() => setSelectedProject(p)}
+                        className="bg-white p-5 rounded-2xl shadow-sm border border-[#EAE2D6] flex flex-col gap-3 relative overflow-hidden group cursor-pointer hover:border-[#D4C3A3] transition-all"
+                      >
                         <div className="absolute top-0 right-0 p-3 flex gap-2">
                           {p.estado === 'buscando_colaboradores' && (
                             <span className="px-2.5 py-1 bg-[#F9F7F1] text-[#A58E61] border border-[#D4C3A3] text-[10px] font-bold tracking-wider uppercase rounded-full whitespace-nowrap">Se busca ayuda</span>
                           )}
                         </div>
                         <h3 className="font-serif text-xl pr-28 text-stone-800 leading-tight">{p.titulo}</h3>
-                        <p className="text-stone-600 text-sm leading-relaxed">{p.descripcion}</p>
+                        <p className="text-stone-600 text-sm leading-relaxed line-clamp-2">{p.descripcion}</p>
                         
                         {(p.fechaInicio || p.fechaFin) && (
                           <div className="flex items-center gap-2 text-xs text-stone-500 mt-2">
@@ -266,17 +313,17 @@ export function ProyectosView() {
                             <span className="font-medium">{p.colaboradores_uid?.length || 0}</span> <span className="opacity-80">colaboradores</span>
                           </div>
                           
-                          {appUser && p.lider_uid !== appUser.uid && !(p.colaboradores_uid || []).includes(appUser.uid) && (
-                            <button 
-                              onClick={() => handleSolicitarColaboracion(p.id!)}
-                              className="text-sm font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors flex items-center gap-1"
-                            >
-                              Quiero colaborar <ArrowRight className="w-4 h-4" />
-                            </button>
-                          )}
-                          {appUser && (p.colaboradores_uid || []).includes(appUser.uid) && (
-                            <span className="text-sm font-medium text-teal-600 flex items-center gap-1 bg-teal-50 px-3 py-1 rounded-full"><CheckCircle2 className="w-4 h-4" /> Colaborando</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {appUser && (p.solicitudes_uid || []).includes(appUser.uid) && (
+                              <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Pendiente</span>
+                            )}
+                            {appUser && p.lider_uid === appUser.uid && (p.solicitudes_uid || []).length > 0 && (
+                              <span className="flex items-center justify-center w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full" title="Tienes solicitudes pendientes">
+                                {(p.solicitudes_uid || []).length}
+                              </span>
+                            )}
+                            <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 transition-colors" />
+                          </div>
                         </div>
                       </div>
                     ))
@@ -335,7 +382,10 @@ export function ProyectosView() {
                               ¡Me apunto!
                             </button>
                           )}
-                          {isColaborando && (
+                          {appUser && (p.solicitudes_uid || []).includes(appUser.uid) && (
+                            <span className="text-sm font-medium text-amber-700 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-100 w-full md:w-auto text-center">Solicitud pendiente</span>
+                          )}
+                          {isColaborando && !(p.solicitudes_uid || []).includes(appUser.uid) && (
                             <span className="text-sm font-medium text-teal-700 bg-teal-50 px-4 py-2.5 rounded-xl border border-teal-100 w-full md:w-auto text-center">Ya estás apuntado/a</span>
                           )}
                           {appUser && p.lider_uid === appUser.uid && (
@@ -357,6 +407,115 @@ export function ProyectosView() {
           </div>
         )}
       </div>
+
+      {/* Project Detail Overlay */}
+      {selectedProject && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-[#4A4E4D] p-6 text-white flex justify-between items-center">
+              <div>
+                <h2 className="font-serif text-2xl">{selectedProject.titulo}</h2>
+                <div className="flex items-center gap-2 text-xs text-stone-300 mt-1">
+                  <span className={`px-2 py-0.5 rounded-full border border-stone-500 uppercase font-bold tracking-tighter ${selectedProject.estado === 'buscando_colaboradores' ? 'bg-amber-900/30 text-amber-200' : 'bg-stone-600'}`}>
+                    {selectedProject.estado.replace('_', ' ')}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedProject(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              <section>
+                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Sobre el proyecto</h4>
+                <p className="text-stone-700 leading-relaxed whitespace-pre-wrap">{selectedProject.descripcion}</p>
+              </section>
+
+              {selectedProject.habilidadesNecesarias && selectedProject.habilidadesNecesarias.length > 0 && (
+                <section>
+                  <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Habilidades buscadas</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.habilidadesNecesarias.map((h, i) => (
+                      <span key={i} className="px-3 py-1.5 bg-[#F9F7F1] border border-[#EAE2D6] text-[#4A4E4D] text-sm rounded-xl flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#6B705C]" /> {h}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <section className="flex flex-col gap-4 pt-4 border-t border-stone-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-stone-500">Liderado por</span>
+                  <span className="font-medium text-stone-800 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#EAE2D6] rounded-full" /> {/* Avatar placeholder */}
+                    Miembro de la comunidad
+                  </span>
+                </div>
+                
+                {appUser && selectedProject.lider_uid === appUser.uid && selectedProject.solicitudes_uid && selectedProject.solicitudes_uid.length > 0 && (
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                    <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4" /> Solicitudes pendientes ({selectedProject.solicitudes_uid.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {selectedProject.solicitudes_uid.map(uid => (
+                        <div key={uid} className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-stone-100">
+                          <span className="text-sm font-medium text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleAprobar(selectedProject.id!, uid)}
+                              className="p-1.5 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors"
+                              title="Aprobar"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleRechazar(selectedProject.id!, uid)}
+                              className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
+                              title="Rechazar"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {appUser && selectedProject.lider_uid !== appUser.uid && (
+                  <div>
+                    {!(selectedProject.colaboradores_uid || []).includes(appUser.uid) && !(selectedProject.solicitudes_uid || []).includes(appUser.uid) ? (
+                      <button 
+                        onClick={() => { handleSolicitarColaboracion(selectedProject.id!); setSelectedProject(null); }}
+                        className="w-full py-4 bg-[#6B705C] text-white font-medium rounded-2xl hover:bg-[#4A4E4D] transition-all shadow-md flex justify-center items-center gap-2"
+                      >
+                        Quiero colaborar
+                      </button>
+                    ) : (selectedProject.solicitudes_uid || []).includes(appUser.uid) ? (
+                      <div className="w-full py-4 bg-amber-50 text-amber-700 border border-amber-100 font-medium rounded-2xl flex justify-center items-center gap-2">
+                        Solicitud pendiente de revisión
+                      </div>
+                    ) : (
+                      <div className="w-full py-4 bg-teal-50 text-teal-700 border border-teal-100 font-medium rounded-2xl flex justify-center items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" /> Ya eres colaborador/a
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

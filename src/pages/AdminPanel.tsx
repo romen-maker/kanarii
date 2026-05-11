@@ -12,7 +12,20 @@ function getDatosPersona(ficha: Ficha) {
   return ficha.datosPersona ?? ficha.datosOnboarding ?? {};
 }
 
-const SEED_DATA = [
+type RolComunitario = 'propietario' | 'miembro' | 'voluntario';
+
+const SEED_DATA: { 
+  nombre: string; 
+  rol_arteara: string; 
+  antiguedad_anos: number; 
+  genero: string; 
+  saberes: string; 
+  tension: string; 
+  fechaNacimiento: string; 
+  lugar: string; 
+  rol: RolComunitario;
+  fechaSalida?: string;
+}[] = [
   { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria", rol: "propietario" },
   { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife", rol: "miembro" },
   { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África", rol: "voluntario", fechaSalida: "2026-11-20" },
@@ -26,7 +39,7 @@ export function AdminPanel() {
   const [fichas, setFichas] = useState<Ficha[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'todos' | 'propietario' | 'miembro' | 'voluntario'>('todos');
+  const [roleFilter, setRoleFilter] = useState<'todos' | RolComunitario>('todos');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
 
   const fetchFichas = async () => {
@@ -152,7 +165,7 @@ export function AdminPanel() {
                 rol_arteara: seed.rol_arteara,
                 antiguedad_anos: seed.antiguedad_anos,
                 tension: seed.tension,
-                rol: seed.rol as any,
+                rol: seed.rol,
                 fechaSalida: seed.fechaSalida
               },
               datosPersona: {
@@ -165,7 +178,7 @@ export function AdminPanel() {
                 rol_arteara: seed.rol_arteara,
                 antiguedad_anos: seed.antiguedad_anos,
                 tension: seed.tension,
-                rol: seed.rol as any,
+                rol: seed.rol,
                 fechaSalida: seed.fechaSalida
               },
               datosBrutos: {

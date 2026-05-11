@@ -1,6 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+if (!geminiKey) {
+  console.error(
+    '⚠️ VITE_GEMINI_API_KEY no está definida en .env.local. ' +
+    'Las funciones de IA no funcionarán.'
+  );
+}
+
+const ai = new GoogleGenAI({ apiKey: geminiKey || '' });
 
 export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any): Promise<any> {
     const prompt = `

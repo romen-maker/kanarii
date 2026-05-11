@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, CheckSquare, FileText, Users, MoreHorizontal } from 'lucide-react';
+import { User, CheckSquare, FileText, Briefcase, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export function BottomNav() {
@@ -16,7 +16,7 @@ export function BottomNav() {
     { label: 'Mi Ficha', icon: User, path: '/ficha' },
     { label: 'Tareas', icon: CheckSquare, path: '/tareas' },
     { label: 'Actas', icon: FileText, path: '/actas' },
-    { label: 'Comunidad', icon: Users, path: '/ficha' },
+    { label: 'Proyectos', icon: Briefcase, path: '/proyectos' },
   ];
 
   const handleNav = (path: string) => {
@@ -30,7 +30,7 @@ export function BottomNav() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '56px' }}
       >
         {navItems.map((item, idx) => {
-          const isReallyActive = location.pathname === item.path && item.label !== 'Comunidad';
+          const isReallyActive = location.pathname === item.path;
           
           return (
             <button

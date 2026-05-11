@@ -31,8 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      if (firebaseUser) {
-        try {
+      try {
+        if (firebaseUser) {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userDocRef);
           
@@ -62,13 +62,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await setDoc(userDocRef, newUser);
             setAppUser({ uid: firebaseUser.uid, ...newUser, hasFicha: false } as AppUser);
           }
-        } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+        } else {
+          setAppUser(null);
         }
-      } else {
-        setAppUser(null);
+      } catch (error: any) {
+        console.error("Auth error - code:", error?.code);
+        console.error("Auth error - message:", error?.message);
+        console.error("Auth error - full stack:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
