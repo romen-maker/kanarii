@@ -58,6 +58,17 @@ export function ProyectosView() {
     loadData();
   }, [appUser]);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCreateMenu(false);
+        setSelectedProject(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -489,7 +500,7 @@ export function ProyectosView() {
       {showCreateMenu && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowCreateMenu(false)}>
           <div 
-            className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+            className="bg-[var(--color-surface)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-[#4A4E4D] p-8 text-white flex justify-between items-center">
