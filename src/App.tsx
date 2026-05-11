@@ -10,6 +10,7 @@ import { TareasPanel } from './pages/TareasPanel';
 import { ActasPanel } from './pages/ActasPanel';
 import { ProyectosView } from './pages/ProyectosView';
 import { BottomNav } from './components/BottomNav';
+import { Sidebar } from './components/Sidebar';
 import { CruceView } from './pages/CruceView';
 
 function AppContent() {
@@ -19,21 +20,26 @@ function AppContent() {
   const showNav = appUser !== null && !hideNavRoutes.includes(location.pathname);
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Welcome />} />
-        <Route path="/contexto" element={<ContextConsent />} />
-        <Route path="/onboarding" element={<OnboardingChat />} />
-        <Route path="/ficha-preview" element={<FichaPreview />} />
-        <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
-        <Route path="/cruce" element={<ProtectedRoute requireAdmin><CruceView /></ProtectedRoute>} />
-        <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
-        <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
-        <Route path="/proyectos" element={<ProtectedRoute><ProyectosView /></ProtectedRoute>} />
-      </Routes>
-      {showNav && <BottomNav />}
-    </>
+    <div className="flex min-h-screen bg-[#F9F7F1]">
+      {showNav && <Sidebar />}
+      
+      <main className="flex-1 min-w-0">
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/contexto" element={<ContextConsent />} />
+          <Route path="/onboarding" element={<OnboardingChat />} />
+          <Route path="/ficha-preview" element={<FichaPreview />} />
+          <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
+          <Route path="/cruce" element={<ProtectedRoute requireAdmin><CruceView /></ProtectedRoute>} />
+          <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
+          <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
+          <Route path="/proyectos" element={<ProtectedRoute><ProyectosView /></ProtectedRoute>} />
+        </Routes>
+        
+        {showNav && <BottomNav />}
+      </main>
+    </div>
   );
 }
 

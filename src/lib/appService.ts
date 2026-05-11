@@ -173,6 +173,19 @@ export async function rechazarSolicitud(proyectoId: string, uid: string): Promis
   }
 }
 
+export async function actualizarEstadoProyecto(proyectoId: string, nuevoEstado: Proyecto['estado']): Promise<void> {
+  try {
+    const docRef = doc(db, 'proyectos', proyectoId);
+    await updateDoc(docRef, {
+      estado: nuevoEstado,
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, 'proyectos');
+    throw err;
+  }
+}
+
 export async function getMemberInfo(uid: string): Promise<any | null> {
   try {
     const docRef = doc(db, 'community_members', uid);

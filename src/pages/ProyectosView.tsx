@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo } from '../lib/appService';
+import { obtenerProyectos, crearProyecto, solicitarColaboracion, Proyecto, getUserFicha, Ficha, aprobarColaborador, rechazarSolicitud, getMemberInfo, actualizarEstadoProyecto } from '../lib/appService';
 import { Briefcase, Activity, Calendar, Users, Plus, CheckCircle2, ChevronRight, Tags, ArrowRight, X, Check, UserMinus } from 'lucide-react';
 
 export function ProyectosView() {
@@ -27,20 +27,26 @@ export function ProyectosView() {
   }, [appUser]);
 
   useEffect(() => {
-    if (selectedProject && appUser && selectedProject.lider_uid === appUser.uid && selectedProject.solicitudes_uid?.length) {
-      loadPendingNames(selectedProject.solicitudes_uid);
+    if (selectedProject && appUser && selectedProject.lider_uid === appUser.uid) {
+      const allUids = [
+        ...(selectedProject.solicitudes_uid || []),
+        ...(selectedProject.colaboradores_uid || [])
+      ];
+      if (allUids.length) resolveMemberNames(allUids);
     }
   }, [selectedProject, appUser]);
 
-  const loadPendingNames = async (uids: string[]) => {
+  const resolveMemberNames = async (uids: string[]) => {
     const names: {[key: string]: string} = { ...pendingMembers };
+    let changed = false;
     for (const uid of uids) {
       if (!names[uid]) {
         const info = await getMemberInfo(uid);
         names[uid] = info?.nombre || 'Miembro desconocido';
+        changed = true;
       }
     }
-    setPendingMembers(names);
+    if (changed) setPendingMembers(names);
   };
 
   const loadData = async () => {
@@ -136,6 +142,7 @@ export function ProyectosView() {
       if (proj) setSelectedProject(proj);
     } catch(e) {
       console.error(e);
+      alert("Error al aprobar colaborador");
     }
   };
 
@@ -148,6 +155,20 @@ export function ProyectosView() {
       if (proj) setSelectedProject(proj);
     } catch(e) {
       console.error(e);
+      alert("Error al rechazar solicitud");
+    }
+  };
+
+  const handleUpdateEstado = async (pid: string, nuevoEstado: Proyecto['estado']) => {
+    try {
+      await actualizarEstadoProyecto(pid, nuevoEstado);
+      const updated = await obtenerProyectos();
+      setProyectos(updated);
+      const proj = updated.find(p => p.id === pid);
+      if (proj) setSelectedProject(proj);
+    } catch(e) {
+      console.error(e);
+      alert("Error al actualizar el estado");
     }
   };
 
@@ -460,33 +481,72 @@ export function ProyectosView() {
                   </span>
                 </div>
                 
-                {appUser && selectedProject.lider_uid === appUser.uid && selectedProject.solicitudes_uid && selectedProject.solicitudes_uid.length > 0 && (
-                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                    <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Users className="w-4 h-4" /> Solicitudes pendientes ({selectedProject.solicitudes_uid.length})
-                    </h4>
-                    <div className="space-y-3">
-                      {selectedProject.solicitudes_uid.map(uid => (
-                        <div key={uid} className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-stone-100">
-                          <span className="text-sm font-medium text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => handleAprobar(selectedProject.id!, uid)}
-                              className="p-1.5 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors"
-                              title="Aprobar"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => handleRechazar(selectedProject.id!, uid)}
-                              className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
-                              title="Rechazar"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
+                {appUser && selectedProject.lider_uid === appUser.uid && (
+                  <div className="space-y-4">
+                    {/* Selector de Estado */}
+                    <div className="bg-[#F9F7F1] p-4 rounded-2xl border border-[#EAE2D6]">
+                      <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3">Estado del Proyecto</h4>
+                      <select 
+                        className="w-full p-2 bg-white border border-stone-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#EAE2D6]"
+                        value={selectedProject.estado}
+                        onChange={(e) => handleUpdateEstado(selectedProject.id!, e.target.value as any)}
+                      >
+                        <option value="buscando_colaboradores">Buscando Colaboradores</option>
+                        <option value="activo">Activo</option>
+                        <option value="pausado">Pausado</option>
+                        <option value="completado">Completado</option>
+                      </select>
+                    </div>
+
+                    {/* Solicitudes Pendientes */}
+                    {selectedProject.solicitudes_uid && selectedProject.solicitudes_uid.length > 0 && (
+                      <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                        <h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                          Solicitudes pendientes ({selectedProject.solicitudes_uid.length})
+                        </h4>
+                        <div className="space-y-3">
+                          {selectedProject.solicitudes_uid.map(uid => (
+                            <div key={uid} className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-amber-100">
+                              <span className="text-sm font-medium text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleAprobar(selectedProject.id!, uid)}
+                                  className="p-1.5 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => handleRechazar(selectedProject.id!, uid)}
+                                  className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+                    )}
+
+                    {/* Equipo Actual */}
+                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                      <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Equipo actual ({(selectedProject.colaboradores_uid?.length || 0)})
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between bg-white/50 p-2 rounded-lg text-xs">
+                          <span className="text-stone-500 italic">Tú (Líder)</span>
+                        </div>
+                        {selectedProject.colaboradores_uid?.map(uid => (
+                          <div key={uid} className="flex items-center justify-between bg-white p-2.5 rounded-xl shadow-sm border border-stone-100">
+                            <span className="text-sm text-stone-700">{pendingMembers[uid] || 'Cargando...'}</span>
+                            <CheckCircle2 className="w-4 h-4 text-teal-500" />
+                          </div>
+                        ))}
+                        {(!selectedProject.colaboradores_uid || selectedProject.colaboradores_uid.length === 0) && (
+                          <p className="text-xs text-stone-400 text-center py-2">Aún no hay colaboradores aceptados</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
