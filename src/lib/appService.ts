@@ -191,6 +191,19 @@ export async function getMemberInfo(uid: string): Promise<any | null> {
     const docRef = doc(db, 'community_members', uid);
     const snap = await getDoc(docRef);
     if (snap.exists()) return { id: snap.id, ...snap.data() };
+    
+    // Fallback to users collection
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      return { 
+        id: userSnap.id, 
+        nombre: userData.displayName || userData.email || 'Miembro nuevo',
+        isFallback: true 
+      };
+    }
+    
     return null;
   } catch (err) {
     handleFirestoreError(err, OperationType.GET, 'community_members');
@@ -538,12 +551,12 @@ export async function saveManual(userId: string, manualGenerado: string, existin
       if (prevManual) {
         versionesAnteriores.push({
           manualGenerado: prevManual,
-          fechaGeneracion: prevFecha
+          fechaGeneracion: prevFecha || null
         });
       }
 
       await updateDoc(docRef, {
-        manualGenerado,
+        manualGenerado: manualGenerado || null,
         fechaGeneracion: serverTimestamp(),
         versionesAnteriores,
         updatedAt: serverTimestamp()
