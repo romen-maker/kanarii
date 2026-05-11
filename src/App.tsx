@@ -12,6 +12,7 @@ import { ProyectosView } from './pages/ProyectosView';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { CruceView } from './pages/CruceView';
+import { Activity, ArrowRight } from 'lucide-react';
 
 function AppContent() {
   const { appUser } = useAuth();
@@ -25,7 +26,30 @@ function AppContent() {
       
       <main className="flex-1 min-w-0">
         <Routes>
-          <Route path="/" element={<Welcome />} />
+          <Route path="/" element={
+            <>
+              {appUser && !appUser.hasFicha && (
+                <div className="bg-[#F9F7F1] border-b border-[#EAE2D6] px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center gap-3 text-[#6B705C]">
+                    <div className="p-2 bg-[#EAE2D6] rounded-full">
+                      <Activity className="w-5 h-5 text-[#4A4E4D]" />
+                    </div>
+                    <p className="text-sm font-medium text-stone-700">
+                      Completa tu ficha para poder colaborar en proyectos
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => window.location.href = '/onboarding'}
+                    className="whitespace-nowrap px-6 py-2 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-bold transition-all shadow-md flex items-center gap-2 group"
+                  >
+                    Completar Ficha
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              )}
+              <Welcome />
+            </>
+          } />
           <Route path="/contexto" element={<ContextConsent />} />
           <Route path="/onboarding" element={<OnboardingChat />} />
           <Route path="/ficha-preview" element={<FichaPreview />} />
@@ -49,16 +73,6 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: React.Re
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div></div>;
   if (!appUser) return <Navigate to="/" />;
   if (requireAdmin && appUser.role !== 'admin') return <Navigate to="/ficha" />;
-  
-  if (!requireAdmin) {
-    if (appUser.hasFicha) {
-      // Deja pasar (ej. a /ficha), no redirige a /contexto
-    } else if (appUser.hasConsented && !appUser.hasFicha) {
-      return <Navigate to="/onboarding" />;
-    } else if (!appUser.hasConsented) {
-      return <Navigate to="/contexto" />;
-    }
-  }
   
   return <>{children}</>;
 }
