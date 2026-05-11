@@ -23,7 +23,7 @@ import { useToast } from '../components/Toaster';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
-import { EntityCard } from '../components/ui/EntityCard';
+import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
 import { StatusMenu } from '../components/ui/StatusMenu';
 
 const COLUMNS: KanbanColumnDef[] = [
@@ -202,7 +202,18 @@ export function ProyectosView() {
         tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
         quickActions={[
           { label: 'Gestionar', icon: Activity, onClick: () => setSelectedProject(proyecto), showLabel: true },
-          { label: 'Eliminar', icon: Trash2, onClick: () => startDelete(proyecto.id!), variant: 'danger' }
+          { 
+            label: 'Eliminar', 
+            icon: Trash2, 
+            onClick: () => startDelete(proyecto.id!, {
+              onDelete: async (id) => {
+                await deleteProyecto(id);
+                loadData();
+              },
+              successMessage: 'Proyecto eliminado'
+            }), 
+            variant: 'danger' 
+          }
         ]}
         actions={[
           { label: 'Editar proyecto', icon: UserPlus, onClick: () => setSelectedProject(proyecto) },
