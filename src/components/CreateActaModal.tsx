@@ -52,7 +52,6 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
 
       // 2. Crear o actualizar el acta usando perform
       await perform(saveActa({
-        id: actaToEdit?.id,
         titulo: formData.titulo.trim(),
         fecha: new Date(formData.fecha),
         facilitador: formData.facilitador,
@@ -63,7 +62,7 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
         proximaReunion: formData.proximaReunion ? new Date(formData.proximaReunion) : undefined,
         creadaPor: actaToEdit ? actaToEdit.creadaPor : appUser.uid,
         lastEditedBy: actaToEdit ? appUser.uid : undefined
-      }), {
+      }, actaToEdit?.id), {
         successMessage: actaToEdit ? "Acta actualizada ✨" : "Acta guardada con éxito 📄",
         onSuccess: () => onClose()
       });
