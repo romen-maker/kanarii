@@ -11,7 +11,7 @@ import {
   actualizarEstadoProyecto, 
   deleteProyecto
 } from '../lib/appService';
-import { Briefcase, Plus, Search, Play, Pause, CheckCircle2 } from 'lucide-react';
+import { Briefcase, Plus, Search, Play, Pause, CheckCircle2, Star, Users } from 'lucide-react';
 import { useToast } from '../components/Toaster';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
