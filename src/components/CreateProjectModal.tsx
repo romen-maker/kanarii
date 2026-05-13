@@ -28,7 +28,7 @@ export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateP
         estado,
         habilidadesNecesarias
       });
-      onClose();
+      // El cierre lo gestiona la página después del éxito, o podemos cerrarlo aquí si onCreate es exitoso
     } catch (err) {
       console.error("Error in CreateProjectModal:", err);
     } finally {
@@ -53,7 +53,7 @@ export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateP
       onClick={onClose}
     >
       <div 
-        className="bg-[var(--color-surface)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#4A4E4D] p-8 text-white flex justify-between items-center">
@@ -131,7 +131,7 @@ export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateP
                     <button 
                       type="button" 
                       onClick={() => handleRemoveHabilidad(h)} 
-                      className="hover:text-red-500 transition-colors text-lg line-height-0"
+                      className="hover:text-red-500 transition-colors text-lg"
                       disabled={isSubmitting}
                     >
                       ×

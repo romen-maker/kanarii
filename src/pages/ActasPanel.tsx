@@ -4,7 +4,7 @@ import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useEntityActions } from '../hooks/useEntityActions';
-import { Acta, saveActa, deleteActa } from '../lib/appService';
+import { Acta, deleteActa } from '../lib/appService';
 import { 
   Leaf, Plus, Calendar, User as UserIcon, Users, 
   CheckSquare, Search, BookOpen, Clock, FileText, Trash2, Edit
@@ -19,7 +19,7 @@ export function ActasPanel() {
   const { actas, loadingActas } = useActas();
   const { tareas } = useTareas();
   const { members, loadingMembers, getMemberName } = useCommunityMembers();
-  const { perform, isSubmitting } = useEntityActions();
+  const { perform } = useEntityActions();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -153,7 +153,6 @@ export function ActasPanel() {
           onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} 
           members={members} 
           actaToEdit={isEditModalOpen && actaSeleccionada ? actaSeleccionada : undefined}
-          isSubmitting={isSubmitting}
         />
       )}
     </div>

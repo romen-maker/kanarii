@@ -31,11 +31,11 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appUser || !formData.titulo.trim()) return;
+    if (!appUser || !formData.titulo.trim() || isSubmitting) return;
     setIsSubmitting(true);
     
     try {
-      // 1. Crear las tareas derivadas si las hay (esto es orquestación manual necesaria aquí)
+      // 1. Crear las tareas derivadas si las hay
       const tareasIds: string[] = actaToEdit?.tareasDerivadas || [];
       for (const tarea of formData.tareasDerivadas) {
         if (tarea.titulo.trim()) {
@@ -67,7 +67,7 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
       
       onClose();
     } catch (e) {
-      console.error(e);
+      console.error("Error saving acta:", e);
       toast.error("Error al procesar el acta");
     } finally {
       setIsSubmitting(false);
@@ -85,7 +85,7 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
 
   return (
     <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#FDFBF7] shrink-0">
           <div>
             <h2 className="text-xl font-serif text-[#4A4E4D]">{actaToEdit ? 'Editar Acta' : 'Nueva Acta'}</h2>
@@ -241,7 +241,7 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
               disabled={isSubmitting || (step === 1 && !formData.titulo.trim()) || (step === 2 && !formData.contexto.trim())}
               className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-6 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
             >
-              {step < 4 ? <>Siguiente <ArrowRight className="w-4 h-4" /></> : (isSubmitting ? 'Guardando...' : 'Crear Acta')}
+              {step < 4 ? <>Siguiente <ArrowRight className="w-4 h-4" /></> : (isSubmitting ? 'Guardando...' : (actaToEdit ? 'Actualizar Acta' : 'Crear Acta'))}
             </button>
           </div>
         </form>

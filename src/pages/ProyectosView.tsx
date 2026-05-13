@@ -11,7 +11,7 @@ import {
   actualizarEstadoProyecto, 
   deleteProyecto
 } from '../lib/appService';
-import { Briefcase, Plus, Search, Play, Pause, CheckCircle2, Star, Users } from 'lucide-react';
+import { Briefcase, Plus, Search, Play, Pause, CheckCircle2, Star, Users, UserPlus } from 'lucide-react';
 import { useToast } from '../components/Toaster';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
@@ -119,9 +119,9 @@ export function ProyectosView() {
           { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" },
           ...(isLider && (proyecto.solicitudes_uid?.length || 0) > 0 ? [
             { 
-              icon: Plus, 
+              icon: UserPlus, 
               text: `${proyecto.solicitudes_uid?.length} solicitudes`, 
-              className: "text-amber-600 font-bold animate-pulse",
+              className: "text-amber-600 font-bold animate-pulse bg-amber-50 border border-amber-200",
               tooltip: "Hay personas queriendo ayudar" 
             }
           ] : [])
