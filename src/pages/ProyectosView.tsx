@@ -25,6 +25,7 @@ import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { useProyectos } from '../hooks/useProyectos';
 import { useTareas } from '../hooks/useTareas';
 import { useFicha } from '../hooks/useFicha';
+import { useEntityActions } from '../hooks/useEntityActions';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { EntityCard } from '../components/ui/EntityCard';
 import { StatusMenu } from '../components/ui/StatusMenu';
@@ -39,13 +40,14 @@ const COLUMNS: KanbanColumnDef[] = [
 export function ProyectosView() {
   const { appUser } = useAuth();
   const { items: proyectos, loading: loadingProyectos } = useProyectos();
-  const { items: tareas, loading: loadingTareas } = useTareas();
-  const { ficha: fichaUser, loading: loadingFicha } = useFicha(appUser?.uid || '');
+  const { tareas, loadingTareas } = useTareas();
+  const { ficha: fichaUser, loadingFicha } = useFicha();
   
   const [activeTab, setActiveTab] = useState<'proyectos' | 'tablon'>('proyectos');
   const { success, error: toastError } = useToast();
   const { getMemberName } = useCommunityMembers();
   const { startDelete } = useUndoableDelete();
+  const { perform, isExecuting } = useEntityActions();
   
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Proyecto | null>(null);
@@ -73,30 +75,28 @@ export function ProyectosView() {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appUser || !newProject.titulo || !newProject.descripcion) return;
-    try {
-      const proj: Proyecto = {
-        titulo: newProject.titulo,
-        descripcion: newProject.descripcion,
-        lider_uid: appUser.uid,
-        colaboradores_uid: [],
-        solicitudes_uid: [],
-        habilidadesNecesarias: newProject.habilidadesNecesarias || [],
-        estado: (newProject.estado as any) || 'buscando_colaboradores'
-      };
-      await crearProyecto(proj);
-      success("Proyecto creado correctamente 🚀");
-      setShowCreateMenu(false);
-      setNewProject({
-        titulo: '',
-        descripcion: '',
-        estado: 'buscando_colaboradores',
-        habilidadesNecesarias: []
-      });
-      loadData();
-    } catch(err: any) {
-      console.error("Error creating project:", err);
-      toastError(`Error al crear el proyecto: ${err.message || 'Error desconocido'}`);
-    }
+
+    await perform(crearProyecto({
+      titulo: newProject.titulo,
+      descripcion: newProject.descripcion,
+      lider_uid: appUser.uid,
+      colaboradores_uid: [],
+      solicitudes_uid: [],
+      habilidadesNecesarias: newProject.habilidadesNecesarias || [],
+      estado: (newProject.estado as any) || 'buscando_colaboradores',
+      creadoEn: new Date().toISOString()
+    }), {
+      successMessage: "Proyecto creado correctamente 🚀",
+      onSuccess: () => {
+        setShowCreateMenu(false);
+        setNewProject({
+          titulo: '',
+          descripcion: '',
+          estado: 'buscando_colaboradores',
+          habilidadesNecesarias: []
+        });
+      }
+    });
   };
 
   const handleAddHabilidad = () => {
@@ -118,47 +118,27 @@ export function ProyectosView() {
 
   const handleSolicitarColaboracion = async (pid: string) => {
     if (!appUser) return;
-    try {
-      await solicitarColaboracion(pid, appUser.uid);
-      success("Solicitud enviada correctamente ✨");
-      loadData();
-    } catch(e) {
-      console.error(e);
-      toastError("Error al enviar la solicitud");
-    }
+    await perform(solicitarColaboracion(pid, appUser.uid), {
+      successMessage: "Solicitud enviada correctamente ✨"
+    });
   };
 
   const handleAprobar = async (pid: string, uid: string) => {
-    try {
-      await aprobarColaborador(pid, uid);
-      success("Colaborador aprobado ✨");
-      loadData();
-    } catch(e) {
-      console.error(e);
-      toastError("Error al aprobar colaborador");
-    }
+    await perform(aprobarColaborador(pid, uid), {
+      successMessage: "Colaborador aprobado ✨"
+    });
   };
 
   const handleRechazar = async (pid: string, uid: string) => {
-    try {
-      await rechazarSolicitud(pid, uid);
-      success("Solicitud rechazada");
-      loadData();
-    } catch(e) {
-      console.error(e);
-      toastError("Error al rechazar solicitud");
-    }
+    await perform(rechazarSolicitud(pid, uid), {
+      successMessage: "Solicitud rechazada"
+    });
   };
 
   const handleUpdateEstado = async (pid: string, nuevoEstado: Proyecto['estado']) => {
-    try {
-      await actualizarEstadoProyecto(pid, nuevoEstado);
-      success(`Proyecto actualizado a ${nuevoEstado.replace('_', ' ')}`);
-      loadData();
-    } catch(e) {
-      console.error(e);
-      toastError("Error al actualizar el estado");
-    }
+    await perform(actualizarEstadoProyecto(pid, nuevoEstado), {
+      successMessage: `Estado actualizado a ${nuevoEstado.replace('_', ' ')}`
+    });
   };
 
   const renderProjectCard = (proyecto: Proyecto) => {
@@ -180,7 +160,15 @@ export function ProyectosView() {
         status={status}
         metadata={[
           { icon: Star, text: isLider ? 'Tú (Líder)' : getMemberName(proyecto.lider_uid), tooltip: "Líder del proyecto" },
-          { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" }
+          { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" },
+          ...(isLider && (proyecto.solicitudes_uid?.length || 0) > 0 ? [
+            { 
+              icon: UserPlus, 
+              text: `${proyecto.solicitudes_uid?.length} solicitudes`, 
+              className: "text-amber-600 font-bold animate-pulse",
+              tooltip: "Hay personas queriendo ayudar" 
+            }
+          ] : [])
         ]}
         tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
         onStateChange={{
@@ -195,7 +183,6 @@ export function ProyectosView() {
             onClick: () => startDelete(proyecto.id!, {
               onDelete: async (id) => {
                 await deleteProyecto(id);
-                loadData();
               },
               successMessage: 'Proyecto eliminado'
             }), 
@@ -477,7 +464,6 @@ export function ProyectosView() {
                       onDelete: async (id) => {
                         await deleteProyecto(id);
                         setSelectedProject(null);
-                        loadData(); // Refrescar lista tras borrar
                       },
                       successMessage: 'Proyecto eliminado'
                     })}
