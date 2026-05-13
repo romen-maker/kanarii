@@ -22,6 +22,9 @@ import {
 import { useToast } from '../components/Toaster';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
+import { useProyectos } from '../hooks/useProyectos';
+import { useTareas } from '../hooks/useTareas';
+import { useFicha } from '../hooks/useFicha';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { EntityCard } from '../components/ui/EntityCard';
 import { StatusMenu } from '../components/ui/StatusMenu';
@@ -35,11 +38,11 @@ const COLUMNS: KanbanColumnDef[] = [
 
 export function ProyectosView() {
   const { appUser } = useAuth();
+  const { items: proyectos, loading: loadingProyectos } = useProyectos();
+  const { items: tareas, loading: loadingTareas } = useTareas();
+  const { ficha: fichaUser, loading: loadingFicha } = useFicha(appUser?.uid || '');
+  
   const [activeTab, setActiveTab] = useState<'proyectos' | 'tablon'>('proyectos');
-  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [tareas, setTareas] = useState<Tarea[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fichaUser, setFichaUser] = useState<Ficha | null>(null);
   const { success, error: toastError } = useToast();
   const { getMemberName } = useCommunityMembers();
   const { startDelete } = useUndoableDelete();
@@ -54,9 +57,7 @@ export function ProyectosView() {
   });
   const [newHabilidad, setNewHabilidad] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, [appUser]);
+  const loading = loadingProyectos || loadingTareas || loadingFicha;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -68,24 +69,6 @@ export function ProyectosView() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      if (appUser) {
-        const ficha = await getUserFicha(appUser.uid);
-        setFichaUser(ficha);
-      }
-      const data = await obtenerProyectos();
-      setProyectos(data);
-      const allTareas = await obtenerTareas();
-      setTareas(allTareas);
-    } catch(e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
