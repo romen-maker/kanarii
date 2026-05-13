@@ -126,7 +126,7 @@ export function ProyectosView() {
             }
           ] : [])
         ]}
-        tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
+        tags={(proyecto.habilidadesNecesarias || []).map(h => ({ label: h, variant: 'neutral' }))}
         onStateChange={{
           next: () => setSelectedProject(proyecto),
           nextLabel: 'Gestionar',
