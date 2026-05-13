@@ -1,6 +1,32 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
+
+// --- REFERENCIAS DE COLECCIONES ---
+export const colFichas = collection(db, 'fichas');
+export const colTareas = collection(db, 'tareas');
+export const colActas = collection(db, 'actas');
+export const colProyectos = collection(db, 'proyectos');
+
+// --- QUERIES ESTÁNDAR PARA HOOKS ---
+export const getFichasQuery = () => query(colFichas);
+export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'));
+export const getActasQuery = () => query(colActas, orderBy('fecha', 'desc'));
+export const getProyectosQuery = () => query(colProyectos, orderBy('updatedAt', 'desc'));
+
+// --- GESTIÓN DE USUARIOS (Para AuthContext) ---
+export async function getAppUserDoc(uid: string) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function syncAppUserDoc(uid: string, data: any) {
+  await setDoc(doc(db, 'users', uid), {
+    ...data,
+    lastLogin: serverTimestamp()
+  }, { merge: true });
+}
+
 
 export interface DatosOnboarding {
   nombre: string;
@@ -888,6 +914,22 @@ export function cruzarMiembros(perfil1: any, perfil2: any): AnalisisCruce {
   return { puntuacion, compatibilidades, tensiones, canalesConexion };
 }
 
+export function getFichaHash(ficha: Ficha): string {
+  try {
+    const str = "v2" + JSON.stringify(ficha.datosBrutos || {}) + JSON.stringify(ficha.perfilVisual || {});
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16).slice(0, 16);
+  } catch (err) {
+    console.error("Error generating hash:", err);
+    return 'hash_error';
+  }
+}
+
 export async function getCruce(id1: string, id2: string): Promise<any | null> {
   const sortedIds = [id1, id2].sort();
   const cruceId = `${sortedIds[0]}_${sortedIds[1]}`;
@@ -901,6 +943,8 @@ export async function saveCruce(id1: string, id2: string, data: any): Promise<vo
   const cruceId = `${sortedIds[0]}_${sortedIds[1]}`;
   await setDoc(doc(db, 'cruces', cruceId), {
     ...data,
+    miembro1_uid: sortedIds[0],
+    miembro2_uid: sortedIds[1],
     generadoEn: serverTimestamp()
   });
 }

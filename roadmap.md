@@ -21,7 +21,9 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] Refactorizar `TareasPanel.tsx` y `ActasPanel.tsx` (Eliminar bypass de `appService`).
   - [ ] Limpiar `CruceView.tsx` y `AdminPanel.tsx` (Eliminar imports directos de Firestore).
   - [ ] Reemplazar `alert()` nativos por `useToast`.
-  - [ ] Extraer modales inline a componentes independientes.
+  - [x] Extraer modales inline a componentes independientes. (`CreateActaModal`, `CreateProjectModal`)
+- [ ] Aplicar EntityCard en todas las listas (Proyectos, Tareas, Actas).
+- [ ] Refactorizar `AuthContext.tsx` (Eliminar Firestore, usar `appService`).
 
 ## 🔴 Fase 1 — App operativa mínima (Prioridad Actual)
 - [ ] **1.1 Gestión de tareas comunitarias**
