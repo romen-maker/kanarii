@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useToast } from './useToast';
+import { useToast } from '../components/Toaster'; // Corregido el path relativo según la estructura del proyecto
 
 interface ActionOptions {
   successMessage?: string;
@@ -11,6 +11,9 @@ interface ActionOptions {
 /**
  * Hook genérico para encapsular el patrón de mutación:
  * try/catch → service call → toast → callback
+ * 
+ * Este hook permite que las vistas sean "tontas" y no tengan que
+ * gestionar estados de loading o errores de mutación repetitivos.
  */
 export function useEntityActions() {
   const { success, error: toastError } = useToast();

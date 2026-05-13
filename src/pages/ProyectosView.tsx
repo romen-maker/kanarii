@@ -9,18 +9,18 @@ import {
   aprobarColaborador, 
   rechazarSolicitud, 
   actualizarEstadoProyecto, 
-  deleteProyecto,
+  deleteProyecto
 } from '../lib/appService';
-import { 
-  Briefcase, Activity, Plus, Search, Play, Pause, CheckCircle2, Star, Users, Trash2
-} from 'lucide-react';
+import { Briefcase, Plus, Search, Play, Pause, CheckCircle2 } from 'lucide-react';
+import { useToast } from '../components/Toaster';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
-import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
-import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
 import { useProyectos } from '../hooks/useProyectos';
 import { useTareas } from '../hooks/useTareas';
+import { useFicha } from '../hooks/useFicha';
 import { useEntityActions } from '../hooks/useEntityActions';
+import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
+import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
 import { ProjectDetailOverlay } from '../components/ProjectDetailOverlay';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 
@@ -33,54 +33,67 @@ const COLUMNS: KanbanColumnDef[] = [
 
 export function ProyectosView() {
   const { appUser } = useAuth();
-  const { proyectos, loading: loadingProyectos } = useProyectos();
-  const { items: tareas } = useTareas();
-  const { perform } = useEntityActions();
+  const { items: proyectos, loading: loadingProyectos } = useProyectos();
+  const { tareas, loadingTareas } = useTareas();
+  const { ficha: fichaUser, loadingFicha } = useFicha();
+  
   const { getMemberName } = useCommunityMembers();
   const { startDelete } = useUndoableDelete();
+  const { perform } = useEntityActions();
   
-  const [activeTab, setActiveTab] = useState<'proyectos' | 'tablon'>('proyectos');
-  const [fichaUser, setFichaUser] = useState<Ficha | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Proyecto | null>(null);
   const [initialCreateStatus, setInitialCreateStatus] = useState<Proyecto['estado']>();
 
-  // Cargamos la ficha del usuario solo para lógica de permisos si es necesario
+  const loading = loadingProyectos || loadingTareas || loadingFicha;
+
   useEffect(() => {
-    if (appUser) {
-      getUserFicha(appUser.uid).then(setFichaUser);
-    }
-  }, [appUser]);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCreateModal(false);
+        setSelectedProject(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const handleCreate = async (data: any) => {
     if (!appUser) return;
-    await perform(crearProyecto({ ...data, lider_uid: appUser.uid, colaboradores_uid: [], solicitudes_uid: [] }), {
-      successMessage: "Proyecto lanzado con éxito 🚀"
-    });
-  };
-
-  const handleUpdateEstado = async (pid: string, estado: Proyecto['estado']) => {
-    await perform(actualizarEstadoProyecto(pid, estado), {
-      successMessage: `Estado actualizado a ${estado.replace('_', ' ')}`
+    await perform(crearProyecto({ 
+      ...data, 
+      lider_uid: appUser.uid, 
+      colaboradores_uid: [], 
+      solicitudes_uid: [],
+      creadoEn: new Date().toISOString()
+    }), {
+      successMessage: "Proyecto lanzado con éxito 🚀",
+      onSuccess: () => setShowCreateModal(false)
     });
   };
 
   const handleSolicitar = async (pid: string) => {
     if (!appUser) return;
     await perform(solicitarColaboracion(pid, appUser.uid), {
-      successMessage: "Solicitud enviada correctamente ✨"
+      successMessage: "Energía enviada a la iniciativa ✨"
     });
   };
 
   const handleAprobar = async (pid: string, uid: string) => {
     await perform(aprobarColaborador(pid, uid), {
-      successMessage: "Colaborador aprobado ✨"
+      successMessage: "Colaborador integrado al equipo"
     });
   };
 
   const handleRechazar = async (pid: string, uid: string) => {
     await perform(rechazarSolicitud(pid, uid), {
-      successMessage: "Solicitud rechazada"
+      successMessage: "Solicitud gestionada"
+    });
+  };
+
+  const handleUpdateEstado = async (pid: string, nuevoEstado: Proyecto['estado']) => {
+    await perform(actualizarEstadoProyecto(pid, nuevoEstado), {
+      successMessage: `Estado actualizado a ${nuevoEstado.replace('_', ' ')}`
     });
   };
 
@@ -103,7 +116,15 @@ export function ProyectosView() {
         status={status}
         metadata={[
           { icon: Star, text: isLider ? 'Tú (Líder)' : getMemberName(proyecto.lider_uid), tooltip: "Líder del proyecto" },
-          { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" }
+          { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" },
+          ...(isLider && (proyecto.solicitudes_uid?.length || 0) > 0 ? [
+            { 
+              icon: Plus, 
+              text: `${proyecto.solicitudes_uid?.length} solicitudes`, 
+              className: "text-amber-600 font-bold animate-pulse",
+              tooltip: "Hay personas queriendo ayudar" 
+            }
+          ] : [])
         ]}
         tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
         onStateChange={{
@@ -111,17 +132,6 @@ export function ProyectosView() {
           nextLabel: 'Gestionar',
           isCompleted: proyecto.estado === 'completado'
         }}
-        quickActions={isLider ? [
-          { 
-            label: 'Eliminar', 
-            icon: Trash2, 
-            onClick: () => startDelete(proyecto.id!, {
-              onDelete: (id) => perform(deleteProyecto(id)),
-              successMessage: 'Proyecto eliminado'
-            }), 
-            variant: 'danger' 
-          }
-        ] : []}
         onClick={() => setSelectedProject(proyecto)}
       />
     );
@@ -136,79 +146,31 @@ export function ProyectosView() {
             <Briefcase className="w-8 h-8 text-[#D4C3A3]" />
             <h1 className="font-serif text-3xl">Proyectos</h1>
           </div>
-          {appUser && (
-            <>
-              <button 
-                onClick={() => { setInitialCreateStatus(undefined); setShowCreateModal(true); }}
-                className="hidden md:flex items-center gap-2 bg-[#D4C3A3] text-[#4A4E4D] px-4 py-2 rounded-xl font-bold text-sm hover:scale-105 transition-transform"
-              >
-                <Plus className="w-4 h-4" /> Nuevo Proyecto
-              </button>
-              <button 
-                onClick={() => { setInitialCreateStatus(undefined); setShowCreateModal(true); }}
-                className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
-              >
-                <Plus className="w-7 h-7" />
-              </button>
-            </>
+          {appUser && !showCreateModal && (
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
           )}
         </div>
-        <p className="text-[#EAE2D6] text-sm leading-relaxed opacity-90 max-w-2xl">
-          Visualiza el progreso de la comunidad y únete a las iniciativas que resuenen con tus saberes.
+        <p className="text-[#D4C3A3] text-sm font-medium tracking-wide">
+          Gestiona las iniciativas estratégicas de Kanarii
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 px-6 mt-8">
-        {[
-          { id: 'proyectos', label: 'Tablero Kanban' },
-          { id: 'tablon', label: 'Tablón de Colaboración' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 text-sm font-bold rounded-full transition-all ${
-              activeTab === tab.id ? 'bg-[#4A4E4D] text-white' : 'bg-stone-200 text-stone-500 hover:bg-stone-300'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="px-6 mt-6">
-        {loadingProyectos ? (
-          <div className="flex flex-col items-center justify-center p-20 gap-4">
-            <Activity className="w-10 h-10 animate-spin text-[#6B705C]" />
-            <p className="text-stone-400 font-medium">Cargando proyectos...</p>
-          </div>
-        ) : (
-          <div>
-            {activeTab === 'proyectos' ? (
-              <KanbanBoard
-                columns={COLUMNS}
-                items={proyectos}
-                getGroupKey={(p) => p.estado}
-                renderCard={renderProjectCard}
-                onActionClick={(columnId) => {
-                  setInitialCreateStatus(columnId as any);
-                  setShowCreateModal(true);
-                }}
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {proyectos
-                  .filter(p => p.estado === 'buscando_colaboradores')
-                  .map(p => renderProjectCard(p))}
-                {proyectos.filter(p => p.estado === 'buscando_colaboradores').length === 0 && (
-                  <div className="col-span-2 text-center p-20 bg-white rounded-3xl border-2 border-dashed border-stone-200 text-stone-400 italic">
-                    No hay solicitudes de colaboración activas en este momento.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+      <div className="p-6">
+        <KanbanBoard
+          columns={COLUMNS}
+          items={proyectos}
+          renderItem={renderProjectCard}
+          loading={loading}
+          onAddItem={(colId) => {
+            setInitialCreateStatus(colId as any);
+            setShowCreateModal(true);
+          }}
+        />
       </div>
 
       {/* Modales Extraídos */}
