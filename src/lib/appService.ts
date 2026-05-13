@@ -14,6 +14,22 @@ export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'
 export const getActasQuery = () => query(colActas, orderBy('fecha', 'desc'));
 export const getProyectosQuery = () => query(colProyectos, orderBy('updatedAt', 'desc'));
 
+/**
+ * Helper genérico para suscripciones en tiempo real.
+ * Centraliza el mapeo de IDs y el manejo de errores de Firestore.
+ */
+export function subscribeToCollection(q: Query, onData: (data: any[]) => void, errorLabel: string) {
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    onData(data);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, errorLabel);
+  });
+}
+
 // --- GESTIÓN DE USUARIOS (Para AuthContext) ---
 export async function getAppUserDoc(uid: string) {
   const snap = await getDoc(doc(db, 'users', uid));

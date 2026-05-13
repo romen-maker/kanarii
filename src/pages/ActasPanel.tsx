@@ -35,6 +35,12 @@ export function ActasPanel() {
     );
   }, [actas, searchTerm, pendingId]);
 
+  // Enlace dinámico para que el detalle se actualice en tiempo real tras editar
+  const currentActa = useMemo(() => {
+    if (!actaSeleccionada) return null;
+    return actas.find(a => a.id === actaSeleccionada.id) || actaSeleccionada;
+  }, [actas, actaSeleccionada]);
+
   const handleConfirmDelete = (id: string) => {
     if (actaSeleccionada?.id === id) setActaSeleccionada(null);
     
@@ -137,7 +143,7 @@ export function ActasPanel() {
         {actaSeleccionada && (
            <div className="absolute inset-0 md:relative md:inset-auto md:flex-1 h-full z-10 bg-white md:bg-transparent">
              <ActaDetailOverlay 
-              acta={actaSeleccionada}
+              acta={currentActa}
               tareas={tareas}
               getMemberName={getMemberName}
               onClose={() => setActaSeleccionada(null)}
@@ -156,7 +162,7 @@ export function ActasPanel() {
             reload();
           }} 
           members={members} 
-          actaToEdit={isEditModalOpen && actaSeleccionada ? actaSeleccionada : undefined}
+          actaToEdit={isEditModalOpen && currentActa ? currentActa : undefined}
         />
       )}
     </div>

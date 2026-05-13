@@ -7,6 +7,7 @@ export interface EntityMetadata {
   icon: React.ElementType;
   text: string;
   tooltip?: string;
+  className?: string;
 }
 
 export interface EntityTag {
@@ -123,10 +124,10 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         {metadata.map((item, idx) => (
           <div 
             key={idx} 
-            className="flex items-center gap-1 bg-[#FDFBF7] px-2 py-1 rounded text-xs font-medium text-stone-500" 
+            className={`flex items-center gap-1 bg-[#FDFBF7] px-2 py-1 rounded text-xs font-medium text-stone-500 ${item.className || ''}`} 
             title={item.tooltip}
           >
-            <item.icon className="w-3.5 h-3.5 text-[#A5A58D]" />
+            <item.icon className={`w-3.5 h-3.5 ${item.className ? '' : 'text-[#A5A58D]'}`} />
             <span>{item.text}</span>
           </div>
         ))}
