@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoreVertical } from 'lucide-react';
+import { ChevronLeft, ArrowRight, Archive, CheckCircle2 } from 'lucide-react';
 
 export type EntityVariant = 'success' | 'warning' | 'info' | 'danger' | 'neutral' | 'primary';
 
@@ -40,8 +40,15 @@ interface EntityCardProps {
   };
   metadata?: EntityMetadata[];
   tags?: EntityTag[];
-  actions?: EntityAction[];
   quickActions?: EntityQuickAction[];
+  onStateChange?: {
+    prev?: () => void;
+    next?: () => void;
+    nextLabel?: string;
+    isCompleted?: boolean;
+  };
+  onArchive?: () => void;
+  onUnarchive?: () => void;
   onClick?: () => void;
   className?: string;
 }
@@ -52,23 +59,13 @@ export const EntityCard: React.FC<EntityCardProps> = ({
   status,
   metadata = [],
   tags = [],
-  actions = [],
   quickActions = [],
+  onStateChange,
+  onArchive,
+  onUnarchive,
   onClick,
   className = ''
 }) => {
-  const [showActions, setShowActions] = React.useState(false);
-  const actionsRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
-        setShowActions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const getVariantClasses = (variant: EntityVariant) => {
     const classes = {
@@ -91,6 +88,13 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         ${className}
       `}
     >
+      {/* Absolute Completion Icon */}
+      {onStateChange?.isCompleted && (
+        <div className="absolute top-0 right-0 p-4">
+          <CheckCircle2 className="w-8 h-8 text-[#C1E1C1]" />
+        </div>
+      )}
+
       {/* Header: Status & Actions */}
       <div className="flex justify-between items-start mb-4">
         <div className={`
@@ -100,35 +104,6 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           {status.icon && <status.icon className="w-3.5 h-3.5" />}
           <span>{status.label}</span>
         </div>
-
-        {actions.length > 0 && (
-          <div className="relative" ref={actionsRef}>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
-              className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-md transition-colors"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-            
-            {showActions && (
-              <div className="absolute right-0 mt-1 w-44 bg-white border border-[#EAE2D6] rounded-xl shadow-xl z-10 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                {actions.map((action, idx) => (
-                  <button
-                    key={idx}
-                    onClick={(e) => { e.stopPropagation(); action.onClick(); setShowActions(false); }}
-                    className={`
-                      w-full flex items-center gap-2 px-4 py-2.5 text-xs text-left transition-colors
-                      ${action.variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-stone-700 hover:bg-stone-50'}
-                    `}
-                  >
-                    <action.icon className="w-3.5 h-3.5" />
-                    <span>{action.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Body: Title & Subtitle */}
@@ -158,44 +133,93 @@ export const EntityCard: React.FC<EntityCardProps> = ({
       </div>
 
       {/* Quick Actions Bar - Unified TareaCard Layout */}
-      {quickActions.length > 0 && (
+      {(quickActions.length > 0 || onStateChange || onArchive || onUnarchive) && (
         <div className="mt-5 pt-4 border-t border-[#FDFBF7] flex justify-between items-center">
           
-          {/* Izquierda: acciones primarias (showLabel=true) */}
+          {/* Izquierda: Flujo de Trabajo (Estado + showLabel actions) */}
           <div className="flex items-center gap-1">
+            {onUnarchive ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); onUnarchive(); }}
+                className="text-xs font-medium text-stone-400 hover:text-stone-600 transition-colors p-3 -ml-3"
+              >
+                Desarchivar
+              </button>
+            ) : onStateChange?.isCompleted ? (
+              <span className="text-xs text-stone-400 px-3">✓ Completado</span>
+            ) : (
+              <>
+                {onStateChange?.prev && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onStateChange.prev!(); }}
+                    className="flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors p-3 -ml-3"
+                    title="Retroceder"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                )}
+                {onStateChange?.next && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onStateChange.next!(); }}
+                    className={`flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3 ${!onStateChange.prev ? '-ml-3' : ''}`}
+                  >
+                    {onStateChange.nextLabel || 'Avanzar'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
+            )}
+
             {quickActions
               .filter(a => a.showLabel)
-              .map((action, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => { e.stopPropagation(); action.onClick(); }}
-                  className="flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3"
-                  title={action.label}
-                >
-                  <action.icon className="w-3.5 h-3.5" />
-                  <span>{action.label}</span>
-                </button>
-            ))}
+              .map((action, idx, filtered) => {
+                const isFirst = !onUnarchive && !onStateChange?.prev && !onStateChange?.next && idx === 0;
+                return (
+                  <button
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+                    className={`flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3 ${isFirst ? '-ml-3' : ''}`}
+                    title={action.label}
+                  >
+                    <action.icon className="w-3.5 h-3.5" />
+                    <span>{action.label}</span>
+                  </button>
+                );
+            })}
           </div>
 
-          {/* Derecha: acciones icono (showLabel=false/undefined) */}
+          {/* Derecha: Herramientas (Archivo + icon-only actions) */}
           <div className="flex items-center gap-1">
+            {onArchive && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onArchive(); }}
+                className={`flex items-center justify-center text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3 ${quickActions.filter(a => !a.showLabel).length === 0 ? '-mr-3' : ''}`}
+                title="Archivar"
+              >
+                <Archive className="w-4 h-4" />
+              </button>
+            )}
+
             {quickActions
               .filter(a => !a.showLabel)
-              .map((action, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => { e.stopPropagation(); action.onClick(); }}
-                  className={`flex items-center justify-center transition-colors p-3
-                    ${action.variant === 'danger' 
-                      ? 'text-[#6B705C] hover:text-red-600' 
-                      : 'text-[#6B705C] hover:text-[#4A4E4D]'}
-                  `}
-                  title={action.label}
-                >
-                  <action.icon className="w-4 h-4" />
-                </button>
-            ))}
+              .map((action, idx, filtered) => {
+                const isLast = idx === filtered.length - 1;
+                return (
+                  <button
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+                    className={`flex items-center justify-center transition-colors p-3
+                      ${action.variant === 'danger' 
+                        ? 'text-[#6B705C] hover:text-red-600' 
+                        : 'text-[#6B705C] hover:text-[#4A4E4D]'}
+                      ${isLast ? '-mr-3' : ''}
+                    `}
+                    title={action.label}
+                  >
+                    <action.icon className="w-4 h-4" />
+                  </button>
+                );
+            })}
           </div>
 
         </div>

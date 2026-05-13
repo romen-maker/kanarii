@@ -200,12 +200,24 @@ export function ProyectosView() {
           { icon: Users, text: `${proyecto.colaboradores_uid?.length || 0} colab.`, tooltip: "Equipo" }
         ]}
         tags={proyecto.habilidadesNecesarias.map(h => ({ label: h, variant: 'neutral' }))}
+        onStateChange={{
+          next: () => setSelectedProject(proyecto),
+          nextLabel: 'Gestionar',
+          isCompleted: proyecto.estado === 'completado'
+        }}
         quickActions={[
-          { label: 'Gestionar', icon: Activity, onClick: () => setSelectedProject(proyecto), showLabel: true },
-          { label: 'Eliminar', icon: Trash2, onClick: () => startDelete(proyecto.id!), variant: 'danger' }
-        ]}
-        actions={[
-          { label: 'Editar proyecto', icon: UserPlus, onClick: () => setSelectedProject(proyecto) },
+          { 
+            label: 'Eliminar', 
+            icon: Trash2, 
+            onClick: () => startDelete(proyecto.id!, {
+              onDelete: async (id) => {
+                await deleteProyecto(id);
+                loadData();
+              },
+              successMessage: 'Proyecto eliminado'
+            }), 
+            variant: 'danger' 
+          }
         ]}
         onClick={() => setSelectedProject(proyecto)}
       />
