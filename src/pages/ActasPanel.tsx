@@ -4,25 +4,22 @@ import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useEntityActions } from '../hooks/useEntityActions';
-import { Acta } from '../lib/appService';
-import { Leaf, Plus, Calendar, User as UserIcon, Users, CheckSquare, Search } from 'lucide-react';
+import { Acta, saveActa, deleteActa } from '../lib/appService';
+import { 
+  Leaf, Plus, Calendar, User as UserIcon, Users, 
+  CheckSquare, Search, BookOpen, Clock, FileText, Trash2, Edit
+} from 'lucide-react';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { CreateActaModal } from '../components/CreateActaModal';
 import { ActaDetailOverlay } from '../components/ActaDetailOverlay';
-
-/* Util function to format Firebase timestamp dates safely */
-function formatDateSafely(ts: any) {
-  if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString();
-}
+import { EntityCard } from '../components/ui/EntityCard';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
   const { actas, loadingActas } = useActas();
   const { tareas } = useTareas();
   const { members, loadingMembers, getMemberName } = useCommunityMembers();
-  const { perform } = useEntityActions();
+  const { perform, isSubmitting } = useEntityActions();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -42,9 +39,8 @@ export function ActasPanel() {
     if (actaSeleccionada?.id === id) setActaSeleccionada(null);
     
     startDelete(id, {
-      onDelete: async (id) => await perform('actas', 'delete', id),
-      successMessage: "Acta eliminada definitivamente",
-      errorMessage: "Error al eliminar el acta"
+      onDelete: (id) => perform(deleteActa(id)),
+      successMessage: "Acta eliminada definitivamente"
     });
   };
 
@@ -92,7 +88,10 @@ export function ActasPanel() {
               </div>
             </div>
             {appUser?.role === 'admin' && (
-              <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-[#A5A58D] text-white px-6 py-2.5 rounded-full font-medium hover:bg-[#6B705C] transition-colors shadow-md">
+              <button 
+                onClick={() => setIsModalOpen(true)} 
+                className="flex items-center gap-2 bg-[#A5A58D] text-white px-6 py-2.5 rounded-full font-medium hover:bg-[#6B705C] transition-colors shadow-md"
+              >
                 <Plus className="w-4 h-4" /> Nueva Acta
               </button>
             )}
@@ -100,41 +99,36 @@ export function ActasPanel() {
 
           <div className="space-y-4">
             {filteredActas.length === 0 ? (
-              <div className="text-center py-16 text-stone-400">
+              <div className="text-center py-16 text-stone-400 border border-dashed border-[#EAE2D6] rounded-3xl bg-white/50">
                  <div className="w-16 h-16 bg-[#EAE2D6] rounded-full flex items-center justify-center mx-auto mb-4">
-                   <Leaf className="w-8 h-8 text-[#A5A58D]" />
+                   <FileText className="w-8 h-8 text-[#A5A58D]" />
                  </div>
-                 <p className="text-lg">{searchTerm ? 'No se encontraron actas para esta búsqueda.' : 'No hay actas registradas aún.'}</p>
+                 <p className="text-lg">{searchTerm ? 'No hay coincidencias.' : 'No hay actas registradas.'}</p>
               </div>
             ) : (
-              filteredActas.map(acta => (
-                <div 
-                  key={acta.id} 
-                  onClick={() => setActaSeleccionada(acta)}
-                  className={`bg-white border rounded-3xl p-6 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${actaSeleccionada?.id === acta.id ? 'border-[#CB997E] ring-1 ring-[#CB997E]' : 'border-[#EAE2D6] hover:border-[#6B705C]'}`}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                       <span className="inline-flex items-center bg-[#FDFBF7] border border-[#EAE2D6] text-stone-600 px-2.5 py-1 rounded-full text-xs font-semibold">
-                         <Calendar className="w-3.5 h-3.5 mr-1 text-[#A5A58D]" /> {formatDateSafely(acta.fecha)}
-                       </span>
-                       {isRecent(acta.fecha) && (
-                         <span className="inline-flex items-center bg-[#CB997E]/10 text-[#CB997E] px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                           Reciente
-                         </span>
-                       )}
-                    </div>
+              filteredActas.map(acta => {
+                const recent = isRecent(acta.fecha);
+                const dateTs = acta.fecha?.toDate ? acta.fecha.toDate() : new Date(acta.fecha);
+                
+                return (
+                  <div key={acta.id} onClick={() => setActaSeleccionada(acta)}>
+                    <EntityCard
+                      id={acta.id!}
+                      title={acta.titulo}
+                      subtitle={acta.contexto}
+                      status={recent ? { label: 'Reciente', variant: 'info', icon: Clock } : undefined}
+                      metadata={[
+                        { icon: UserIcon, text: getMemberName(acta.facilitador), tooltip: "Facilitador" },
+                        { icon: Calendar, text: dateTs.toLocaleDateString(), tooltip: "Fecha" },
+                        { icon: Users, text: `${acta.participantes.length} Asistentes`, tooltip: "Participantes" },
+                        { icon: CheckSquare, text: `${acta.decisiones.length} Decisiones`, tooltip: "Acuerdos" }
+                      ]}
+                      isSelected={actaSeleccionada?.id === acta.id}
+                      variant="compact"
+                    />
                   </div>
-                  
-                  <h3 className="text-xl font-medium text-stone-800 mb-4 line-clamp-2 leading-tight">{acta.titulo}</h3>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm text-stone-500 mt-auto">
-                    <div className="flex items-center gap-1.5"><UserIcon className="w-4 h-4 text-[#A5A58D]" /> {getMemberName(acta.facilitador)}</div>
-                    <div className="flex items-center gap-1.5"><Users className="w-4 h-4 text-[#A5A58D]" /> {acta.participantes.length} Participantes</div>
-                    <div className="flex items-center gap-1.5"><CheckSquare className="w-4 h-4 text-[#A5A58D]" /> {acta.decisiones.length} Decisiones</div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -158,7 +152,8 @@ export function ActasPanel() {
         <CreateActaModal 
           onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} 
           members={members} 
-          actaToEdit={isEditModalOpen && actaSeleccionada ? actaSeleccionada : undefined} 
+          actaToEdit={isEditModalOpen && actaSeleccionada ? actaSeleccionada : undefined}
+          isSubmitting={isSubmitting}
         />
       )}
     </div>
