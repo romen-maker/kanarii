@@ -51,7 +51,7 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
       }
 
       // 2. Crear o actualizar el acta usando perform
-      await perform('actas', actaToEdit ? 'update' : 'create', {
+      await perform(saveActa({
         id: actaToEdit?.id,
         titulo: formData.titulo.trim(),
         fecha: new Date(formData.fecha),
@@ -63,9 +63,10 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
         proximaReunion: formData.proximaReunion ? new Date(formData.proximaReunion) : undefined,
         creadaPor: actaToEdit ? actaToEdit.creadaPor : appUser.uid,
         lastEditedBy: actaToEdit ? appUser.uid : undefined
+      }), {
+        successMessage: actaToEdit ? "Acta actualizada ✨" : "Acta guardada con éxito 📄",
+        onSuccess: () => onClose()
       });
-      
-      onClose();
     } catch (e) {
       console.error("Error saving acta:", e);
       toast.error("Error al procesar el acta");
