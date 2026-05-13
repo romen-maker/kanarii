@@ -3,7 +3,7 @@ import { X, CheckSquare, Plus, Trash2, ArrowLeft, ArrowRight } from 'lucide-reac
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { useEntityActions } from '../hooks/useEntityActions';
-import { Acta, saveTarea } from '../lib/appService';
+import { Acta, saveTarea, saveActa } from '../lib/appService';
 
 interface CreateActaModalProps {
   onClose: () => void;
@@ -13,7 +13,7 @@ interface CreateActaModalProps {
 
 export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModalProps) {
   const { appUser } = useAuth();
-  const { toast } = useToast();
+  const toast = useToast();
   const { perform } = useEntityActions();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,14 +31,29 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appUser || !formData.titulo.trim() || isSubmitting) return;
+    console.log("DEBUG: Iniciando handleSubmit de Acta");
+    if (!appUser) {
+      console.error("DEBUG: No hay appUser");
+      return;
+    }
+    if (!formData.titulo.trim()) {
+      console.error("DEBUG: Título vacío");
+      return;
+    }
+    if (isSubmitting) {
+      console.warn("DEBUG: Ya se está enviando...");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       // 1. Crear las tareas derivadas si las hay
+      console.log("DEBUG: Procesando tareas derivadas...", formData.tareasDerivadas);
       const tareasIds: string[] = actaToEdit?.tareasDerivadas || [];
       for (const tarea of formData.tareasDerivadas) {
         if (tarea.titulo.trim()) {
+          console.log("DEBUG: Guardando tarea derivada:", tarea.titulo);
           const tId = await saveTarea({
             titulo: tarea.titulo,
             asignadaA: tarea.asignadaA || undefined,
@@ -46,12 +61,15 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
             estado: 'pendiente',
             creadaPor: appUser.uid
           });
-          if (tId) tareasIds.push(tId);
+          if (tId) {
+            console.log("DEBUG: Tarea guardada con ID:", tId);
+            tareasIds.push(tId);
+          }
         }
       }
 
       // 2. Crear o actualizar el acta usando perform
-      await perform(saveActa({
+      const finalData = {
         titulo: formData.titulo.trim(),
         fecha: new Date(formData.fecha),
         facilitador: formData.facilitador,
@@ -62,15 +80,28 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
         proximaReunion: formData.proximaReunion ? new Date(formData.proximaReunion) : undefined,
         creadaPor: actaToEdit ? actaToEdit.creadaPor : appUser.uid,
         lastEditedBy: actaToEdit ? appUser.uid : undefined
-      }, actaToEdit?.id), {
+      };
+
+      console.log("DEBUG: Datos finales para saveActa:", finalData);
+      console.log("DEBUG: ID existente (si es update):", actaToEdit?.id);
+
+      await perform(saveActa(finalData, actaToEdit?.id), {
         successMessage: actaToEdit ? "Acta actualizada ✨" : "Acta guardada con éxito 📄",
-        onSuccess: () => onClose()
+        onSuccess: () => {
+          console.log("DEBUG: Guardado exitoso, cerrando modal");
+          onClose();
+        },
+        onError: (err) => {
+          console.error("DEBUG: Error en perform:", err);
+        }
       });
-    } catch (e) {
-      console.error("Error saving acta:", e);
+      
+    } catch (err) {
+      console.error("DEBUG: Excepción capturada en handleSubmit:", err);
       toast.error("Error al procesar el acta");
     } finally {
       setIsSubmitting(false);
+      console.log("DEBUG: Finalizado proceso de submit");
     }
   };
 
