@@ -1,19 +1,18 @@
-import { useState, useEffect } from 'react';
-import { collection, query, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Ficha, cruzarMiembros, AnalisisCruce } from '../lib/appService';
+import { useState } from 'react';
+import { Ficha, cruzarMiembros, AnalisisCruce, getCruce, saveCruce } from '../lib/appService';
 import { generarAnalisisCruce } from '../lib/gemini';
-import { handleFirestoreError, OperationType } from '../lib/error-handler';
 import { Leaf, Users, Search, ArrowLeft, RefreshCw, Layers, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
+import { useFichas } from '../hooks/useFichas';
+import { useToast } from '../hooks/useToast';
 
 export function CruceView() {
   const { appUser } = useAuth();
   const navigate = useNavigate();
-  const [fichas, setFichas] = useState<Ficha[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { fichas, loading } = useFichas();
+  const toast = useToast();
   
   const [perfil1Id, setPerfil1Id] = useState<string>('');
   const [perfil2Id, setPerfil2Id] = useState<string>('');
@@ -25,25 +24,6 @@ export function CruceView() {
     fromCache: boolean;
     generadoEn: Date | null;
   } | null>(null);
-
-  useEffect(() => {
-    if (appUser) {
-      fetchFichas();
-    }
-  }, [appUser]);
-
-  const fetchFichas = async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, 'fichas'));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Ficha));
-      setFichas(data.filter(f => f.datosBrutos || f.estado === 'completo'));
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, 'fichas');
-    }
-    setLoading(false);
-  };
 
   const getHash = (ficha: Ficha) => {
     try {
@@ -68,30 +48,27 @@ export function CruceView() {
     }
 
     if (!f1.datosBrutos || !f2.datosBrutos || !f1.perfilVisual || !f2.perfilVisual) {
-      alert("Uno de estos miembros aún no tiene ficha completa (faltan datos astrales o visuales).");
+      toast.error("Uno de estos miembros aún no tiene ficha completa (faltan datos astrales o visuales).");
       setAnalyzing(false);
       return;
     }
 
     const sortedIds = [perfil1Id, perfil2Id].sort();
-    const cruceId = `${sortedIds[0]}_${sortedIds[1]}`;
     
     // Check cache
     try {
-      const cruceRef = doc(db, 'cruces', cruceId);
-      const cruceSnap = await getDoc(cruceRef);
+      const cachedCruce = await getCruce(perfil1Id, perfil2Id);
       
       const hash1 = sortedIds[0] === perfil1Id ? getHash(f1) : getHash(f2);
       const hash2 = sortedIds[1] === perfil2Id ? getHash(f2) : getHash(f1);
 
-      if (cruceSnap.exists()) {
-        const data = cruceSnap.data();
-        if (data.perfilHash1 === hash1 && data.perfilHash2 === hash2) {
+      if (cachedCruce) {
+        if (cachedCruce.perfilHash1 === hash1 && cachedCruce.perfilHash2 === hash2) {
           setResult({
-            determinista: data.resultado,
-            gemini: data.analisisGemini,
+            determinista: cachedCruce.resultado,
+            gemini: cachedCruce.analisisGemini,
             fromCache: true,
-            generadoEn: data.generadoEn?.toDate() || new Date()
+            generadoEn: cachedCruce.generadoEn?.toDate() || new Date()
           });
           setAnalyzing(false);
           return;
@@ -106,12 +83,11 @@ export function CruceView() {
         miembro2_uid: sortedIds[1],
         resultado: respDet,
         analisisGemini: geminiTxt,
-        generadoEn: serverTimestamp(),
         perfilHash1: hash1,
         perfilHash2: hash2
       };
 
-      await setDoc(cruceRef, newCruceData);
+      await saveCruce(perfil1Id, perfil2Id, newCruceData);
 
       setResult({ 
         determinista: respDet, 
@@ -119,9 +95,9 @@ export function CruceView() {
         fromCache: false,
         generadoEn: new Date()
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Error al generar análisis: " + (err as any).message);
+      toast.error("Error al generar análisis: " + err.message);
     }
     setAnalyzing(false);
   };

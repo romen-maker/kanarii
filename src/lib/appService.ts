@@ -875,3 +875,100 @@ export function cruzarMiembros(perfil1: any, perfil2: any): AnalisisCruce {
 
   return { puntuacion, compatibilidades, tensiones, canalesConexion };
 }
+
+export async function getCruce(id1: string, id2: string): Promise<any | null> {
+  const sortedIds = [id1, id2].sort();
+  const cruceId = `${sortedIds[0]}_${sortedIds[1]}`;
+  const docRef = doc(db, 'cruces', cruceId);
+  const snap = await getDoc(docRef);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+export async function saveCruce(id1: string, id2: string, data: any): Promise<void> {
+  const sortedIds = [id1, id2].sort();
+  const cruceId = `${sortedIds[0]}_${sortedIds[1]}`;
+  await setDoc(doc(db, 'cruces', cruceId), {
+    ...data,
+    generadoEn: serverTimestamp()
+  });
+}
+export const SEED_DATA = [
+  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria", rol: "propietario" },
+  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife", rol: "miembro" },
+  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África", rol: "voluntario", fechaSalida: "2026-11-20" },
+  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote", rol: "voluntario", fechaSalida: "2024-01-10" },
+  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura", rol: "miembro" }
+];
+
+export async function ensureSeedData(appUserUid: string) {
+  try {
+    const q = query(collection(db, 'fichas'));
+    const snapshot = await getDocs(q);
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+    
+    const realDocs = data.filter(doc => !doc.isSeedData);
+    
+    if (realDocs.length < 3) {
+      const promises = SEED_DATA.map(async (seed, index) => {
+        const seedId = `seed-${appUserUid}-${index}`;
+        const existing = data.find(d => d.id === seedId);
+        
+        if (!existing) {
+          const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
+          const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
+          const seedFicha = {
+            userId: seedId,
+            estado: 'completo',
+            datosOnboarding: {
+              nombre: seed.nombre,
+              fechaNacimiento: seed.fechaNacimiento,
+              hora: "12:00",
+              lugar: seed.lugar,
+              genero: seed.genero,
+              saberes: seed.saberes,
+              rol_arteara: seed.rol_arteara,
+              antiguedad_anos: seed.antiguedad_anos,
+              tension: seed.tension,
+              rol: seed.rol,
+              fechaSalida: seed.fechaSalida
+            },
+            datosPersona: {
+              nombre: seed.nombre,
+              fechaNacimiento: seed.fechaNacimiento,
+              hora: "12:00",
+              lugar: seed.lugar,
+              genero: seed.genero,
+              saberes: seed.saberes,
+              rol_arteara: seed.rol_arteara,
+              antiguedad_anos: seed.antiguedad_anos,
+              tension: seed.tension,
+              rol: seed.rol,
+              fechaSalida: seed.fechaSalida
+            },
+            datosBrutos: {
+              tipo_hd: tiposHD[index % tiposHD.length],
+              autoridad: autoridades[index % autoridades.length],
+              perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`
+            },
+            perfilVisual: {
+              dimensiones: {
+                escucha: 30 + (index * 15) % 70,
+                accion: 40 + (index * 20) % 60,
+                estructura: 20 + (index * 25) % 80,
+                cuidado: 50 + (index * 10) % 50
+              }
+            },
+            manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.tension}".`,
+            isSeedData: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          await setDoc(doc(db, 'fichas', seedId), seedFicha);
+        }
+      });
+      await Promise.all(promises);
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.LIST, 'fichas');
+  }
+}
