@@ -643,6 +643,18 @@ export async function updateTareaEstado(id: string, nuevoEstado: Tarea['estado']
   }
 }
 
+export const getTareaNextState = (estado: Tarea['estado']): Tarea['estado'] => {
+  if (estado === 'pendiente') return 'en_progreso';
+  if (estado === 'en_progreso') return 'completada';
+  return 'pendiente';
+};
+
+export const getTareaPrevState = (estado: Tarea['estado']): Tarea['estado'] => {
+  if (estado === 'completada') return 'en_progreso';
+  if (estado === 'en_progreso') return 'pendiente';
+  return 'pendiente';
+};
+
 export async function obtenerTareas(): Promise<Tarea[]> {
   try {
     const q = query(collection(db, 'tareas'), orderBy('createdAt', 'desc'));
