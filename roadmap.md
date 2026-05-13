@@ -10,6 +10,19 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [x] Panel de Administración con búsqueda, filtro y gestión de manuales.
 - [x] Geocodificación integrada en the onboarding.
 
+## 🏗️ Fase 0 — Refactorización de Arquitectura (Sprints Actuales)
+- [ ] **Fase 1: Fundaciones (Completado)**
+  - [x] Crear `appService.ts` (Single Source of Truth para Firestore).
+  - [x] Implementar Hooks de Entidad: `useProyectos`, `useTareas`, `useActas`.
+  - [x] Crear `useEntityActions` (Abstracción de mutaciones con toasts).
+  - [x] Establecer reglas persistentes (`dry-architecture.md`, `react-page-boundaries.md`).
+- [ ] **Fase 2: Migración de Vistas (Foco Actual)**
+  - [ ] Refactorizar `ProyectosView.tsx` (Migración a `useProyectos` y `useEntityActions`).
+  - [ ] Refactorizar `TareasPanel.tsx` y `ActasPanel.tsx` (Eliminar bypass de `appService`).
+  - [ ] Limpiar `CruceView.tsx` y `AdminPanel.tsx` (Eliminar imports directos de Firestore).
+  - [ ] Reemplazar `alert()` nativos por `useToast`.
+  - [ ] Extraer modales inline a componentes independientes.
+
 ## 🔴 Fase 1 — App operativa mínima (Prioridad Actual)
 - [ ] **1.1 Gestión de tareas comunitarias**
   - [x] **CRUD Tareas**: Crear, editar, borrar y cambiar estados (Pendiente/Proceso/Hecho).

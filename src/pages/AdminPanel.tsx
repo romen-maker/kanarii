@@ -1,14 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
-import { collection, query, getDocs, setDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Ficha, saveFicha, obtenerTareas, Tarea } from '../lib/appService';
-import { handleFirestoreError, OperationType } from '../lib/error-handler';
-import { Leaf, Users, Search, X, RefreshCw, CheckCircle2, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown } from 'lucide-react';
+import { Ficha, ensureSeedData, Tarea } from '../lib/appService';
+import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { useToast } from '../components/Toaster';
+import { useToast } from '../hooks/useToast';
+import { useFichas } from '../hooks/useFichas';
+import { useTareas } from '../hooks/useTareas';
 
 function getDatosPersona(ficha: Ficha) {
   return ficha.datosPersona ?? ficha.datosOnboarding ?? {};
@@ -16,140 +15,24 @@ function getDatosPersona(ficha: Ficha) {
 
 type RolComunitario = 'propietario' | 'miembro' | 'voluntario';
 
-const SEED_DATA: { 
-  nombre: string; 
-  rol_arteara: string; 
-  antiguedad_anos: number; 
-  genero: string; 
-  saberes: string; 
-  tension: string; 
-  fechaNacimiento: string; 
-  lugar: string; 
-  rol: RolComunitario;
-  fechaSalida?: string;
-}[] = [
-  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria", rol: "propietario" },
-  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife", rol: "miembro" },
-  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África", rol: "voluntario", fechaSalida: "2026-11-20" },
-  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote", rol: "voluntario", fechaSalida: "2024-01-10" },
-  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura", rol: "miembro" }
-];
-
 export function AdminPanel() {
   const { appUser, logout } = useAuth();
   const navigate = useNavigate();
-  const [fichas, setFichas] = useState<Ficha[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { fichas, loading: loadingFichas } = useFichas();
+  const { tareas, loading: loadingTareas, reload: fetchTareas } = useTareas();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'todos' | RolComunitario>('todos');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
   const [activeTab, setActiveTab] = useState<'comunidad' | 'tareas'>('comunidad');
-  const [tareas, setTareas] = useState<Tarea[]>([]);
-  const [loadingTareas, setLoadingTareas] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const { getMemberName } = useCommunityMembers();
-  const { success, error: toastError } = useToast();
-
-  const fetchTareas = async () => {
-    setLoadingTareas(true);
-    try {
-      const data = await obtenerTareas();
-      setTareas(data);
-    } catch (err) {
-      toastError("Error al cargar tareas globales");
-    }
-    setLoadingTareas(false);
-  };
-
-  const fetchFichas = async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, 'fichas'));
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
-      
-      const realDocs = data.filter(doc => !doc.isSeedData);
-      
-      if (realDocs.length < 3 && appUser) {
-        const promises = SEED_DATA.map(async (seed, index) => {
-          const seedId = `seed-${appUser.uid}-${index}`;
-          const existing = data.find(d => d.id === seedId);
-          
-          if (!existing) {
-            const tiposHD = ["Generador", "Proyector", "Manifestador", "Reflector", "Generador Manifestante"];
-            const autoridades = ["Sacral", "Emocional", "Explénica", "Lunar"];
-            const seedFicha = {
-              userId: seedId,
-              estado: 'completo',
-              datosOnboarding: {
-                nombre: seed.nombre,
-                fechaNacimiento: seed.fechaNacimiento,
-                hora: "12:00",
-                lugar: seed.lugar,
-                genero: seed.genero,
-                saberes: seed.saberes,
-                rol_arteara: seed.rol_arteara,
-                antiguedad_anos: seed.antiguedad_anos,
-                tension: seed.tension,
-                rol: seed.rol,
-                fechaSalida: seed.fechaSalida
-              },
-              datosPersona: {
-                nombre: seed.nombre,
-                fechaNacimiento: seed.fechaNacimiento,
-                hora: "12:00",
-                lugar: seed.lugar,
-                genero: seed.genero,
-                saberes: seed.saberes,
-                rol_arteara: seed.rol_arteara,
-                antiguedad_anos: seed.antiguedad_anos,
-                tension: seed.tension,
-                rol: seed.rol,
-                fechaSalida: seed.fechaSalida
-              },
-              datosBrutos: {
-                tipo_hd: tiposHD[index % tiposHD.length],
-                autoridad: autoridades[index % autoridades.length],
-                perfil: `${(index % 6) + 1}/${((index + 2) % 6) + 1}`
-              },
-              perfilVisual: {
-                dimensiones: {
-                  escucha: 30 + (index * 15) % 70,
-                  accion: 40 + (index * 20) % 60,
-                  estructura: 20 + (index * 25) % 80,
-                  cuidado: 50 + (index * 10) % 50
-                }
-              },
-              manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.tension}".`,
-              isSeedData: true,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            };
-            await setDoc(doc(db, 'fichas', seedId), seedFicha);
-            return { id: seedId, ...seedFicha, createdAt: new Date(), updatedAt: new Date() } as Ficha;
-          }
-          return null;
-        });
-        
-        const newSeeds = (await Promise.all(promises)).filter(Boolean) as Ficha[];
-        if (newSeeds.length > 0) {
-          data = [...data, ...newSeeds];
-        }
-      }
-      
-      setFichas(data);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, 'fichas');
-    }
-    setLoading(false);
-  };
+  const toast = useToast();
 
   useEffect(() => {
     if (appUser) {
-      fetchFichas();
-      if (activeTab === 'tareas') fetchTareas();
+      ensureSeedData(appUser.uid);
     }
-  }, [appUser, activeTab]);
+  }, [appUser]);
 
   const stats = useMemo(() => {
     if (tareas.length === 0) return { total: 0, completedPct: 0, topMember: '-', weeklyCompleted: 0 };
@@ -297,7 +180,7 @@ export function AdminPanel() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  {loading ? (
+                  {loadingFichas ? (
                     <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando comunidad...</td></tr>
                   ) : filteredFichas.length === 0 ? (
                     <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No se encontraron miembros</td></tr>
@@ -332,7 +215,7 @@ export function AdminPanel() {
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
             <div className="p-6 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
               <h2 className="font-serif text-xl text-[#4A4E4D]">Todas las Tareas</h2>
-              <button onClick={fetchTareas} className="p-2 text-stone-400 hover:text-[#4A4E4D] transition-colors">
+              <button onClick={() => reloadTareas()} className="p-2 text-stone-400 hover:text-[#4A4E4D] transition-colors">
                 <RefreshCw className={`w-4 h-4 ${loadingTareas ? 'animate-spin' : ''}`} />
               </button>
             </div>

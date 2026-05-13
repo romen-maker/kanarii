@@ -2,8 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
 import { Leaf, User } from 'lucide-react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 
 export function Welcome() {
   const { user, appUser, login } = useAuth();

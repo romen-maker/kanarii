@@ -1,55 +1,35 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTareas } from '../hooks/useTareas';
+import { useProyectos } from '../hooks/useProyectos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { saveTarea, updateTareaEstado, deleteTarea, Tarea, obtenerProyectos, Proyecto } from '../lib/appService';
+import { useEntityActions } from '../hooks/useEntityActions';
+import { Tarea } from '../lib/appService';
 import { Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, Clock, Trash2, ArrowRight, Edit, Archive, ChevronLeft, Briefcase } from 'lucide-react';
-import { useToast } from '../components/Toaster';
+import { useToast } from '../hooks/useToast';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
+import { CreateTareaModal } from '../components/CreateTareaModal';
 
 export function TareasPanel() {
-  const { appUser, logout } = useAuth();
-  const navigate = useNavigate();
+  const { appUser } = useAuth();
+  const { toast } = useToast();
+  const { startDelete, pendingId } = useUndoableDelete();
+  const { perform, isSubmitting } = useEntityActions();
+  
+  // Hooks de Entidad
   const { tareas, loadingTareas } = useTareas();
   const { members, loadingMembers, getMemberName } = useCommunityMembers();
+  const { items: proyectos, loading: loadingProyectos } = useProyectos();
   
   const [filter, setFilter] = useState<'todas' | 'mis_tareas' | 'sin_asignar' | 'archivadas'>('todas');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tareaToEdit, setTareaToEdit] = useState<Tarea | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    titulo: '',
-    descripcion: '',
-    asignadaA: '',
-    fechaLimite: '',
-    proyectoId: ''
-  });
-
-  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const { success, error: toastError } = useToast();
-  const { startDelete, pendingId } = useUndoableDelete();
 
   const openEditModal = (t: Tarea) => {
-    let dateStr = '';
-    if (t.fechaLimite) {
-      const d = t.fechaLimite.toDate ? t.fechaLimite.toDate() : new Date(t.fechaLimite);
-      dateStr = d.toISOString().split('T')[0];
-    }
-    setFormData({
-      titulo: t.titulo,
-      descripcion: t.descripcion || '',
-      asignadaA: t.asignadaA || '',
-      fechaLimite: dateStr,
-      proyectoId: t.proyectoId || ''
-    });
     setTareaToEdit(t);
     setIsModalOpen(true);
   };
   
   const openCreateModal = () => {
-    setFormData({ titulo: '', descripcion: '', asignadaA: '', fechaLimite: '', proyectoId: '' });
     setTareaToEdit(null);
     setIsModalOpen(true);
   };
@@ -59,25 +39,7 @@ export function TareasPanel() {
     setTareaToEdit(null);
   };
 
-  React.useEffect(() => {
-    const fetchProyectos = async () => {
-      try {
-        const all = await obtenerProyectos();
-        const userUid = appUser?.uid;
-        const filtered = all.filter(p => {
-          const isLider = p.lider_uid === userUid;
-          const isColaborador = p.colaboradores_uid && Array.isArray(p.colaboradores_uid) && p.colaboradores_uid.includes(userUid || '');
-          return isLider || isColaborador;
-        });
-        setProyectos(filtered);
-      } catch (err) {
-        console.error("Error cargando proyectos:", err);
-      }
-    };
-    if (appUser) fetchProyectos();
-  }, [appUser]);
-
-  if (loadingTareas || loadingMembers) {
+  if (loadingTareas || loadingMembers || loadingProyectos) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDFBF7]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div>
@@ -94,43 +56,27 @@ export function TareasPanel() {
     return true;
   });
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.titulo.trim() || !appUser) return;
-    setIsSubmitting(true);
-
-    try {
-      await saveTarea({
-        titulo: formData.titulo.trim(),
-        descripcion: formData.descripcion.trim() || undefined,
-        asignadaA: formData.asignadaA || undefined,
-        creadaPor: tareaToEdit ? tareaToEdit.creadaPor : appUser.uid,
-        estado: tareaToEdit ? tareaToEdit.estado : 'pendiente',
-        fechaLimite: formData.fechaLimite ? new Date(formData.fechaLimite) : undefined,
-        proyectoId: formData.proyectoId || undefined
-      }, tareaToEdit?.id);
-
-      success(tareaToEdit ? "Tarea actualizada" : "Tarea creada correctamente");
-      closeModal();
-    } catch (err) {
-      toastError("Error al guardar la tarea");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSaveTarea = async (data: any) => {
+    await perform('tareas', tareaToEdit ? 'update' : 'create', {
+      ...data,
+      creadaPor: tareaToEdit ? tareaToEdit.creadaPor : appUser?.uid,
+      estado: tareaToEdit ? tareaToEdit.estado : 'pendiente',
+      id: tareaToEdit?.id
+    });
+    closeModal();
   };
 
   const handleUpdateEstado = async (id: string, nuevoEstado: Tarea['estado'], previo?: Tarea['estado']) => {
-    try {
-      await updateTareaEstado(id, nuevoEstado, previo);
-      success("Estado actualizado");
-    } catch (err) {
-      toastError("Error al actualizar estado");
-    }
+    await perform('tareas', 'update', { 
+      id, 
+      estado: nuevoEstado,
+      ...(nuevoEstado === 'archivada' ? { estadoPrevio: previo } : {})
+    });
   };
 
   const handleDelete = (id: string) => {
     startDelete(id, {
-      onDelete: async (id) => await deleteTarea(id),
+      onDelete: async (id) => await perform('tareas', 'delete', id),
       successMessage: "Tarea eliminada definitivamente",
       errorMessage: "Error al eliminar la tarea"
     });
@@ -344,102 +290,14 @@ export function TareasPanel() {
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden">
-            <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#FDFBF7]">
-              <h2 className="text-xl font-serif text-[#4A4E4D]">{tareaToEdit ? 'Editar Tarea' : 'Nueva Tarea'}</h2>
-              <button 
-                onClick={closeModal}
-                className="text-stone-400 hover:text-stone-600 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Título *</label>
-                <input
-                  required
-                  type="text"
-                  value={formData.titulo}
-                  onChange={e => setFormData({ ...formData, titulo: e.target.value })}
-                  className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors"
-                  placeholder="Ej. Arreglar riego huerta norte"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Descripción</label>
-                <textarea
-                  rows={3}
-                  value={formData.descripcion}
-                  onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
-                  className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors resize-none"
-                  placeholder="Detalles sobre la tarea..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Asignar a</label>
-                <select
-                  value={formData.asignadaA}
-                  onChange={e => setFormData({ ...formData, asignadaA: e.target.value })}
-                  className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors bg-white"
-                >
-                  <option value="">-- Sin asignar --</option>
-                  {members.map(m => (
-                    <option key={m.userId} value={m.userId}>{m.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Fecha Límite</label>
-                <input
-                  type="date"
-                  value={formData.fechaLimite}
-                  onChange={e => setFormData({ ...formData, fechaLimite: e.target.value })}
-                  className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Vincular a Proyecto</label>
-                <select
-                  value={formData.proyectoId}
-                  onChange={e => setFormData({ ...formData, proyectoId: e.target.value })}
-                  className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors bg-white"
-                >
-                  <option value="">-- Sin vincular --</option>
-                  {proyectos.map(p => (
-                    <option key={p.id} value={p.id}>{p.titulo}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-stone-400 mt-1 italic">
-                  Solo aparecen proyectos donde eres líder o colaborador.
-                </p>
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 text-stone-500 hover:bg-[#FDFBF7] rounded-xl font-medium transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !formData.titulo.trim()}
-                  className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-6 py-2 rounded-xl font-medium transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Guardando...' : (tareaToEdit ? 'Guardar Cambios' : 'Crear Tarea')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CreateTareaModal
+          tareaToEdit={tareaToEdit}
+          members={members}
+          proyectos={proyectos}
+          isSubmitting={isSubmitting}
+          onClose={closeModal}
+          onSubmit={handleSaveTarea}
+        />
       )}
     </div>
   );
