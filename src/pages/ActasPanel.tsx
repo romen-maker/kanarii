@@ -16,7 +16,7 @@ import { EntityCard } from '../components/ui/EntityCard';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
-  const { actas, loadingActas } = useActas();
+  const { actas, loadingActas, reload } = useActas();
   const { tareas } = useTareas();
   const { members, loadingMembers, getMemberName } = useCommunityMembers();
   const { perform } = useEntityActions();
@@ -150,7 +150,11 @@ export function ActasPanel() {
 
       {(isModalOpen || isEditModalOpen) && (
         <CreateActaModal 
-          onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} 
+          onClose={() => { 
+            setIsModalOpen(false); 
+            setIsEditModalOpen(false);
+            reload();
+          }} 
           members={members} 
           actaToEdit={isEditModalOpen && actaSeleccionada ? actaSeleccionada : undefined}
         />

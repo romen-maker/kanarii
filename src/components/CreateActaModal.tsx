@@ -31,29 +31,15 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("DEBUG: Iniciando handleSubmit de Acta");
-    if (!appUser) {
-      console.error("DEBUG: No hay appUser");
-      return;
-    }
-    if (!formData.titulo.trim()) {
-      console.error("DEBUG: Título vacío");
-      return;
-    }
-    if (isSubmitting) {
-      console.warn("DEBUG: Ya se está enviando...");
-      return;
-    }
+    if (!appUser || !formData.titulo.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     
     try {
       // 1. Crear las tareas derivadas si las hay
-      console.log("DEBUG: Procesando tareas derivadas...", formData.tareasDerivadas);
       const tareasIds: string[] = actaToEdit?.tareasDerivadas || [];
       for (const tarea of formData.tareasDerivadas) {
         if (tarea.titulo.trim()) {
-          console.log("DEBUG: Guardando tarea derivada:", tarea.titulo);
           const tId = await saveTarea({
             titulo: tarea.titulo,
             asignadaA: tarea.asignadaA || undefined,
@@ -61,10 +47,7 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
             estado: 'pendiente',
             creadaPor: appUser.uid
           });
-          if (tId) {
-            console.log("DEBUG: Tarea guardada con ID:", tId);
-            tareasIds.push(tId);
-          }
+          if (tId) tareasIds.push(tId);
         }
       }
 
@@ -82,26 +65,19 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
         lastEditedBy: actaToEdit ? appUser.uid : undefined
       };
 
-      console.log("DEBUG: Datos finales para saveActa:", finalData);
-      console.log("DEBUG: ID existente (si es update):", actaToEdit?.id);
-
       await perform(saveActa(finalData, actaToEdit?.id), {
         successMessage: actaToEdit ? "Acta actualizada ✨" : "Acta guardada con éxito 📄",
-        onSuccess: () => {
-          console.log("DEBUG: Guardado exitoso, cerrando modal");
-          onClose();
-        },
+        onSuccess: () => onClose(),
         onError: (err) => {
-          console.error("DEBUG: Error en perform:", err);
+          console.error("Error saving acta:", err);
         }
       });
       
     } catch (err) {
-      console.error("DEBUG: Excepción capturada en handleSubmit:", err);
+      console.error("Excepción en handleSubmit:", err);
       toast.error("Error al procesar el acta");
     } finally {
       setIsSubmitting(false);
-      console.log("DEBUG: Finalizado proceso de submit");
     }
   };
 
