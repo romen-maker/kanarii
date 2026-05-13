@@ -161,16 +161,24 @@ export function ProyectosView() {
       </div>
 
       <div className="p-6">
-        <KanbanBoard
-          columns={COLUMNS}
-          items={proyectos}
-          renderItem={renderProjectCard}
-          loading={loading}
-          onAddItem={(colId) => {
-            setInitialCreateStatus(colId as any);
-            setShowCreateModal(true);
-          }}
-        />
+        {loading ? (
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="min-w-[300px] h-[600px] bg-stone-100/50 rounded-3xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <KanbanBoard
+            columns={COLUMNS}
+            items={proyectos}
+            getGroupKey={(p) => p.estado}
+            renderCard={renderProjectCard}
+            onActionClick={(colId) => {
+              setInitialCreateStatus(colId as any);
+              setShowCreateModal(true);
+            }}
+          />
+        )}
       </div>
 
       {/* Modales Extraídos */}
