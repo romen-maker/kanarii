@@ -1,12 +1,14 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, ChevronDown, MapPin } from 'lucide-react';
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, appUser, logout } = useAuth();
+  const { comunidad, comunidades, setCommunityId } = useComunidad();
 
   const isAdmin = appUser?.role === 'admin';
   
@@ -71,7 +73,25 @@ export function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-[#4A4E4D] truncate">{user?.displayName || 'Miembro'}</p>
-            <p className="text-[10px] text-stone-400 truncate">{appUser?.email}</p>
+            {comunidades.length > 1 ? (
+              <div className="relative group/sel">
+                <select
+                  value={comunidad?.id || ''}
+                  onChange={(e) => setCommunityId(e.target.value)}
+                  className="appearance-none bg-transparent border-none p-0 pr-4 text-[10px] text-[#A5A58D] font-bold focus:ring-0 cursor-pointer w-full truncate"
+                >
+                  {comunidades.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+                <ChevronDown size={10} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#A5A58D] pointer-events-none" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-[10px] text-[#A5A58D] font-bold">
+                <MapPin size={10} />
+                <span className="truncate">{comunidad?.nombre || 'General'}</span>
+              </div>
+            )}
           </div>
         </div>
         <button

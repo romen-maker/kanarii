@@ -3,10 +3,9 @@ import { Acta, subscribeToCollection, getActasQuery } from '../lib/appService';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Hook para gestionar actas en tiempo real.
- * Normalizado para cumplir con el estándar de arquitectura Kanarii.
+ * Hook para gestionar actas en tiempo real filtradas por comunidad.
  */
-export function useActas() {
+export function useActas(communityId?: string) {
   const [actas, setActas] = useState<Acta[]>([]);
   const [loading, setLoading] = useState(true);
   const { appUser } = useAuth();
@@ -23,9 +22,17 @@ export function useActas() {
       return;
     }
 
+    const activeCommunityId = communityId || appUser.communityId;
+    
+    if (!activeCommunityId) {
+      setActas([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const unsubscribe = subscribeToCollection(
-      getActasQuery(),
+      getActasQuery(activeCommunityId),
       (data) => {
         setActas(data as Acta[]);
         setLoading(false);
@@ -34,13 +41,7 @@ export function useActas() {
     );
 
     return () => unsubscribe();
-  }, [appUser, key]);
+  }, [appUser, communityId, key]);
 
-  return { 
-    actas, 
-    items: actas, 
-    loading, 
-    loadingActas: loading,
-    reload 
-  };
+  return { actas, loadingActas: loading, reload };
 }

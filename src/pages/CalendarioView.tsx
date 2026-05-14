@@ -7,6 +7,7 @@ import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
+import { useComunidad } from '../contexts/ComunidadContext';
 import { useEventos } from '../hooks/useEventos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,8 +38,9 @@ const EVENT_COLORS: Record<string, string> = {
 
 export default function CalendarioView() {
   const { appUser } = useAuth();
-  const { eventos, loading } = useEventos(appUser?.communityId || 'arteara');
-  const { members } = useCommunityMembers();
+  const { currentCommunityId } = useComunidad();
+  const { eventos, loading } = useEventos(currentCommunityId || appUser?.communityId || 'arteara');
+  const { members } = useCommunityMembers(currentCommunityId || 'arteara');
   const { perform, isSubmitting } = useEntityActions();
   
   const [view, setView] = useState<View>(Views.MONTH);
@@ -61,7 +63,7 @@ export default function CalendarioView() {
   const handleSaveEvento = async (data: any) => {
     const payload = {
       ...data,
-      communityId: appUser?.communityId || 'arteara',
+      communityId: currentCommunityId || appUser?.communityId || 'arteara',
       creadoPor: appUser?.uid
     };
 

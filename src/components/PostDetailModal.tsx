@@ -84,6 +84,15 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
     }
   };
 
+  // Sincronizar editData cuando el post cambia externamente
+  useEffect(() => {
+    setEditData({
+      titulo: post.titulo,
+      descripcion: post.descripcion,
+      categoria: post.categoria
+    });
+  }, [post.id, post.titulo, post.descripcion, post.categoria]);
+
   const handleUpdateEstado = async (nuevoEstado: Post['estado']) => {
     if (!post.id) return;
     await perform(updatePost(post.id, { estado: nuevoEstado }), {
@@ -247,12 +256,29 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
                     </div>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="p-2 rounded-lg text-[#A5A58D] hover:bg-white transition-all"
+                      className="flex items-center gap-2 p-2 px-3 rounded-lg text-[#A5A58D] hover:bg-white transition-all border border-transparent hover:border-[#EAE2D6]"
                       title="Editar contenido"
                     >
                       <Pencil size={18} />
+                      <span className="text-xs font-bold">Editar</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+                          perform(deletePost(post.id!), {
+                            successMessage: "Publicación eliminada",
+                            onSuccess: onClose
+                          });
+                        }
+                      }}
+                      className="p-2 rounded-lg text-rose-400 hover:bg-rose-50 transition-all"
+                      title="Eliminar publicación"
+                    >
+                      <Trash2 size={18} />
                     </button>
                   </>
+
                 )}
               </div>
               

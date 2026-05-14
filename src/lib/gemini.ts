@@ -113,7 +113,7 @@ function parsearRespuestaIA(text: string): any {
   }
 }
 
-export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any, comunidadNombre: string = 'Arteara'): Promise<any> {
+export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any, comunidadNombre: string = 'la comunidad'): Promise<any> {
     const prompt = `
    Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.
    Responde SOLO con JSON válido, sin markdown ni backticks ni texto extra.
@@ -139,7 +139,7 @@ export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, d
   return parsearRespuestaIA(textResponse);
 }
 
-export async function generarManual(datosBrutos: any, datosPersona: any, perfilVisual: any, comunidadNombre: string = 'Arteara'): Promise<string> {
+export async function generarManual(datosBrutos: any, datosPersona: any, perfilVisual: any, comunidadNombre: string = 'la comunidad'): Promise<string> {
    const d = new Date();
    d.setMonth(d.getMonth() + 6);
    const formattedDate = d.toLocaleDateString();
@@ -174,7 +174,7 @@ export async function generarAnalisisCruce(
   perfil1: any, 
   perfil2: any, 
   resultadoDeterminista: any, 
-  comunidadNombre: string = 'Arteara'
+  comunidadNombre: string = 'la comunidad'
 ): Promise<{ structured: AnalisisCruceStructured; narrative: string }> {
    const prompt = `Eres un experto en Astrología Psicológica, Diseño Humano y Sociocracia aplicados a comunidades intencionales.
 Analiza la dinámica entre estos dos miembros de la comunidad ${comunidadNombre}.

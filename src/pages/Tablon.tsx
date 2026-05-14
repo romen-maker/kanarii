@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePosts } from '../hooks/usePosts';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { useEntityActions } from '../hooks/useEntityActions';
 import { createPost, Post } from '../lib/appService';
 import { CreatePostModal } from '../components/CreatePostModal';
@@ -26,8 +27,9 @@ const ESTADOS = [
 
 export default function Tablon() {
   const { appUser } = useAuth();
-  const { posts, loading } = usePosts(appUser?.communityId || 'arteara');
-  const { members } = useCommunityMembers();
+  const { currentCommunityId } = useComunidad();
+  const { posts, loading } = usePosts(currentCommunityId || 'arteara');
+  const { members } = useCommunityMembers(currentCommunityId || 'arteara');
   const { perform, isSubmitting } = useEntityActions();
 
   const [activeTab, setActiveTab] = useState<'necesidad' | 'oferta'>('necesidad');
@@ -47,7 +49,7 @@ export default function Tablon() {
     const payload = {
       ...data,
       autor_uid: appUser?.uid,
-      communityId: appUser?.communityId || 'arteara',
+      communityId: currentCommunityId || 'arteara',
       estado: 'activo'
     };
 

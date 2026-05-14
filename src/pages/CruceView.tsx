@@ -7,7 +7,8 @@ import {
   saveCruce,
   getFichaHash,
   enrichFichaDatosBrutos,
-  getFichaById
+  getFichaById,
+  getComunidad
 } from '../lib/appService';
 import { generarAnalisisCruce, AnalisisCruceStructured } from '../lib/gemini';
 import { 
@@ -29,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import { useFichas } from '../hooks/useFichas';
 import { useToast } from '../hooks/useToast';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { useEntityActions } from '../hooks/useEntityActions';
 
 export function CruceView() {
@@ -37,6 +39,8 @@ export function CruceView() {
   const { fichas, loading } = useFichas();
   const toast = useToast();
   const { perform } = useEntityActions();
+  
+  const { currentCommunityId } = useComunidad();
   
   const [perfil1Id, setPerfil1Id] = useState<string>('');
   const [perfil2Id, setPerfil2Id] = useState<string>('');
@@ -113,7 +117,9 @@ export function CruceView() {
 
       // 2. Generar si no hay cache o es obsoleto
       const respDet = cruzarMiembros(f1, f2);
-      const geminiResult = await generarAnalisisCruce(f1, f2, respDet, 'Arteara');
+      // Obtenemos el nombre de la comunidad desde el contexto (podríamos añadir comunidadNombre al contexto si fuera necesario, o leerlo de la comunidad activa)
+      const comunidadActual = await getComunidad(currentCommunityId || 'arteara');
+      const geminiResult = await generarAnalisisCruce(f1, f2, respDet, comunidadActual?.nombre || 'la comunidad');
       
       const newCruceData = {
         resultado: respDet,

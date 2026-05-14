@@ -18,7 +18,7 @@ const fichaSchema = z.object({
   lugar: z.string().min(1, 'Requerido'),
   genero: z.string().min(1, 'Requerido'),
   saberes: z.string().min(1, 'Requerido'),
-  rol_arteara: z.string().min(1, 'Requerido'),
+  rol_comunidad: z.string().min(1, 'Requerido'),
   antiguedad_anos: z.preprocess((val) => Number(val), z.number()),
   tension: z.string().min(1, 'Requerido'),
   latitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
@@ -259,8 +259,8 @@ export function FichaPreview() {
 
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-stone-600">Participación en Kanarii</label>
-                    <textarea {...register("rol_arteara")} rows={4} placeholder="¿Cómo contribuyes o te gustaría contribuir al proyecto?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                    {errors.rol_arteara && <p className="text-red-500 text-xs">{errors.rol_arteara.message}</p>}
+                    <textarea {...register("rol_comunidad")} rows={4} placeholder="¿Cómo contribuyes o te gustaría contribuir al proyecto?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    {errors.rol_comunidad && <p className="text-red-500 text-xs">{errors.rol_comunidad.message}</p>}
                   </div>
 
                   <div className="space-y-1">
@@ -372,7 +372,7 @@ export function FichaPreview() {
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Participación en Kanarii</h4>
-                        <p className="text-stone-700">{pendingFicha.rol_arteara}</p>
+                        <p className="text-stone-700">{pendingFicha.rol_comunidad}</p>
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>

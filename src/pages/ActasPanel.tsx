@@ -4,6 +4,7 @@ import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useEntityActions } from '../hooks/useEntityActions';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { Acta, deleteActa } from '../lib/appService';
 import { 
   Leaf, Plus, Calendar, User as UserIcon, Users, 
@@ -16,9 +17,10 @@ import { EntityCard } from '../components/ui/EntityCard';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
-  const { actas, loadingActas, reload } = useActas();
-  const { tareas } = useTareas();
-  const { members, loadingMembers, getMemberName } = useCommunityMembers();
+  const { currentCommunityId } = useComunidad();
+  const { actas, loadingActas, reload } = useActas(currentCommunityId || 'arteara');
+  const { items: tareas } = useTareas(currentCommunityId || 'arteara');
+  const { members, loadingMembers, getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
   const { perform } = useEntityActions();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -156,13 +158,10 @@ export function ActasPanel() {
 
       {(isModalOpen || isEditModalOpen) && (
         <CreateActaModal 
-          onClose={() => { 
-            setIsModalOpen(false); 
-            setIsEditModalOpen(false);
-            reload();
-          }} 
-          members={members} 
+          onClose={closeModal} 
+          members={members}
           actaToEdit={isEditModalOpen && currentActa ? currentActa : undefined}
+          communityId={currentCommunityId || 'arteara'}
         />
       )}
     </div>

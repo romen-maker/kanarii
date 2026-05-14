@@ -4,6 +4,7 @@ import { useTareas } from '../hooks/useTareas';
 import { useProyectos } from '../hooks/useProyectos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useEntityActions } from '../hooks/useEntityActions';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { 
   Tarea, 
   saveTarea, 
@@ -31,13 +32,14 @@ const COLUMNS: KanbanColumnDef[] = [
 
 export function TareasPanel() {
   const { appUser } = useAuth();
+  const { currentCommunityId } = useComunidad();
   const { startDelete, pendingId } = useUndoableDelete();
   const { perform, isSubmitting } = useEntityActions();
   
   // Hooks de Entidad
-  const { items: tareas, loading: loadingTareas } = useTareas();
-  const { members, loadingMembers, getMemberName } = useCommunityMembers();
-  const { items: proyectos, loading: loadingProyectos } = useProyectos();
+  const { items: tareas, loading: loadingTareas } = useTareas(currentCommunityId || 'arteara');
+  const { members, loadingMembers, getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
+  const { items: proyectos, loading: loadingProyectos } = useProyectos(currentCommunityId || 'arteara');
   
   const [filter, setFilter] = useState<'todas' | 'mis_tareas' | 'sin_asignar' | 'archivadas'>('todas');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,7 +75,8 @@ export function TareasPanel() {
     const payload = {
       ...data,
       creadaPor: tareaToEdit ? tareaToEdit.creadaPor : appUser?.uid,
-      estado: tareaToEdit ? tareaToEdit.estado : 'pendiente'
+      estado: tareaToEdit ? tareaToEdit.estado : 'pendiente',
+      communityId: currentCommunityId || 'arteara'
     };
     
     await perform(saveTarea(payload, tareaToEdit?.id), {

@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Ficha } from '../lib/appService';
 
-export function useFichas() {
+export function useFichas(communityId?: string) {
   const [fichas, setFichas] = useState<Ficha[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'fichas'));
+    let q = query(collection(db, 'fichas'));
+    
+    if (communityId) {
+      q = query(collection(db, 'fichas'), where('communityId', '==', communityId));
+    }
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({
@@ -24,7 +28,7 @@ export function useFichas() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [communityId]);
 
   return { fichas, loading };
 }
