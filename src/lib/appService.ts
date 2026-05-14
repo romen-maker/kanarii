@@ -31,6 +31,15 @@ export function subscribeToCollection(q: Query, onData: (data: any[]) => void, e
 }
 
 // --- GESTIÓN DE USUARIOS (Para AuthContext) ---
+export interface AppUser {
+  uid: string;
+  email: string;
+  role: 'user' | 'admin';
+  hasConsented?: boolean;
+  hasFicha?: boolean;
+  communityId?: string | null;
+}
+
 export async function getAppUserDoc(uid: string) {
   const snap = await getDoc(doc(db, 'users', uid));
   return snap.exists() ? snap.data() : null;
@@ -41,6 +50,71 @@ export async function syncAppUserDoc(uid: string, data: any) {
     ...data,
     lastLogin: serverTimestamp()
   }, { merge: true });
+}
+
+/**
+ * Obtiene el perfil completo del usuario, creándolo si no existe.
+ * Realiza las comprobaciones de rol y existencia de ficha.
+ */
+export async function getAppUser(uid: string, email: string): Promise<AppUser> {
+  try {
+    const userDocRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userDocRef);
+    let userData: any;
+
+    if (userDoc.exists()) {
+      userData = userDoc.data();
+      // Verificación de rol administrativo (Hardcoded por seguridad inicial)
+      if (email === 'romenusabo3@gmail.com' && userData.role !== 'admin') {
+        userData.role = 'admin';
+        await updateDoc(userDocRef, { role: 'admin' });
+      }
+    } else {
+      // Crear nuevo usuario
+      const role = email === 'romenusabo3@gmail.com' ? 'admin' : 'user';
+      userData = {
+        email: email,
+        role,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        communityId: null
+      };
+      await setDoc(userDocRef, userData);
+    }
+
+    // Verificar si tiene ficha
+    const fichasQuery = query(collection(db, 'fichas'), where('userId', '==', uid));
+    const fichasSnapshot = await getDocs(fichasQuery);
+    const hasFicha = !fichasSnapshot.empty;
+
+    return {
+      uid,
+      email: userData.email,
+      role: userData.role,
+      hasConsented: userData.hasConsented || false,
+      communityId: userData.communityId || null,
+      hasFicha
+    };
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `users/${uid}`);
+    throw err;
+  }
+}
+
+/**
+ * Actualiza el consentimiento del usuario.
+ */
+export async function updateAppUserConsent(uid: string): Promise<void> {
+  try {
+    const userDocRef = doc(db, 'users', uid);
+    await updateDoc(userDocRef, { 
+      hasConsented: true, 
+      updatedAt: serverTimestamp() 
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `users/${uid}`);
+    throw err;
+  }
 }
 
 
