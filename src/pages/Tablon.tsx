@@ -224,13 +224,17 @@ export default function Tablon() {
         />
       )}
 
-      {selectedPost && (
-        <PostDetailModal
-          post={selectedPost}
-          members={members}
-          onClose={() => setSelectedPost(null)}
-        />
-      )}
+      {selectedPost && (() => {
+        const livePost = posts.find(p => p.id === selectedPost.id);
+        if (!livePost) return null;
+        return (
+          <PostDetailModal
+            post={livePost}
+            members={members}
+            onClose={() => setSelectedPost(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

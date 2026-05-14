@@ -3,7 +3,7 @@ import { Post, Respuesta, getRespuestas, createRespuesta, updatePost, deletePost
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { MessageSquare, Trash2, CheckCircle, Clock, Send, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Trash2, CheckCircle, Clock, Send, ShieldAlert, Pencil, Save, XCircle } from 'lucide-react';
 import { useEntityActions } from '../hooks/useEntityActions';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 
@@ -12,6 +12,14 @@ interface PostDetailModalProps {
   members: any[];
   onClose: () => void;
 }
+
+const CATEGORIAS = [
+  { id: 'habilidad', label: 'Habilidad' },
+  { id: 'recurso', label: 'Recurso' },
+  { id: 'espacio', label: 'Espacio' },
+  { id: 'apoyo_emocional', label: 'Apoyo' },
+  { id: 'otro', label: 'Otro' }
+];
 
 export function PostDetailModal({ post, members, onClose }: PostDetailModalProps) {
   const { appUser } = useAuth();
@@ -22,6 +30,24 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
   const [loadingRes, setLoadingRes] = useState(true);
   const [nuevaRespuesta, setNuevaRespuesta] = useState('');
   const [isSubmittingRes, setIsSubmittingRes] = useState(false);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    titulo: post.titulo,
+    descripcion: post.descripcion,
+    categoria: post.categoria
+  });
+
+  // Actualizar editData si post cambia por fuera (live prop)
+  useEffect(() => {
+    if (!isEditing) {
+      setEditData({
+        titulo: post.titulo,
+        descripcion: post.descripcion,
+        categoria: post.categoria
+      });
+    }
+  }, [post, isEditing]);
 
   useEffect(() => {
     loadRespuestas();
@@ -65,6 +91,14 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
     });
   };
 
+  const handleSaveEdit = async () => {
+    if (!post.id) return;
+    await perform(updatePost(post.id, editData), {
+      successMessage: "Publicación actualizada correctamente",
+      onSuccess: () => setIsEditing(false)
+    });
+  };
+
   const handleDelete = () => {
     if (!post.id) return;
     startDelete(post.id, {
@@ -104,15 +138,38 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
                 {post.estado.replace('_', ' ')}
               </span>
             </div>
-            <h2 className="text-2xl font-serif text-[#4A4E4D] leading-tight">{post.titulo}</h2>
-            <div className="flex items-center gap-2 mt-2 text-xs text-stone-400">
-              <div className="w-5 h-5 rounded-full bg-[#EAE2D6] flex items-center justify-center text-[10px] font-bold text-stone-600">
-                {getMemberName(post.autor_uid).charAt(0)}
+            {isEditing ? (
+              <div className="space-y-3 mt-4">
+                <input
+                  type="text"
+                  value={editData.titulo}
+                  onChange={e => setEditData({ ...editData, titulo: e.target.value })}
+                  className="w-full text-xl font-serif border-[#EAE2D6] rounded-xl focus:ring-[#CB997E] focus:border-[#CB997E]"
+                  placeholder="Título de la publicación"
+                />
+                <select
+                  value={editData.categoria}
+                  onChange={e => setEditData({ ...editData, categoria: e.target.value as any })}
+                  className="w-full text-xs font-bold border-[#EAE2D6] rounded-xl focus:ring-[#CB997E] focus:border-[#CB997E]"
+                >
+                  {CATEGORIAS.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                  ))}
+                </select>
               </div>
-              <span>Por {getMemberName(post.autor_uid)}</span>
-              <span>•</span>
-              <span>{formatDistanceToNow(post.creadoEn?.toDate ? post.creadoEn.toDate() : new Date(post.creadoEn), { addSuffix: true, locale: es })}</span>
-            </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-serif text-[#4A4E4D] leading-tight">{post.titulo}</h2>
+                <div className="flex items-center gap-2 mt-2 text-xs text-stone-400">
+                  <div className="w-5 h-5 rounded-full bg-[#EAE2D6] flex items-center justify-center text-[10px] font-bold text-stone-600">
+                    {getMemberName(post.autor_uid).charAt(0)}
+                  </div>
+                  <span>Por {getMemberName(post.autor_uid)}</span>
+                  <span>•</span>
+                  <span>{formatDistanceToNow(post.creadoEn?.toDate ? post.creadoEn.toDate() : new Date(post.creadoEn), { addSuffix: true, locale: es })}</span>
+                </div>
+              </>
+            )}
           </div>
           <button 
             onClick={onClose}
@@ -124,46 +181,90 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          <div className="text-stone-700 leading-relaxed whitespace-pre-wrap">
-            {post.descripcion}
-          </div>
+          {isEditing ? (
+            <textarea
+              value={editData.descripcion}
+              onChange={e => setEditData({ ...editData, descripcion: e.target.value })}
+              rows={6}
+              className="w-full text-sm text-stone-700 border-[#EAE2D6] rounded-2xl focus:ring-[#CB997E] focus:border-[#CB997E] bg-stone-50"
+              placeholder="Describe lo que necesitas u ofreces..."
+            />
+          ) : (
+            <div className="text-stone-700 leading-relaxed whitespace-pre-wrap">
+              {post.descripcion}
+            </div>
+          )}
 
           {/* Acciones del Propietario/Admin */}
           {(isOwner || isAdmin) && (
             <div className="p-4 bg-[#FDFBF7] rounded-2xl border border-[#EAE2D6] flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Gestionar:</span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleUpdateEstado('activo')}
-                    className={`p-2 rounded-lg transition-all ${post.estado === 'activo' ? 'bg-[#A5A58D] text-white shadow-sm' : 'hover:bg-white text-stone-400'}`}
-                    title="Marcar como Activo"
-                  >
-                    <Clock size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleUpdateEstado('en_proceso')}
-                    className={`p-2 rounded-lg transition-all ${post.estado === 'en_proceso' ? 'bg-amber-500 text-white shadow-sm' : 'hover:bg-white text-stone-400'}`}
-                    title="Marcar En Proceso"
-                  >
-                    <ShieldAlert size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleUpdateEstado('resuelto')}
-                    className={`p-2 rounded-lg transition-all ${post.estado === 'resuelto' ? 'bg-stone-500 text-white shadow-sm' : 'hover:bg-white text-stone-400'}`}
-                    title="Marcar como Resuelto"
-                  >
-                    <CheckCircle size={18} />
-                  </button>
-                </div>
+              <div className="flex items-center gap-4">
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={isActionSubmitting}
+                      className="flex items-center gap-2 bg-[#A5A58D] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#6B705C] transition-all"
+                    >
+                      <Save size={16} />
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="flex items-center gap-2 bg-white border border-[#EAE2D6] text-stone-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-stone-50 transition-all"
+                    >
+                      <XCircle size={16} />
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Gestionar:</span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleUpdateEstado('activo')}
+                          className={`p-2 rounded-lg transition-all ${post.estado === 'activo' ? 'bg-[#A5A58D] text-white shadow-sm' : 'hover:bg-white text-stone-400'}`}
+                          title="Marcar como Activo"
+                        >
+                          <Clock size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleUpdateEstado('en_proceso')}
+                          className={`p-2 rounded-lg transition-all ${post.estado === 'en_proceso' ? 'bg-amber-500 text-white shadow-sm' : 'hover:bg-white text-stone-400'}`}
+                          title="Marcar En Proceso"
+                        >
+                          <ShieldAlert size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleUpdateEstado('resuelto')}
+                          className={`p-2 rounded-lg transition-all ${post.estado === 'resuelto' ? 'bg-stone-500 text-white shadow-sm' : 'hover:bg-white text-stone-400'}`}
+                          title="Marcar como Resuelto"
+                        >
+                          <CheckCircle size={18} />
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-2 rounded-lg text-[#A5A58D] hover:bg-white transition-all"
+                      title="Editar contenido"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                  </>
+                )}
               </div>
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-600 transition-colors px-3 py-2 rounded-xl hover:bg-red-50"
-              >
-                <Trash2 size={16} />
-                Eliminar Publicación
-              </button>
+              
+              {!isEditing && (
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-600 transition-colors px-3 py-2 rounded-xl hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                  Eliminar
+                </button>
+              )}
             </div>
           )}
 
