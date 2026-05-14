@@ -784,15 +784,24 @@ export function clasificarCanales(perfil1: any, perfil2: any) {
 
   if (!db1 || !db2) return result;
 
-  const getCanales = (db: any) => Array.isArray(db.canales) ? db.canales : [];
-  const getPuertas = (db: any) => Array.isArray(db.puertas_activas) ? db.puertas_activas : [];
+  const getCanales = (db: any) => Array.isArray(db?.diseno_humano?.canales) ? db.diseno_humano.canales : [];
+  const getPuertas = (db: any) => {
+    const pa = db?.diseno_humano?.puertas_activas;
+    if (Array.isArray(pa) && pa.length > 0) return pa.map(g => Math.floor(Number(g)));
+    return [];
+  };
 
   const c1 = getCanales(db1);
   const c2 = getCanales(db2);
   const v1 = new Set(getPuertas(db1));
   const v2 = new Set(getPuertas(db2));
 
-  const hasCanal = (canales: any[], cName: string) => canales.some(c => c.nombre === cName || c.puertas?.join('-') === cName);
+  const hasCanal = (canales: any[], cName: string) => canales.some(c => {
+    if (typeof c === 'string') return c === cName;
+    const normalizedNombre = c.nombre?.split('-').sort((a: string, b: string) => Number(a) - Number(b)).join('-');
+    const normalizedPuertas = c.puertas?.slice().sort((a: number, b: number) => a - b).join('-');
+    return normalizedNombre === cName || normalizedPuertas === cName;
+  });
   
   const nom1 = perfil1.datosPersona?.nombre || perfil1.datosOnboarding?.nombre || 'Persona 1';
   const nom2 = perfil2.datosPersona?.nombre || perfil2.datosOnboarding?.nombre || 'Persona 2';
@@ -1042,5 +1051,49 @@ export async function ensureSeedData(appUserUid: string) {
     }
   } catch (err) {
     handleFirestoreError(err, OperationType.LIST, 'fichas');
+  }
+}
+
+/**
+ * Enriquece una ficha con datos brutos de diseño humano si le faltan.
+ * Se ejecuta en background sin bloquear la UI principal.
+ */
+export async function enrichFichaDatosBrutos(ficha: Ficha): Promise<void> {
+  const dp = ficha.datosPersona || ficha.datosOnboarding;
+  if (!dp?.fechaNacimiento || !dp?.latitud || !dp?.longitud) {
+    console.warn('Cannot enrich ficha: missing birth data in', ficha.userId);
+    return;
+  }
+
+  try {
+    const raw = await calcularDatosBrutos({
+      fecha: dp.fechaNacimiento,
+      hora: dp.hora || '00:00',
+      latitud: parseFloat(dp.latitud.toString()),
+      longitud: parseFloat(dp.longitud.toString()),
+      timezone: dp.timezone || 'UTC'
+    });
+
+    const profileRef = doc(db, 'profiles', ficha.userId);
+    await updateDoc(profileRef, { 
+      datosBrutos: raw, 
+      updatedAt: serverTimestamp() 
+    });
+    console.log(`✅ Ficha ${ficha.userId} enriquecida con datos de la API.`);
+  } catch (err) {
+    console.warn('❌ Auto-enrich failed for', ficha.userId, err);
+  }
+}
+
+export async function getFichaById(userId: string): Promise<Ficha | null> {
+  try {
+    const snap = await getDoc(doc(db, 'profiles', userId));
+    if (snap.exists()) {
+      return { userId, ...snap.data() } as Ficha;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching ficha by ID:', error);
+    return null;
   }
 }

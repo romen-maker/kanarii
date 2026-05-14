@@ -5,7 +5,9 @@ import {
   AnalisisCruce, 
   getCruce, 
   saveCruce,
-  getFichaHash
+  getFichaHash,
+  enrichFichaDatosBrutos,
+  getFichaById
 } from '../lib/appService';
 import { generarAnalisisCruce } from '../lib/gemini';
 import { Leaf, Search, ArrowLeft, Layers, CheckCircle, Play } from 'lucide-react';
@@ -34,14 +36,20 @@ export function CruceView() {
     generadoEn: Date | null;
   } | null>(null);
 
+  const needsEnrich = (f: Ficha) => {
+    const dh = f.datosBrutos?.diseno_humano;
+    const puertas = dh?.puertas_activas;
+    return !puertas || (Array.isArray(puertas) && puertas.length === 0);
+  };
+
   const handleAnalisis = async () => {
     if (!perfil1Id || !perfil2Id || perfil1Id === perfil2Id) return;
 
     setAnalyzing(true);
     setResult(null);
 
-    const f1 = fichas.find(f => f.userId === perfil1Id);
-    const f2 = fichas.find(f => f.userId === perfil2Id);
+    let f1 = fichas.find(f => f.userId === perfil1Id);
+    let f2 = fichas.find(f => f.userId === perfil2Id);
 
     if (!f1 || !f2) {
       toast.error("No se encontraron los perfiles seleccionados.");
@@ -53,6 +61,19 @@ export function CruceView() {
       toast.error("Uno de estos miembros aún no tiene ficha completa (faltan datos astrales o visuales).");
       setAnalyzing(false);
       return;
+    }
+
+    if (needsEnrich(f1) || needsEnrich(f2)) {
+      toast.info('Obteniendo datos astrológicos actualizados...');
+      const promises = [];
+      if (needsEnrich(f1)) promises.push(enrichFichaDatosBrutos(f1));
+      if (needsEnrich(f2)) promises.push(enrichFichaDatosBrutos(f2));
+      await Promise.all(promises);
+      
+      const newF1 = await getFichaById(perfil1Id);
+      const newF2 = await getFichaById(perfil2Id);
+      if (newF1) f1 = newF1;
+      if (newF2) f2 = newF2;
     }
 
     const sortedIds = [perfil1Id, perfil2Id].sort();
@@ -224,31 +245,65 @@ export function CruceView() {
               )}
             </div>
 
-            {result.determinista.canalesConexion && (
-              <div className="mb-8 p-5 bg-[#F9F7F1] rounded-2xl border border-[#EAE2D6]">
-                <h3 className="text-sm font-bold text-[#6B705C] uppercase tracking-wider mb-4">Canales de Conexión Astrológica</h3>
-                <div className="flex flex-col gap-3">
-                  {result.determinista.canalesConexion.electromagneticos.length > 0 && (
-                     <div className="flex flex-wrap gap-2">
-                       {result.determinista.canalesConexion.electromagneticos.map((txt, i) => (
-                         <span key={i} className="px-3 py-1.5 bg-white text-yellow-800 border border-yellow-200 rounded-full text-xs shadow-sm font-medium flex items-center gap-1">
-                           ✨ {txt}
-                         </span>
-                       ))}
-                     </div>
-                  )}
-                  {result.determinista.canalesConexion.compania.length > 0 && (
-                     <div className="flex flex-wrap gap-2 mt-1">
-                       {result.determinista.canalesConexion.compania.map((txt, i) => (
-                         <span key={i} className="px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-full text-xs">
-                           {txt}
-                         </span>
-                       ))}
-                     </div>
+            {result.determinista.canalesConexion && (() => {
+              const cc = result.determinista.canalesConexion;
+              const hayCanales = 
+                cc.electromagneticos.length > 0 || 
+                cc.compania.length > 0 || 
+                cc.dominancia.length > 0 || 
+                cc.compromiso.length > 0;
+              
+              return (
+                <div className="mb-8 p-5 bg-[#F9F7F1] rounded-2xl border border-[#EAE2D6]">
+                  <h3 className="text-sm font-bold text-[#6B705C] uppercase tracking-wider mb-4">Canales de Conexión Astrológica</h3>
+                  {!hayCanales ? (
+                    <p className="text-sm text-stone-400 italic">
+                      No se han detectado canales de conexión directa entre estos perfiles. 
+                      Esto puede ocurrir si las fichas no tienen datos de puertas activas o si simplemente no hay coincidencia técnica.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {cc.electromagneticos.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {cc.electromagneticos.map((txt, i) => (
+                            <span key={i} className="px-3 py-1.5 bg-white text-yellow-800 border border-yellow-200 rounded-full text-xs shadow-sm font-medium flex items-center gap-1">
+                              ✨ {txt}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {cc.compania.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {cc.compania.map((txt, i) => (
+                            <span key={i} className="px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-full text-xs">
+                              🤝 {txt}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {cc.dominancia.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {cc.dominancia.map((txt, i) => (
+                            <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs">
+                              🏔️ {txt}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {cc.compromiso.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {cc.compromiso.map((txt, i) => (
+                            <span key={i} className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-full text-xs">
+                              ⚖️ {txt}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div className="pt-6 border-t border-[#EAE2D6]">
               <div className="flex items-center gap-2 mb-4">

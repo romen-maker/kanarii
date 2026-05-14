@@ -318,15 +318,15 @@ export function AdminPanel() {
                       <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Diseño Humano</h3>
                       <div>
                         <div className="text-[10px] text-stone-400 font-bold uppercase">Tipo</div>
-                        <div className="text-[#D4C3A3] font-serif text-lg">{selectedFicha.datosBrutos.tipo_hd}</div>
+                        <div className="text-[#D4C3A3] font-serif text-lg">{selectedFicha.datosBrutos.diseno_humano?.tipo || selectedFicha.datosBrutos.tipo_hd}</div>
                       </div>
                       <div>
                         <div className="text-[10px] text-stone-400 font-bold uppercase">Autoridad</div>
-                        <div className="text-[#EAE2D6] font-medium">{selectedFicha.datosBrutos.autoridad}</div>
+                        <div className="text-[#EAE2D6] font-medium">{selectedFicha.datosBrutos.diseno_humano?.autoridad || selectedFicha.datosBrutos.autoridad}</div>
                       </div>
                       <div className="pt-2 border-t border-white/10">
                         <div className="text-[10px] text-stone-400 font-bold uppercase">Perfil</div>
-                        <div className="text-[#F9F7F1]">{selectedFicha.datosBrutos.perfil}</div>
+                        <div className="text-[#F9F7F1]">{selectedFicha.datosBrutos.diseno_humano?.perfil || selectedFicha.datosBrutos.perfil}</div>
                       </div>
                     </div>
                   )}
