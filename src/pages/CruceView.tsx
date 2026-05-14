@@ -9,8 +9,21 @@ import {
   enrichFichaDatosBrutos,
   getFichaById
 } from '../lib/appService';
-import { generarAnalisisCruce } from '../lib/gemini';
-import { Leaf, Search, ArrowLeft, Layers, CheckCircle, Play } from 'lucide-react';
+import { generarAnalisisCruce, AnalisisCruceStructured } from '../lib/gemini';
+import { 
+  Leaf, 
+  Search, 
+  ArrowLeft, 
+  Layers, 
+  CheckCircle, 
+  AlertCircle, 
+  Zap, 
+  Users, 
+  Eye, 
+  MessageSquare, 
+  ShieldAlert,
+  Repeat
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
@@ -32,6 +45,7 @@ export function CruceView() {
   const [result, setResult] = useState<{
     determinista: AnalisisCruce;
     gemini: string;
+    structured: AnalisisCruceStructured | null;
     fromCache: boolean;
     generadoEn: Date | null;
   } | null>(null);
@@ -89,6 +103,7 @@ export function CruceView() {
         setResult({
           determinista: cachedCruce.resultado,
           gemini: cachedCruce.analisisGemini,
+          structured: cachedCruce.analisisStructured || null,
           fromCache: true,
           generadoEn: cachedCruce.generadoEn?.toDate() || new Date()
         });
@@ -98,11 +113,12 @@ export function CruceView() {
 
       // 2. Generar si no hay cache o es obsoleto
       const respDet = cruzarMiembros(f1, f2);
-      const geminiTxt = await generarAnalisisCruce(f1, f2, respDet);
+      const geminiResult = await generarAnalisisCruce(f1, f2, respDet, 'Arteara');
       
       const newCruceData = {
         resultado: respDet,
-        analisisGemini: geminiTxt,
+        analisisGemini: geminiResult.narrative,
+        analisisStructured: geminiResult.structured,
         perfilHash1: hash1,
         perfilHash2: hash2
       };
@@ -112,7 +128,8 @@ export function CruceView() {
 
       setResult({ 
         determinista: respDet, 
-        gemini: geminiTxt,
+        gemini: geminiResult.narrative,
+        structured: geminiResult.structured,
         fromCache: false,
         generadoEn: new Date()
       });
@@ -199,121 +216,235 @@ export function CruceView() {
         </div>
 
         {result && (
-          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-2xl font-serif text-[#4A4E4D] mb-6 flex justify-between items-center flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <span>Resultados del Encuentro</span>
-                {result.fromCache && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-medium">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Desde archivo ({result.generadoEn ? result.generadoEn.toLocaleDateString() : ''})
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            {/* Header / Arquetipo */}
+            <div className="mb-10 border-b border-[#F9F7F1] pb-8">
+              <div className="flex justify-between items-start flex-wrap gap-4 mb-4">
+                <div>
+                  {result.structured ? (
+                    <>
+                      <h2 className="text-3xl font-serif text-[#4A4E4D] mb-2">
+                        {result.structured.arquetipo_relacional}
+                      </h2>
+                      <p className="text-[#6B705C] font-medium flex items-center gap-2 italic">
+                        <AlertCircle className="w-4 h-4" />
+                        {result.structured.clima_grupal_alerta}
+                      </p>
+                    </>
+                  ) : (
+                    <h2 className="text-3xl font-serif text-[#4A4E4D]">Resultados del Encuentro</h2>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-2xl px-6 py-2 bg-[#F9F7F1] border border-[#EAE2D6] rounded-full text-[#6B705C] font-serif shadow-inner">
+                    Sinergia: {result.determinista.puntuacion}%
                   </span>
-                )}
+                  {result.fromCache && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-[10px] uppercase font-bold tracking-wider">
+                      <CheckCircle className="w-3 h-3" />
+                      Archivo ({result.generadoEn?.toLocaleDateString()})
+                    </span>
+                  )}
+                </div>
               </div>
-              <span className="text-xl px-4 py-1 bg-[#F9F7F1] border border-[#EAE2D6] rounded-full text-[#6B705C] font-serif">
-                Sinergia: {result.determinista.puntuacion}%
-              </span>
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              {result.determinista.compatibilidades.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3">Compatibilidades</h3>
-                  <div className="flex flex-col gap-2">
-                    {result.determinista.compatibilidades.map((c, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm text-stone-700">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                        {c}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {result.determinista.tensiones.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3">Tensiones Potenciales</h3>
-                  <div className="flex flex-col gap-2">
-                    {result.determinista.tensiones.map((t, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm text-stone-700">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                        {t}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {result.determinista.canalesConexion && (() => {
-              const cc = result.determinista.canalesConexion;
-              const hayCanales = 
-                cc.electromagneticos.length > 0 || 
-                cc.compania.length > 0 || 
-                cc.dominancia.length > 0 || 
-                cc.compromiso.length > 0;
-              
-              return (
-                <div className="mb-8 p-5 bg-[#F9F7F1] rounded-2xl border border-[#EAE2D6]">
-                  <h3 className="text-sm font-bold text-[#6B705C] uppercase tracking-wider mb-4">Canales de Conexión Astrológica</h3>
-                  {!hayCanales ? (
-                    <p className="text-sm text-stone-400 italic">
-                      No se han detectado canales de conexión directa entre estos perfiles. 
-                      Esto puede ocurrir si las fichas no tienen datos de puertas activas o si simplemente no hay coincidencia técnica.
+            {/* Mapa de Rangos (NUEVO) */}
+            {result.structured && (
+              <div className="mb-10 bg-[#FDFBF7] border border-[#EAE2D6] rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="w-5 h-5 text-[#6B705C]" />
+                  <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Mapa de Rangos Contextuales</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white p-4 rounded-xl border border-[#F0EBE0]">
+                    <div className="text-[10px] text-stone-400 font-bold uppercase mb-1">Poder de Influencia</div>
+                    <div className="text-lg font-serif text-[#4A4E4D]">{result.structured.mapa_rangos.quien_tiene_mas_rango}</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-[#F0EBE0]">
+                    <div className="text-[10px] text-stone-400 font-bold uppercase mb-1">Tipo de Asimetría</div>
+                    <div className="text-lg font-serif text-[#4A4E4D] capitalize">{result.structured.mapa_rangos.tipo_rango}</div>
+                  </div>
+                  <div className="md:col-span-1 bg-[#F9F7F1] p-4 rounded-xl border border-[#EAE2D6] flex items-center gap-3">
+                    <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+                    <p className="text-sm text-stone-600 leading-tight italic">
+                      {result.structured.mapa_rangos.alerta_rango}
                     </p>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {cc.electromagneticos.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {cc.electromagneticos.map((txt, i) => (
-                            <span key={i} className="px-3 py-1.5 bg-white text-yellow-800 border border-yellow-200 rounded-full text-xs shadow-sm font-medium flex items-center gap-1">
-                              ✨ {txt}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {cc.compania.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {cc.compania.map((txt, i) => (
-                            <span key={i} className="px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-full text-xs">
-                              🤝 {txt}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {cc.dominancia.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {cc.dominancia.map((txt, i) => (
-                            <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs">
-                              🏔️ {txt}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {cc.compromiso.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {cc.compromiso.map((txt, i) => (
-                            <span key={i} className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-100 rounded-full text-xs">
-                              ⚖️ {txt}
-                            </span>
-                          ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Canales Enriquecidos (NUEVO/ACTUALIZADO) */}
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-[#6B705C]" />
+                <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Canales de Conexión</h3>
+              </div>
+              
+              {result.structured ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {result.structured.canales_enriquecidos.map((canal, i) => (
+                    <div key={i} className="bg-white border border-[#EAE2D6] p-4 rounded-2xl hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="font-serif text-[#4A4E4D] font-bold">{canal.nombre} ({canal.id})</div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${
+                          canal.tipo === 'electromagnetico' ? 'bg-yellow-100 text-yellow-700' :
+                          canal.tipo === 'dominancia' ? 'bg-blue-100 text-blue-700' :
+                          canal.tipo === 'compania' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {canal.tipo}
+                        </span>
+                      </div>
+                      <p className="text-sm text-stone-600 mb-2">{canal.descripcion_comunitaria}</p>
+                      {canal.nota_rango && (
+                        <div className="text-[11px] text-amber-600 font-medium flex items-center gap-1 bg-amber-50 p-2 rounded-lg">
+                          <AlertCircle className="w-3 h-3" />
+                          {canal.nota_rango}
                         </div>
                       )}
                     </div>
+                  ))}
+                  {result.structured.canales_enriquecidos.length === 0 && (
+                    <p className="text-sm text-stone-400 italic md:col-span-2">Sin canales definidos entre estos perfiles.</p>
                   )}
                 </div>
-              );
-            })()}
+              ) : (
+                /* Fallback determinista antiguo */
+                <div className="bg-[#F9F7F1] p-6 rounded-2xl border border-[#EAE2D6]">
+                  {!(result.determinista.canalesConexion && (
+                    result.determinista.canalesConexion.electromagneticos.length > 0 || 
+                    result.determinista.canalesConexion.compania.length > 0 || 
+                    result.determinista.canalesConexion.dominancia.length > 0 || 
+                    result.determinista.canalesConexion.compromiso.length > 0
+                  )) ? (
+                    <p className="text-sm text-stone-400 italic">No se detectaron canales técnicos.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {result.determinista.canalesConexion.electromagneticos.map((txt, i) => (
+                        <span key={i} className="px-3 py-1.5 bg-white text-yellow-800 border border-yellow-200 rounded-full text-xs font-medium">✨ {txt}</span>
+                      ))}
+                      {/* ... otros canales simplificados ... */}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-            <div className="pt-6 border-t border-[#EAE2D6]">
-              <div className="flex items-center gap-2 mb-4">
-                <Leaf className="w-5 h-5 text-[#6B705C]" />
-                <h3 className="text-lg font-serif text-[#4A4E4D]">Perspectiva Sociocrática</h3>
+            {/* Comunicación No Violenta (NUEVO) */}
+            {result.structured && (
+              <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-5 h-5 text-[#6B705C]" />
+                  <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Puentes de Comunicación (CNV)</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {result.structured.cnv.map((item, i) => (
+                    <div key={i} className="bg-white border border-[#EAE2D6] rounded-2xl overflow-hidden shadow-sm">
+                      <div className="bg-[#F9F7F1] px-4 py-2 border-b border-[#EAE2D6] flex justify-between items-center">
+                        <span className="font-serif font-bold text-[#4A4E4D]">{item.persona}</span>
+                        <span className="text-[10px] text-stone-500 uppercase tracking-tight italic">{item.situacion}</span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex gap-2">
+                          <span className="text-[10px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded h-fit">Hecho</span>
+                          <p className="text-xs text-stone-600">{item.observacion}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-[10px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded h-fit">Siento</span>
+                          <p className="text-xs text-stone-600">{item.sentimiento}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-[10px] bg-green-50 text-green-500 px-1.5 py-0.5 rounded h-fit">Necesito</span>
+                          <p className="text-xs text-stone-600">{item.necesidad}</p>
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-dashed border-stone-200">
+                          <div className="text-[10px] font-bold text-[#6B705C] uppercase mb-1">Petición Concreta</div>
+                          <p className="text-sm italic font-serif text-[#4A4E4D]">"{item.peticion}"</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="prose prose-stone max-w-none text-stone-700 leading-relaxed">
+            )}
+
+            {/* Sombras y Espejos (NUEVO) */}
+            {result.structured && (
+              <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Eye className="w-5 h-5 text-[#6B705C]" />
+                  <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Espejos y Sombras Probables</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {result.structured.sombras.map((s, i) => (
+                    <div key={i} className="bg-[#4A4E4D] text-[#F9F7F1] p-5 rounded-2xl shadow-lg relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <ShieldAlert className="w-12 h-12" />
+                      </div>
+                      <div className="font-serif text-lg mb-4 border-b border-white/10 pb-2">{s.persona}</div>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="text-[9px] uppercase tracking-widest text-white/50 mb-1">Lo que conscientemente cree</div>
+                          <div className="text-sm">{s.proceso_primario}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] uppercase tracking-widest text-white/50 mb-1">Sombra proyectada en el otro</div>
+                          <div className="text-sm font-medium text-amber-200">{s.sombra_probable}</div>
+                        </div>
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                          <div className="text-[9px] uppercase tracking-widest text-white/50 mb-1">Gancho Proyectivo</div>
+                          <div className="text-sm italic">"Me dispara cuando el otro..." {s.gancho_proyectivo}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Doble Enlace (NUEVO) */}
+            {result.structured && (
+              <div className="mb-10 bg-[#6B705C] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                <div className="absolute -right-8 -bottom-8 opacity-10">
+                  <Repeat className="w-32 h-32" />
+                </div>
+                <div className="flex items-center gap-2 mb-6">
+                  <Repeat className="w-5 h-5" />
+                  <h3 className="text-sm font-bold uppercase tracking-widest">Protocolo de Doble Enlace Sociocrático</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                  <div className="space-y-2">
+                    <div className="text-[10px] text-white/60 font-bold uppercase">Enlace 1: {result.structured.acuerdo_doble_enlace.dominio_1.persona}</div>
+                    <div className="text-xl font-serif">{result.structured.acuerdo_doble_enlace.dominio_1.area}</div>
+                    <div className="text-[10px] bg-white/20 w-fit px-2 py-0.5 rounded">Revisión: {result.structured.acuerdo_doble_enlace.dominio_1.fecha_revision}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-[10px] text-white/60 font-bold uppercase">Enlace 2: {result.structured.acuerdo_doble_enlace.dominio_2.persona}</div>
+                    <div className="text-xl font-serif">{result.structured.acuerdo_doble_enlace.dominio_2.area}</div>
+                    <div className="text-[10px] bg-white/20 w-fit px-2 py-0.5 rounded">Revisión: {result.structured.acuerdo_doble_enlace.dominio_2.fecha_revision}</div>
+                  </div>
+                </div>
+                <div className="mt-8 pt-6 border-t border-white/20 text-sm italic text-white/80">
+                  Metodología: {result.structured.acuerdo_doble_enlace.metodologia}
+                </div>
+              </div>
+            )}
+
+            {/* Narrativo Original */}
+            <div className="pt-10 border-t border-[#EAE2D6]">
+              <div className="flex items-center gap-2 mb-6">
+                <Leaf className="w-6 h-6 text-[#6B705C]" />
+                <h3 className="text-2xl font-serif text-[#4A4E4D]">Análisis Profundo de Facilitación</h3>
+              </div>
+              <div className="prose prose-stone max-w-none text-stone-700 leading-relaxed prose-headings:font-serif prose-headings:text-[#4A4E4D] prose-blockquote:border-l-[#A5A58D] prose-blockquote:bg-[#F9F7F1] prose-blockquote:py-2 prose-blockquote:rounded-r-xl">
                 <Markdown>{result.gemini}</Markdown>
               </div>
             </div>
+
+            {/* Debug (opcional, visible solo en desarrollo) */}
+            {/* <pre className="text-[10px] mt-10 p-4 bg-stone-100 rounded overflow-auto">{JSON.stringify(result.structured, null, 2)}</pre> */}
           </div>
         )}
       </div>
