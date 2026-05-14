@@ -1,16 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth, db } from '../lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../lib/error-handler';
-
-interface AppUser {
-  uid: string;
-  email: string;
-  role: 'user' | 'admin';
-  hasConsented?: boolean;
-  hasFicha?: boolean;
-}
+import { auth } from '../lib/firebase';
+import { AppUser, getAppUser, updateAppUserConsent } from '../lib/appService';
 
 interface AuthContextType {
   user: User | null;
@@ -33,42 +24,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(firebaseUser);
       try {
         if (firebaseUser) {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            let finalRole = data.role;
-            if (firebaseUser.email === 'romenusabo3@gmail.com' && finalRole !== 'admin') {
-               finalRole = 'admin';
-               await updateDoc(userDocRef, { role: 'admin' });
-            }
-
-            // Check if user has a ficha
-            const fichasQuery = query(collection(db, 'fichas'), where('userId', '==', firebaseUser.uid));
-            const fichasSnapshot = await getDocs(fichasQuery);
-            const hasFicha = !fichasSnapshot.empty;
-
-            setAppUser({ uid: firebaseUser.uid, ...data, role: finalRole, hasFicha } as AppUser);
-          } else {
-            // Create user
-            const role = firebaseUser.email === 'romenusabo3@gmail.com' ? 'admin' : 'user';
-            const newUser = {
-              email: firebaseUser.email!,
-              role,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            };
-            await setDoc(userDocRef, newUser);
-            setAppUser({ uid: firebaseUser.uid, ...newUser, hasFicha: false } as AppUser);
-          }
+          const profile = await getAppUser(firebaseUser.uid, firebaseUser.email!);
+          setAppUser(profile);
         } else {
           setAppUser(null);
         }
       } catch (error: any) {
-        console.error("Auth error - code:", error?.code);
-        console.error("Auth error - message:", error?.message);
-        console.error("Auth error - full stack:", error);
+        console.error("Auth error:", error);
       } finally {
         setLoading(false);
       }
@@ -90,11 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateConsent = async () => {
     if (!user || !appUser) return;
     try {
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, { hasConsented: true, updatedAt: serverTimestamp() });
+      await updateAppUserConsent(user.uid);
       setAppUser({ ...appUser, hasConsented: true });
     } catch(err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
+      // El error ya se maneja en appService vía handleFirestoreError
+      console.error("Error updating consent:", err);
     }
   };
 
