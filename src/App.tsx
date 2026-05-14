@@ -10,6 +10,7 @@ import { AdminPanel } from './pages/AdminPanel';
 import { TareasPanel } from './pages/TareasPanel';
 import { ActasPanel } from './pages/ActasPanel';
 import { ProyectosView } from './pages/ProyectosView';
+import CalendarioView from './pages/CalendarioView';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { CruceView } from './pages/CruceView';
@@ -67,6 +68,7 @@ function AppContent() {
           <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
           <Route path="/actas" element={<ProtectedRoute><ActasPanel /></ProtectedRoute>} />
           <Route path="/proyectos" element={<ProtectedRoute><ProyectosView /></ProtectedRoute>} />
+          <Route path="/calendario" element={<ProtectedRoute><CalendarioView /></ProtectedRoute>} />
         </Routes>
         
         {showNav && <BottomNav />}

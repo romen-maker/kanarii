@@ -7,12 +7,14 @@ export const colFichas = collection(db, 'fichas');
 export const colTareas = collection(db, 'tareas');
 export const colActas = collection(db, 'actas');
 export const colProyectos = collection(db, 'proyectos');
+export const colEventos = collection(db, 'eventos');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas);
 export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'));
 export const getActasQuery = () => query(colActas, orderBy('fecha', 'desc'));
 export const getProyectosQuery = () => query(colProyectos, orderBy('updatedAt', 'desc'));
+export const getEventosQuery = (communityId: string) => query(colEventos, where('communityId', '==', communityId), orderBy('inicio', 'asc'));
 
 /**
  * Helper genérico para suscripciones en tiempo real.
@@ -116,6 +118,70 @@ export async function updateAppUserConsent(uid: string): Promise<void> {
     throw err;
   }
 }
+
+// --- GESTIÓN DE EVENTOS (CALENDARIO) ---
+
+export interface Evento {
+  id?: string;
+  titulo: string;
+  descripcion: string;
+  tipo: 'reunion' | 'tarea_comunal' | 'visita' | 'celebracion' | 'otro';
+  inicio: any; // Timestamp
+  fin: any;    // Timestamp
+  todoElDia: boolean;
+  responsable_uid: string;
+  participantes: string[];
+  communityId: string;
+  vinculado_a?: { tipo: 'proyecto' | 'acta'; id: string };
+  creadoEn: any;
+  creadoPor: string;
+}
+
+export async function createEvento(evento: Partial<Evento>): Promise<string> {
+  try {
+    const docRef = await addDoc(colEventos, {
+      ...evento,
+      creadoEn: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'eventos');
+    throw err;
+  }
+}
+
+export async function updateEvento(id: string, cambios: Partial<Evento>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'eventos', id), {
+      ...cambios,
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `eventos/${id}`);
+    throw err;
+  }
+}
+
+export async function deleteEvento(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'eventos', id));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `eventos/${id}`);
+    throw err;
+  }
+}
+
+export async function getEventos(communityId: string): Promise<Evento[]> {
+  try {
+    const q = getEventosQuery(communityId);
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Evento));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, 'eventos');
+    throw err;
+  }
+}
+
 
 
 export interface DatosOnboarding {

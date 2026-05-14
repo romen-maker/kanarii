@@ -1,4 +1,4 @@
-import { Home, User, CheckSquare, Briefcase, FileText, Settings } from 'lucide-react';
+import { Home, User, CheckSquare, Briefcase, FileText, Settings, Calendar } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -22,6 +22,11 @@ export const navigationConfig: NavItem[] = [
     label: 'Tareas',
     href: '/tareas',
     icon: CheckSquare,
+  },
+  {
+    label: 'Calendario',
+    href: '/calendario',
+    icon: Calendar,
   },
   {
     label: 'Proyectos',

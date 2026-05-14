@@ -23,8 +23,8 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Reemplazar `alert()` nativos por `useToast`.
   - [x] Extraer modales inline a componentes independientes. (`CreateActaModal`, `CreateProjectModal`)
 - [x] Aplicar **EntityCard** en todas las listas (Proyectos, Tareas, Actas).
-- [ ] **Refactorización Core Final**:
-  - [ ] Refactorizar `AuthContext.tsx` (Eliminar Firestore, usar `appService`).
+- [x] **Refactorización Core Final ✅**:
+  - [x] Refactorizar `AuthContext.tsx` (Eliminar Firestore, usar `appService`).
 
 ## 🟢 Fase 1 — App operativa mínima (Completado / En Refinamiento 🔄)
 - [x] **1.1 Gestión de tareas comunitarias**
@@ -49,8 +49,11 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Renderizado dinámico de Canales Enriquecidos, Mapa de Rangos y Sombras Relacionales.
   - [x] Desacoplamiento de Comunidad (Parámetro dinámico listo para multi-comunidad).
   - [x] Sistema de Caché inteligente basado en hashes de integridad (v2).
-- [ ] **2.2 Calendario comunitario**
-  - [ ] Eventos, reuniones, turnos. Vista mensual simple. Cada evento con responsable.
+- [x] **2.2 Calendario Comunitario**
+  - [x] Integración `react-big-calendar` + `date-fns`.
+  - [x] Colección `/eventos` en Firestore (CRUD completo).
+  - [x] Hook `useEventos` con suscripción real-time.
+  - [x] Vista mensual/agenda responsiva y modal de creación.
 - [ ] **2.3 Tablón de necesidades/ofertas**
   - [ ] "Necesito ayuda con X" / "Ofrezco Y". Posts con respuesta asíncrona.
 - [ ] **2.4 Gestión de Propuestas y Consentimiento**
