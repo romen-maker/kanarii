@@ -21,7 +21,9 @@ export function Sidebar() {
       {/* Header / Logo */}
       <div className="p-8 pb-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#6B705C] rounded-lg flex items-center justify-center text-white font-serif italic text-xl">K</div>
+          <div className="w-8 h-8 bg-[#6B705C] rounded-lg flex items-center justify-center text-white font-serif italic text-xl">
+            <img src="/kanarii-logo.svg" alt="Kanarii" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          </div>
           <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
         </div>
       </div>

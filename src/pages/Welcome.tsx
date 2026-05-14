@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
-import { Leaf, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export function Welcome() {
   const { user, appUser, login } = useAuth();
@@ -22,7 +22,7 @@ export function Welcome() {
       <div className="max-w-xl w-full text-center space-y-8">
         <div className="flex justify-center mb-4">
           <div className="bg-[#EAE2D6] p-4 rounded-full">
-            <Leaf className="w-12 h-12 text-[#6B705C]" />
+            <img src="/kanarii-logo.svg" alt="Kanarii" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
           </div>
         </div>
         <h1 className="text-4xl md:text-5xl font-serif text-[#4A4E4D]">Kanarii</h1>
