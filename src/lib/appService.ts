@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query, writeBatch, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
 
@@ -8,6 +8,7 @@ export const colTareas = collection(db, 'tareas');
 export const colActas = collection(db, 'actas');
 export const colProyectos = collection(db, 'proyectos');
 export const colEventos = collection(db, 'eventos');
+export const colPosts = collection(db, 'posts');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas);
@@ -15,6 +16,7 @@ export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'
 export const getActasQuery = () => query(colActas, orderBy('fecha', 'desc'));
 export const getProyectosQuery = () => query(colProyectos, orderBy('updatedAt', 'desc'));
 export const getEventosQuery = (communityId: string) => query(colEventos, where('communityId', '==', communityId), orderBy('inicio', 'asc'));
+export const getPostsQuery = (communityId: string) => query(colPosts, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
 
 /**
  * Helper genérico para suscripciones en tiempo real.
@@ -178,6 +180,110 @@ export async function getEventos(communityId: string): Promise<Evento[]> {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Evento));
   } catch (err) {
     handleFirestoreError(err, OperationType.GET, 'eventos');
+    throw err;
+  }
+}
+
+// --- GESTIÓN DE POSTS (TABLÓN) ---
+
+export interface Post {
+  id?: string;
+  tipo: 'necesidad' | 'oferta';
+  titulo: string;
+  descripcion: string;
+  categoria: 'habilidad' | 'recurso' | 'espacio' | 'apoyo_emocional' | 'otro';
+  estado: 'activo' | 'en_proceso' | 'resuelto';
+  autor_uid: string;
+  communityId: string;
+  respuestas_count: number;
+  creadoEn: any;
+  actualizadoEn: any;
+}
+
+export interface Respuesta {
+  id?: string;
+  texto: string;
+  autor_uid: string;
+  creadoEn: any;
+}
+
+export async function createPost(post: Partial<Post>): Promise<string> {
+  try {
+    const docRef = await addDoc(colPosts, {
+      ...post,
+      respuestas_count: 0,
+      creadoEn: serverTimestamp(),
+      actualizadoEn: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'posts');
+    throw err;
+  }
+}
+
+export async function updatePost(id: string, cambios: Partial<Post>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'posts', id), {
+      ...cambios,
+      actualizadoEn: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `posts/${id}`);
+    throw err;
+  }
+}
+
+export async function deletePost(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'posts', id));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `posts/${id}`);
+    throw err;
+  }
+}
+
+export async function getPosts(communityId: string): Promise<Post[]> {
+  try {
+    const q = getPostsQuery(communityId);
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, 'posts');
+    throw err;
+  }
+}
+
+export async function getRespuestas(postId: string): Promise<Respuesta[]> {
+  try {
+    const q = query(collection(db, 'posts', postId, 'respuestas'), orderBy('creadoEn', 'asc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Respuesta));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `posts/${postId}/respuestas`);
+    throw err;
+  }
+}
+
+export async function createRespuesta(postId: string, respuesta: Partial<Respuesta>): Promise<void> {
+  try {
+    const batch = writeBatch(db);
+    const postRef = doc(db, 'posts', postId);
+    const resRef = doc(collection(db, 'posts', postId, 'respuestas'));
+    
+    batch.set(resRef, {
+      ...respuesta,
+      creadoEn: serverTimestamp()
+    });
+    
+    batch.update(postRef, {
+      respuestas_count: increment(1),
+      actualizadoEn: serverTimestamp()
+    });
+    
+    await batch.commit();
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, `posts/${postId}/respuestas`);
     throw err;
   }
 }
