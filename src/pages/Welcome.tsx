@@ -21,9 +21,7 @@ export function Welcome() {
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 flex flex-col items-center justify-center p-6 font-sans">
       <div className="max-w-xl w-full text-center space-y-8">
         <div className="flex justify-center mb-4">
-          <div className="bg-[#EAE2D6] p-4 rounded-full">
-            <img src="/kanarii-logo.svg" alt="Kanarii" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
-          </div>
+          <img src="/kanarii-logo.svg" alt="Kanarii" style={{ width: '140px', height: '140px', objectFit: 'contain' }} />
         </div>
         <h1 className="text-4xl md:text-5xl font-serif text-[#4A4E4D]">Kanarii</h1>
         <h2 className="text-xl md:text-2xl font-light text-[#8A817C] tracking-wide">Tawăzawazt</h2>
@@ -36,10 +34,8 @@ export function Welcome() {
             Un espacio que congrega a nuestra tribu. Una red que sostiene, cuida
             y hace crecer nuestra revolución interna para expandirla de adentro hacia afuera.
           </p>
-          <p className="text-[#CB997E] font-medium font-serif text-xl mt-4">
-            Las personas solas pueden llegar a ser poderosas, pero juntas somos invencibles.
-          </p>
         </div>
+
 
         <div className="pt-8 space-y-4">
           {appUser ? (
@@ -92,6 +88,9 @@ export function Welcome() {
               </button>
             </>
           )}
+          <p className="text-[#CB997E] font-medium font-serif text-xl pt-6">
+            Las personas solas pueden llegar a ser poderosas, pero juntas somos invencibles.
+          </p>
         </div>
       </div>
     </div>
