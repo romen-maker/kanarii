@@ -9,9 +9,10 @@ interface CreateActaModalProps {
   onClose: () => void;
   members: any[];
   actaToEdit?: Acta | null;
+  communityId: string;
 }
 
-export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModalProps) {
+export function CreateActaModal({ onClose, members, actaToEdit, communityId }: CreateActaModalProps) {
   const { appUser } = useAuth();
   const toast = useToast();
   const { perform } = useEntityActions();
@@ -45,7 +46,8 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
             asignadaA: tarea.asignadaA || undefined,
             descripcion: tarea.descripcion || undefined,
             estado: 'pendiente',
-            creadaPor: appUser.uid
+            creadaPor: appUser.uid,
+            communityId
           });
           if (tId) tareasIds.push(tId);
         }
@@ -62,7 +64,8 @@ export function CreateActaModal({ onClose, members, actaToEdit }: CreateActaModa
         tareasDerivadas: tareasIds.length > 0 ? tareasIds : undefined,
         proximaReunion: formData.proximaReunion ? new Date(formData.proximaReunion) : undefined,
         creadaPor: actaToEdit ? actaToEdit.creadaPor : appUser.uid,
-        lastEditedBy: actaToEdit ? appUser.uid : undefined
+        lastEditedBy: actaToEdit ? appUser.uid : undefined,
+        communityId
       };
 
       await perform(saveActa(finalData, actaToEdit?.id), {

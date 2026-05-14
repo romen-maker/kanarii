@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Evento, getEventosQuery, subscribeToCollection } from '../lib/appService';
 
-export function useEventos(communityId: string = 'arteara') {
+export function useEventos(communityId: string) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!communityId) return;
     setLoading(true);
     const q = getEventosQuery(communityId);
     

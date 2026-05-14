@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Ficha, ensureSeedData, Tarea } from '../lib/appService';
 import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
@@ -17,15 +18,16 @@ type RolComunitario = 'propietario' | 'miembro' | 'voluntario';
 
 export function AdminPanel() {
   const { appUser, logout } = useAuth();
+  const { currentCommunityId } = useComunidad();
   const navigate = useNavigate();
-  const { fichas, loading: loadingFichas } = useFichas();
-  const { tareas, loading: loadingTareas, reload: fetchTareas } = useTareas();
+  const { fichas, loading: loadingFichas } = useFichas(currentCommunityId);
+  const { items: tareas, loading: loadingTareas, reload: fetchTareas } = useTareas(currentCommunityId);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'todos' | RolComunitario>('todos');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
   const [activeTab, setActiveTab] = useState<'comunidad' | 'tareas'>('comunidad');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
-  const { getMemberName } = useCommunityMembers();
+  const { getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
   const toast = useToast();
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export function AdminPanel() {
     if (roleFilter !== 'todos' && datos.rol !== roleFilter) return false;
     return (
       (datos.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (datos.rol_arteara?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (datos.rol_comunidad?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
   });
 
@@ -173,7 +175,7 @@ export function AdminPanel() {
               <table className="w-full text-left">
                 <thead className="bg-stone-50 text-stone-400 text-[10px] uppercase font-bold tracking-widest">
                   <tr>
-                    <th className="px-6 py-4">Nombre / Rol en Arteara</th>
+                    <th className="px-6 py-4">Nombre / Rol en Comunidad</th>
                     <th className="px-6 py-4">Estado / Rol Comunitario</th>
                     <th className="px-6 py-4">Antigüedad</th>
                     <th className="px-6 py-4 text-right">Acciones</th>
@@ -190,7 +192,7 @@ export function AdminPanel() {
                       <tr key={ficha.id} className="hover:bg-[#FDFBF7] transition-colors group">
                         <td className="px-6 py-4">
                           <div className="font-medium text-stone-800">{datos.nombre}</div>
-                          <div className="text-xs text-stone-400">{datos.rol_arteara || 'Sin rol definido'}</div>
+                          <div className="text-xs text-stone-400">{datos.rol_comunidad || 'Sin rol definido'}</div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -301,8 +303,8 @@ export function AdminPanel() {
                   <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm space-y-4">
                     <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Detalles del Perfil</h3>
                     <div>
-                      <div className="text-[10px] text-stone-400 font-bold uppercase">Rol en Arteara</div>
-                      <div className="text-stone-800 font-medium">{getDatosPersona(selectedFicha).rol_arteara || 'N/A'}</div>
+                      <div className="text-[10px] text-stone-400 font-bold uppercase">Rol en Comunidad</div>
+                      <div className="text-stone-800 font-medium">{getDatosPersona(selectedFicha).rol_comunidad || 'N/A'}</div>
                     </div>
                     <div>
                       <div className="text-[10px] text-stone-400 font-bold uppercase">Saberes</div>

@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query, writeBatch, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
 
@@ -8,13 +8,23 @@ export const colTareas = collection(db, 'tareas');
 export const colActas = collection(db, 'actas');
 export const colProyectos = collection(db, 'proyectos');
 export const colEventos = collection(db, 'eventos');
+export const colPosts = collection(db, 'posts');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas);
 export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'));
-export const getActasQuery = () => query(colActas, orderBy('fecha', 'desc'));
-export const getProyectosQuery = () => query(colProyectos, orderBy('updatedAt', 'desc'));
+export const getActasQuery = (communityId: string) => query(
+  colActas, 
+  where('communityId', '==', communityId),
+  orderBy('fecha', 'desc')
+);
+export const getProyectosQuery = (communityId: string) => query(
+  colProyectos, 
+  where('communityId', '==', communityId),
+  orderBy('updatedAt', 'desc')
+);
 export const getEventosQuery = (communityId: string) => query(colEventos, where('communityId', '==', communityId), orderBy('inicio', 'asc'));
+export const getPostsQuery = (communityId: string) => query(colPosts, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
 
 /**
  * Helper genérico para suscripciones en tiempo real.
@@ -33,14 +43,25 @@ export function subscribeToCollection(q: Query, onData: (data: any[]) => void, e
 }
 
 // --- GESTIÓN DE USUARIOS (Para AuthContext) ---
+export interface Comunidad {
+  id: string; // Slug (ej: 'arteara')
+  nombre: string;
+  slug: string;
+  descripcion: string;
+  logoUrl?: string;
+  creadoEn: any;
+}
+
 export interface AppUser {
   uid: string;
   email: string;
-  role: 'user' | 'admin';
+  displayName?: string;
+  role: 'admin' | 'member' | 'user';
   hasConsented?: boolean;
   hasFicha?: boolean;
   communityId?: string | null;
 }
+
 
 export async function getAppUserDoc(uid: string) {
   const snap = await getDoc(doc(db, 'users', uid));
@@ -92,9 +113,10 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
     return {
       uid,
       email: userData.email,
-      role: userData.role,
-      hasConsented: userData.hasConsented || false,
-      communityId: userData.communityId || null,
+      displayName: userData.displayName || '',
+      role: userData.role ?? 'member',
+      hasConsented: userData.hasConsented ?? false,
+      communityId: userData.communityId ?? null,
       hasFicha
     };
   } catch (err) {
@@ -182,6 +204,110 @@ export async function getEventos(communityId: string): Promise<Evento[]> {
   }
 }
 
+// --- GESTIÓN DE POSTS (TABLÓN) ---
+
+export interface Post {
+  id?: string;
+  tipo: 'necesidad' | 'oferta';
+  titulo: string;
+  descripcion: string;
+  categoria: 'habilidad' | 'recurso' | 'espacio' | 'apoyo_emocional' | 'otro';
+  estado: 'activo' | 'en_proceso' | 'resuelto';
+  autor_uid: string;
+  communityId: string;
+  respuestas_count: number;
+  creadoEn: any;
+  actualizadoEn: any;
+}
+
+export interface Respuesta {
+  id?: string;
+  texto: string;
+  autor_uid: string;
+  creadoEn: any;
+}
+
+export async function createPost(post: Partial<Post>): Promise<string> {
+  try {
+    const docRef = await addDoc(colPosts, {
+      ...post,
+      respuestas_count: 0,
+      creadoEn: serverTimestamp(),
+      actualizadoEn: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'posts');
+    throw err;
+  }
+}
+
+export async function updatePost(id: string, cambios: Partial<Post>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'posts', id), {
+      ...cambios,
+      actualizadoEn: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `posts/${id}`);
+    throw err;
+  }
+}
+
+export async function deletePost(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'posts', id));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `posts/${id}`);
+    throw err;
+  }
+}
+
+export async function getPosts(communityId: string): Promise<Post[]> {
+  try {
+    const q = getPostsQuery(communityId);
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, 'posts');
+    throw err;
+  }
+}
+
+export async function getRespuestas(postId: string): Promise<Respuesta[]> {
+  try {
+    const q = query(collection(db, 'posts', postId, 'respuestas'), orderBy('creadoEn', 'asc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Respuesta));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `posts/${postId}/respuestas`);
+    throw err;
+  }
+}
+
+export async function createRespuesta(postId: string, respuesta: Partial<Respuesta>): Promise<void> {
+  try {
+    const batch = writeBatch(db);
+    const postRef = doc(db, 'posts', postId);
+    const resRef = doc(collection(db, 'posts', postId, 'respuestas'));
+    
+    batch.set(resRef, {
+      ...respuesta,
+      creadoEn: serverTimestamp()
+    });
+    
+    batch.update(postRef, {
+      respuestas_count: increment(1),
+      actualizadoEn: serverTimestamp()
+    });
+    
+    await batch.commit();
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, `posts/${postId}/respuestas`);
+    throw err;
+  }
+}
+
 
 
 export interface DatosOnboarding {
@@ -191,9 +317,10 @@ export interface DatosOnboarding {
   lugar: string;
   genero: string;
   saberes: string;
-  rol_arteara: string;
+  rol_comunidad: string;
   antiguedad_anos: number | string;
   tension: string;
+  communityId: string;
   hora_aproximada?: boolean;
   latitud?: number;
   longitud?: number;
@@ -234,6 +361,7 @@ export interface Tarea {
   createdAt?: any;
   updatedAt?: any;
   proyectoId?: string;
+  communityId: string;
 }
 
 export interface Acta {
@@ -250,6 +378,7 @@ export interface Acta {
   createdAt?: any;
   updatedAt?: any;
   lastEditedBy?: string;
+  communityId: string;
 }
 
 export interface Proyecto {
@@ -263,6 +392,7 @@ export interface Proyecto {
   estado: "en_marcha" | "buscando_colaboradores" | "completado" | "pausado";
   fechaInicio?: string; // YYYY-MM-DD
   fechaFin?: string;
+  communityId: string;
   creadoEn?: any; // timestamp
   updatedAt?: any;
 }
@@ -516,7 +646,7 @@ export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record
   if (isAgua(lunaSigno)) cuidado += 30;
   if (isAgua(venusSigno) || isTierra(venusSigno)) cuidado += 25;
   if (perfil.includes('2/4') || perfil.includes('6/2') || perfil.includes('4/6')) cuidado += 25; 
-  if (datosPersona?.rol_arteara && datosPersona.rol_arteara.toLowerCase().includes('cuidad')) cuidado += 20;
+  if (datosPersona?.rol_comunidad && datosPersona.rol_comunidad.toLowerCase().includes('cuidad')) cuidado += 20;
 
   return { escucha, accion, estructura, cuidado };
 }
@@ -581,7 +711,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       hora: horaVal,
       genero: datosOnboarding.genero,
       saberes: datosOnboarding.saberes,
-      rol_arteara: datosOnboarding.rol_arteara,
+      rol_comunidad: datosOnboarding.rol_comunidad || datosOnboarding.rol_arteara,
       antiguedad_anos: parseFloat(datosOnboarding.antiguedad_anos as string) || 0,
       tension: datosOnboarding.tension,
       lugar: datosOnboarding.lugar,
@@ -615,7 +745,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
         perfilVisual.dimensiones = dimensiones;
         
-        manualMarkdown = await generarManual(rawData, datosPersona, perfilVisual);
+        manualMarkdown = await generarManual(rawData, datosPersona, perfilVisual, comunidadNombre);
         estado = "completo";
       } catch(apiError) {
         console.error("Error al generar perfil visual o manual", apiError);
@@ -705,7 +835,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
           elemento_dominante: rawData?.carta_astral_completa?.elemento_dominante || '',
           autoridad_hd: rawData?.diseno_humano?.autoridad || '',
           antiguedad_anos: datosPersona.antiguedad_anos,
-          rol_arteara: datosPersona.rol_arteara,
+          rol_comunidad: datosPersona.rol_comunidad || datosPersona.rol_arteara,
           estado,
           creadoEn: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -1114,11 +1244,11 @@ export async function saveCruce(id1: string, id2: string, data: any): Promise<vo
   });
 }
 export const SEED_DATA = [
-  { nombre: "Tamarit Benchara", rol_arteara: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria", rol: "propietario" },
-  { nombre: "Yurena Doramas", rol_arteara: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife", rol: "miembro" },
-  { nombre: "Aythami Guayarmina", rol_arteara: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África", rol: "voluntario", fechaSalida: "2026-11-20" },
-  { nombre: "Nakima Tigoraf", rol_arteara: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote", rol: "voluntario", fechaSalida: "2024-01-10" },
-  { nombre: "Bentor Achaman", rol_arteara: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura", rol: "miembro" }
+  { nombre: "Tamarit Benchara", rol_comunidad: "bioconstrucción", antiguedad_anos: 3, genero: "hombre", saberes: "FP en Carpintería, años de experiencia construyendo domos y trabajando la tierra", tension: "Siento que mis aportaciones técnicas no son valoradas igual que las decisiones del núcleo fundador", fechaNacimiento: "15/04/1990", lugar: "Gran Canaria", rol: "propietario" },
+  { nombre: "Yurena Doramas", rol_comunidad: "huerta y semillas", antiguedad_anos: 1, genero: "mujer", saberes: "Grado en Ciencias Ambientales, aficionada a la botánica y permacultura", tension: "Noto dificultad para decir no sin sentirme culpable por decepcionar al grupo", fechaNacimiento: "22/08/1988", lugar: "Tenerife", rol: "miembro" },
+  { nombre: "Aythami Guayarmina", rol_comunidad: "cuidados y espacio común", antiguedad_anos: 2, genero: "no binario", saberes: "Conocimientos autodidactas en mediación de conflictos, cocina comunitaria y terapias holísticas", tension: "Hay una dinámica de triángulos y conversaciones que no incluyen a quien afectan directamente", fechaNacimiento: "10/11/1995", lugar: "Norte de África", rol: "voluntario", fechaSalida: "2026-11-20" },
+  { nombre: "Nakima Tigoraf", rol_comunidad: "facilitación y sociocracia", antiguedad_anos: 4, genero: "mujer", saberes: "Psicóloga especializada en dinámicas de grupos, certificada en Sociocracia 3.0", tension: "Estoy en calma, quiero profundizar en los procesos de toma de decisiones colectivas", fechaNacimiento: "03/02/1985", lugar: "Lanzarote", rol: "voluntario", fechaSalida: "2024-01-10" },
+  { nombre: "Bentor Achaman", rol_comunidad: "música y ritual", antiguedad_anos: 0.5, genero: "hombre", saberes: "Músico multiinstrumentista y luthier aficionado, conectado con las tradiciones canarias", tension: "Soy recién llegado y aún no entiendo bien cómo funciona la estructura del proyecto", fechaNacimiento: "18/07/2000", lugar: "Fuerteventura", rol: "miembro" }
 ];
 
 export async function ensureSeedData(appUserUid: string) {
@@ -1147,7 +1277,7 @@ export async function ensureSeedData(appUserUid: string) {
               lugar: seed.lugar,
               genero: seed.genero,
               saberes: seed.saberes,
-              rol_arteara: seed.rol_arteara,
+              rol_comunidad: seed.rol_comunidad,
               antiguedad_anos: seed.antiguedad_anos,
               tension: seed.tension,
               rol: seed.rol,
@@ -1160,7 +1290,7 @@ export async function ensureSeedData(appUserUid: string) {
               lugar: seed.lugar,
               genero: seed.genero,
               saberes: seed.saberes,
-              rol_arteara: seed.rol_arteara,
+              rol_comunidad: seed.rol_comunidad,
               antiguedad_anos: seed.antiguedad_anos,
               tension: seed.tension,
               rol: seed.rol,
@@ -1238,25 +1368,42 @@ export async function getFichaById(userId: string): Promise<Ficha | null> {
   }
 }
 
-export async function getComunidad(communityId: string): Promise<{ nombre: string; descripcion: string; metodologia: string } | null> {
+
+// --- COMUNIDADES ---
+export const colComunidades = collection(db, 'comunidades');
+
+export async function getComunidades(): Promise<Comunidad[]> {
   try {
-    const snap = await getDoc(doc(db, 'comunidades', communityId));
-    if (snap.exists()) return snap.data() as any;
-    return null;
+    const snap = await getDocs(colComunidades);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comunidad));
   } catch (error) {
-    console.error('Error fetching comunidad:', error);
+    handleFirestoreError(error, OperationType.GET, 'Listar comunidades');
+    return [];
+  }
+}
+
+export async function getComunidad(slug: string): Promise<Comunidad | null> {
+  try {
+    const snap = await getDoc(doc(db, 'comunidades', slug));
+    return snap.exists() ? ({ id: snap.id, ...snap.data() } as Comunidad) : null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, 'Obtener comunidad');
     return null;
   }
 }
 
-export async function ensureComunidadSeed(): Promise<void> {
+/**
+ * Seed inicial para asegurar que Arteara existe.
+ */
+export async function seedArteara() {
   const ref = doc(db, 'comunidades', 'arteara');
   const snap = await getDoc(ref);
   if (!snap.exists()) {
     await setDoc(ref, {
       nombre: 'Arteara',
-      descripcion: 'Comunidad intencional de convivencia en Gran Canaria',
-      metodologia: 'sociocracia'
+      slug: 'arteara',
+      descripcion: 'Comunidad prototipo para el desarrollo de Kanarii.',
+      creadoEn: serverTimestamp()
     });
   }
 }

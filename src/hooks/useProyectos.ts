@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Proyecto } from '../lib/appService';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Hook para gestionar la lista de proyectos en tiempo real.
+ * Hook para gestionar la lista de proyectos en tiempo real filtrados por comunidad.
  * Cumple con el estándar de arquitectura Kanarii: { items, loading, reload }
  */
-export function useProyectos() {
+export function useProyectos(communityId?: string) {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { appUser } = useAuth();
   const [key, setKey] = useState(0);
 
   const reload = useCallback(() => {
@@ -18,8 +20,26 @@ export function useProyectos() {
   }, []);
 
   useEffect(() => {
+    if (!appUser) {
+      setProyectos([]);
+      setLoading(false);
+      return;
+    }
+
+    const activeCommunityId = communityId || appUser.communityId;
+    
+    if (!activeCommunityId) {
+      setProyectos([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const q = query(collection(db, 'proyectos'), orderBy('creadoEn', 'desc'));
+    const q = query(
+      collection(db, 'proyectos'), 
+      where('communityId', '==', activeCommunityId),
+      orderBy('creadoEn', 'desc')
+    );
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
@@ -31,20 +51,14 @@ export function useProyectos() {
         setLoading(false);
       },
       (err) => {
-        console.error("Error en useProyectos snapshot:", err);
+        console.error("Error fetching projects:", err);
         setError(err as Error);
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [key]);
+  }, [appUser, communityId, key]);
 
-  return {
-    proyectos,
-    items: proyectos, // Alias para cumplir firma genérica
-    loading,
-    error,
-    reload
-  };
+  return { items: proyectos, loading, error, reload };
 }

@@ -13,7 +13,7 @@ interface Message {
 }
 
 const INITIAL_STEPS = [
-  { key: 'rol_tipo', q: '¿Cómo llegas a Arteara?', 
+  { key: 'rol_tipo', q: '¿Cómo llegas a la comunidad?', 
     options: [
       { label: 'Soy del núcleo / propietaria o propietario', value: 'propietario' },
       { label: 'Soy miembro de la comunidad', value: 'miembro' },
@@ -33,7 +33,7 @@ const INITIAL_STEPS = [
     ]
   },
   { key: 'saberes', q: 'Todas y todos traemos aprendizajes valiosos. ¿Cuáles son tus saberes, formación o recorrido vital que te acompañan hoy?', example: 'Ejemplos: Sé de agricultura ecológica, me encanta tejer, estuve 10 años como electricista, toco la guitarra, cocino para multitudes...' },
-  { key: 'rol_arteara', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?', example: 'Ejemplos: Colaboro en el huerto, asisto a los círculos de escucha, ayudo con la contabilidad, hago los diseños gráficos...' },
+  { key: 'rol_comunidad', q: 'Cada persona es un hilo vital en nuestra tela de araña cósmica. ¿Cuál sientes que es tu rol, participación o aporte actual dentro de este proyecto y nuestra tribu?', example: 'Ejemplos: Colaboro en el huerto, asisto a los círculos de escucha, ayudo con la contabilidad, hago los diseños gráficos...' },
   { key: 'antiguedad_anos', q: 'El tiempo caminando juntos fortalece nuestros cimientos. ¿Desde cuándo formas parte de la comunidad o sientes tu vinculación a esta red?',
     options: [
       { label: 'Recién llegado/a (menos de 6 meses)', value: '0' },

@@ -11,6 +11,7 @@ import {
   actualizarEstadoProyecto, 
   deleteProyecto
 } from '../lib/appService';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { Briefcase, Plus, Search, Play, Pause, CheckCircle2, Star, Users, UserPlus } from 'lucide-react';
 import { useToast } from '../components/Toaster';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
@@ -33,11 +34,12 @@ const COLUMNS: KanbanColumnDef[] = [
 
 export function ProyectosView() {
   const { appUser } = useAuth();
-  const { items: proyectos, loading: loadingProyectos } = useProyectos();
-  const { tareas, loadingTareas } = useTareas();
+  const { currentCommunityId } = useComunidad();
+  const { items: proyectos, loading: loadingProyectos } = useProyectos(currentCommunityId || 'arteara');
+  const { items: tareas, loading: loadingTareas } = useTareas(currentCommunityId || 'arteara');
   const { ficha: fichaUser, loadingFicha } = useFicha();
   
-  const { getMemberName } = useCommunityMembers();
+  const { getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
   const { startDelete } = useUndoableDelete();
   const { perform } = useEntityActions();
   
@@ -60,13 +62,15 @@ export function ProyectosView() {
 
   const handleCreate = async (data: any) => {
     if (!appUser) return;
-    await perform(crearProyecto({ 
+    const finalData = {
       ...data, 
       lider_uid: appUser.uid, 
-      colaboradores_uid: [], 
+      colaboradores_uid: [appUser.uid], 
+      communityId: currentCommunityId || 'arteara',
       solicitudes_uid: [],
       creadoEn: new Date().toISOString()
-    }), {
+    };
+    await perform(crearProyecto(finalData), {
       successMessage: "Proyecto lanzado con éxito 🚀",
       onSuccess: () => setShowCreateModal(false)
     });

@@ -54,8 +54,11 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Colección `/eventos` en Firestore (CRUD completo).
   - [x] Hook `useEventos` con suscripción real-time.
   - [x] Vista mensual/agenda responsiva y modal de creación.
-- [ ] **2.3 Tablón de necesidades/ofertas**
-  - [ ] "Necesito ayuda con X" / "Ofrezco Y". Posts con respuesta asíncrona.
+- [x] **2.3 Tablón de necesidades/ofertas**
+    - [x] Sistema de Posts (Necesidad/Oferta) con subcolección de respuestas.
+    - [x] Batch atómico para incremento de contador de respuestas.
+    - [x] UI responsiva con filtros por categoría y estado.
+    - [x] Gestión de estados y borrado con Deshacer.
 - [ ] **2.4 Gestión de Propuestas y Consentimiento**
   - [ ] Flujo sociocrático: Crear propuesta → ronda de objeciones → estado (borrador / en proceso / acordada / descartada).
 - [ ] **2.5 Selector de Comunidad**
