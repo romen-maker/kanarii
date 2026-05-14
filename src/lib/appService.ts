@@ -1097,3 +1097,26 @@ export async function getFichaById(userId: string): Promise<Ficha | null> {
     return null;
   }
 }
+
+export async function getComunidad(communityId: string): Promise<{ nombre: string; descripcion: string; metodologia: string } | null> {
+  try {
+    const snap = await getDoc(doc(db, 'comunidades', communityId));
+    if (snap.exists()) return snap.data() as any;
+    return null;
+  } catch (error) {
+    console.error('Error fetching comunidad:', error);
+    return null;
+  }
+}
+
+export async function ensureComunidadSeed(): Promise<void> {
+  const ref = doc(db, 'comunidades', 'arteara');
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      nombre: 'Arteara',
+      descripcion: 'Comunidad intencional de convivencia en Gran Canaria',
+      metodologia: 'sociocracia'
+    });
+  }
+}
