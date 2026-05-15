@@ -15,6 +15,7 @@ import Tablon from './pages/Tablon';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { CruceView } from './pages/CruceView';
+import { ComunidadesView } from './pages/ComunidadesView';
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
 
@@ -27,7 +28,7 @@ function AppContent() {
     success("¡Sistema de feedback activo! ✨");
   }, []);
 
-  const hideNavRoutes = ['/', '/contexto', '/onboarding'];
+  const hideNavRoutes = ['/', '/contexto', '/onboarding', '/comunidades'];
   const showNav = appUser !== null && !hideNavRoutes.includes(location.pathname);
 
   return (
@@ -71,6 +72,7 @@ function AppContent() {
           <Route path="/proyectos" element={<ProtectedRoute><ProyectosView /></ProtectedRoute>} />
           <Route path="/calendario" element={<ProtectedRoute><CalendarioView /></ProtectedRoute>} />
           <Route path="/tablon" element={<ProtectedRoute><Tablon /></ProtectedRoute>} />
+          <Route path="/comunidades" element={<ProtectedRoute><ComunidadesView /></ProtectedRoute>} />
         </Routes>
         
         {showNav && <BottomNav />}

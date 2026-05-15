@@ -8,11 +8,17 @@ export function Welcome() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Solo manejamos el login después de generar una ficha (flujo de onboarding)
     if (appUser) {
+      // 1. Prioridad: Ficha pendiente de onboarding
       const pendingFicha = localStorage.getItem('kanarii_pendingFicha');
       if (pendingFicha) {
         navigate('/ficha-preview');
+        return;
+      }
+
+      // 2. Si no tiene comunidades, forzar descubrimiento
+      if (!appUser.communityIds || appUser.communityIds.length === 0) {
+        navigate('/comunidades');
       }
     }
   }, [appUser, navigate]);

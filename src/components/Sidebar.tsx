@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, ChevronDown, MapPin } from 'lucide-react';
+import { User, LogOut, ChevronDown, MapPin, Compass } from 'lucide-react';
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -46,6 +46,21 @@ export function Sidebar() {
             </button>
           );
         })}
+
+        {/* Explorar comunidades (Solo si ya es miembro) */}
+        {appUser?.communityIds && appUser.communityIds.length > 0 && (
+          <button
+            onClick={() => navigate('/comunidades')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+              location.pathname === '/comunidades'
+                ? 'bg-[#EAE2D6] text-[#4A4E4D] font-medium shadow-sm' 
+                : 'text-[#CB997E] hover:bg-[#CB997E]/10'
+            }`}
+          >
+            <Compass className={`w-5 h-5 ${location.pathname === '/comunidades' ? 'text-[#CB997E]' : 'text-[#CB997E] group-hover:text-[#B58368]'}`} />
+            <span className="text-sm font-medium">Explorar comunidades</span>
+          </button>
+        )}
 
         {isAdmin && adminNavItem && (
           <div className="pt-6 mt-6 border-t border-stone-200/60">

@@ -1574,3 +1574,19 @@ export async function solicitarUnirse(communityId: string, uid: string, mensaje:
     throw error;
   }
 }
+
+export async function getSolicitudPendiente(communityId: string, uid: string): Promise<SolicitudAcceso | null> {
+  try {
+    const q = query(
+      collection(db, 'comunidades', communityId, 'solicitudes'),
+      where('solicitante_uid', '==', uid),
+      where('estado', '==', 'pendiente')
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() } as SolicitudAcceso;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, 'Consultar solicitud pendiente');
+    return null;
+  }
+}
