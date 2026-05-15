@@ -29,12 +29,16 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     init();
   }, []);
 
-  // Sincronizar con el perfil del usuario
+  // Sincronizar con el perfil del usuario (multi-membership)
   useEffect(() => {
-    if (appUser?.communityId) {
-      setCurrentCommunityId(appUser.communityId);
+    if (appUser?.communityIds && appUser.communityIds.length > 0) {
+      // Si el usuario tiene comunidades y la actual no está entre ellas, 
+      // o si la actual es la por defecto y tiene otras, cambiamos.
+      if (!appUser.communityIds.includes(currentCommunityId)) {
+        setCurrentCommunityId(appUser.communityIds[0]);
+      }
     }
-  }, [appUser]);
+  }, [appUser, currentCommunityId]);
 
   // Cargar datos de la comunidad actual
   useEffect(() => {

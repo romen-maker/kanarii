@@ -50,6 +50,11 @@ export interface Comunidad {
   descripcion: string;
   logoUrl?: string;
   creadoEn: any;
+  manifiesto?: string;
+  esPublica?: boolean;
+  requiereAprobacion?: boolean;
+  adminUids?: string[];
+  plan?: 'free' | 'pro';
 }
 
 export interface AppUser {
@@ -59,7 +64,31 @@ export interface AppUser {
   role: 'admin' | 'member' | 'user';
   hasConsented?: boolean;
   hasFicha?: boolean;
-  communityId?: string | null;
+  communityIds: string[];
+  communityId?: string | null; // Compatibilidad: computed del primero
+}
+
+export interface Invitacion {
+  id?: string;
+  communityId: string;
+  creadoPor: string;
+  tipo: 'permanente' | 'caduca' | 'unico_uso';
+  expiraEn?: any;
+  usosMaximos?: number;
+  usosActuales: number;
+  activo: boolean;
+  creadoEn: any;
+}
+
+export interface SolicitudAcceso {
+  id?: string;
+  communityId: string;
+  solicitante_uid: string;
+  mensaje: string;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  creadoEn: any;
+  resueltoPor?: string;
+  resueltoEn?: any;
 }
 
 
@@ -87,6 +116,13 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
 
     if (userDoc.exists()) {
       userData = userDoc.data();
+      // Migración al vuelo si no tiene el array de IDs
+      if (!userData.communityIds && userData.communityId) {
+        userData.communityIds = [userData.communityId];
+      } else if (!userData.communityIds) {
+        userData.communityIds = [];
+      }
+
       // Verificación de rol administrativo (Hardcoded por seguridad inicial)
       if (email === 'romenusabo3@gmail.com' && userData.role !== 'admin') {
         userData.role = 'admin';
@@ -100,7 +136,7 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
         role,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        communityId: null
+        communityIds: []
       };
       await setDoc(userDocRef, userData);
     }
@@ -110,13 +146,16 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
     const fichasSnapshot = await getDocs(fichasQuery);
     const hasFicha = !fichasSnapshot.empty;
 
+    const communityIds = userData.communityIds || [];
+
     return {
       uid,
       email: userData.email,
       displayName: userData.displayName || '',
       role: userData.role ?? 'member',
       hasConsented: userData.hasConsented ?? false,
-      communityId: userData.communityId ?? null,
+      communityIds: communityIds,
+      communityId: communityIds[0] ?? null,
       hasFicha
     };
   } catch (err) {
@@ -1398,12 +1437,140 @@ export async function getComunidad(slug: string): Promise<Comunidad | null> {
 export async function seedArteara() {
   const ref = doc(db, 'comunidades', 'arteara');
   const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      nombre: 'Arteara',
-      slug: 'arteara',
-      descripcion: 'Comunidad prototipo para el desarrollo de Kanarii.',
+  
+  // Buscar UID del admin
+  const userQuery = query(collection(db, 'users'), where('email', '==', 'romenusabo3@gmail.com'));
+  const userSnap = await getDocs(userQuery);
+  const adminUid = userSnap.empty ? null : userSnap.docs[0].id;
+
+  const data: Partial<Comunidad> = {
+    nombre: 'Arteara',
+    slug: 'arteara',
+    descripcion: 'Comunidad prototipo para el desarrollo de Kanarii.',
+    manifiesto: '# Manifiesto de Arteara\n\nBienvenidx a la revolución del cuidado y la autogestión. En Arteara creemos en la inteligencia colectiva y el apoyo mutuo.',
+    esPublica: true,
+    requiereAprobacion: true,
+    plan: 'free',
+    creadoEn: snap.exists() ? snap.data().creadoEn : serverTimestamp()
+  };
+
+  if (adminUid) {
+    data.adminUids = [adminUid];
+  }
+
+  await setDoc(ref, data, { merge: true });
+}
+
+// --- SERVICIOS DE COMUNIDAD V2 ---
+
+export async function getComunidadesPublicas(): Promise<Comunidad[]> {
+  try {
+    const q = query(colComunidades, where('esPublica', '==', true));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comunidad));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, 'Listar comunidades públicas');
+    return [];
+  }
+}
+
+/**
+ * Genera un código de invitación legible (adjetivo-sustantivo-número).
+ */
+function generateInviteCode(): string {
+  const adjetivos = ['valiente', 'sereno', 'vibrante', 'eterno', 'sabio', 'fiel', 'veloz', 'claro', 'noble', 'libre'];
+  const sustantivos = ['sol', 'monte', 'rio', 'viento', 'mar', 'bosque', 'senda', 'luz', 'tierra', 'alma'];
+  const adj = adjetivos[Math.floor(Math.random() * adjetivos.length)];
+  const sus = sustantivos[Math.floor(Math.random() * sustantivos.length)];
+  const num = Math.floor(Math.random() * 90) + 10; // 10-99
+  return `${adj}-${sus}-${num}`;
+}
+
+export async function createInvitacion(communityId: string, creadoPor: string, opciones: Partial<Invitacion>): Promise<string> {
+  try {
+    const codigo = generateInviteCode();
+    await setDoc(doc(db, 'invitaciones', codigo), {
+      communityId,
+      creadoPor,
+      tipo: opciones.tipo || 'permanente',
+      expiraEn: opciones.expiraEn || null,
+      usosMaximos: opciones.usosMaximos || null,
+      usosActuales: 0,
+      activo: true,
       creadoEn: serverTimestamp()
     });
+    return codigo;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'Crear invitación');
+    throw error;
+  }
+}
+
+export async function validateInvitacion(codigo: string): Promise<Invitacion | null> {
+  try {
+    const docRef = doc(db, 'invitaciones', codigo);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
+    
+    const data = snap.data() as Invitacion;
+    if (!data.activo) return null;
+    
+    // Validar expiración
+    if (data.expiraEn && data.expiraEn.toDate() < new Date()) return null;
+    
+    // Validar usos
+    if (data.usosMaximos !== undefined && data.usosMaximos !== null && data.usosActuales >= data.usosMaximos) return null;
+    
+    return { id: snap.id, ...data };
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, 'Validar invitación');
+    return null;
+  }
+}
+
+export async function useInvitacion(codigo: string, uid: string): Promise<void> {
+  try {
+    const inv = await validateInvitacion(codigo);
+    if (!inv) throw new Error('Invitación no válida o agotada');
+
+    const batch = writeBatch(db);
+    
+    // 1. Actualizar invitación
+    const invRef = doc(db, 'invitaciones', codigo);
+    const nuevosUsos = inv.usosActuales + 1;
+    const cambiosInv: any = { usosActuales: nuevosUsos };
+    
+    if (inv.tipo === 'unico_uso' || (inv.usosMaximos && nuevosUsos >= inv.usosMaximos)) {
+      cambiosInv.activo = false;
+    }
+    batch.update(invRef, cambiosInv);
+    
+    // 2. Añadir comunidad al usuario
+    const userRef = doc(db, 'users', uid);
+    batch.update(userRef, {
+      communityIds: arrayUnion(inv.communityId),
+      updatedAt: serverTimestamp()
+    });
+    
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');
+    throw error;
+  }
+}
+
+export async function solicitarUnirse(communityId: string, uid: string, mensaje: string): Promise<void> {
+  try {
+    const solRef = doc(collection(db, 'comunidades', communityId, 'solicitudes'));
+    await setDoc(solRef, {
+      communityId,
+      solicitante_uid: uid,
+      mensaje,
+      estado: 'pendiente',
+      creadoEn: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'Solicitar unirse');
+    throw error;
   }
 }
