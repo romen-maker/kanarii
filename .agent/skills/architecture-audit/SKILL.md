@@ -1,3 +1,8 @@
+---
+name: architecture-audit
+description: Realiza auditorías técnicas del código de Kanarii para detectar violaciones de arquitectura, dependencias incorrectas, duplicidades y componentes fuera de su capa. Actívala antes de un refactor o cuando un archivo supere las 300 líneas.
+---
+
 # Skill: Architecture Audit (Experto en Limpieza)
 
 Realiza auditorías técnicas profundas para asegurar que el código sigue los estándares de arquitectura de Kanarii.
@@ -21,3 +26,7 @@ El resultado debe ser un reporte detallado (como el del plan de implementación)
 
 ## Comando de Activación
 - `/audit` o "Haz una auditoría de arquitectura de [componente/directorio]".
+
+---
+
+*Última actualización: 15 May 2026*

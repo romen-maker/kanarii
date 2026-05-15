@@ -1,59 +1,65 @@
 ---
 name: tech-scout
-description: Realiza investigación técnica para encontrar soluciones Open Source existentes antes de desarrollar desde cero.
+description: Busca, evalúa y compara librerías, paquetes npm y SDKs antes de añadir dependencias al proyecto. Úsala cuando el usuario pregunte qué librería usar, quiera comparar opciones o necesite validar una dependencia nueva.
 ---
 
-# Tech Scout (Explorador Técnico)
+# Tech Scout (Explorador de Dependencias)
 
-Esta habilidad es tu departamento de I+D personal. Su misión es evitar reinventar la rueda buscando bibliotecas, herramientas o componentes de código abierto que ya resuelvan el problema planteado.
+Esta habilidad es tu departamento de I+D personal. Su misión es evitar reinventar la rueda buscando bibliotecas, herramientas o SDKs dentro del ecosistema npm que ya resuelvan el problema planteado, asegurando compatibilidad con el stack de Kanarii.
 
 ## Prerrequisitos
-- Acceso a herramientas de búsqueda (`perplexity`, `search_web`, `search_repositories` de GitHub).
+- Acceso a herramientas de búsqueda (`perplexity`, `search_web`).
 
 ## Instrucciones
 
 ### 1. Análisis de Requerimientos
-Antes de buscar, define:
-- **Lenguaje**: (Python, JS, etc.)
+Antes de buscar, define los criterios técnicos del stack:
+- **Lenguaje**: TypeScript (TS).
+- **Framework**: React.
+- **Ecosistema**: Vite + Firebase (Firestore/Auth).
 - **Funcionalidad Clave**: ¿Qué debe hacer exactamente?
-- **Licencia Permitida**: MIT, Apache 2.0, BSD (según `.agent/context/tools-policy.md`).
 
 ### 2. Ejecución de Búsqueda
 Usa las herramientas disponibles en este orden de preferencia:
 
-1.  **Perplexity** (Si disponible):
-    - Prompt: "Find best open source [language] libraries for [task]. Prioritize active maintenance, MIT/Apache license. Compare top 3 options."
-2.  **GitHub Search**:
-    - Query: `topic:[task] language:[language] stars:>100 sort:updated`
-3.  **Web Search**:
-    - Query: "best python library for [task] 2025 open source"
+1.  **Perplexity**:
+    - Prompt: "Find best npm packages for [task] in a React + Vite + Firebase environment. Prioritize active maintenance and TypeScript support. Compare top 3 options."
+2.  **Web Search (Reddit & StackOverflow)**:
+    - Query: "best react library for [task] reddit"
+    - Query: "[library-A] vs [library-B] react 2025"
+3.  **Búsqueda Técnica (NPM Trends / Bundlephobia)**:
+    - Investiga el volumen de descargas y el peso del bundle si la información no es clara en los pasos anteriores.
 
-### 3. Evaluación (Scorecard)
-Para cada candidato prometedor, verifica:
-- [ ] **Licencia**: ¿Es permisiva?
-- [ ] **Actividad**: ¿Último commit hace < 6 meses?
-- [ ] **Popularidad**: Estrellas/Descargas (proxy de estabilidad).
-- [ ] **Documentación**: ¿Tiene README claro y ejemplos?
+### 3. Evaluación (Matriz de Calidad)
+Para cada candidato, evalúa los siguientes puntos:
 
-- [ ] **Documentación**: ¿Tiene README claro y ejemplos?
+| Criterio | Requerimiento MVP |
+| :--- | :--- |
+| **Compatibilidad** | Soporte para React, Vite (ESM) y Firebase. |
+| **TypeScript** | Tipado nativo (preferido) o `@types` de calidad. |
+| **Peso (Bundle)** | Tamaño ligero para no penalizar el rendimiento móvil. |
+| **Actividad** | Commits frecuentes y buena gestión de issues. |
+| **Licencia** | Permisiva (MIT, Apache 2.0). |
+| **Riesgo Lock-in** | Nivel de dependencia de servicios externos no-Firebase. |
 
-### 4. Validación Social (Reddit)
-Antes de decidir, busca opiniones reales en la comunidad:
-1. Usa `reddit-tracker` en modo búsqueda:
-   ```bash
-   .venv/bin/python .agent/skills/reddit-tracker/scripts/search_subreddit.py python "best library for [task]"
-   ```
-2. Busca hilos de "X vs Y" para ver quejas comunes o recomendaciones.
-3. Si la comunidad odia una herramienta, anótalo como bandera roja.
+### 4. Validación Social
+Busca opiniones reales para detectar "banderas rojas":
+- Hilos de Reddit sobre problemas de performance o bugs conocidos.
+- Dificultades de integración reportadas en StackOverflow.
+- Facilidad de uso y calidad de la documentación.
 
 ### 5. Reporte de Resultados
-Presenta al usuario (o al plan) una tabla comparativa:
+Presenta al usuario una tabla comparativa clara:
 
-| Solución | Licencia | Actividad | Pros | Contras | Recomendación |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `lib-A` | MIT | Alta | Rápida, Ligera | Poca doc | ✅ Opción #1 |
-| `lib-B` | GPL | Media | Potente | Licencia vírica | ❌ Descartada |
+| Librería | Licencia | Peso | Compatibilidad | Pros | Contras | Recomendación |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `lib-A` | MIT | 5kb | Alta | Nativa TS, Ligera | Pocos temas | ✅ Opción #1 |
+| `lib-B` | Apache | 45kb | Media | Muy potente | Pesada, no-ESM | ⚠️ Solo si necesitas X |
 
 ### 6. Acción Post-Scout
-- Si hay un ganador claro: **Proponer usarlo (`pip install`)**.
-- Si no hay opciones viables: **Proceder a construir desde cero (Custom)**.
+- Si hay un ganador claro: **Proponer usarlo (`npm install [package]`)**.
+- Si no hay opciones viables: **Proceder a construir una solución personalizada (Custom)**.
+
+---
+
+*Última actualización: 15 May 2026*
