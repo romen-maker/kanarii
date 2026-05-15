@@ -1590,3 +1590,54 @@ export async function getSolicitudPendiente(communityId: string, uid: string): P
     return null;
   }
 }
+
+export async function resolverSolicitud(
+  communityId: string,
+  solicitudId: string,
+  decision: 'aprobada' | 'rechazada',
+  adminUid: string
+): Promise<void> {
+  try {
+    const solRef = doc(db, 'comunidades', communityId, 'solicitudes', solicitudId);
+    const solSnap = await getDoc(solRef);
+    if (!solSnap.exists()) throw new Error('La solicitud no existe');
+    
+    const solicitud = solSnap.data() as SolicitudAcceso;
+    const batch = writeBatch(db);
+    
+    // 1. Actualizar solicitud
+    batch.update(solRef, {
+      estado: decision,
+      resueltoPor: adminUid,
+      resueltoEn: serverTimestamp()
+    });
+    
+    // 2. Si es aprobada, añadir comunidad al usuario
+    if (decision === 'aprobada') {
+      const userRef = doc(db, 'users', solicitud.solicitante_uid);
+      batch.update(userRef, {
+        communityIds: arrayUnion(communityId),
+        updatedAt: serverTimestamp()
+      });
+    }
+    
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'Resolver solicitud');
+    throw error;
+  }
+}
+
+export function listenSolicitudes(
+  communityId: string, 
+  callback: (solicitudes: SolicitudAcceso[]) => void
+) {
+  const q = query(
+    collection(db, 'comunidades', communityId, 'solicitudes'),
+    orderBy('creadoEn', 'desc')
+  );
+  return onSnapshot(q, (snap) => {
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SolicitudAcceso));
+    callback(list);
+  });
+}

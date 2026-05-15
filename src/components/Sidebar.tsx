@@ -1,19 +1,51 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, ChevronDown, MapPin, Compass } from 'lucide-react';
+import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck } from 'lucide-react';
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
+import { listenSolicitudes } from '../lib/appService';
+import { useState, useEffect } from 'react';
 
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, appUser, logout } = useAuth();
   const { comunidad, comunidades, setCommunityId } = useComunidad();
+  const [pendingCount, setPendingCount] = useState(0);
 
   const isAdmin = appUser?.role === 'admin';
+  const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+
+  useEffect(() => {
+    // Si no hay comunidad, no somos admin de comunidad, o no hay usuario, limpiar y salir
+    if (!comunidad?.id || !isCommunityAdmin || !appUser?.uid) {
+      setPendingCount(0);
+      return;
+    }
+
+    try {
+      const unsubscribe = listenSolicitudes(comunidad.id, (list) => {
+        const count = list.filter(s => s.estado === 'pendiente').length;
+        setPendingCount(count);
+      });
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error suscribiéndose a solicitudes:", error);
+      setPendingCount(0);
+    }
+  }, [comunidad?.id, isCommunityAdmin, appUser?.uid]);
   
   // Dividimos los items en principales y admin
-  const mainNavItems = navigationConfig.filter(item => !item.adminOnly);
+  const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
+
+  const mainNavItems = navigationConfig.filter(item => {
+    if (item.adminOnly) return false;
+    // Si el usuario no tiene comunidades, solo permitimos Inicio y Ficha
+    if (!hasCommunities) {
+      return ['Inicio', 'Mi Ficha'].includes(item.label);
+    }
+    return true;
+  });
   const adminNavItem = navigationConfig.find(item => item.adminOnly);
 
   return (
@@ -59,6 +91,25 @@ export function Sidebar() {
           >
             <Compass className={`w-5 h-5 ${location.pathname === '/comunidades' ? 'text-[#CB997E]' : 'text-[#CB997E] group-hover:text-[#B58368]'}`} />
             <span className="text-sm font-medium">Explorar comunidades</span>
+          </button>
+        )}
+        {/* Solicitudes de acceso (Solo admins de la comunidad) */}
+        {isCommunityAdmin && (
+          <button
+            onClick={() => navigate('/admin/solicitudes')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+              location.pathname === '/admin/solicitudes'
+                ? 'bg-[#EAE2D6] text-[#4A4E4D] font-medium shadow-sm' 
+                : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700'
+            }`}
+          >
+            <ShieldCheck className={`w-5 h-5 ${location.pathname === '/admin/solicitudes' ? 'text-[#6B705C]' : 'text-stone-400 group-hover:text-stone-600'}`} />
+            <span className="text-sm">Solicitudes</span>
+            {pendingCount > 0 && (
+              <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                {pendingCount}
+              </span>
+            )}
           </button>
         )}
 
