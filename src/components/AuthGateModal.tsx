@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Loader2, Leaf, Chrome, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Mail, Loader2, Leaf, Chrome, ArrowRight, CheckCircle2, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthGateModalProps {
   isOpen: boolean;
+  title?: string;
+  subtitle?: string;
+  onClose?: () => void;
 }
 
-export function AuthGateModal({ isOpen }: AuthGateModalProps) {
+export function AuthGateModal({ isOpen, title, subtitle, onClose }: AuthGateModalProps) {
   const { login, sendMagicLink } = useAuth();
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -29,11 +32,18 @@ export function AuthGateModal({ isOpen }: AuthGateModalProps) {
     setIsSending(true);
     setError(null);
     try {
-      await sendMagicLink(email.trim());
+      const fichaRaw = localStorage.getItem('kanarii_pendingFicha');
+      const ficha = fichaRaw ? JSON.parse(fichaRaw) : undefined;
+      
+      await sendMagicLink(email.trim(), ficha);
       setSentTo(email.trim());
     } catch (err: any) {
-      console.error("Magic link error:", err);
-      setError("No pudimos enviar el enlace. Verifica el email e inténtalo de nuevo.");
+      console.error("Magic link error detailed:", err.code, err.message);
+      if (err.code === 'auth/operation-not-allowed') {
+        setError("El proveedor Magic Link no está habilitado. Actívalo en Firebase Console → Authentication → Sign-in method → Email link.");
+      } else {
+        setError("No pudimos enviar el enlace. Verifica el email e inténtalo de nuevo.");
+      }
     } finally {
       setIsSending(false);
     }
@@ -56,14 +66,24 @@ export function AuthGateModal({ isOpen }: AuthGateModalProps) {
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         className="relative w-full max-w-md bg-[#FDFBF7] rounded-[2rem] shadow-2xl border border-[#EAE2D6] overflow-hidden"
       >
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors z-10"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
         <div className="p-8 pt-10 text-center">
           <div className="w-16 h-16 bg-[#EAE2D6] rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Leaf className="w-8 h-8 text-[#6B705C]" />
           </div>
           
-          <h2 className="text-2xl font-serif text-[#4A4E4D] mb-2">Guarda tu ficha</h2>
+          <h2 className="text-2xl font-serif text-[#4A4E4D] mb-2">
+            {title || "Guarda tu ficha"}
+          </h2>
           <p className="text-stone-600 mb-8 px-4">
-            Crea tu cuenta para no perder tu conversación de acogida y formar parte de la tribu.
+            {subtitle || "Crea tu cuenta para no perder tu conversación de acogida y formar parte de la tribu."}
           </p>
 
           <AnimatePresence mode="wait">
@@ -130,7 +150,7 @@ export function AuthGateModal({ isOpen }: AuthGateModalProps) {
                 key="success"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="py-6 space-y-6"
+                className="py-6 space-y-6 text-center"
               >
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto text-green-500">
                   <CheckCircle2 className="w-10 h-10" />
@@ -141,6 +161,14 @@ export function AuthGateModal({ isOpen }: AuthGateModalProps) {
                   <p className="text-stone-500 text-sm leading-relaxed px-4">
                     Te enviamos un enlace a <span className="font-bold text-stone-700">{sentTo}</span>. 
                     Haz clic en él para guardar tu ficha y entrar.
+                  </p>
+                </div>
+
+                <div className="bg-[#F9F7F1] p-4 rounded-2xl flex items-start gap-3 text-left border border-[#EAE2D6]">
+                  <AlertCircle className="w-5 h-5 text-[#CB997E] flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-stone-600">
+                    <span className="font-semibold block mb-1 text-[#4A4E4D]">¿No lo ves?</span>
+                    Revisa también la carpeta de spam o correo no deseado. A veces los enlaces mágicos se pierden por ahí.
                   </p>
                 </div>
 

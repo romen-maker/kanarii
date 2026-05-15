@@ -41,6 +41,7 @@ export function CruceView() {
   const { perform } = useEntityActions();
   
   const { currentCommunityId } = useComunidad();
+  const sinComunidad = !appUser?.communityIds?.length;
   
   const [perfil1Id, setPerfil1Id] = useState<string>('');
   const [perfil2Id, setPerfil2Id] = useState<string>('');
@@ -147,6 +148,28 @@ export function CruceView() {
   };
 
   const getNombre = (ficha: Ficha) => ficha.datosPersona?.nombre || ficha.datosOnboarding?.nombre || 'Desconocido';
+
+  if (sinComunidad) {
+    return (
+      <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center justify-center pb-20 md:pb-6">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 text-center">
+          <div className="w-16 h-16 bg-[#F9F7F1] rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShieldAlert className="w-8 h-8 text-[#A5A58D]" />
+          </div>
+          <h2 className="text-2xl font-serif text-[#4A4E4D] mb-4">Acceso Reservado</h2>
+          <p className="text-stone-600 mb-8">
+            El Cruce de Perfiles es una herramienta para miembros de comunidades. Únete a una tribu para empezar a explorar compatibilidades.
+          </p>
+          <button 
+            onClick={() => navigate('/comunidades')}
+            className="w-full bg-[#6B705C] hover:bg-[#4A4E4D] text-white px-8 py-3 rounded-xl font-medium transition-colors shadow-sm"
+          >
+            Explorar Comunidades
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">

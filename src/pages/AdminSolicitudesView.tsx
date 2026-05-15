@@ -29,7 +29,9 @@ import {
   listenInvitaciones,
   createInvitacion,
   desactivarInvitacion,
-  getAppUserDoc 
+  getAppUserDoc,
+  getFichaById,
+  Ficha
 } from '../lib/appService';
 
 // --- COMPONENTES AUXILIARES ---
@@ -47,13 +49,25 @@ const SolicitudCard: React.FC<{
   isResolved?: boolean;
 }> = ({ solicitud, onApprove, onReject, isExecuting, isResolved = false }) => {
   const [profile, setProfile] = useState<SolicitanteProfile | null>(null);
+  const [ficha, setFicha] = useState<Ficha | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
-    getAppUserDoc(solicitud.solicitante_uid).then(data => {
-      if (data) setProfile(data as SolicitanteProfile);
-      setLoadingProfile(false);
-    });
+    const loadData = async () => {
+      try {
+        const [profileData, fichaData] = await Promise.all([
+          getAppUserDoc(solicitud.solicitante_uid),
+          getFichaById(solicitud.solicitante_uid).catch(() => null)
+        ]);
+        if (profileData) setProfile(profileData as SolicitanteProfile);
+        if (fichaData) setFicha(fichaData);
+      } catch (e) {
+        console.error("Error loading solicitante info", e);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    loadData();
   }, [solicitud.solicitante_uid]);
 
   const initials = profile?.displayName 
@@ -104,6 +118,37 @@ const SolicitudCard: React.FC<{
               "{solicitud.mensaje}"
             </p>
           </div>
+
+          {/* Ficha vinculada */}
+          {!loadingProfile && (
+            <div className="bg-[#F9F7F1]/50 border border-[#EAE2D6]/40 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">
+                <ShieldCheck className="w-3 h-3" />
+                Contexto Galáctico
+              </div>
+              
+              {ficha ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-[9px] text-stone-400 uppercase font-bold">Rol</div>
+                    <div className="text-sm font-serif text-[#4A4E4D]">{ficha.datosPersona?.rol || 'No definido'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-stone-400 uppercase font-bold">Saberes</div>
+                    <div className="text-sm text-stone-600 truncate">{ficha.datosPersona?.saberes || 'No definidos'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-stone-400 uppercase font-bold">Tensión</div>
+                    <div className="text-sm text-stone-600">{ficha.datosPersona?.tension_creativa || 'N/A'}</div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-stone-400 italic">
+                  Este solicitante aún no ha completado su ficha de perfil.
+                </p>
+              )}
+            </div>
+          )}
 
           {!isResolved && (
             <div className="flex flex-col sm:flex-row gap-3 pt-2">

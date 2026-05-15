@@ -45,6 +45,7 @@ export function FichaPreview() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'save' | 'generate' | null>(null);
   const syncInProgress = useRef(false);
 
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -85,6 +86,12 @@ export function FichaPreview() {
   };
 
   const handleGenerateManual = async () => {
+    if (!appUser) {
+      setPendingAction('generate');
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     setIsGenerating(true);
     try {
       let latitud = pendingFicha.latitud ? parseFloat(pendingFicha.latitud.toString()) : 0;
@@ -125,22 +132,29 @@ export function FichaPreview() {
   };
 
   useEffect(() => {
-    if (appUser && isSaving && !syncInProgress.current) {
-      syncInProgress.current = true;
-      (async () => {
-        const fichaId = await syncPendingOnboarding(appUser.uid);
-        if (fichaId && generatedManual) {
-          try {
-            await saveManual(appUser.uid, generatedManual, fichaId);
-          } catch (e) {
-            console.error("Failed to default manual:", e);
+    if (appUser && pendingAction && !syncInProgress.current) {
+      setIsAuthModalOpen(false);
+      if (pendingAction === 'save') {
+        syncInProgress.current = true;
+        (async () => {
+          const fichaId = await syncPendingOnboarding(appUser.uid);
+          if (fichaId && generatedManual) {
+            try {
+              await saveManual(appUser.uid, generatedManual, fichaId);
+            } catch (e) {
+              console.error("Failed to default manual:", e);
+            }
           }
-        }
-        await updateConsent();
-        navigate('/ficha');
-      })();
+          await updateConsent();
+          setPendingAction(null);
+          navigate('/ficha');
+        })();
+      } else if (pendingAction === 'generate') {
+        setPendingAction(null);
+        handleGenerateManual();
+      }
     }
-  }, [appUser, isSaving, navigate, updateConsent, generatedManual]);
+  }, [appUser, pendingAction, generatedManual, updateConsent, navigate]);
 
   if (!pendingFicha) {
     return (
@@ -152,6 +166,7 @@ export function FichaPreview() {
 
   const handleSaveClick = async () => {
     if (!appUser) {
+      setPendingAction('save');
       setIsAuthModalOpen(true);
       setIsSaving(true);
     } else {
@@ -454,7 +469,15 @@ export function FichaPreview() {
         )}
       </div>
 
-      <AuthGateModal isOpen={isAuthModalOpen && !appUser} />
+      <AuthGateModal 
+        isOpen={isAuthModalOpen && !appUser} 
+        title={pendingAction === 'generate' ? "Genera tu Manual Galáctico" : undefined}
+        subtitle={pendingAction === 'generate' ? "Introduce tu email para generar tu manual personalizado. También te enviaremos recursos y novedades de la comunidad de vez en cuando." : undefined}
+        onClose={() => {
+          setPendingAction(null);
+          setIsAuthModalOpen(false);
+        }}
+      />
     </div>
   );
 }

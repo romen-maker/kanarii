@@ -68,9 +68,15 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Página de Descubrimiento (`/comunidades`): Listado público y manifiestos.
   - [x] Acceso por Invitación: Modal para introducir código y unirse.
   - [x] Solicitudes de Acceso: Flujo de aprobación para comunidades privadas.
-  - [x] Panel de Administración de Solicitudes: Aprobación/Rechazo en tiempo real (Paso 3 ✅).
+  - [x] Panel de Administración de Solicitudes: Aprobación/Rechazo en tiempo real con vista previa de ficha (Paso 3 ✅).
   - [x] Paso 4: Generación de códigos de invitación desde el panel admin (Completado ✅).
   - [x] Selector de comunidad en Sidebar para usuarios multi-comunidad.
+- [x] **2.6 Onboarding y Seguridad de Autenticación (Foco Actual 🎯)**
+  - [x] **AuthGateModal Reutilizable**: Sistema de autenticación *just-in-time* escapable con soporte para Google y Magic Link (con detección de errores de proveedor).
+  - [x] **Persistencia Cross-Device**: Guardado de fichas en `/fichas_pendientes` (Firestore) antes de la autenticación para evitar pérdida de datos.
+  - [x] **Migración Determinista**: Recuperación automática de datos del onboarding tras el login en cualquier dispositivo/navegador.
+  - [x] **Membership Guards**: Restricción de acceso a herramientas core (ej: CruceView) para usuarios sin comunidad, con flujo de reconducción.
+  - [x] **Aviso de Spam y UX**: Mejorada la comunicación en el flujo de Magic Link con avisos de carpeta de spam y cierres automáticos de modal.
 
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**

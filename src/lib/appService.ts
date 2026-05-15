@@ -856,49 +856,121 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
     
     cleanUndefined(fichaFull);
 
-    // 1) Guardar en /profiles/{userId}
-    try {
-        const profileRef = doc(db, 'profiles', userId);
-        await setDoc(profileRef, fichaFull, { merge: true });
-    } catch (err) {
-        handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'profiles');
-        throw err;
-    }
-
-    // 2) Guardar en /community_members/{userId}
-    try {
-        const memberRef = doc(db, 'community_members', userId);
-        await setDoc(memberRef, {
-          nombre: datosPersona.nombre,
-          tipo_hd: rawData?.diseno_humano?.tipo || '',
-          elemento_dominante: rawData?.carta_astral_completa?.elemento_dominante || '',
-          autoridad_hd: rawData?.diseno_humano?.autoridad || '',
-          antiguedad_anos: datosPersona.antiguedad_anos,
-          rol_comunidad: datosPersona.rol_comunidad || datosPersona.rol_arteara,
-          estado,
-          creadoEn: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
-    } catch (err) {
-        handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
-        throw err;
-    }
-
-    // 3) We also keep the update in `fichas` for backwards compatibility just in case there are missing places that read it:
-    try {
-        const fichaRef = isUpdate ? doc(db, 'fichas', existingId) : doc(db, 'fichas', userId);
-        await setDoc(fichaRef, fichaFull, { merge: true });
-    } catch (err) {
-        handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'fichas');
-        throw err;
-    }
-
-    return docRefId;
+    // 1 & 2) Guardar en /profiles y /community_members
+    await _writeFichaRaw(userId, fichaFull, isUpdate);
+    
+    return userId;
   } catch (err) {
-    console.error("Error outside of setDoc sections:", err);
+    console.error("Critical error in saveFicha:", err);
     throw err;
   }
 }
+
+/**
+ * Función interna de escritura directa a Firestore.
+ * Evita duplicar lógica entre guardado normal y migración desde pendiente.
+ */
+async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: boolean = true) {
+  // 1) Guardar en /profiles/{userId}
+  try {
+    const profileRef = doc(db, 'profiles', userId);
+    await setDoc(profileRef, fichaFull, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'profiles');
+    throw err;
+  }
+
+  // 2) Guardar en /community_members/{userId}
+  try {
+    const memberRef = doc(db, 'community_members', userId);
+    const data = fichaFull.datosPersona;
+    await setDoc(memberRef, {
+      nombre: data.nombre,
+      tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
+      elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
+      autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
+      antiguedad_anos: data.antiguedad_anos,
+      rol_comunidad: data.rol_comunidad,
+      estado: fichaFull.estado,
+      creadoEn: fichaFull.createdAt || serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      userId
+    }, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
+  }
+
+  // 3) Mantener en /fichas para compatibilidad hacia atrás
+  try {
+    const fichaRef = doc(db, 'fichas', userId);
+    await setDoc(fichaRef, fichaFull, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'fichas');
+  }
+}
+
+/**
+ * Persiste temporalmente la ficha en Firestore antes de enviar el Magic Link.
+ * Esto permite que el usuario recupere su progreso si abre el link en otro dispositivo.
+ * 
+ * CONFIGURACIÓN MANUAL REQUERIDA EN FIREBASE CONSOLE:
+ * Firestore → fichas_pendientes → TTL policy (Campo: expiresAt)
+ */
+export async function guardarFichaPendiente(email: string, ficha: any): Promise<void> {
+  if (!email || !ficha) return;
+  
+  try {
+    const docRef = doc(db, 'fichas_pendientes', email.toLowerCase().trim());
+    await setDoc(docRef, {
+      ...ficha,
+      email: email.toLowerCase().trim(),
+      creadoEn: serverTimestamp(),
+      // Expira en 48 horas (TTL)
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000)
+    });
+  } catch (err) {
+    console.error("Error al guardar ficha pendiente:", err);
+    // No bloqueamos el flujo principal si esto falla
+  }
+}
+
+/**
+ * Migra una ficha desde /fichas_pendientes a /profiles/{uid} de forma directa.
+ * Se usa tras un login exitoso por Magic Link.
+ */
+export async function migrarFichaPendiente(email: string, uid: string): Promise<boolean> {
+  if (!email || !uid) return false;
+  
+  try {
+    const pendingRef = doc(db, 'fichas_pendientes', email.toLowerCase().trim());
+    const snap = await getDoc(pendingRef);
+    
+    if (snap.exists()) {
+      const data = snap.data();
+      
+      // La ficha pendiente ya viene con la estructura de saveFicha (o casi)
+      // Si el onboarding guardó 'kanarii_pendingFicha', esa es la estructura de fichaFull
+      // Si guardó el formData plano, tendríamos un problema, pero syncPendingOnboarding
+      // usa saveFicha que genera el fichaFull.
+      
+      // REGLA: Si en /fichas_pendientes guardamos el fichaFull ya listo:
+      await _writeFichaRaw(uid, {
+        ...data,
+        userId: uid,
+        updatedAt: serverTimestamp()
+      }, false);
+      
+      // Limpiar tras migrar
+      await deleteDoc(pendingRef);
+      return true;
+    }
+  } catch (err) {
+    console.error("Error al migrar ficha pendiente:", err);
+  }
+  
+  return false;
+}
+
 
 export async function saveManual(userId: string, manualGenerado: string, existingId: string) {
   try {

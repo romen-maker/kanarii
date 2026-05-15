@@ -10,7 +10,7 @@ import {
   isSignInWithEmailLink
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { AppUser, getAppUser, updateAppUserConsent } from '../lib/appService';
+import { AppUser, getAppUser, updateAppUserConsent, guardarFichaPendiente } from '../lib/appService';
 
 interface AuthContextType {
   user: User | null;
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithPopup(auth, provider);
   };
 
-  const sendMagicLink = async (email: string) => {
+  const sendMagicLink = async (email: string, ficha?: any) => {
     const actionCodeSettings = {
       // TODO PRODUCCIÓN: cambiar por dominio real
       url: window.location.origin + '/auth/callback',
@@ -71,6 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     await sendSignInLinkToEmail(auth, email, actionCodeSettings);
     setMemoryEmail(email);
+
+    if (ficha) {
+      // Guardado silencioso en Firestore para recuperación cross-device
+      await guardarFichaPendiente(email, ficha);
+    }
   };
 
   const completeMagicLinkLogin = async (email: string, link: string) => {
