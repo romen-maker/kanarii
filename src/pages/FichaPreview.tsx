@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
+import { AuthGateModal } from '../components/AuthGateModal';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -43,6 +44,7 @@ export function FichaPreview() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const syncInProgress = useRef(false);
 
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -150,7 +152,7 @@ export function FichaPreview() {
 
   const handleSaveClick = async () => {
     if (!appUser) {
-      await login();
+      setIsAuthModalOpen(true);
       setIsSaving(true);
     } else {
       setIsSaving(true);
@@ -323,7 +325,7 @@ export function FichaPreview() {
                     className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm cursor-pointer"
                   >
                     <Edit2 className="w-4 h-4" />
-                    <span className="text-sm font-medium">✏️ Editar datos</span>
+                    <span className="text-sm font-medium">Editar datos</span>
                   </button>
                 </div>
                 
@@ -392,13 +394,25 @@ export function FichaPreview() {
                   </div>
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                <div className="mt-8 flex flex-col md:flex-row justify-end gap-4">
                   <button
                     onClick={handleGenerateManual}
-                    className="w-full md:w-auto bg-[#CB997E] hover:bg-[#B58368] text-white py-4 px-8 rounded-2xl font-medium transition-colors shadow-sm text-lg cursor-pointer flex justify-center items-center gap-2"
+                    className="flex-1 md:flex-none bg-[#CB997E] hover:bg-[#B58368] text-white py-4 px-8 rounded-2xl font-medium transition-colors shadow-sm text-lg cursor-pointer flex justify-center items-center gap-2"
                   >
                     <Sparkles className="w-5 h-5"/>
                     ✨ Generar mi Manual Galáctico
+                  </button>
+                  
+                  <button
+                    onClick={handleSaveClick}
+                    disabled={isSaving}
+                    className="flex-1 md:flex-none bg-[#A5A58D] hover:bg-[#6B705C] text-white py-4 px-8 rounded-2xl font-medium transition-colors shadow-sm text-lg cursor-pointer flex justify-center items-center"
+                  >
+                    {isSaving ? (
+                      <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Guardando...</span>
+                    ) : (
+                      'Guardar ficha sin manual'
+                    )}
                   </button>
                 </div>
               </div>
@@ -439,6 +453,8 @@ export function FichaPreview() {
           </div>
         )}
       </div>
+
+      <AuthGateModal isOpen={isAuthModalOpen && !appUser} />
     </div>
   );
 }
