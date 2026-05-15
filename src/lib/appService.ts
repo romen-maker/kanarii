@@ -1506,6 +1506,34 @@ export async function createInvitacion(communityId: string, creadoPor: string, o
   }
 }
 
+export async function desactivarInvitacion(codigo: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'invitaciones', codigo);
+    await updateDoc(docRef, {
+      activo: false,
+      desactivadoEn: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'Desactivar invitación');
+    throw error;
+  }
+}
+
+export function listenInvitaciones(
+  communityId: string,
+  callback: (invitaciones: Invitacion[]) => void
+) {
+  const q = query(
+    collection(db, 'invitaciones'),
+    where('communityId', '==', communityId),
+    orderBy('creadoEn', 'desc')
+  );
+  return onSnapshot(q, (snap) => {
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invitacion));
+    callback(list);
+  });
+}
+
 export async function validateInvitacion(codigo: string): Promise<Invitacion | null> {
   try {
     const docRef = doc(db, 'invitaciones', codigo);
