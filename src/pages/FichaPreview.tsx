@@ -2,8 +2,9 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Fingerprint, Sparkles, Users, HeartPulse, Leaf, Loader2, Edit2, Check, X, MapPin } from 'lucide-react';
-import { syncPendingOnboarding, saveManual, calcularDatosBrutos, calcularDimensiones } from '../lib/appService';
+import { syncPendingOnboarding, saveManual, calcularDatosBrutos, calcularDimensiones, getFichaById, _writeFichaRaw } from '../lib/appService';
 import { generarPerfilVisual, generarManual } from '../lib/gemini';
+import { useToast } from '../hooks/useToast';
 import Markdown from 'react-markdown';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +37,7 @@ type FichaFormData = z.infer<typeof fichaSchema>;
 export function FichaPreview() {
   const { appUser, login, updateConsent } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [pendingFicha, setPendingFicha] = useState<any>(() => JSON.parse(localStorage.getItem('kanarii_pendingFicha') || 'null'));
   
   const [estadoVista, setEstadoVista] = useState<'datos' | 'manual'>('datos');
@@ -94,6 +96,21 @@ export function FichaPreview() {
 
     setIsGenerating(true);
     try {
+      // FIX 2 — Guardar ficha automáticamente si no existe antes de llamar a IA
+      const fichaExistente = await getFichaById(appUser.uid).catch(() => null);
+      if (!fichaExistente) {
+        // Normalizar datos para _writeFichaRaw
+        const horaVal = !pendingFicha.hora || pendingFicha.hora.trim() === '00:00' ? '00:00' : pendingFicha.hora;
+        const baseFicha = {
+          userId: appUser.uid,
+          datosPersona: { ...pendingFicha, hora: horaVal },
+          datosOnboarding: { ...pendingFicha, hora: horaVal },
+          datosBrutos: null,
+          estado: 'capa1_completa',
+        };
+        await _writeFichaRaw(appUser.uid, baseFicha, false);
+      }
+
       let latitud = pendingFicha.latitud ? parseFloat(pendingFicha.latitud.toString()) : 0;
       let longitud = pendingFicha.longitud ? parseFloat(pendingFicha.longitud.toString()) : 0;
       let timezone = pendingFicha.timezone || 'UTC';
@@ -116,16 +133,19 @@ export function FichaPreview() {
       const perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
       const manualText = await generarManual(rawData, datosPersona, perfilVisual);
 
-      // Save previewed state locally so sync doesn't have to re-fetch if we decide to
       const updatedFicha = { ...pendingFicha, preview_perfilVisual: perfilVisual, preview_manual: manualText, preview_dimensiones: dimensiones };
       setPendingFicha(updatedFicha);
       localStorage.setItem('kanarii_pendingFicha', JSON.stringify(updatedFicha));
 
       setGeneratedManual(manualText);
       setEstadoVista('manual');
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to generate manual", e);
-      alert("Hubo un error al generar tu perfil. ¡Inténtalo más tarde o guarda tus datos sin generarlo ahora!");
+      toast({
+        title: "Error al generar manual",
+        description: e.message || "Hubo un problema. Inténtalo de nuevo.",
+        variant: "destructive"
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -134,23 +154,37 @@ export function FichaPreview() {
   useEffect(() => {
     if (appUser && pendingAction && !syncInProgress.current) {
       setIsAuthModalOpen(false);
-      if (pendingAction === 'save') {
+      
+      const action = pendingAction;
+      setPendingAction(null); // Limpiar primero para evitar re-ejecuciones
+
+      if (action === 'save') {
         syncInProgress.current = true;
         (async () => {
-          const fichaId = await syncPendingOnboarding(appUser.uid);
-          if (fichaId && generatedManual) {
-            try {
-              await saveManual(appUser.uid, generatedManual, fichaId);
-            } catch (e) {
-              console.error("Failed to default manual:", e);
+          try {
+            const fichaId = await syncPendingOnboarding(appUser.uid);
+            if (fichaId && generatedManual) {
+              try {
+                await saveManual(appUser.uid, generatedManual, fichaId);
+              } catch (e) {
+                console.error("Failed to save manual:", e);
+              }
             }
+            await updateConsent();
+            navigate('/ficha');
+          } catch (e: any) {
+            console.error('[FichaPreview] Error guardando ficha:', e?.code, e?.message);
+            const msg = e?.code === 'permission-denied'
+              ? 'Sin permisos de escritura. Contacta con el equipo.'
+              : 'No pudimos guardar tu ficha. Inténtalo de nuevo.';
+            alert(msg); 
+          } finally {
+            setIsSaving(false);          // SIEMPRE
+            setPendingAction(null);      // SIEMPRE
+            syncInProgress.current = false; // SIEMPRE
           }
-          await updateConsent();
-          setPendingAction(null);
-          navigate('/ficha');
         })();
-      } else if (pendingAction === 'generate') {
-        setPendingAction(null);
+      } else if (action === 'generate') {
         handleGenerateManual();
       }
     }
@@ -170,6 +204,7 @@ export function FichaPreview() {
       setIsAuthModalOpen(true);
       setIsSaving(true);
     } else {
+      setPendingAction('save');
       setIsSaving(true);
     }
   };

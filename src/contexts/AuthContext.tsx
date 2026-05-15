@@ -69,13 +69,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       handleCodeInApp: true,
     };
     
-    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-    setMemoryEmail(email);
-
     if (ficha) {
-      // Guardado silencioso en Firestore para recuperación cross-device
+      // FIX 2: Guardar ficha pendiente ANTES del Magic Link
       await guardarFichaPendiente(email, ficha);
     }
+
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    setMemoryEmail(email);
   };
 
   const completeMagicLinkLogin = async (email: string, link: string) => {

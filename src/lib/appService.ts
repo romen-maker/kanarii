@@ -141,10 +141,12 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
       await setDoc(userDocRef, userData);
     }
 
-    // Verificar si tiene ficha
-    const fichasQuery = query(collection(db, 'fichas'), where('userId', '==', uid));
-    const fichasSnapshot = await getDocs(fichasQuery);
-    const hasFicha = !fichasSnapshot.empty;
+    // Verificar si tiene ficha (en ambas colecciones por migración)
+    const [fichasSnapshot, profilesSnap] = await Promise.all([
+      getDocs(query(collection(db, 'fichas'), where('userId', '==', uid))),
+      getDoc(doc(db, 'profiles', uid))
+    ]);
+    const hasFicha = !fichasSnapshot.empty || profilesSnap.exists();
 
     const communityIds = userData.communityIds || [];
 
@@ -870,11 +872,16 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
  * Función interna de escritura directa a Firestore.
  * Evita duplicar lógica entre guardado normal y migración desde pendiente.
  */
-async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: boolean = true) {
+export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: boolean = true) {
   // 1) Guardar en /profiles/{userId}
   try {
     const profileRef = doc(db, 'profiles', userId);
-    await setDoc(profileRef, fichaFull, { merge: true });
+    const finalData = {
+      ...fichaFull,
+      updatedAt: serverTimestamp(),
+      ...(isUpdate ? {} : { createdAt: serverTimestamp() })
+    };
+    await setDoc(profileRef, finalData, { merge: true });
   } catch (err) {
     handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'profiles');
     throw err;
@@ -954,11 +961,27 @@ export async function migrarFichaPendiente(email: string, uid: string): Promise<
       // usa saveFicha que genera el fichaFull.
       
       // REGLA: Si en /fichas_pendientes guardamos el fichaFull ya listo:
-      await _writeFichaRaw(uid, {
+      // FIX 2: Asegurar que los datos preview se mapean a los campos finales
+      const fichaMigrada = {
         ...data,
         userId: uid,
         updatedAt: serverTimestamp()
-      }, false);
+      };
+
+      if (data.preview_manual) {
+        fichaMigrada.manualGenerado = data.preview_manual;
+        fichaMigrada.manualMarkdown = data.preview_manual;
+      }
+      
+      if (data.preview_perfilVisual) {
+        fichaMigrada.perfilVisual = data.preview_perfilVisual;
+      }
+
+      if (data.preview_dimensiones) {
+        fichaMigrada.dimensiones = data.preview_dimensiones;
+      }
+
+      await _writeFichaRaw(uid, fichaMigrada, false);
       
       // Limpiar tras migrar
       await deleteDoc(pendingRef);
@@ -995,6 +1018,20 @@ export async function saveManual(userId: string, manualGenerado: string, existin
         versionesAnteriores,
         updatedAt: serverTimestamp()
       });
+
+      // FIX 3: Actualizar también en /profiles para coherencia visual
+      try {
+        const profileRef = doc(db, 'profiles', userId);
+        await setDoc(profileRef, {
+          manualGenerado: manualGenerado || null,
+          manualMarkdown: manualGenerado || null,
+          fechaGeneracion: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          versionesAnteriores
+        }, { merge: true });
+      } catch (e) {
+        console.warn('saveManual: no se pudo actualizar /profiles', e);
+      }
     }
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, 'fichas');
