@@ -94,9 +94,11 @@ export function OnboardingChat() {
     setMessages(rebuiltMessages);
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || saving) return;
-    const userText = input.trim();
+  const handleSend = async (valueOverride?: string) => {
+    const value = (valueOverride ?? input).trim();
+    if (!value || saving) return;
+    
+    const userText = value;
     setInput('');
 
     // Add user msg
@@ -111,14 +113,15 @@ export function OnboardingChat() {
       newData.rol = userText; // Map to the rol property dynamically
       if (userText === 'voluntario') {
         const lugarIndex = currentSteps.findIndex(s => s.key === 'lugar');
-        if (lugarIndex !== -1 && !currentSteps.find(s => s.key === 'fechas_voluntario')) {
+        if (lugarIndex !== -1 && !currentSteps.find(s => s.key === 'fechaLlegada')) {
           currentSteps.splice(lugarIndex + 1, 0, 
-            { key: 'fechas_voluntario', q: '¿Cuándo planeas llegar y cuándo te irías aproximadamente?' },
+            { key: 'fechaLlegada', type: 'date', q: '¿Cuándo planeas llegar aproximadamente? Puedes poner una fecha orientativa.' },
+            { key: 'fechaSalida', type: 'date', q: '¿Y cuándo te irías? Si no lo sabes con exactitud, pon una fecha aproximada.' },
             { key: 'habilidades_voluntario', q: '¿Qué habilidades o saberes traes para compartir con la finca?' }
           );
         }
       } else {
-        currentSteps = currentSteps.filter(s => s.key !== 'fechas_voluntario' && s.key !== 'habilidades_voluntario');
+        currentSteps = currentSteps.filter(s => s.key !== 'fechaLlegada' && s.key !== 'fechaSalida' && s.key !== 'habilidades_voluntario');
       }
       setSteps(currentSteps);
     }
@@ -205,11 +208,7 @@ export function OnboardingChat() {
               {steps[currentStepIndex].options?.map((opt: any) => (
                 <button
                   key={opt.value}
-                  onClick={() => {
-                    setInput(opt.value);
-                    // use setTimeout to ensure state isn't batched wrongly, or just call handleSend directly with value:
-                    // Actually handleSend uses input state, better let it be or pass param
-                  }}
+                  onClick={() => handleSend(opt.value)}
                   className="bg-white border border-[#CB997E] text-[#CB997E] hover:bg-[#CB997E] hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
                 >
                   {opt.label}
@@ -294,7 +293,13 @@ export function OnboardingChat() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder={steps[currentStepIndex]?.options ? "O selecciona una opción arriba..." : "Escribe tu respuesta aquí..."}
+                    placeholder={
+                      steps[currentStepIndex]?.options 
+                        ? "O selecciona una opción arriba..." 
+                        : (steps[currentStepIndex] as any)?.type === 'date' 
+                          ? "" 
+                          : "Escribe tu respuesta aquí..."
+                    }
                     disabled={saving}
                     className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-full py-4 pl-6 pr-14 text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]"
                   />

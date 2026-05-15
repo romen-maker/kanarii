@@ -69,7 +69,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Acceso por Invitación: Modal para introducir código y unirse.
   - [x] Solicitudes de Acceso: Flujo de aprobación para comunidades privadas.
   - [x] Panel de Administración de Solicitudes: Aprobación/Rechazo en tiempo real (Paso 3 ✅).
-  - [ ] Paso 4: Generación de códigos de invitación desde el panel admin.
+  - [x] Paso 4: Generación de códigos de invitación desde el panel admin (Completado ✅).
   - [x] Selector de comunidad en Sidebar para usuarios multi-comunidad.
 
 ## 🌍 Fase 3 — Espacios y escala

@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { 
+  User, 
+  onAuthStateChanged, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut,
+  sendSignInLinkToEmail,
+  signInWithEmailLink,
+  isSignInWithEmailLink
+} from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { AppUser, getAppUser, updateAppUserConsent } from '../lib/appService';
 
@@ -8,9 +17,17 @@ interface AuthContextType {
   appUser: AppUser | null;
   loading: boolean;
   login: () => Promise<void>;
+  sendMagicLink: (email: string) => Promise<void>;
+  completeMagicLinkLogin: (email: string, link: string) => Promise<void>;
   logout: () => Promise<void>;
   updateConsent: () => Promise<void>;
 }
+
+// Variable de módulo para persistir el email en memoria durante la sesión del navegador
+// (Sandbox constraint: evitamos localStorage para el email)
+let memoryEmail: string | null = null;
+export const getMemoryEmail = () => memoryEmail;
+export const setMemoryEmail = (email: string | null) => { memoryEmail = email; };
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -45,6 +62,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithPopup(auth, provider);
   };
 
+  const sendMagicLink = async (email: string) => {
+    const actionCodeSettings = {
+      // TODO PRODUCCIÓN: cambiar por dominio real
+      url: window.location.origin + '/auth/callback',
+      handleCodeInApp: true,
+    };
+    
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    setMemoryEmail(email);
+  };
+
+  const completeMagicLinkLogin = async (email: string, link: string) => {
+    await signInWithEmailLink(auth, email, link);
+    setMemoryEmail(null); // Limpiar tras éxito
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
@@ -61,7 +94,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, appUser, loading, login, logout, updateConsent }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      appUser, 
+      loading, 
+      login, 
+      sendMagicLink,
+      completeMagicLinkLogin,
+      logout, 
+      updateConsent 
+    }}>
       {children}
     </AuthContext.Provider>
   );
