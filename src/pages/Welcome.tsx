@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from 'lucide-react';
+import { AuthGateModal } from '../components/AuthGateModal';
 
 export function Welcome() {
   const { user, appUser, login } = useAuth();
   const navigate = useNavigate();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
     if (appUser) {
@@ -87,7 +89,7 @@ export function Welcome() {
               </button>
               
               <button
-                onClick={login}
+                onClick={() => setIsLoginModalOpen(true)}
                 className="w-full py-4 px-6 text-[#A5A58D] hover:text-[#6B705C] transition-colors rounded-2xl text-lg font-medium"
               >
                 Ya soy parte (Iniciar sesión)
@@ -99,6 +101,11 @@ export function Welcome() {
           </p>
         </div>
       </div>
+      <AuthGateModal
+        isOpen={isLoginModalOpen}
+        mode="login"
+        onClose={() => setIsLoginModalOpen(false)}
+      />
     </div>
   );
 }

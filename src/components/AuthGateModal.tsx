@@ -7,10 +7,11 @@ interface AuthGateModalProps {
   isOpen: boolean;
   title?: string;
   subtitle?: string;
+  mode?: 'onboarding' | 'login';
   onClose?: () => void;
 }
 
-export function AuthGateModal({ isOpen, title, subtitle, onClose }: AuthGateModalProps) {
+export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', onClose }: AuthGateModalProps) {
   const { login, sendMagicLink } = useAuth();
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -33,9 +34,9 @@ export function AuthGateModal({ isOpen, title, subtitle, onClose }: AuthGateModa
     setError(null);
     try {
       const fichaRaw = localStorage.getItem('kanarii_pendingFicha');
-      const ficha = fichaRaw ? JSON.parse(fichaRaw) : undefined;
+      const ficha = mode === 'login' ? null : (fichaRaw ? JSON.parse(fichaRaw) : undefined);
       
-      await sendMagicLink(email.trim(), ficha);
+      await sendMagicLink(email.trim(), ficha, mode);
       setSentTo(email.trim());
     } catch (err: any) {
       console.error("Magic link error detailed:", err.code, err.message);
@@ -80,10 +81,10 @@ export function AuthGateModal({ isOpen, title, subtitle, onClose }: AuthGateModa
           </div>
           
           <h2 className="text-2xl font-serif text-[#4A4E4D] mb-2">
-            {title || "Guarda tu ficha"}
+            {title || (mode === 'login' ? 'Inicia sesión' : 'Guarda tu ficha')}
           </h2>
           <p className="text-stone-600 mb-8 px-4">
-            {subtitle || "Crea tu cuenta para no perder tu conversación de acogida y formar parte de la tribu."}
+            {subtitle || (mode === 'login' ? 'Bienvenido de nuevo a la tribu.' : 'Crea tu cuenta para no perder tu conversación de acogida y formar parte de la tribu.')}
           </p>
 
           <AnimatePresence mode="wait">

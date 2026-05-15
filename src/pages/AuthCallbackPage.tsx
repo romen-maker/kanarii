@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { isSignInWithEmailLink } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useAuth, getMemoryEmail } from '../contexts/AuthContext';
-import { migrarFichaPendiente } from '../lib/appService';
+// migrarFichaPendiente se ejecuta ahora dentro de completeMagicLinkLogin
 import { Loader2, Mail, ArrowRight, AlertTriangle } from 'lucide-react';
 
 export function AuthCallbackPage() {
@@ -21,8 +21,8 @@ export function AuthCallbackPage() {
         
         if (savedEmail) {
           try {
-      await completeMagicLinkLogin(savedEmail, window.location.href);
-      await finalize();
+            const migrada = await completeMagicLinkLogin(savedEmail, window.location.href);
+            await finalize(migrada);
           } catch (err: any) {
             console.error("Auth callback error:", err);
             setErrorMessage("El enlace ha caducado o ya ha sido utilizado.");
@@ -47,8 +47,8 @@ export function AuthCallbackPage() {
     setIsSubmitting(true);
     setErrorMessage('');
     try {
-      await completeMagicLinkLogin(email.trim(), window.location.href);
-      await finalize();
+      const migrada = await completeMagicLinkLogin(email.trim(), window.location.href);
+      await finalize(migrada);
     } catch (err: any) {
       console.error("Auth callback with email error:", err);
       setErrorMessage("Ese email no coincide con el que solicitó el enlace o el enlace no es válido.");
@@ -56,15 +56,10 @@ export function AuthCallbackPage() {
     }
   };
 
-  const finalize = async () => {
-    // 1. Intentar migrar desde Firestore (cross-device)
-    const user = auth.currentUser;
-    if (user?.email) {
-      const migrada = await migrarFichaPendiente(user.email, user.uid);
-      if (migrada) {
-        navigate('/ficha-preview');
-        return;
-      }
+  const finalize = async (migrada: boolean) => {
+    if (migrada) {
+      navigate('/ficha-preview');
+      return;
     }
 
     // 2. Fallback a localStorage (mismo dispositivo)

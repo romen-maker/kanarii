@@ -10,15 +10,15 @@ import {
   isSignInWithEmailLink
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { AppUser, getAppUser, updateAppUserConsent, guardarFichaPendiente } from '../lib/appService';
+import { AppUser, getAppUser, updateAppUserConsent, guardarFichaPendiente, migrarFichaPendiente } from '../lib/appService';
 
 interface AuthContextType {
   user: User | null;
   appUser: AppUser | null;
   loading: boolean;
   login: () => Promise<void>;
-  sendMagicLink: (email: string) => Promise<void>;
-  completeMagicLinkLogin: (email: string, link: string) => Promise<void>;
+  sendMagicLink: (email: string, ficha?: any, mode?: 'onboarding' | 'login') => Promise<void>;
+  completeMagicLinkLogin: (email: string, link: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateConsent: () => Promise<void>;
 }
@@ -62,14 +62,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithPopup(auth, provider);
   };
 
-  const sendMagicLink = async (email: string, ficha?: any) => {
+  const sendMagicLink = async (email: string, ficha?: any, mode?: 'onboarding' | 'login') => {
     const actionCodeSettings = {
       // TODO PRODUCCIÓN: cambiar por dominio real
       url: window.location.origin + '/auth/callback',
       handleCodeInApp: true,
     };
     
-    if (ficha) {
+    // REGLA 1: Guard explícito. NO guardar en modo login.
+    if (mode !== 'login' && ficha) {
       // FIX 2: Guardar ficha pendiente ANTES del Magic Link
       await guardarFichaPendiente(email, ficha);
     }
@@ -78,9 +79,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setMemoryEmail(email);
   };
 
-  const completeMagicLinkLogin = async (email: string, link: string) => {
-    await signInWithEmailLink(auth, email, link);
+  const completeMagicLinkLogin = async (email: string, link: string): Promise<boolean> => {
+    const result = await signInWithEmailLink(auth, email, link);
     setMemoryEmail(null); // Limpiar tras éxito
+    
+    // REGLA 2: Siempre intentar migrar tras login exitoso por Magic Link
+    let migrada = false;
+    if (result.user && result.user.email) {
+      migrada = await migrarFichaPendiente(result.user.email, result.user.uid);
+    }
+    return migrada;
   };
 
   const logout = async () => {
