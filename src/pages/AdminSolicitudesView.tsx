@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ShieldCheck, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  User as UserIcon, 
-  Info, 
-  Loader2, 
-  Check, 
-  X, 
-  AlertTriangle 
+  ShieldCheck,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  Check,
+  X,
+  AlertTriangle,
+  Key,
+  Copy,
+  Calendar,
+  Zap,
+  Infinity,
+  Ban,
+  Trash2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -19,8 +23,12 @@ import { useComunidad } from '../contexts/ComunidadContext';
 import { useEntityActions } from '../hooks/useEntityActions';
 import { 
   SolicitudAcceso, 
+  Invitacion,
   resolverSolicitud, 
   listenSolicitudes, 
+  listenInvitaciones,
+  createInvitacion,
+  desactivarInvitacion,
   getAppUserDoc 
 } from '../lib/appService';
 
@@ -123,6 +131,101 @@ const SolicitudCard: React.FC<{
   );
 };
 
+const InvitacionCard: React.FC<{ 
+  invitacion: Invitacion; 
+  onDesactivar: () => void;
+  isExecuting: boolean;
+}> = ({ invitacion, onDesactivar, isExecuting }) => {
+  const [confirm, setConfirm] = useState(false);
+  const isExpired = invitacion.expiraEn && invitacion.expiraEn.toDate() < new Date();
+  const isExhausted = invitacion.usosMaximos && invitacion.usosActuales >= invitacion.usosMaximos;
+  const isInactive = !invitacion.activo || isExpired || isExhausted;
+
+  return (
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-white border ${isInactive ? 'border-stone-100 opacity-60' : 'border-[#EAE2D6] shadow-sm'} rounded-3xl p-5 transition-all`}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="font-mono font-bold text-lg text-[#4A4E4D] tracking-tight bg-[#F9F7F1] px-3 py-1 rounded-xl border border-[#EAE2D6]/60">
+              {invitacion.id}
+            </span>
+            <div className="flex gap-2">
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                invitacion.tipo === 'permanente' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                invitacion.tipo === 'unico_uso' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                'bg-rose-50 text-rose-600 border-rose-100'
+              }`}>
+                {invitacion.tipo === 'permanente' ? 'Permanente' : 
+                 invitacion.tipo === 'unico_uso' ? 'Un solo uso' : 'Temporal'}
+              </span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                !isInactive ? 'bg-green-50 text-green-600 border-green-100' : 'bg-stone-100 text-stone-400 border-stone-200'
+              }`}>
+                {!isInactive ? 'Activo' : 'Inactivo'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
+            <div className="flex items-center gap-1">
+              <Zap className="w-3.5 h-3.5" />
+              <span>{invitacion.usosActuales} {invitacion.usosMaximos ? `/ ${invitacion.usosMaximos}` : ''} usos</span>
+            </div>
+            {invitacion.expiraEn && (
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Caduca {formatDistanceToNow(invitacion.expiraEn.toDate(), { addSuffix: true, locale: es })}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Creado {invitacion.creadoEn ? formatDistanceToNow(invitacion.creadoEn.toDate(), { addSuffix: true, locale: es }) : 'hace poco'}</span>
+            </div>
+          </div>
+        </div>
+
+        {invitacion.activo && !isExpired && !isExhausted && (
+          <div className="shrink-0">
+            {confirm ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setConfirm(false); onDesactivar(); }}
+                  disabled={isExecuting}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-2xl transition-all shadow-md"
+                  title="Confirmar desactivación"
+                >
+                  {isExecuting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                </button>
+                <button
+                  onClick={() => setConfirm(false)}
+                  disabled={isExecuting}
+                  className="bg-stone-100 hover:bg-stone-200 text-stone-500 p-2.5 rounded-2xl transition-all"
+                  title="Cancelar"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirm(true)}
+                className="text-stone-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-2xl transition-all"
+                title="Desactivar código"
+              >
+                <Ban className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 // --- VISTA PRINCIPAL ---
 
 export function AdminSolicitudesView() {
@@ -131,9 +234,17 @@ export function AdminSolicitudesView() {
   const { perform } = useEntityActions();
   
   const [solicitudes, setSolicitudes] = useState<SolicitudAcceso[]>([]);
+  const [invitaciones, setInvitaciones] = useState<Invitacion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pendientes' | 'resueltas'>('pendientes');
+  const [activeTab, setActiveTab] = useState<'pendientes' | 'resueltas' | 'codigos'>('pendientes');
   
+  // Estados para generador de códigos
+  const [newCodeType, setNewCodeType] = useState<'permanente' | 'unico_uso' | 'caduca'>('permanente');
+  const [newCodeExpiration, setNewCodeExpiration] = useState<string>('');
+  const [newCodeMaxUses, setNewCodeMaxUses] = useState<string>('');
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [isCopying, setIsCopying] = useState(false);
+
   // Estado para confirmación de rechazo
   const [confirmReject, setConfirmReject] = useState<SolicitudAcceso | null>(null);
   const [isExecutingAction, setIsExecutingAction] = useState<string | null>(null);
@@ -147,12 +258,19 @@ export function AdminSolicitudesView() {
       return;
     }
 
-    const unsubscribe = listenSolicitudes(comunidad.id, (list) => {
+    const unsubSolicitudes = listenSolicitudes(comunidad.id, (list) => {
       setSolicitudes(list);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const unsubInvitaciones = listenInvitaciones(comunidad.id, (list) => {
+      setInvitaciones(list);
+    });
+
+    return () => {
+      unsubSolicitudes();
+      unsubInvitaciones();
+    };
   }, [comunidad?.id, isCommunityAdmin]);
 
   const handleAction = async (solicitud: SolicitudAcceso, decision: 'aprobada' | 'rechazada') => {
@@ -171,6 +289,49 @@ export function AdminSolicitudesView() {
     } finally {
       setIsExecutingAction(null);
     }
+  };
+
+  const handleGenerateCode = async () => {
+    if (!comunidad?.id || !appUser?.uid) return;
+    
+    setIsExecutingAction('generating');
+    try {
+      const opciones: Partial<Invitacion> = {
+        tipo: newCodeType,
+        usosMaximos: newCodeType === 'unico_uso' ? 1 : (newCodeMaxUses ? parseInt(newCodeMaxUses) : null),
+        expiraEn: newCodeType === 'caduca' && newCodeExpiration ? new Date(newCodeExpiration) as any : null
+      };
+      
+      const codigo = await perform(createInvitacion(comunidad.id, appUser.uid, opciones), {
+        successMessage: 'Código generado correctamente.'
+      });
+      
+      if (codigo) setGeneratedCode(codigo);
+    } catch (error) {
+      // Error manejado por perform
+    } finally {
+      setIsExecutingAction(null);
+    }
+  };
+
+  const handleDesactivar = async (codigo: string) => {
+    setIsExecutingAction(codigo);
+    try {
+      await perform(desactivarInvitacion(codigo), {
+        successMessage: 'Código desactivado.'
+      });
+    } catch (error) {
+      // Error manejado por perform
+    } finally {
+      setIsExecutingAction(null);
+    }
+  };
+
+  const handleCopyCode = () => {
+    if (!generatedCode) return;
+    navigator.clipboard.writeText(generatedCode);
+    setIsCopying(true);
+    setTimeout(() => setIsCopying(false), 2000);
   };
 
   if (!isCommunityAdmin && !loading) {
@@ -239,12 +400,148 @@ export function AdminSolicitudesView() {
           >
             Resueltas
           </button>
+          <button
+            onClick={() => setActiveTab('codigos')}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+              activeTab === 'codigos' 
+                ? 'bg-white text-[#4A4E4D] shadow-sm' 
+                : 'text-[#8A817C] hover:text-[#4A4E4D]'
+            }`}
+          >
+            Invitaciones
+          </button>
         </div>
 
-        {/* Lista de Cards */}
+        {/* Lista de Cards o Generador */}
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
-            {activeTab === 'pendientes' ? (
+            {activeTab === 'codigos' ? (
+              <motion.div 
+                key="tab-codigos"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-8"
+              >
+                {/* Generador */}
+                <div className="bg-white border border-[#EAE2D6] rounded-3xl p-8 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#F9F7F1] rounded-2xl flex items-center justify-center text-[#CB997E]">
+                      <Key className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-stone-800">Generar nuevo código</h3>
+                      <p className="text-xs text-stone-400">Crea una invitación personalizada para tu comunidad</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-xs font-bold text-stone-400 uppercase tracking-widest px-1">Tipo de invitación</label>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          { id: 'permanente', label: 'Permanente', icon: Infinity },
+                          { id: 'unico_uso', label: 'Un solo uso', icon: Zap },
+                          { id: 'caduca', label: 'Con caducidad', icon: Calendar },
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setNewCodeType(type.id as any)}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition-all ${
+                              newCodeType === type.id 
+                                ? 'border-[#CB997E] bg-[#CB997E]/5 text-[#B58368]' 
+                                : 'border-stone-100 hover:border-stone-200 text-stone-500'
+                            }`}
+                          >
+                            <type.icon className="w-4 h-4" />
+                            <span className="text-sm font-bold">{type.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {newCodeType === 'caduca' && (
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-stone-400 uppercase tracking-widest px-1">Fecha de expiración</label>
+                          <input 
+                            type="date"
+                            value={newCodeExpiration}
+                            onChange={(e) => setNewCodeExpiration(e.target.value)}
+                            className="w-full bg-[#F9F7F1] border-2 border-stone-100 rounded-2xl px-4 py-3 text-stone-700 focus:border-[#CB997E] focus:ring-0 transition-all outline-none"
+                          />
+                        </div>
+                      )}
+
+                      {newCodeType !== 'unico_uso' && (
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-stone-400 uppercase tracking-widest px-1">Usos máximos (opcional)</label>
+                          <input 
+                            type="number"
+                            placeholder="Ilimitados"
+                            value={newCodeMaxUses}
+                            onChange={(e) => setNewCodeMaxUses(e.target.value)}
+                            className="w-full bg-[#F9F7F1] border-2 border-stone-100 rounded-2xl px-4 py-3 text-stone-700 focus:border-[#CB997E] focus:ring-0 transition-all outline-none"
+                          />
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleGenerateCode}
+                        disabled={isExecutingAction === 'generating' || (newCodeType === 'caduca' && !newCodeExpiration)}
+                        className="w-full bg-[#4A4E4D] hover:bg-[#3A3E3D] text-white py-4 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isExecutingAction === 'generating' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Key className="w-5 h-5" />}
+                        Generar código
+                      </button>
+                    </div>
+                  </div>
+
+                  {generatedCode && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 p-6 bg-green-50 border-2 border-green-100 rounded-3xl flex flex-col items-center justify-center space-y-4"
+                    >
+                      <p className="text-xs font-bold text-green-600 uppercase tracking-widest">Código generado listo para compartir</p>
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl font-mono font-bold text-stone-800 tracking-wider">
+                          {generatedCode}
+                        </span>
+                        <button
+                          onClick={handleCopyCode}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
+                            isCopying ? 'bg-green-600 text-white' : 'bg-white text-green-600 border border-green-200'
+                          }`}
+                        >
+                          {isCopying ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          {isCopying ? '¡Copiado!' : 'Copiar'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Listado */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest px-1">Códigos activos e históricos</h4>
+                  {invitaciones.length === 0 ? (
+                    <div className="text-center py-10 bg-white border border-[#EAE2D6] rounded-3xl text-[#8A817C] text-sm italic">
+                      No hay códigos generados todavía.
+                    </div>
+                  ) : (
+                    invitaciones.map(inv => (
+                      <InvitacionCard 
+                        key={inv.id}
+                        invitacion={inv}
+                        onDesactivar={() => handleDesactivar(inv.id!)}
+                        isExecuting={isExecutingAction === inv.id}
+                      />
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            ) : activeTab === 'pendientes' ? (
               pendientes.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0 }}
