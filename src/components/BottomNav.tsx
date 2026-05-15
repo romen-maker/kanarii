@@ -10,12 +10,23 @@ export function BottomNav() {
   const { appUser, logout } = useAuth();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
-  // Seleccionamos los primeros 4 items para la barra principal (excluyendo adminOnly)
-  const mainNavItems = navigationConfig.filter(item => !item.adminOnly).slice(0, 4);
+  // Filtramos por pertenencia a comunidades
+  const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || appUser?.role === 'admin';
+
+  const availableNavItems = navigationConfig.filter(item => {
+    if (item.adminOnly) return appUser?.role === 'admin';
+    if (!hasCommunities) {
+      return ['Inicio', 'Mi Ficha'].includes(item.label);
+    }
+    return true;
+  });
+
+  // Seleccionamos los primeros 4 items para la barra principal
+  const mainNavItems = availableNavItems.filter(item => !item.adminOnly).slice(0, 4);
   // El resto van al menú "Más"
   const moreNavItems = [
-    ...navigationConfig.filter(item => !item.adminOnly).slice(4),
-    ...navigationConfig.filter(item => item.adminOnly && appUser?.role === 'admin')
+    ...availableNavItems.filter(item => !item.adminOnly).slice(4),
+    ...availableNavItems.filter(item => item.adminOnly)
   ];
 
   const handleNav = (path: string) => {

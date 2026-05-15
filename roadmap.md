@@ -65,10 +65,12 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Evolución del modelo: Multi-membership (`communityIds[]`), manifiestos y privacidad.
   - [x] Servicios de Invitación: Códigos legibles, validación y uso.
   - [x] Migración de datos: Backfill de `/users` y `/fichas` (Arteara).
-  - [ ] Página de Descubrimiento (`/comunidades`): Listado público y manifiestos.
-  - [ ] Acceso por Invitación: Modal para introducir código y unirse.
-  - [ ] Solicitudes de Acceso: Flujo de aprobación para comunidades privadas.
-  - [ ] Selector de comunidad en Sidebar para usuarios multi-comunidad.
+  - [x] Página de Descubrimiento (`/comunidades`): Listado público y manifiestos.
+  - [x] Acceso por Invitación: Modal para introducir código y unirse.
+  - [x] Solicitudes de Acceso: Flujo de aprobación para comunidades privadas.
+  - [x] Panel de Administración de Solicitudes: Aprobación/Rechazo en tiempo real (Paso 3 ✅).
+  - [ ] Paso 4: Generación de códigos de invitación desde el panel admin.
+  - [x] Selector de comunidad en Sidebar para usuarios multi-comunidad.
 
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
