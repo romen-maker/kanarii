@@ -61,12 +61,17 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
     - [x] Gestión de estados y borrado con Deshacer.
 - [ ] **2.4 Gestión de Propuestas y Consentimiento**
   - [ ] Flujo sociocrático: Crear propuesta → ronda de objeciones → estado (borrador / en proceso / acordada / descartada).
-- [ ] **2.5 Selector de Comunidad**
-  - [ ] Implementar selector en UI para alimentar dinámicamente el contexto de la IA.
+- [ ] **2.5 Sistema de Comunidades v2 (Foco Actual 🎯)**
+  - [x] Evolución del modelo: Multi-membership (`communityIds[]`), manifiestos y privacidad.
+  - [x] Servicios de Invitación: Códigos legibles, validación y uso.
+  - [x] Migración de datos: Backfill de `/users` y `/fichas` (Arteara).
+  - [ ] Página de Descubrimiento (`/comunidades`): Listado público y manifiestos.
+  - [ ] Acceso por Invitación: Modal para introducir código y unirse.
+  - [ ] Solicitudes de Acceso: Flujo de aprobación para comunidades privadas.
+  - [ ] Selector de comunidad en Sidebar para usuarios multi-comunidad.
 
 ## 🌍 Fase 3 — Espacios y escala
-- [ ] **3.1 Múltiples espacios/tribus**
-  - [ ] Soporte para albergar múltiples comunidades independientes.
+- [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
 - [ ] **3.2 Gestión de visitas / recién llegados**
   - [ ] Ficha simplificada para período de prueba y transición a miembro.
 - [ ] **3.3 Registro de contribuciones**
