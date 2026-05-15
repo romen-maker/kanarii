@@ -13,9 +13,10 @@ Kanarii es un sistema de gestión comunitaria diseñado para elevar la armonía 
 - **Onboarding Guiado**: Proceso fluido de entrada para nuevos miembros con geocodificación automática.
 
 ### 🏗️ Gestión Comunitaria
-- **Dashboard Kanban**: Gestión visual de tareas e iniciativas (proyectos) con cálculo automático de progreso.
+- **Calendario de Eventos**: Gestión de la agenda grupal con sincronización real-time en Firestore.
+- **Tablón de Sinergias**: Sistema de ofertas y necesidades para facilitar el intercambio dentro de la comunidad.
 - **Actas Sociocráticas**: Registro de reuniones con flujo integrado para la creación de tareas desde acuerdos.
-- **Panel Administrativo**: Control total sobre la base de datos de miembros, roles y manuales generados.
+- **Dashboard Kanban**: Gestión visual de tareas e iniciativas (proyectos) con cálculo automático de progreso.
 
 ### 🛡️ Arquitectura DRY & Robusta
 - **Single Source of Truth**: Acceso centralizado a datos mediante `appService.ts`.
@@ -76,7 +77,10 @@ Puedes consultar el estado actual del proyecto y las próximas funcionalidades e
 
 ## 🤝 Contribución
 
-Este es un proyecto enfocado en comunidades. Si quieres colaborar, por favor revisa nuestras reglas de arquitectura en `AGENT_ONBOARDING.md` para mantener la consistencia del código.
+¡Kanarii es un proyecto de y para la comunidad! Si quieres colaborar, por favor:
+1. Lee nuestra [Guía de Contribución](./CONTRIBUTING.md) para conocer el flujo de trabajo.
+2. Revisa nuestro [Código de Conducta](./CODE_OF_CONDUCT.md) para asegurar un espacio de cuidado.
+3. Para detalles técnicos profundos, consulta `AGENT_ONBOARDING.md`.
 
 ---
 
