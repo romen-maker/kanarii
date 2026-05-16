@@ -87,6 +87,33 @@ export function FichaPreview() {
     }
   };
 
+  // Efecto para cargar datos reales si el usuario está logueado
+  // Esto evita el "fantasma de asdf" del localStorage
+  useEffect(() => {
+    async function loadRealData() {
+      if (appUser) {
+        try {
+          const realFicha = await getFichaById(appUser.uid);
+          if (realFicha) {
+            // Si hay datos en la nube, los priorizamos
+            const mappedData = {
+              ...realFicha.datosPersona,
+              ...realFicha.datosOnboarding,
+              rol: realFicha.rol || realFicha.datosPersona?.rol,
+              userId: appUser.uid
+            };
+            setPendingFicha(mappedData);
+            // Opcional: sincronizar localStorage para futuras recargas
+            localStorage.setItem('kanarii_pendingFicha', JSON.stringify(mappedData));
+          }
+        } catch (e) {
+          console.log("No hay ficha previa en la nube, usando local.");
+        }
+      }
+    }
+    loadRealData();
+  }, [appUser]);
+
   const handleGenerateManual = async () => {
     if (!appUser) {
       setPendingAction('generate');

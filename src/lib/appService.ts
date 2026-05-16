@@ -1017,14 +1017,14 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
   // 2) Guardar en /community_members/{userId}
   try {
     const memberRef = doc(db, 'community_members', userId);
-    const data = fichaFull.datosPersona;
+    const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
     await setDoc(memberRef, {
-      nombre: data.nombre,
+      nombre: base.nombre || fichaFull.nombre || 'Sin Nombre',
       tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
       elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
       autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
-      antiguedad_anos: data.antiguedad_anos,
-      rol_comunidad: data.rol_comunidad,
+      antiguedad_anos: base.antiguedad_anos || 0,
+      rol_comunidad: base.rol_comunidad || 'miembro',
       estado: fichaFull.estado,
       creadoEn: fichaFull.createdAt || serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -1530,11 +1530,11 @@ export const SEED_DATA = [
 
 export async function ensureSeedData(appUserUid: string) {
   try {
-    const q = query(collection(db, 'fichas'));
+    const q = query(collection(db, 'profiles'));
     const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ficha));
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
     
-    const realDocs = data.filter(doc => !doc.isSeedData);
+    const realDocs = data.filter((doc: any) => !doc.isSeedData && !doc.id.startsWith('seed-'));
     
     if (realDocs.length < 3) {
       const promises = SEED_DATA.map(async (seed, index) => {
@@ -1588,16 +1588,17 @@ export async function ensureSeedData(appUserUid: string) {
             },
             manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.tension}".`,
             isSeedData: true,
+            communityId: 'arteara', // Default community for seeds
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           };
-          await setDoc(doc(db, 'fichas', seedId), seedFicha);
+          await _writeFichaRaw(seedId, seedFicha, false);
         }
       });
       await Promise.all(promises);
     }
   } catch (err) {
-    handleFirestoreError(err, OperationType.LIST, 'fichas');
+    handleFirestoreError(err, OperationType.LIST, 'profiles');
   }
 }
 
@@ -1824,18 +1825,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<void> 
     const fichaRef = doc(db, 'fichas', uid);
     const fichaSnap = await getDoc(fichaRef);
     if (fichaSnap.exists()) {
-      const updatePayload = {
-        'datosOnboarding.communityId': inv.communityId,
-        updatedAt: serverTimestamp()
-      };
-      await Promise.all([
-        setDoc(doc(db, 'fichas', uid), updatePayload, { merge: true }),
-        setDoc(doc(db, 'profiles', uid), updatePayload, { merge: true }),
-        setDoc(doc(db, 'community_members', uid),
-          { communityId: inv.communityId, updatedAt: serverTimestamp() },
-          { merge: true }
-        )
-      ]);
+      await _writeFichaRaw(uid, { communityId: inv.communityId }, true);
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');
@@ -2062,7 +2052,7 @@ export async function registerPropuestaResponse(
 
     // 3. MOTOR DE CIERRE Y QUÓRUM (S3 Avanzado)
     const quorumPercentage = 0.5;
-    const totalPossibleVoters = totalMembers - 1;
+    const totalPossibleVoters = totalMembers;
     const requiredResponses = Math.ceil(totalPossibleVoters * quorumPercentage);
     
     // Solo 'consentimiento' y 'preocupacion' incrementan el contador de respuestas positivas
