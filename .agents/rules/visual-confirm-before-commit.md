@@ -12,7 +12,7 @@ trigger: always_on
 2.  **Verificación Visual**: El agente debe pedir confirmación explícita con el siguiente mensaje:
     > "He realizado los cambios indicados. ¿Los has revisado visualmente en el preview? Confirma con 'sí, commitea' para proceder."
 3.  **Bloqueo de Commit**: Solo se puede proceder al commit tras recibir una confirmación afirmativa del usuario.
-4.  **Cambios sin Impacto Visual**: Si los cambios son exclusivamente en directorios de configuración o documentación (`.agent/`, `docs/`, `scripts/`, etc.), la confirmación puede ser simplificada pero **nunca eliminada**.
+4.  **Cambios sin Impacto Visual**: Si los cambios son exclusivamente en directorios de configuración o documentación (`.agents/`, `docs/`, `scripts/`, etc.), la confirmación puede ser simplificada pero **nunca eliminada**.
 
 ## Ejemplos
 

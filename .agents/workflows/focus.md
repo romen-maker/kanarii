@@ -82,4 +82,4 @@ Agent:
 ## Archivos a Leer
 
 - `docs/roadmap.md` (identificar sprint actual y foco)
-- `.agent/ANTIGRAVITY_SYSTEM_PROMPT.md` (ejemplos de reconducción)
+- `.agents/ANTIGRAVITY_SYSTEM_PROMPT.md` (ejemplos de reconducción)

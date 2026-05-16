@@ -163,4 +163,4 @@ markers =
 ## Archivos a Leer
 
 - `tests/` (directorio completo)
-- `.agent/DEFINITION_OF_DONE.md` (criterios de tests)
+- `.agents/DEFINITION_OF_DONE.md` (criterios de tests)

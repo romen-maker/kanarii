@@ -26,21 +26,21 @@ Esta carpeta es **temporal** y no forma parte del repo. Para persistir artifacts
 
 3. **Copiar a la carpeta del proyecto (solo si el usuario lo especifica):**
    ```
-   Destino: projects/[proyecto]/.agent/artifacts/
+   Destino: projects/[proyecto]/.agents/artifacts/
    
    Ejemplos:
-   - projects/kanairos/.agent/artifacts/task_lists/task_2025-12-15.md
-   - projects/kanairos/.agent/artifacts/walkthroughs/walkthrough_content_generator.md
+   - projects/kanairos/.agents/artifacts/task_lists/task_2025-12-15.md
+   - projects/kanairos/.agents/artifacts/walkthroughs/walkthrough_content_generator.md
    ```
 
 4. **Para artifacts globales:**
    ```
-   Destino: .agent/artifacts/[capeta_correspondiente] (revisa las carpetas que hay y elige las oportunas)
+   Destino: .agents/artifacts/[capeta_correspondiente] (revisa las carpetas que hay y elige las oportunas)
    ```
 
 5. **Commit si procede:**
    ```bash
-   git add .agent/artifacts/ projects/*/. agent/artifacts/
+   git add .agents/artifacts/ projects/*/. agent/artifacts/
    git commit -m "docs: save session artifacts [fecha]"
    ```
 
@@ -55,13 +55,13 @@ Agent:
 - implementation_plan.md (plan multi-contexto)
 
 ¿Dónde los guardo?
-1. projects/kanairos/.agent/artifacts/ (recomendado)
-2. .agent/artifacts/ (global)
+1. projects/kanairos/.agents/artifacts/ (recomendado)
+2. .agents/artifacts/ (global)
 3. No guardar
 
 [Usuario elige 1]
 
-✅ Copiado a projects/kanairos/.agent/artifacts/
+✅ Copiado a projects/kanairos/.agents/artifacts/
    - restructuring_plan_2025-12-15.md
 
 ¿Hago commit? (s/n)
@@ -70,9 +70,9 @@ Agent:
 ## Estructura de Artifacts
 
 ```
-.agent/artifacts/                    ← Artifacts globales
-projects/kanairos/.agent/artifacts/  ← Artifacts de KanAIrOS
-projects/client_tds/.agent/artifacts/ ← Artifacts de TDS
+.agents/artifacts/                    ← Artifacts globales
+projects/kanairos/.agents/artifacts/  ← Artifacts de KanAIrOS
+projects/client_tds/.agents/artifacts/ ← Artifacts de TDS
 ```
 
 ## Nomenclatura Sugerida
