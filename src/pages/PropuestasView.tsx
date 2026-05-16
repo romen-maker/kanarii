@@ -3,9 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { usePropuestas } from '../hooks/usePropuestas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { usePropuestaActions } from '../hooks/usePropuestaActions';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
-import { deletePropuesta, Propuesta } from '../lib/appService';
+import { Propuesta } from '../lib/appService';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { PropuestaCard } from '../components/PropuestaCard';
 import { PropuestaDetail } from '../components/PropuestaDetail';
@@ -27,7 +27,7 @@ export function PropuestasView() {
   
   const { items: propuestas, loading } = usePropuestas(communityId);
   const { members } = useCommunityMembers(communityId);
-  const { perform } = useEntityActions();
+  const { removePropuesta } = usePropuestaActions();
   const { startDelete } = useUndoableDelete();
 
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function PropuestasView() {
         totalMiembros={members.length || 0}
         onClick={() => setSelectedPropId(propuesta.id!)}
         onDelete={() => startDelete(propuesta.id!, {
-          onDelete: (id) => perform(deletePropuesta(id)),
+          onDelete: (id) => removePropuesta(id),
           successMessage: 'Propuesta eliminada'
         })}
       />
