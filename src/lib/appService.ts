@@ -9,6 +9,8 @@ export const colActas = collection(db, 'actas');
 export const colProyectos = collection(db, 'proyectos');
 export const colEventos = collection(db, 'eventos');
 export const colPosts = collection(db, 'posts');
+export const colServicios = collection(db, 'servicios');
+export const colAcuerdos = collection(db, 'acuerdos');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas);
@@ -25,6 +27,8 @@ export const getProyectosQuery = (communityId: string) => query(
 );
 export const getEventosQuery = (communityId: string) => query(colEventos, where('communityId', '==', communityId), orderBy('inicio', 'asc'));
 export const getPostsQuery = (communityId: string) => query(colPosts, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
+export const getServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId), where('isActive', '==', true));
+export const getAcuerdosQuery = (communityId: string) => query(colAcuerdos, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
 
 /**
  * Helper genérico para suscripciones en tiempo real.
@@ -436,6 +440,127 @@ export interface Proyecto {
   communityId: string;
   creadoEn?: any; // timestamp
   updatedAt?: any;
+}
+
+// --- MARKETPLACE DE SOBERANÍA ---
+
+export interface Servicio {
+  id?: string;
+  providerId: string;
+  title: string;
+  description: string;
+  type: 'talento' | 'recurso';
+  category: string;
+  location?: string;
+  availability?: string;
+  communityId: string;
+  isActive: boolean;
+  creadoEn: any;
+  actualizadoEn: any;
+}
+
+export interface Acuerdo {
+  id?: string;
+  servicioId: string;
+  providerId: string;
+  solicitanteId: string;
+  communityId: string;
+  status: 'pendiente' | 'en_curso' | 'completada' | 'cancelada';
+  exchangeType?: 'tiempo' | 'especie' | 'economico' | 'regalo';
+  terms: string;
+  fechaPropuesta?: any;
+  linkedEventId?: string | null;
+  feedback?: {
+    gratitud: string;
+    oportunidadMejora: string;
+    creadoEn: any;
+  };
+  creadoEn: any;
+  actualizadoEn: any;
+}
+
+export async function createServicio(servicio: Partial<Servicio>): Promise<string> {
+  try {
+    const docRef = await addDoc(colServicios, {
+      ...servicio,
+      creadoEn: serverTimestamp(),
+      actualizadoEn: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'servicios');
+    throw err;
+  }
+}
+
+export async function updateServicio(id: string, cambios: Partial<Servicio>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'servicios', id), {
+      ...cambios,
+      actualizadoEn: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `servicios/${id}`);
+    throw err;
+  }
+}
+
+export async function deleteServicio(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'servicios', id));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `servicios/${id}`);
+    throw err;
+  }
+}
+
+export async function getServiciosByProvider(uid: string): Promise<Servicio[]> {
+  try {
+    const q = query(colServicios, where('providerId', '==', uid), orderBy('creadoEn', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Servicio));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `servicios?providerId=${uid}`);
+    throw err;
+  }
+}
+
+export async function createAcuerdo(acuerdo: Partial<Acuerdo>): Promise<string> {
+  try {
+    const docRef = await addDoc(colAcuerdos, {
+      ...acuerdo,
+      creadoEn: serverTimestamp(),
+      actualizadoEn: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'acuerdos');
+    throw err;
+  }
+}
+
+export async function updateAcuerdo(id: string, cambios: Partial<Acuerdo>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'acuerdos', id), {
+      ...cambios,
+      actualizadoEn: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `acuerdos/${id}`);
+    throw err;
+  }
+}
+
+export async function getAcuerdosByUser(uid: string, role: 'provider' | 'solicitante'): Promise<Acuerdo[]> {
+  try {
+    const field = role === 'provider' ? 'providerId' : 'solicitanteId';
+    const q = query(colAcuerdos, where(field, '==', uid), orderBy('creadoEn', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `acuerdos?${role}=${uid}`);
+    throw err;
+  }
 }
 
 export async function crearProyecto(proyecto: Proyecto): Promise<string> {
