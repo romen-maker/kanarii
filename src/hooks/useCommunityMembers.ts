@@ -26,7 +26,7 @@ export function useCommunityMembers(communityId?: string) {
     try {
       setLoadingMembers(true);
       const q = query(
-        collection(db, 'fichas'),
+        collection(db, 'community_members'),
         where('communityId', '==', communityId)
       );
       const snapshot = await getDocs(q);
@@ -43,7 +43,7 @@ export function useCommunityMembers(communityId?: string) {
       });
       setMembers(membersData);
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, 'fichas');
+      handleFirestoreError(error, OperationType.GET, 'community_members');
     } finally {
       setLoadingMembers(false);
     }

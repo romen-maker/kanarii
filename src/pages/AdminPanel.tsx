@@ -11,7 +11,15 @@ import { useFichas } from '../hooks/useFichas';
 import { useTareas } from '../hooks/useTareas';
 
 function getDatosPersona(ficha: Ficha) {
-  return ficha.datosPersona ?? ficha.datosOnboarding ?? {};
+  // Buscamos en orden de prioridad: datosPersona > datosOnboarding > Raíz de la ficha
+  const base = ficha.datosPersona ?? ficha.datosOnboarding ?? {};
+  return {
+    ...base,
+    nombre: base.nombre || (ficha as any).nombre || 'Sin Nombre',
+    rol: base.rol || (ficha as any).rol || 'Miembro',
+    rol_comunidad: base.rol_comunidad || (ficha as any).rol_comunidad || 'Sin rol definido',
+    antiguedad_anos: base.antiguedad_anos || (ficha as any).antiguedad_anos || 0
+  };
 }
 
 type RolComunitario = 'propietario' | 'miembro' | 'voluntario';

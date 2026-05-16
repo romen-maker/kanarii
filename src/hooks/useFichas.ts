@@ -8,10 +8,10 @@ export function useFichas(communityId?: string) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let q = query(collection(db, 'fichas'));
+    let q = query(collection(db, 'profiles'));
     
     if (communityId) {
-      q = query(collection(db, 'fichas'), where('communityId', '==', communityId));
+      q = query(collection(db, 'profiles'), where('communityId', '==', communityId));
     }
     
     const unsubscribe = onSnapshot(q, (snapshot) => {

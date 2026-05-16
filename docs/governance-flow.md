@@ -18,7 +18,7 @@ Condición: todos los miembros requeridos han respondido
 Y ninguno con `objecion` activa.
 - Consentimiento ✅ y Preocupación ⚠️ cuentan como avance
 - Duda ❓ NO bloquea ni avanza — requiere resolución en hilo
-- Denominador: totalMembers - 1 (el autor no vota)
+- Denominador: totalMembers (el autor ahora puede votar y su respuesta cuenta)
 - Trigger: al registrar cualquier respuesta
 
 ### De `abierta` → `en_objeciones`
@@ -71,8 +71,8 @@ El autor puede reabrir la propuesta (status → 'borrador') para ampliar el plaz
 4. **Regla de retirada**: El autor es el único que puede 
    descartar una propuesta, en cualquier punto del flujo.
 
-5. **Denominador del acuerdo**: totalMembers - 1.
-   El autor ya expresó su posición al proponer.
+5. **Denominador del acuerdo**: totalMembers.
+   El autor ahora debe registrar explícitamente su consentimiento en la UI.
 
 ## Estructura de datos Firestore
 
@@ -107,6 +107,11 @@ El autor puede reabrir la propuesta (status → 'borrador') para ampliar el plaz
   createdAt: timestamp
 }
 ```
+
+> [!IMPORTANT]
+> **Lógica de Quórum y Dudas ❓**
+> Las respuestas de tipo `duda` NO contabilizan para el quórum de cierre de la propuesta. Su función es pausar el proceso para el miembro hasta que el autor responda sus inquietudes. Para que una propuesta se cierre como `acordada`, el miembro debe cambiar su estado a `consentimiento` o `preocupacion`.
+
 
 ## Pendiente (backlog)
 - [ ] ResponseFeed: mostrar dudas y preocupaciones al autor
