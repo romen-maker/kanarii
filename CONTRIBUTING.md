@@ -48,6 +48,16 @@ Usamos **Conventional Commits** para que el historial sea automático y legible:
 
 ---
 
+## 🤖 Desarrollo Aumentado por IA
+
+En Kanarii no solo colaboramos humanos. Usamos agentes de IA para acelerar el desarrollo y mantener la calidad.
+
+1. **La Carpeta `.agent/`**: Si usas un asistente (Gemini, Cursor, Copilot), pídele que lea el contenido de `.agent/`. Ahí residen nuestras reglas de arquitectura, estilo y nomenclatura.
+2. **Revisión Visual Sagrada**: Antes de realizar cualquier commit que afecte a la interfaz de usuario (archivos en `src/`), **DEBES** verificar los cambios visualmente en tu entorno local (`npm run dev`). No aceptamos contribuciones que no hayan sido validadas en el navegador.
+3. **Mantenimiento de Reglas**: Si descubres que las instrucciones para la IA en `.agent/` fallan o son contradictorias, edítalas y envía una mejora. ¡La IA también necesita aprender de nosotros!
+
+---
+
 ## 🗣️ Comunicación y Propuestas
 
 Si tienes una idea o has encontrado un error:
