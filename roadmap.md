@@ -59,9 +59,13 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
     - [x] Batch atómico para incremento de contador de respuestas.
     - [x] UI responsiva con filtros por categoría y estado.
     - [x] Gestión de estados y borrado con Deshacer.
-- [ ] **2.4 Gestión de Propuestas y Consentimiento**
-  - [ ] Flujo sociocrático: Crear propuesta → ronda de objeciones → estado (borrador / en proceso / acordada / descartada).
-- [ ] **2.5 Sistema de Comunidades v2 (Foco Actual 🎯)**
+- [ ] **2.4 Gestión de Propuestas y Consentimiento (Próximo Foco 🎯)**
+  - [ ] **Modelo de Datos**: Colección `/propuestas` con subcolecciones para objeciones y consentimientos.
+  - [ ] **Creación sociocrática**: Formulario guiado (razón, propuesta, responsable, plazo).
+  - [ ] **Rondas de Consentimiento**: UI para que los miembros aporten "Consentimiento", "Duda", u "Objeción".
+  - [ ] **Gestión de Objeciones**: Hilos de resolución para integrar las objeciones y modificar la propuesta.
+  - [ ] **Estados**: Flujo automático de Borrador → Proceso → Acordada / Descartada.
+- [ ] **2.5 Sistema de Comunidades v2**
   - [x] Evolución del modelo: Multi-membership (`communityIds[]`), manifiestos y privacidad.
   - [x] Servicios de Invitación: Códigos legibles, validación y uso.
   - [x] Migración de datos: Backfill de `/users` y `/fichas` (Arteara).
@@ -71,12 +75,19 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Panel de Administración de Solicitudes: Aprobación/Rechazo en tiempo real con vista previa de ficha (Paso 3 ✅).
   - [x] Paso 4: Generación de códigos de invitación desde el panel admin (Completado ✅).
   - [x] Selector de comunidad en Sidebar para usuarios multi-comunidad.
-- [x] **2.6 Onboarding y Seguridad de Autenticación (Foco Actual 🎯)**
+- [x] **2.6 Onboarding y Seguridad de Autenticación (Completado ✅)**
   - [x] **AuthGateModal Reutilizable**: Sistema de autenticación *just-in-time* escapable con soporte para Google y Magic Link (con detección de errores de proveedor).
   - [x] **Persistencia Cross-Device**: Guardado de fichas en `/fichas_pendientes` (Firestore) antes de la autenticación para evitar pérdida de datos.
   - [x] **Migración Determinista**: Recuperación automática de datos del onboarding tras el login en cualquier dispositivo/navegador.
   - [x] **Membership Guards**: Restricción de acceso a herramientas core (ej: CruceView) para usuarios sin comunidad, con flujo de reconducción.
   - [x] **Aviso de Spam y UX**: Mejorada la comunicación en el flujo de Magic Link con avisos de carpeta de spam y cierres automáticos de modal.
+  - [x] **Login Unificado (Magic Link Return)**: Adaptación del modal para permitir que los usuarios recurrentes inicien sesión sin contraseñas, usando el mismo sistema Magic Link.
+- [ ] **2.7 Marketplace de Soberanía (Apoyo Mutuo)**
+  - [ ] **Catálogo Persistente**: Colección `/servicios` independiente del Tablón efímero, vinculada al perfil del creador.
+  - [ ] **Peticiones y Acuerdos**: Colección `/acuerdos` para conectar solicitante y proveedor con estados (pendiente, en_curso, completado).
+  - [ ] **Gestión de Catálogo**: Pestaña en el perfil para ofrecer/pausar servicios (el propio Ikigai).
+  - [ ] **Directorio Global**: Pantalla `/soberania` para explorar los talentos de la comunidad.
+  - [ ] **Cierre y Feedback**: Modal amigable de gratitud y oportunidades de mejora al completar un acuerdo.
 
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
@@ -102,3 +113,4 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] Exportación de actas a PDF.
 - [ ] RAG (Retrieval Augmented Generation) sobre el histórico de actas.
 - [ ] Notificaciones push para nuevas tareas asignadas.
+- [ ] **Alternativa a Passwordless**: Evaluar implementación de un sistema opcional de Contraseñas / Email tradicional si la adopción de Magic Link genera fricción a largo plazo.
