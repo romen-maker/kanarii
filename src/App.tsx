@@ -12,6 +12,7 @@ import { ActasPanel } from './pages/ActasPanel';
 import { ProyectosView } from './pages/ProyectosView';
 import CalendarioView from './pages/CalendarioView';
 import Tablon from './pages/Tablon';
+import { PropuestasView } from './pages/PropuestasView';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { CruceView } from './pages/CruceView';
@@ -78,6 +79,7 @@ function AppContent() {
           <Route path="/comunidades" element={<ProtectedRoute><ComunidadesView /></ProtectedRoute>} />
           <Route path="/admin/solicitudes" element={<ProtectedRoute><AdminSolicitudesView /></ProtectedRoute>} />
           <Route path="/soberania" element={<ProtectedRoute><MarketplaceView /></ProtectedRoute>} />
+          <Route path="/gobernanza" element={<ProtectedRoute><PropuestasView /></ProtectedRoute>} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>
         

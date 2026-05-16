@@ -1,4 +1,4 @@
-import { Home, User, CheckSquare, Briefcase, FileText, Settings, Calendar, MessageSquare, Handshake } from 'lucide-react';
+import { Home, User, CheckSquare, Briefcase, FileText, Settings, Calendar, MessageSquare, Handshake, Scale } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -42,6 +42,11 @@ export const navigationConfig: NavItem[] = [
     label: 'Actas',
     href: '/actas',
     icon: FileText,
+  },
+  {
+    label: 'Gobernanza',
+    href: '/gobernanza',
+    icon: Scale,
   },
   {
     label: 'Marketplace',

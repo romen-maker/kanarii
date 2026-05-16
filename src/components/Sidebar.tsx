@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck } from 'lucide-react';
+import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck, Scale } from 'lucide-react';
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -61,7 +61,9 @@ export function Sidebar() {
       {/* Navigation Links */}
       <nav className="flex-1 px-4 space-y-1">
         {mainNavItems.map((item, idx) => {
-          const isActive = location.pathname === item.href;
+          const isActive = item.href === '/' 
+            ? location.pathname === '/' 
+            : location.pathname.startsWith(item.href);
           return (
             <button
               key={idx}
