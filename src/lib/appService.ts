@@ -879,7 +879,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       hora: horaVal,
       genero: datosOnboarding.genero,
       saberes: datosOnboarding.saberes,
-      rol_comunidad: datosOnboarding.rol_comunidad || datosOnboarding.rol_arteara,
+      rol_comunidad: datosOnboarding.rol_comunidad || (datosOnboarding as any).rol_arteara,
       antiguedad_anos: parseFloat(datosOnboarding.antiguedad_anos as string) || 0,
       tension: datosOnboarding.tension,
       lugar: datosOnboarding.lugar,
@@ -913,7 +913,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
         perfilVisual.dimensiones = dimensiones;
         
-        manualMarkdown = await generarManual(rawData, datosPersona, perfilVisual, comunidadNombre);
+        manualMarkdown = await generarManual(rawData, datosPersona, perfilVisual, undefined);
         estado = "completo";
       } catch(apiError) {
         console.error("Error al generar perfil visual o manual", apiError);
@@ -1089,7 +1089,7 @@ export async function migrarFichaPendiente(email: string, uid: string): Promise<
       
       // REGLA: Si en /fichas_pendientes guardamos el fichaFull ya listo:
       // FIX 2: Asegurar que los datos preview se mapean a los campos finales
-      const fichaMigrada = {
+      const fichaMigrada: any = {
         ...data,
         userId: uid,
         updatedAt: serverTimestamp()
@@ -1362,10 +1362,12 @@ export function clasificarCanales(perfil1: any, perfil2: any) {
       continue;
     }
 
-    const hasP1A = v1.has(pA) || v1.has(pA.toString());
-    const hasP1B = v1.has(pB) || v1.has(pB.toString());
-    const hasP2A = v2.has(pA) || v2.has(pA.toString());
-    const hasP2B = v2.has(pB) || v2.has(pB.toString());
+    const pANum = Number(pA);
+    const pBNum = Number(pB);
+    const hasP1A = v1.has(pANum) || v1.has(pA as any);
+    const hasP1B = v1.has(pBNum) || v1.has(pB as any);
+    const hasP2A = v2.has(pANum) || v2.has(pA as any);
+    const hasP2B = v2.has(pBNum) || v2.has(pB as any);
 
     // 1. ELECTROMAGNÉTICOS
     if (!inC1 && !inC2) {
@@ -2030,10 +2032,7 @@ export async function registerPropuestaResponse(
     }
     const propData = propSnap.data() as Propuesta;
     
-    // El autor no puede emitir respuesta a su propia propuesta
-    if (propData.authorId === respuesta.memberId) {
-      return; 
-    }
+
 
     const batch = writeBatch(db);
     
