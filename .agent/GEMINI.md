@@ -27,6 +27,19 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile> => 
 }
 ```
 
+### Modelo de Datos (Firestore + Interfaces TypeScript)
+
+Los campos de Firestore y las interfaces en `appService.ts` siguen las mismas convenciones que el código:
+
+**Siempre en inglés, camelCase.**
+
+- ✅ `providerId`, `title`, `isActive`, `createdAt`, `exchangeType`  
+- ❌ `autorUid`, `titulo`, `estado`, `creadoEn`, `tipoIntercambio`
+
+**Regla de consistencia entre entidades:** si una entidad existente usa `authorId`, las nuevas entidades no pueden usar `authorId` ni `autorUid`. Antes de nombrar un campo nuevo, verificar cómo se llama el campo equivalente en otras colecciones de `appService.ts`.
+
+**Por qué:** Firebase SDK usa inglés (`auth.currentUser.uid`, `serverTimestamp()`), las librerías externas usan inglés, y los agentes razonan mejor sobre modelos en inglés. Mezclar idiomas genera código Frankenstein difícil de mantener.
+
 ---
 
 ## 🎯 Teaching Approach & Architecture First
@@ -138,4 +151,4 @@ Antes de implementar desde cero lógicas complejas (ej. validaciones, manipulaci
 
 ---
 
-*Última actualización: 15 May 2026*
+*Última actualización: 16 May 2026*

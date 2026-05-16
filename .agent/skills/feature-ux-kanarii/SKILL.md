@@ -39,23 +39,25 @@ Consulta `src/components/` para identificar qué piezas ya existen que puedan se
 ### 5. Modelo de Datos (Firestore)
 Define la estructura necesaria:
 - **Colección**: ¿Dónde se guardan los datos?
-- **Campos**: Lista de campos necesarios justificando su uso.
+- **Campos**: Lista de campos necesarios **siempre en Inglés y camelCase** (ej: `authorId`, `isActive`).
+- **Consistencia**: Verificar en `appService.ts` si ya existe un nombre estándar para campos similares.
 - **Relaciones**: ¿Cómo se vincula con usuarios o comunidades existentes?
 
 ### 6. Entrega (Artefacto)
 Genera siempre un documento con:
 - **Flujo de Pantallas**: Descripción del recorrido.
 - **Componentes**: Estrategia de construcción (reutilizar vs crear).
-- **Firestore**: Cambios en el modelo de datos.
+- **Firestore**: Cambios en el modelo de datos (campos en inglés).
 - **Criterios de Aceptación**: Cómo sabemos que la feature funciona.
 - **Fuera de MVP**: Lo que es buena idea pero se queda para después.
 
 ## Restricciones
 - **No escribir código**: Esta skill es para diseño y planificación.
+- **Nomenclatura Estricta**: No propongas campos en español para el modelo de datos.
 - **Máximo 3 pantallas**: Mantén el enfoque en el MVP.
 - **Roles y Permisos**: Si la funcionalidad requiere niveles de acceso, señálalo explícitamente al inicio.
 - **Justificación Firestore**: No propongas añadir campos "por si acaso"; cada campo debe tener un uso en el flujo diseñado.
 
 ---
 
-*Última actualización: 15 May 2026*
+*Última actualización: 16 May 2026*

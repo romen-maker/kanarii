@@ -12,12 +12,14 @@ Esta habilidad es el protocolo obligatorio para añadir cualquier funcionalidad 
 ### Fase 1: Mapeo y Análisis Previo
 Antes de escribir una sola línea de código, debes responder a estas preguntas analizando el repositorio:
 1. **Entidad de Datos**: ¿Qué entidad maneja esta feature? (ej. tareas, actas, eventos).
-2. **Hooks Existentes**: ¿Existe ya un hook `use[Entidad].ts` en `src/hooks/`? 
+2. **Consistencia de Nomenclatura**: ¿Los campos propuestos siguen `naming-convention.md`? 
+   - *Verificación*: Abrir `appService.ts` y comparar nombres de campos (ej: ¿usamos `authorId` o `creatorId` en otras partes?).
+3. **Hooks Existentes**: ¿Existe ya un hook `use[Entidad].ts` en `src/hooks/`? 
    - *Regla*: Si existe, se reutiliza o extiende. No se crea uno nuevo para la misma entidad.
-3. **Servicios de Datos**: ¿Hay ya operaciones similares en `src/lib/appService.ts`?
+4. **Servicios de Datos**: ¿Hay ya operaciones similares en `src/lib/appService.ts`?
    - *Regla*: Toda interacción con Firestore vive en `appService.ts`. No se importa `firebase/firestore` en otros sitios.
-4. **Acciones y Mutaciones**: ¿La acción (crear, editar, borrar) está ya contemplada en `useEntityActions`?
-5. **UI Reutilizable**: ¿Qué componentes de `src/components/ui/` pueden usarse para esta feature?
+5. **Acciones y Mutaciones**: ¿La acción (crear, editar, borrar) está ya contemplada en `useEntityActions`?
+6. **UI Reutilizable**: ¿Qué componentes de `src/components/ui/` pueden usarse para esta feature?
 
 ### Fase 2: Plan de Acción (Decisión)
 Presenta al usuario un plan estructurado antes de proceder:
@@ -54,4 +56,4 @@ Checklist final antes de dar la tarea por concluida:
 
 ---
 
-*Última actualización: 15 May 2026*
+*Última actualización: 16 May 2026*
