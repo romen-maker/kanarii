@@ -1,7 +1,10 @@
 import React from 'react';
 import { Propuesta, PropuestaRespuesta, PropuestaHilo } from '../lib/appService';
 import { usePropuestaDetail } from '../hooks/usePropuestaDetail';
+import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { ResponseModal } from './ResponseModal';
+import { S3Timeline } from './S3Timeline';
+import { ConsentGrid } from './ConsentGrid';
 import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -20,6 +23,7 @@ export function PropuestaDetail({
   onResponseClick
 }: PropuestaDetailProps) {
   const { propuesta, respuestas, hilos, loading } = usePropuestaDetail(propuestaId);
+  const { members } = useCommunityMembers(propuesta?.communityId);
   const [showResponseModal, setShowResponseModal] = React.useState(false);
 
   if (loading || !propuesta) {
@@ -85,20 +89,14 @@ export function PropuestaDetail({
           </section>
 
           {/* S3 Process Actions */}
-          <section className="pt-4 border-t border-stone-200">
-            <div className="flex items-center justify-between mb-6">
-              <h4 className="text-xs font-black text-stone-500 uppercase tracking-widest flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" /> Sala de Deliberación
-              </h4>
-              <span className="text-[10px] font-bold text-stone-400 uppercase bg-stone-100 px-2 py-1 rounded-full">
-                {respuestas.length} participaciones
-              </span>
-            </div>
+          <section className="pt-4 border-t border-stone-200 space-y-12">
+            <ConsentGrid 
+              members={members}
+              respuestas={respuestas}
+              currentUserId={currentUserId}
+            />
 
-            {/* Placeholder para S3Timeline y ConsentGrid */}
-            <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-3xl p-12 text-center text-stone-400 italic">
-              Timeline de deliberación y Grid de consentimiento (Fase 3.5)
-            </div>
+            <S3Timeline propuesta={propuesta} />
           </section>
         </div>
 
