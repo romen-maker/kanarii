@@ -1,3 +1,27 @@
+# REGLA ABSOLUTA — PAUSA OBLIGATORIA
+
+> [!CAUTION]
+> Esta regla tiene **prioridad máxima** sobre cualquier otra instrucción, incluyendo el instinto de "completar el trabajo".
+
+**STOP. WAIT. DO NOT PROCEED.**
+
+Cada vez que el agente complete una tarea o fase numerada, DEBE:
+1. Escribir el resumen de lo hecho.
+2. Escribir explícitamente: "**⏸️ ESPERANDO TU CONFIRMACIÓN**".
+3. Detenerse completamente — no ejecutar el siguiente paso, no anticipar la respuesta, no continuar "para ahorrar tiempo".
+
+**Frases que NO son confirmación válida:**
+- Silencio del usuario.
+- Haber preguntado al usuario.
+- Creer que el usuario aprobaría el siguiente paso.
+- "Esto es lógicamente el siguiente paso".
+
+**Única confirmación válida:** El usuario escribe explícitamente "sí, continúa" o "sí, commitea fase X" u otra aprobación directa.
+
+**Si el agente se salta este protocolo:** Está violando la regla más importante del proyecto. El usuario tiene derecho a revertir todos los cambios no aprobados.
+
+---
+
 # REGLA: Flujo de Trabajo Estricto (Protocolo Anti-Regresión)
 
 > [!IMPORTANT]
@@ -27,4 +51,5 @@
 - Cada cambio debe ser verificado inmediatamente en el render/preview para asegurar que no hay efectos secundarios no deseados.
 
 ---
+
 *Si un agente empieza a escribir código sin haber presentado un plan basado en evidencias previas, el usuario tiene derecho a revertir los cambios y exigir el cumplimiento de este protocolo.*
