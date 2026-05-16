@@ -1817,6 +1817,24 @@ export async function useInvitacion(codigo: string, uid: string): Promise<void> 
     });
     
     await batch.commit();
+
+    // Opción B: propagar communityId a fichas/profiles/community_members si ya existen
+    const fichaRef = doc(db, 'fichas', uid);
+    const fichaSnap = await getDoc(fichaRef);
+    if (fichaSnap.exists()) {
+      const updatePayload = {
+        'datosOnboarding.communityId': inv.communityId,
+        updatedAt: serverTimestamp()
+      };
+      await Promise.all([
+        setDoc(doc(db, 'fichas', uid), updatePayload, { merge: true }),
+        setDoc(doc(db, 'profiles', uid), updatePayload, { merge: true }),
+        setDoc(doc(db, 'community_members', uid),
+          { communityId: inv.communityId, updatedAt: serverTimestamp() },
+          { merge: true }
+        )
+      ]);
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');
     throw error;
