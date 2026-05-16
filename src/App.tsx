@@ -18,6 +18,7 @@ import { CruceView } from './pages/CruceView';
 import { ComunidadesView } from './pages/ComunidadesView';
 import { AdminSolicitudesView } from './pages/AdminSolicitudesView';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import MarketplaceView from './pages/MarketplaceView';
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
 
@@ -76,6 +77,7 @@ function AppContent() {
           <Route path="/tablon" element={<ProtectedRoute><Tablon /></ProtectedRoute>} />
           <Route path="/comunidades" element={<ProtectedRoute><ComunidadesView /></ProtectedRoute>} />
           <Route path="/admin/solicitudes" element={<ProtectedRoute><AdminSolicitudesView /></ProtectedRoute>} />
+          <Route path="/soberania" element={<ProtectedRoute><MarketplaceView /></ProtectedRoute>} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>
         
