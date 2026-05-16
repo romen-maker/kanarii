@@ -1019,6 +1019,8 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     const memberRef = doc(db, 'community_members', userId);
     const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
     await setDoc(memberRef, {
+      userId,
+      communityId: fichaFull.communityId || fichaFull.datosOnboarding?.communityId || fichaFull.datosPersona?.communityId || null,
       nombre: base.nombre || fichaFull.nombre || 'Sin Nombre',
       tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
       elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
@@ -1027,8 +1029,7 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
       rol_comunidad: base.rol_comunidad || 'miembro',
       estado: fichaFull.estado,
       creadoEn: fichaFull.createdAt || serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      userId
+      updatedAt: serverTimestamp()
     }, { merge: true });
   } catch (err) {
     handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
