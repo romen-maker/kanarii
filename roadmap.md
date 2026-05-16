@@ -117,6 +117,10 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] Exportación de actas a PDF.
 - [ ] RAG (Retrieval Augmented Generation) sobre el histórico de actas.
 - [ ] Notificaciones push para nuevas tareas asignadas.
+- [ ] **Tablón**: Añadir botón para editar post directamente desde la lista o vista principal.
+- [ ] **Tablón**: Añadir botón para eliminar post.
+- [ ] **Gobernanza**: Añadir botón para eliminar acta.
+- [ ] **Propuestas**: Arreglar validación de descripción (hacerla obligatoria u opcional, revisar bug "error al procesar solicitud").
 - [ ] **Alternativa a Passwordless**: Evaluar implementación de un sistema opcional de Contraseñas / Email tradicional si la adopción de Magic Link genera fricción a largo plazo.
 - [ ] **Evolución Propuestas (Post-2.4)**:
   - [ ] Notificaciones push cuando hay propuesta nueva.

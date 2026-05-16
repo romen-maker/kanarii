@@ -1,3 +1,4 @@
+// TODO: Fase Posterior - Arreglar bug de validación de formulario (error al procesar solicitud) cuando la descripción está vacía
 import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, ArrowLeft, Send, User, Calendar, Info, Gavel } from 'lucide-react';
 import { Propuesta, createPropuesta, updatePropuesta } from '../lib/appService';
