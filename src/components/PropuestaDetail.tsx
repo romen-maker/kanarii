@@ -6,7 +6,7 @@ import { useEntityActions } from '../hooks/useEntityActions';
 import { ResponseModal } from './ResponseModal';
 import { S3Timeline } from './S3Timeline';
 import { ConsentGrid } from './ConsentGrid';
-import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2, RefreshCw } from 'lucide-react';
+import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2, RefreshCw, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -49,6 +49,18 @@ export function PropuestaDetail({
     });
     setShowIntegrationModal(false);
   };
+
+  const getResponseStyle = (type: string) => {
+    switch (type) {
+      case 'objecion': return { icon: AlertCircle, bg: 'bg-rose-50', border: 'border-rose-100', text: 'text-rose-700', iconColor: 'text-rose-600', label: 'Objeción' };
+      case 'duda': return { icon: HelpCircle, bg: 'bg-sky-50', border: 'border-sky-100', text: 'text-sky-700', iconColor: 'text-sky-600', label: 'Duda' };
+      case 'preocupacion': return { icon: MessageSquare, bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700', iconColor: 'text-amber-600', label: 'Preocupación' };
+      case 'consentimiento': return { icon: CheckCircle2, bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700', iconColor: 'text-emerald-600', label: 'Consentimiento' };
+      default: return { icon: MessageSquare, bg: 'bg-stone-50', border: 'border-stone-100', text: 'text-stone-700', iconColor: 'text-stone-600', label: 'Comentario' };
+    }
+  };
+
+  const respuestasConTexto = respuestas.filter(r => r.content?.trim());
 
   return (
     <div 
@@ -112,6 +124,42 @@ export function PropuestaDetail({
               respuestas={respuestas}
               currentUserId={currentUserId}
             />
+
+            {/* Posiciones detalladas */}
+            {respuestasConTexto.length > 0 && (
+              <div className="space-y-4 pt-4">
+                <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] ml-1">
+                  Posiciones registradas
+                </h4>
+                <div className="grid grid-cols-1 gap-4">
+                  {respuestasConTexto.map((r, idx) => {
+                    const member = members.find(m => m.userId === r.memberId);
+                    const style = getResponseStyle(r.type);
+                    const Icon = style.icon;
+                    const dateLabel = r.updatedAt ? format(r.updatedAt.toDate ? r.updatedAt.toDate() : new Date(r.updatedAt), "d 'de' MMM, HH:mm", { locale: es }) : '';
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`${style.bg} ${style.border} border rounded-2xl p-5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500`}
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <Icon className={`w-4 h-4 ${style.iconColor}`} />
+                            <span className={`text-[10px] font-black ${style.text} uppercase tracking-widest`}>
+                              {style.label} · {member?.nombre || 'Miembro'}
+                            </span>
+                          </div>
+                          <span className="text-[9px] font-medium text-stone-400 uppercase">{dateLabel}</span>
+                        </div>
+                        <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{r.content}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <S3Timeline propuesta={propuesta} />
           </section>
