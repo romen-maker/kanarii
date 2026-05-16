@@ -3,8 +3,8 @@ import { usePosts } from '../hooks/usePosts';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { useEntityActions } from '../hooks/useEntityActions';
-import { createPost, Post } from '../lib/appService';
+import { usePostActions } from '../hooks/usePostActions';
+import { Post } from '../lib/appService';
 import { CreatePostModal } from '../components/CreatePostModal';
 import { PostDetailModal } from '../components/PostDetailModal';
 import { MessageSquare, Plus, Filter, Search } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function Tablon() {
   const { currentCommunityId } = useComunidad();
   const { posts, loading } = usePosts(currentCommunityId || 'arteara');
   const { members } = useCommunityMembers(currentCommunityId || 'arteara');
-  const { perform, isSubmitting } = useEntityActions();
+  const { addPost, isExecuting: isSubmitting } = usePostActions();
 
   const [activeTab, setActiveTab] = useState<'necesidad' | 'oferta'>('necesidad');
   const [filterCategoria, setFilterCategoria] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function Tablon() {
       estado: 'activo'
     };
 
-    await perform(createPost(payload), {
+    await addPost(payload, {
       successMessage: "Publicación creada ✨",
       onSuccess: () => setIsCreateModalOpen(false)
     });
