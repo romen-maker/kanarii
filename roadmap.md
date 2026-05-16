@@ -59,12 +59,16 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
     - [x] Batch atómico para incremento de contador de respuestas.
     - [x] UI responsiva con filtros por categoría y estado.
     - [x] Gestión de estados y borrado con Deshacer.
-- [ ] **2.4 Gestión de Propuestas y Consentimiento (Próximo Foco 🎯)**
-  - [ ] **Modelo de Datos**: Colección `/propuestas` con subcolecciones para objeciones y consentimientos.
-  - [ ] **Creación sociocrática**: Formulario guiado (razón, propuesta, responsable, plazo).
-  - [ ] **Rondas de Consentimiento**: UI para que los miembros aporten "Consentimiento", "Duda", u "Objeción".
-  - [ ] **Gestión de Objeciones**: Hilos de resolución para integrar las objeciones y modificar la propuesta.
-  - [ ] **Estados**: Flujo automático de Borrador → Proceso → Acordada / Descartada.
+- [ ] **2.4 Gestión de Propuestas y Consentimiento (S3) (Próximo Foco 🎯)**
+  - [ ] **Modelo de Datos S3**: Colección `/propuestas` con subcolecciones `/respuestas` y `/hilos` (plana con `relatedResponseId`).
+  - [ ] **Campos Críticos**: `activeObjectionsCount` para estados automáticos y `responsibleIds[]` para co-responsabilidad.
+  - [ ] **Creación Sociocrática (Wizard)**: Formulario en pasos (Tensión/Driver → Propuesta → Ejecución y Revisión).
+  - [ ] **Directorio de Decisiones**: Pantalla de lista con filtros por estado y badge de "Requiere tu atención".
+  - [ ] **Sala de Deliberación**: Detalle de propuesta con Timeline S3 y visualización de participantes.
+  - [ ] **Opciones de Respuesta S3**: Modal inline con 4 opciones explicadas (Consentimiento ✅, Preocupación 💭, Duda ❓, Objeción ⛔).
+  - [ ] **Gestión de Dudas y Objeciones**: Hilos de aclaración para Dudas y obligación de argumentar daño en Objeciones.
+  - [ ] **Estados Automáticos**: Transición asíncrona (borrador → abierta → en_objeciones → integrando → acordada / descartada).
+  - [ ] **Acuerdo Cálido**: Estado de éxito visual que mantiene visibles las preocupaciones para futuras revisiones (`reviewDate`).
 - [ ] **2.5 Sistema de Comunidades v2**
   - [x] Evolución del modelo: Multi-membership (`communityIds[]`), manifiestos y privacidad.
   - [x] Servicios de Invitación: Códigos legibles, validación y uso.
@@ -82,12 +86,12 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] **Membership Guards**: Restricción de acceso a herramientas core (ej: CruceView) para usuarios sin comunidad, con flujo de reconducción.
   - [x] **Aviso de Spam y UX**: Mejorada la comunicación en el flujo de Magic Link con avisos de carpeta de spam y cierres automáticos de modal.
   - [x] **Login Unificado (Magic Link Return)**: Adaptación del modal para permitir que los usuarios recurrentes inicien sesión sin contraseñas, usando el mismo sistema Magic Link.
-- [ ] **2.7 Marketplace de Soberanía (Apoyo Mutuo)**
-  - [ ] **Catálogo Persistente**: Colección `/servicios` independiente del Tablón efímero, vinculada al perfil del creador.
-  - [ ] **Peticiones y Acuerdos**: Colección `/acuerdos` para conectar solicitante y proveedor con estados (pendiente, en_curso, completado).
-  - [ ] **Gestión de Catálogo**: Pestaña en el perfil para ofrecer/pausar servicios (el propio Ikigai).
-  - [ ] **Directorio Global**: Pantalla `/soberania` para explorar los talentos de la comunidad.
-  - [ ] **Cierre y Feedback**: Modal amigable de gratitud y oportunidades de mejora al completar un acuerdo.
+- [x] **2.7 Marketplace de Soberanía (Apoyo Mutuo) ✅**
+  - [x] **Catálogo Persistente**: Colección `/servicios` independiente del Tablón efímero, vinculada al perfil del creador.
+  - [x] **Peticiones y Acuerdos**: Colección `/acuerdos` para conectar solicitante y proveedor con estados (`pendiente`, `en_curso`, `completada`, `cancelada`).
+  - [x] **Gestión de Catálogo**: Acciones de soberanía para el propietario (editar, pausar/reactivar con icono `Archive`, eliminar con `Deshacer`).
+  - [x] **Directorio Global**: Pantalla `/soberania` con navegación por tabs (Catálogo / Mis Acuerdos) y filtros por talento/recurso y categoría.
+  - [x] **Cierre y Feedback**: Flujo de estados para acuerdos, permitiendo marcar como completado directamente desde la UI.
 
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
@@ -114,3 +118,8 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] RAG (Retrieval Augmented Generation) sobre el histórico de actas.
 - [ ] Notificaciones push para nuevas tareas asignadas.
 - [ ] **Alternativa a Passwordless**: Evaluar implementación de un sistema opcional de Contraseñas / Email tradicional si la adopción de Magic Link genera fricción a largo plazo.
+- [ ] **Evolución Propuestas (Post-2.4)**:
+  - [ ] Notificaciones push cuando hay propuesta nueva.
+  - [ ] Propuestas entre comunidades.
+  - [ ] IA para sugerir si una objeción es válida S3.
+  - [ ] Plantillas de propuestas predefinidas.

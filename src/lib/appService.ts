@@ -11,6 +11,7 @@ export const colEventos = collection(db, 'eventos');
 export const colPosts = collection(db, 'posts');
 export const colServicios = collection(db, 'servicios');
 export const colAcuerdos = collection(db, 'acuerdos');
+export const colPropuestas = collection(db, 'propuestas');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas);
@@ -29,6 +30,7 @@ export const getEventosQuery = (communityId: string) => query(colEventos, where(
 export const getPostsQuery = (communityId: string) => query(colPosts, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
 export const getServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId), where('isActive', '==', true));
 export const getAcuerdosQuery = (communityId: string) => query(colAcuerdos, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
+export const getPropuestasQuery = (communityId: string) => query(colPropuestas, where('communityId', '==', communityId), orderBy('createdAt', 'desc'));
 
 /**
  * Helper genérico para suscripciones en tiempo real.
@@ -1901,5 +1903,150 @@ export function listenSolicitudes(
   return onSnapshot(q, (snap) => {
     const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SolicitudAcceso));
     callback(list);
+  });
+}
+
+// --- GESTIÓN DE PROPUESTAS (S3) ---
+
+export interface Propuesta {
+  id?: string;
+  title: string;
+  description: string;
+  reason: string;
+  authorId: string;
+  communityId: string;
+  status: 'borrador' | 'abierta' | 'en_objeciones' | 'integrando' | 'acordada' | 'descartada';
+  responsibleIds: string[];
+  activeObjectionsCount: number;
+  deadline?: any;
+  reviewDate?: any;
+  version: number;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface PropuestaRespuesta {
+  id?: string;
+  memberId: string;
+  type: 'consentimiento' | 'preocupacion' | 'duda' | 'objecion';
+  content?: string;
+  status?: 'pendiente' | 'aclarada' | 'integrada' | 'retirada';
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface PropuestaHilo {
+  id?: string;
+  relatedResponseId: string;
+  authorId: string;
+  content: string;
+  createdAt: any;
+}
+
+export async function createPropuesta(propuesta: Partial<Propuesta>): Promise<string> {
+  try {
+    const docRef = await addDoc(colPropuestas, {
+      ...propuesta,
+      status: propuesta.status || 'borrador',
+      version: 1,
+      activeObjectionsCount: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'propuestas');
+    throw err;
+  }
+}
+
+export async function updatePropuesta(id: string, cambios: Partial<Propuesta>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'propuestas', id), {
+      ...cambios,
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `propuestas/${id}`);
+    throw err;
+  }
+}
+
+export async function deletePropuesta(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'propuestas', id));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `propuestas/${id}`);
+    throw err;
+  }
+}
+
+export async function registerPropuestaResponse(propuestaId: string, respuesta: PropuestaRespuesta, oldType?: PropuestaRespuesta['type']): Promise<void> {
+  try {
+    const batch = writeBatch(db);
+    const propRef = doc(db, 'propuestas', propuestaId);
+    const resRef = doc(db, 'propuestas', propuestaId, 'respuestas', respuesta.memberId);
+    
+    // 1. Registrar respuesta
+    batch.set(resRef, {
+      ...respuesta,
+      updatedAt: serverTimestamp(),
+      createdAt: respuesta.createdAt || serverTimestamp()
+    });
+
+    // 2. Lógica del contador de objeciones
+    let countAdjustment = 0;
+    
+    // Caso A: Es una nueva objeción
+    if (!oldType && respuesta.type === 'objecion') {
+      countAdjustment = 1;
+    }
+    // Caso B: Era objeción y ya no lo es (retirada/cambiada)
+    else if (oldType === 'objecion' && respuesta.type !== 'objecion') {
+      countAdjustment = -1;
+    }
+    // Caso C: No era objeción y ahora sí (cambio de opinión)
+    else if (oldType && oldType !== 'objecion' && respuesta.type === 'objecion') {
+      countAdjustment = 1;
+    }
+
+    if (countAdjustment !== 0) {
+      batch.update(propRef, {
+        activeObjectionsCount: increment(countAdjustment),
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    await batch.commit();
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, `propuestas/${propuestaId}/respuestas`);
+    throw err;
+  }
+}
+
+export async function createHiloMessage(propuestaId: string, mensaje: PropuestaHilo): Promise<void> {
+  try {
+    const hiloRef = doc(collection(db, 'propuestas', propuestaId, 'hilos'));
+    await setDoc(hiloRef, {
+      ...mensaje,
+      createdAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, `propuestas/${propuestaId}/hilos`);
+    throw err;
+  }
+}
+
+export function listenPropuestaResponses(propuestaId: string, callback: (respuestas: PropuestaRespuesta[]) => void) {
+  const q = query(collection(db, 'propuestas', propuestaId, 'respuestas'), orderBy('createdAt', 'asc'));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropuestaRespuesta)));
+  });
+}
+
+export function listenPropuestaHilos(propuestaId: string, callback: (mensajes: PropuestaHilo[]) => void) {
+  const q = query(collection(db, 'propuestas', propuestaId, 'hilos'), orderBy('createdAt', 'asc'));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropuestaHilo)));
   });
 }
