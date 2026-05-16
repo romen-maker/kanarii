@@ -1,6 +1,7 @@
 import React from 'react';
 import { Propuesta, PropuestaRespuesta, PropuestaHilo } from '../lib/appService';
 import { usePropuestaDetail } from '../hooks/usePropuestaDetail';
+import { ResponseModal } from './ResponseModal';
 import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -19,6 +20,7 @@ export function PropuestaDetail({
   onResponseClick
 }: PropuestaDetailProps) {
   const { propuesta, respuestas, hilos, loading } = usePropuestaDetail(propuestaId);
+  const [showResponseModal, setShowResponseModal] = React.useState(false);
 
   if (loading || !propuesta) {
     return (
@@ -106,7 +108,7 @@ export function PropuestaDetail({
             <div className="flex flex-col gap-4">
               {!userResponse ? (
                 <button 
-                  onClick={onResponseClick}
+                  onClick={() => setShowResponseModal(true)}
                   className="w-full py-5 bg-[#4A4E4D] text-white font-black uppercase tracking-widest rounded-[1.5rem] hover:bg-black transition-all shadow-xl active:scale-95 flex justify-center items-center gap-3"
                 >
                   Dar mi respuesta socrática <Send className="w-5 h-5" />
@@ -121,7 +123,7 @@ export function PropuestaDetail({
                     </div>
                   </div>
                   <button 
-                    onClick={onResponseClick}
+                    onClick={() => setShowResponseModal(true)}
                     className="text-[10px] font-black text-teal-700 uppercase tracking-widest hover:underline"
                   >
                     Cambiar posición
@@ -144,6 +146,18 @@ export function PropuestaDetail({
           )}
         </div>
       </div>
+
+      {showResponseModal && (
+        <ResponseModal
+          propuestaId={propuestaId}
+          memberId={currentUserId}
+          existingResponse={userResponse}
+          onClose={() => setShowResponseModal(false)}
+          onSuccess={() => {
+            // Refresco automático vía snapshot del hook
+          }}
+        />
+      )}
     </div>
   );
 }
