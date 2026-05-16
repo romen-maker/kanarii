@@ -10,13 +10,13 @@ description: List available tools and how to propose new ones
 
 Antes de proponer herramientas, lee estos archivos para conocer el stack actual:
 
-### `.agent/context/infrastructure.md`
+### `.agents/context/infrastructure.md`
 - Infraestructura desplegada (OCI, Coolify, PostgreSQL, MinIO, etc.)
 - Herramientas internas (N8N MCP, Prompt Lab, SEO Generator)
 - Integraciones disponibles (Google APIs)
 - Reglas de oro (DB, redes Docker, DNS)
 
-### `.agent/context/services.md`
+### `.agents/context/services.md`
 - Servicios externos y APIs (OpenRouter, Sentry, Cloudflare R2)
 - Credenciales y configuración
 - Variables de entorno requeridas
@@ -29,7 +29,7 @@ Si ninguna herramienta del stack cubre la necesidad:
 
 ### A. Leer Política
 
-**Archivo:** `.agent/context/tools-policy.md`
+**Archivo:** `.agents/context/tools-policy.md`
 
 **Aplicar criterios:**
 -  **Tier 1 (Preferido):** OSS, self-hosted, licencia permisiva
@@ -38,7 +38,7 @@ Si ninguna herramienta del stack cubre la necesidad:
 
 ### B. Verificar Herramientas Premium del Usuario
 
-**Leer:** `.agent/context/user_premium_tools.md`
+**Leer:** `.agents/context/user_premium_tools.md`
 
 Si el usuario ya tiene la herramienta:
 - Úsala directamente
@@ -78,10 +78,10 @@ Ejecutar workflow `/update-tools` para documentar la herramienta.
 
 | Archivo | Propósito |
 |---------|-----------|
-| `.agent/context/infrastructure.md` | Infraestructura + herramientas internas |
-| `.agent/context/services.md` | APIs y servicios externos |
-| `.agent/context/tools-policy.md` | Política para nuevas herramientas |
-| `.agent/context/user_premium_tools.md` | Tools premium del usuario |
+| `.agents/context/infrastructure.md` | Infraestructura + herramientas internas |
+| `.agents/context/services.md` | APIs y servicios externos |
+| `.agents/context/tools-policy.md` | Política para nuevas herramientas |
+| `.agents/context/user_premium_tools.md` | Tools premium del usuario |
 
 ---
 
@@ -89,5 +89,5 @@ Ejecutar workflow `/update-tools` para documentar la herramienta.
 
 - [ ] Leíste `infrastructure.md` y `services.md`
 - [ ] Verificaste que ninguna herramienta del stack cubre la necesidad
-- [ ] Si propones nueva: aplicaste `.agent/context/tools-policy.md`
+- [ ] Si propones nueva: aplicaste `.agents/context/tools-policy.md`
 - [ ] Si aprobaron: ejecutas `/update-tools`

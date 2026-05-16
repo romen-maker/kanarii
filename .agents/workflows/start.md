@@ -12,10 +12,10 @@ description: Initialize agent for new session
 
 Leer en este orden:
 
-1. **`.agent/GEMINI.md`** (rules globales - CRÍTICO: RULE #0 + RULE #1)
-2. **`.agent/ANTIGRAVITY_SYSTEM_PROMPT.md`** (prompt system completo)
-3. **`.agent/AGENT_ONBOARDING.md`** (arquitectura del proyecto)
-4. `.agent/context/` (infraestructura, servicios)
+1. **`.agents/GEMINI.md`** (rules globales - CRÍTICO: RULE #0 + RULE #1)
+2. **`.agents/ANTIGRAVITY_SYSTEM_PROMPT.md`** (prompt system completo)
+3. **`.agents/AGENT_ONBOARDING.md`** (arquitectura del proyecto)
+4. `.agents/context/` (infraestructura, servicios)
 5. `docs/vision/` (visión alto nivel)
 6. **`docs/roadmap.md`** → Identificar:
    - **Sprint actual** (sección "Fase Actual")
@@ -24,7 +24,7 @@ Leer en este orden:
    - **Foco actual** (primera tarea sin `[x]`)
 
 **Si hay `.agent` local del proyecto:**
-- `projects/[proyecto]/.agent/context.md`
+- `projects/[proyecto]/.agents/context.md`
 
 ---
 
@@ -45,9 +45,9 @@ Foco actual: [Tarea prioritaria del roadmap]
 Completado: [X/Y tareas]
 
 Referencias:
-- RULE #1 (mantener foco): .agent/GEMINI.md
-- Git workflow: .agent/workflows/git-branching.md
-- Arquitectura: .agent/AGENT_ONBOARDING.md
+- RULE #1 (mantener foco): .agents/GEMINI.md
+- Git workflow: .agents/workflows/git-branching.md
+- Arquitectura: .agents/AGENT_ONBOARDING.md
 
 ¿Continuamos con [tarea prioritaria]?
 ```
@@ -131,7 +131,7 @@ git branch --show-current
   
 - ✅ **NO** (en branch) → Continuar
 
-**Referencia:** `.agent/workflows/git-branching.md`, RULE #0 en `GEMINI.md:213`
+**Referencia:** `.agents/workflows/git-branching.md`, RULE #0 en `GEMINI.md:213`
 
 ---
 
@@ -173,16 +173,16 @@ which python
 ## Archivos Críticos a Leer SIEMPRE
 
 **Obligatorios (en orden):**
-1. `.agent/GEMINI.md` → RULE #0 + RULE #1
-2. `.agent/ANTIGRAVITY_SYSTEM_PROMPT.md` → Prompt system completo
-3. `.agent/AGENT_ONBOARDING.md` → Arquitectura
+1. `.agents/GEMINI.md` → RULE #0 + RULE #1
+2. `.agents/ANTIGRAVITY_SYSTEM_PROMPT.md` → Prompt system completo
+3. `.agents/AGENT_ONBOARDING.md` → Arquitectura
 4. `docs/roadmap.md` → Sprint actual + foco
-5. `.agent/workflows/git-branching.md` → Workflow Git
-6. `.agent/context/ (todos)
+5. `.agents/workflows/git-branching.md` → Workflow Git
+6. `.agents/context/ (todos)
 
 **Condicionales:**
 - `docs/vision/` (visión alto nivel)
-- `projects/[nombre]/.agent/context.md` (si workspace de proyecto)
+- `projects/[nombre]/.agents/context.md` (si workspace de proyecto)
 
 ---
 

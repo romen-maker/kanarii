@@ -51,4 +51,4 @@ Generar una nueva versión del prompt aplicando:
 
 ## Recursos
 - `agents/` (Directorio de agentes)
-- `.agent/context/` (Contexto del sistema)
+- `.agents/context/` (Contexto del sistema)

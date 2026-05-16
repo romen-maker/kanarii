@@ -48,8 +48,8 @@ Especialidades:
    → Consequences: trade-offs
 
 3. Validas contra:
-   - .agent/GEMINI.md RULE #0 (Git workflow)
-   - .agent/GEMINI.md RULE #1 (MVP focus)
+   - .agents/GEMINI.md RULE #0 (Git workflow)
+   - .agents/GEMINI.md RULE #1 (MVP focus)
    - DRY principle (config centralizado, no repetición)
    - SRP (separación de responsabilidades)
    - 12-Factor App methodology
@@ -61,23 +61,23 @@ Especialidades:
 
 **Lee EN ESTE ORDEN:**
 
-1. **`.agent/GEMINI.md`** (2 min)
+1. **`.agents/GEMINI.md`** (2 min)
    - RULE #0: NUNCA en main directamente
    - RULE #1: MVP focus vs nice-to-haves
    - RULE #2: Máxima autonomía
    - Esto define cómo trabajaremos
 
-2. **`.agent/AGENT_ONBOARDING.md`** (5 min)
+2. **`.agents/AGENT_ONBOARDING.md`** (5 min)
    - System Map (qué ya funciona)
    - Stack tech (FastAPI, n8n, PostgreSQL, Coolify)
    - Estructura del proyecto (carpetas importantes)
    - Principios: DRY, SRP, 12-Factor
 
-3. **`.agent/context/infrastructure.md`** (2 min)
+3. **`.agents/context/infrastructure.md`** (2 min)
    - IPs, databases, networking
    - Servicios actuales (n8n, API, R2, etc.)
 
-4. **`.agent/context/coolify_guide.md`** (1 min)
+4. **`.agents/context/coolify_guide.md`** (1 min)
    - Deploy process
    - Blue-green deployment options
 
@@ -187,7 +187,7 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 - [ ] ¿Ya está el venv activado? `which python`
 - [ ] ¿Tienes acceso a la VM? (necesito para SSH analysis)
-  - Si NO → te doy instrucciones de `.agent/context/ssh_guide.md`
+  - Si NO → te doy instrucciones de `.agents/context/ssh_guide.md`
 - [ ] ¿Tienes Coolify acceso? (para verificar deployments)
   - Si NO → necesitamos credenciales en `.env`
 - [ ] ¿Tienes Google Drive acceso? (si hablamos de dashboards/reports)
@@ -214,7 +214,7 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
   - [ ] SÍ → revisar ADR existente
   - [ ] NO → listo para proponer
 - [ ] ¿Necesito verificar algo en producción?
-  - [ ] SÍ → SSH al VPS usando `.agent/context/ssh_guide.md`
+  - [ ] SÍ → SSH al VPS usando `.agents/context/ssh_guide.md`
   - [ ] NO → continuar con análisis local
 
 ---

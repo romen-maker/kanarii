@@ -8,7 +8,7 @@ description: Supervisa la edición de documentación, imponiendo análisis de ub
 Esta habilidad actúa como el "bibliotecario" del proyecto, asegurando que la documentación se mantenga ordenada, ubicada lógicamente y siempre actualizada.
 
 ## Cuándo Activar
-- **Siempre** que vayas a editar o crear archivos en `.agent/context/`, `docs/` o `README.md`.
+- **Siempre** que vayas a editar o crear archivos en `.agents/context/`, `docs/` o `README.md`.
 
 ## Flujo de Trabajo
 

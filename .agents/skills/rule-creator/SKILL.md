@@ -5,7 +5,7 @@ description: Formaliza solicitudes de comportamiento del usuario en reglas persi
 
 # Creador de Reglas (Rule Creator)
 
-Esta habilidad permite al usuario dictar nuevas "leyes" o comportamientos que el agente debe respetar siempre, convirtiéndolas en archivos de reglas formales en `.agent/rules/`.
+Esta habilidad permite al usuario dictar nuevas "leyes" o comportamientos que el agente debe respetar siempre, convirtiéndolas en archivos de reglas formales en `.agents/rules/`.
 
 ## Propósito
 Capturar preferencias, restricciones de seguridad, o principios de diseño que deben ser permanentes y globales para todos los agentes.
@@ -27,9 +27,9 @@ Capturar preferencias, restricciones de seguridad, o principios de diseño que d
 
 4.  **PERSISTENCIA**:
     - **Solo si aprobado**:
-        - Crear el archivo en `.agent/rules/[nombre-kebab].md`.
+        - Crear el archivo en `.agents/rules/[nombre-kebab].md`.
         - Ejecutar (opcional pero recomendado):
-          - `git add .agent/rules/[archivo]`
+          - `git add .agents/rules/[archivo]`
           - `git commit -m "docs(rules): add rule [nombre]"`
 
 ## Template Obligatorio
@@ -56,5 +56,5 @@ trigger: always_on
 ```
 
 ## Verificación
-- El archivo debe residir en `.agent/rules/`.
+- El archivo debe residir en `.agents/rules/`.
 - Debe empezar con `--- trigger: always_on ---`.

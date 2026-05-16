@@ -25,7 +25,7 @@ Utiliza las herramientas del servidor MCP de Firebase siguiendo estos criterios:
 - **`get_advisors`**: Úsalo para auditar el rendimiento de las consultas y sugerir índices.
 
 ## 📏 Nomenclatura y Modelo de Datos
-Consulta siempre `.agent/rules/naming-convention.md`. Resumen rápido:
+Consulta siempre `.agents/rules/naming-convention.md`. Resumen rápido:
 
 - **Idioma**: Siempre Inglés.
 - **Formato**: `camelCase`.

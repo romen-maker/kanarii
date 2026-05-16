@@ -220,7 +220,7 @@ Si es **infraestructura desplegada:**
 git add [path/to/README.md]
 
 # Archivo de contexto actualizado
-git add .agent/context/[archivo].md
+git add .agents/context/[archivo].md
 
 git commit -m "docs: add [TOOL_NAME] to stack
 
@@ -279,7 +279,7 @@ streamlit run apps/prompt_lab/app.py
 
 ---
 
-✅ Añadido a .agent/context/infrastructure.md
+✅ Añadido a .agents/context/infrastructure.md
 ✅ Fecha actualizada: 18 Dic 2025
 
 ¿Hago commit?"
@@ -291,9 +291,9 @@ streamlit run apps/prompt_lab/app.py
 
 | Archivo | Cuándo Actualizar |
 |---------|-------------------|
-| `.agent/context/infrastructure.md` | Infra desplegada / Herramientas internas |
-| `.agent/context/services.md` | APIs externas / SaaS / Proveedores cloud |
-| `.agent/context/user_premium_tools.md` | Tools premium personales del usuario |
+| `.agents/context/infrastructure.md` | Infra desplegada / Herramientas internas |
+| `.agents/context/services.md` | APIs externas / SaaS / Proveedores cloud |
+| `.agents/context/user_premium_tools.md` | Tools premium personales del usuario |
 | `[carpeta]/README.md` | Si no existe, crearlo primero |
 
 ---

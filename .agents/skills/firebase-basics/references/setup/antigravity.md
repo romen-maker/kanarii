@@ -5,7 +5,7 @@ To get the most out of Firebase in Antigravity, follow these steps to install th
 ### 1. Install and Verify Firebase Skills
 Check if the skills are already installed before proceeding:
 
-1. **Check Local skills**: Run `ls -d .agent/skills/firebase-basics` or `ls -d .agents/skills/firebase-basics`. If the directory exists, the skills are already installed locally.
+1. **Check Local skills**: Run `ls -d .agents/skills/firebase-basics` or `ls -d .agents/skills/firebase-basics`. If the directory exists, the skills are already installed locally.
 2. **Check Global skills**: If not found locally, check the global installation by running:
    ```bash
    npx skills list --global --agent antigravity

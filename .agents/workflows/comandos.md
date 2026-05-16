@@ -34,7 +34,7 @@ El agente determina la acción según el contexto:
 - "/comandos [herramienta] [acción]"
 
 **Agente:**
-1. Lee `.agent/context/comandos-inline.md`
+1. Lee `.agents/context/comandos-inline.md`
 2. Busca comando relevante
 3. **EJECUTA el comando directamente** (con confirmación si destructivo)
 4. Muestra resultado
@@ -51,7 +51,7 @@ Agent:
 - KanAIrOS - Publisher (activo)
 ...
 
-Comando usado: `.agent/context/comandos-inline.md` → N8N → Listar Workflows"
+Comando usado: `.agents/context/comandos-inline.md` → N8N → Listar Workflows"
 ```
 
 ---
@@ -69,7 +69,7 @@ Comando usado: `.agent/context/comandos-inline.md` → N8N → Listar Workflows"
 - Código: [comando]
 
 **Proceso:**
-1. Leer `.agent/context/comandos-inline.md`
+1. Leer `.agents/context/comandos-inline.md`
 2. Determinar sección (crear si no existe)
 3. Añadir comando con formato consistente
 4. Actualizar fecha
@@ -81,7 +81,7 @@ User: "apunta este comando para escribir en Google Sheets"
 [paste código]
 
 Agent:
-"✅ Comando añadido a `.agent/context/comandos-inline.md`
+"✅ Comando añadido a `.agents/context/comandos-inline.md`
 
 Sección: Google Sheets
 Acción: Escribir Fila
@@ -108,7 +108,7 @@ Código documentado.
 
 ## Archivos
 
-**Read/Write:** `.agent/context/comandos-inline.md`
+**Read/Write:** `.agents/context/comandos-inline.md`
 
 ---
 

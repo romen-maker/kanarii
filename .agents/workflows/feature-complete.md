@@ -10,7 +10,7 @@ description: Complete feature branch using Definition of Done checklist
 
 ### 1. Leer Definition of Done
 
-Leer `.agent/DEFINITION_OF_DONE.md` completo
+Leer `.agents/DEFINITION_OF_DONE.md` completo
 
 ### 2. Ejecutar Checklist
 
@@ -163,7 +163,7 @@ Resumen: 3/4 secciones OK. Falta tests.
 
 ## Archivos a Leer
 
-- `.agent/DEFINITION_OF_DONE.md`
+- `.agents/DEFINITION_OF_DONE.md`
 - `docs/roadmap.md` (verificar actualización)
 - `tests/` (verificar cobertura)
 

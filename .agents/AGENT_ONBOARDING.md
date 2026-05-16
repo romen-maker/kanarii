@@ -19,15 +19,15 @@
 - **Autenticación:** Requiere header `X-API-Key`. La clave debe estar en `.env` como `VITE_HD_API_KEY`.
 - **Datos:** El API devuelve el objeto `diseño_humano` (con `puertas_activas` para cálculos de conexión) y `carta_astral_completa`.
 
-## 📏 Reglas de Oro (Leer .agent/GEMINI.md)
-1. **Protocolo de Seguridad:** OBLIGATORIO seguir el flujo de `.agent/rules/strict-workflow.md` (Analiza -> Prueba -> Planifica -> Aprueba). **NUNCA** toques código que funciona sin un plan aprobado.
+## 📏 Reglas de Oro (Leer .agents/GEMINI.md)
+1. **Protocolo de Seguridad:** OBLIGATORIO seguir el flujo de `.agents/rules/strict-workflow.md` (Analiza -> Prueba -> Planifica -> Aprueba). **NUNCA** toques código que funciona sin un plan aprobado.
 2. **MVP First:** No construyas arquitecturas complejas si una solución simple valida la idea.
 2. **Tech Scout:** Antes de crear un componente complejo (gráficos, calendarios), usa la skill `tech-scout` para buscar librerías OSS.
 3. **What & Why:** Explica siempre qué haces y por qué (trade-offs).
 
 ## 🔀 Workflow de Git
 1. Trabaja siempre en ramas `feat/` o `fix/`.
-2. Sigue el flujo definido en `.agent/workflows/git-branching.md`.
+2. Sigue el flujo definido en `.agents/workflows/git-branching.md`.
 3. Nunca hagas push directo a `main` sin que el usuario lo apruebe.
 
 ---

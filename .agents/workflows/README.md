@@ -70,7 +70,7 @@ Agent: Excelente idea, pero NO es MVP porque...
 **Cuándo usar:** Necesitas nueva herramienta
 
 **Qué hace:**
-- Aplica RULE #3 y `.agent/context/tools-policy.md`
+- Aplica RULE #3 y `.agents/context/tools-policy.md`
 - Propone 3 opciones (OSS / Free SaaS / Premium)
 - Pregunta qué herramientas premium tienes
 - Documenta decisión
@@ -163,7 +163,7 @@ Agent: Revisando feat/content-generator...
 
 ## 📝 Crear Nuevo Workflow
 
-Los workflows son archivos Markdown en `.agent/workflows/` con este formato:
+Los workflows son archivos Markdown en `.agents/workflows/` con este formato:
 
 ```markdown
 ---

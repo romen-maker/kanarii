@@ -18,7 +18,7 @@ Esta habilidad te convierte en un experto capaz de guiar e implementar nuevas Sk
 2.  **Proponer Especificaciones**: Antes de crear nada, valida con el usuario:
     - **Nombre Técnico**: Debe ser `kebab-case` (ej: `analisis-datos-csv`).
     - **Descripción**: Breve resumen para el frontmatter.
-    - **Ubicación**: Confirma que será en `.agent/skills/<nombre-tecnico>/`.
+    - **Ubicación**: Confirma que será en `.agents/skills/<nombre-tecnico>/`.
 
 ### 2. Estructura del Archivo SKILL.md
 El archivo principal debe ser `SKILL.md`. Usa esta plantilla base:
@@ -49,7 +49,7 @@ Pasos detallados, secuenciales y deterministas que el agente debe seguir.
 
 ### 3. Implementación
 1.  **Crear Directorio**:
-    - Usa `run_command` para crear la carpeta: `mkdir -p .agent/skills/<nombre-tecnico>`.
+    - Usa `run_command` para crear la carpeta: `mkdir -p .agents/skills/<nombre-tecnico>`.
 2.  **Crear SKILL.md**:
     - Usa `write_to_file` con la plantilla rellenada.
 3.  **Scripts Adicionales** (si aplica):
@@ -57,7 +57,7 @@ Pasos detallados, secuenciales y deterministas que el agente debe seguir.
 
 ### 4. Registro en Inventario
 1.  **Localizar Inventario**:
-    - El archivo suele estar en `.agent/context/agent-skills-inventory.md`.
+    - El archivo suele estar en `.agents/context/agent-skills-inventory.md`.
 2.  **Añadir Entrada**:
     - Añade una nueva entrada al final de la lista "Lista de Habilidades Activas".
     - Sigue el formato:
@@ -65,7 +65,7 @@ Pasos detallados, secuenciales y deterministas que el agente debe seguir.
       ### N. <Nombre Humanizado> (`<nombre-tecnico>`)
       - **Para qué sirve**: <descripción-corta>
       - **Cómo invocar**: <ejemplo-invocación>
-      - **Ubicación**: `.agent/skills/<nombre-tecnico>/`
+      - **Ubicación**: `.agents/skills/<nombre-tecnico>/`
       ```
     - Asegúrate de incrementar el número secuencial (N).
 3.  **Actualizar Fecha**:
