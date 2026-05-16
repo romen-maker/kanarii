@@ -8,6 +8,7 @@ import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { deletePropuesta, Propuesta } from '../lib/appService';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { PropuestaCard } from '../components/PropuestaCard';
+import { PropuestaDetail } from '../components/PropuestaDetail';
 import { Gavel, Plus } from 'lucide-react';
 
 const COLUMNS: KanbanColumnDef[] = [
@@ -85,7 +86,19 @@ export function PropuestasView() {
         )}
       </div>
 
-      {/* Aquí irán los modales de detalle y creación en los siguientes pasos */}
+      {selectedPropId && (
+        <PropuestaDetail 
+          propuestaId={selectedPropId}
+          currentUserId={appUser?.uid || ''}
+          onClose={() => setSelectedPropId(null)}
+          onResponseClick={() => {
+            console.log("Abrir modal de respuesta");
+            // Se implementará en la siguiente fase (ResponseModal)
+          }}
+        />
+      )}
+
+      {/* Aquí irá el modal de creación en los siguientes pasos */}
     </div>
   );
 }
