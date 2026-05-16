@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MoreHorizontal, LogOut, Compass, ShieldCheck } from 'lucide-react';
+import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
@@ -66,7 +66,9 @@ export function BottomNav() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '56px' }}
       >
         {mainNavItems.map((item, idx) => {
-          const isReallyActive = location.pathname === item.href;
+          const isReallyActive = item.href === '/' 
+            ? location.pathname === '/' 
+            : location.pathname.startsWith(item.href);
           
           return (
             <button

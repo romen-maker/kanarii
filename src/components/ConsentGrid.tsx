@@ -1,6 +1,6 @@
-import React from 'react';
 import { CommunityMember } from '../hooks/useCommunityMembers';
 import { PropuestaRespuesta } from '../lib/appService';
+import { getInitials } from '../lib/utils';
 import { Check, AlertCircle, HelpCircle, MessageSquare } from 'lucide-react';
 
 interface ConsentGridProps {
@@ -45,7 +45,7 @@ export const ConsentGrid: React.FC<ConsentGridProps> = ({
                 ${isMe ? 'ring-2 ring-[#4A4E4D] ring-offset-2' : ''}
                 ${respuesta ? 'bg-stone-50 text-stone-800' : 'bg-stone-100 text-stone-300'}
               `}>
-                {member.nombre.charAt(0)}
+                {getInitials(member.nombre)}
               </div>
 
               {/* Position Indicator Badge */}

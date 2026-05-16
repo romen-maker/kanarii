@@ -9,13 +9,15 @@ import { deletePropuesta, Propuesta } from '../lib/appService';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { PropuestaCard } from '../components/PropuestaCard';
 import { PropuestaDetail } from '../components/PropuestaDetail';
+import { CreateProposalWizard } from '../components/CreateProposalWizard';
 import { Gavel, Plus } from 'lucide-react';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'abierta', title: 'Deliberación', accentColor: 'var(--color-info)' },
   { id: 'en_objeciones', title: 'En Objeciones', accentColor: 'var(--color-warning)' },
   { id: 'integrando', title: 'Integración', accentColor: 'var(--color-primary)' },
-  { id: 'acordada', title: 'Acordadas', accentColor: 'var(--color-success)' }
+  { id: 'acordada', title: 'Acordadas', accentColor: 'var(--color-success)' },
+  { id: 'caducada', title: 'Caducadas', accentColor: 'var(--color-text-faint)' }
 ];
 
 export function PropuestasView() {
@@ -24,11 +26,12 @@ export function PropuestasView() {
   const communityId = currentCommunityId || 'arteara';
   
   const { items: propuestas, loading } = usePropuestas(communityId);
-  const { totalMembers } = useCommunityMembers(communityId);
+  const { members } = useCommunityMembers(communityId);
   const { perform } = useEntityActions();
   const { startDelete } = useUndoableDelete();
 
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
+  const [showCreateWizard, setShowCreateWizard] = useState(false);
 
   const renderPropuestaCard = (propuesta: Propuesta) => {
     return (
@@ -36,7 +39,7 @@ export function PropuestasView() {
         propuesta={propuesta}
         respuestas={[]} // Se cargará en el detalle o vía query optimizada luego
         currentUserId={appUser?.uid || ''}
-        totalMiembros={totalMembers || 5} // Fallback para visualización
+        totalMiembros={members.length || 0}
         onClick={() => setSelectedPropId(propuesta.id!)}
         onDelete={() => startDelete(propuesta.id!, {
           onDelete: (id) => perform(deletePropuesta(id)),
@@ -57,6 +60,7 @@ export function PropuestasView() {
           </div>
           {appUser && (
             <button 
+              onClick={() => setShowCreateWizard(true)}
               className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
               title="Nueva Propuesta"
             >
@@ -98,7 +102,16 @@ export function PropuestasView() {
         />
       )}
 
-      {/* Aquí irá el modal de creación en los siguientes pasos */}
+      {showCreateWizard && (
+        <CreateProposalWizard
+          communityId={communityId}
+          authorId={appUser?.uid || ''}
+          onClose={() => setShowCreateWizard(false)}
+          onSuccess={() => {
+            // El hook usePropuestas refrescará automáticamente
+          }}
+        />
+      )}
     </div>
   );
 }

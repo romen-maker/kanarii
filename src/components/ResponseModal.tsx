@@ -6,6 +6,7 @@ import { useEntityActions } from '../hooks/useEntityActions';
 interface ResponseModalProps {
   propuestaId: string;
   memberId: string;
+  totalMembers: number;
   existingResponse?: PropuestaRespuesta;
   onClose: () => void;
   onSuccess: () => void;
@@ -16,6 +17,7 @@ type ResponseType = PropuestaRespuesta['type'];
 export function ResponseModal({
   propuestaId,
   memberId,
+  totalMembers,
   existingResponse,
   onClose,
   onSuccess
@@ -43,13 +45,13 @@ export function ResponseModal({
     const respuesta: PropuestaRespuesta = {
       memberId,
       type,
-      content: content.trim() || undefined,
+      content: content.trim() || '',
       status: 'pendiente',
       createdAt: existingResponse?.createdAt || new Date(),
       updatedAt: new Date()
     };
 
-    await perform(registerPropuestaResponse(propuestaId, respuesta, existingResponse?.type), {
+    await perform(registerPropuestaResponse(propuestaId, respuesta, totalMembers, existingResponse?.type), {
       successMessage: 'Tu participación ha sido registrada ✨',
       onSuccess: () => {
         onSuccess();
@@ -95,10 +97,10 @@ export function ResponseModal({
       onClick={onClose}
     >
       <div 
-        className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+        className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-8 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+        <div className="p-8 border-b border-stone-100 flex justify-between items-center bg-stone-50 shrink-0">
           <div>
             <h3 className="text-xl font-serif text-stone-800">Tu respuesta socrática</h3>
             <p className="text-xs text-stone-500 mt-1 uppercase tracking-widest font-bold">
@@ -110,7 +112,7 @@ export function ResponseModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
           {/* Educación S3 Inline */}
           <div className="bg-[#4A4E4D] p-5 rounded-3xl text-white/90 text-xs leading-relaxed flex gap-4 items-start shadow-inner">
             <HelpCircle className="w-8 h-8 text-[#D4C3A3] shrink-0" />
@@ -165,7 +167,7 @@ export function ResponseModal({
           )}
         </div>
 
-        <div className="p-8 bg-stone-50 border-t border-stone-100 flex gap-4">
+        <div className="p-8 bg-stone-50 border-t border-stone-100 flex gap-4 shrink-0">
           <button 
             onClick={onClose}
             className="flex-1 py-4 text-stone-500 font-bold text-xs uppercase tracking-widest hover:bg-stone-200 rounded-2xl transition-all"

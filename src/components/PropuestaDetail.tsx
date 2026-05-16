@@ -1,11 +1,12 @@
-import React from 'react';
-import { Propuesta, PropuestaRespuesta, PropuestaHilo } from '../lib/appService';
+import React, { useState } from 'react';
+import { Propuesta, PropuestaRespuesta, PropuestaHilo, integratePropuestaObjeciones } from '../lib/appService';
 import { usePropuestaDetail } from '../hooks/usePropuestaDetail';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
+import { useEntityActions } from '../hooks/useEntityActions';
 import { ResponseModal } from './ResponseModal';
 import { S3Timeline } from './S3Timeline';
 import { ConsentGrid } from './ConsentGrid';
-import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
+import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -24,7 +25,9 @@ export function PropuestaDetail({
 }: PropuestaDetailProps) {
   const { propuesta, respuestas, hilos, loading } = usePropuestaDetail(propuestaId);
   const { members } = useCommunityMembers(propuesta?.communityId);
-  const [showResponseModal, setShowResponseModal] = React.useState(false);
+  const { perform } = useEntityActions();
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
   if (loading || !propuesta) {
     return (
@@ -38,6 +41,14 @@ export function PropuestaDetail({
 
   const isAuthor = propuesta.authorId === currentUserId;
   const userResponse = respuestas.find(r => r.memberId === currentUserId);
+
+  const handleIntegrate = async (newDescription: string, note: string) => {
+    await perform(integratePropuestaObjeciones(propuestaId, newDescription, note), {
+      loadingMessage: 'Publicando versión integrada...',
+      successMessage: 'Propuesta evolucionada con éxito'
+    });
+    setShowIntegrationModal(false);
+  };
 
   return (
     <div 
@@ -81,11 +92,17 @@ export function PropuestaDetail({
               <p className="text-stone-700 leading-relaxed text-lg italic">"{propuesta.reason}"</p>
             </div>
             <div>
-              <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2">La Propuesta</h4>
-              <p className="text-stone-700 leading-relaxed bg-white p-6 rounded-3xl border border-[#EAE2D6] shadow-sm">
+              <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2">La Propuesta v{propuesta.version || 1}</h4>
+              <p className="text-stone-700 leading-relaxed bg-white p-6 rounded-3xl border border-[#EAE2D6] shadow-sm whitespace-pre-wrap">
                 {propuesta.description}
               </p>
             </div>
+            {propuesta.integrationNote && (
+              <div className="bg-teal-50/50 p-4 rounded-2xl border border-teal-100/50">
+                <h4 className="text-[9px] font-black text-teal-700 uppercase tracking-[0.2em] mb-1 text-teal-800">Nota de Integración</h4>
+                <p className="text-stone-600 text-xs italic">"{propuesta.integrationNote}"</p>
+              </div>
+            )}
           </section>
 
           {/* S3 Process Actions */}
@@ -102,7 +119,7 @@ export function PropuestaDetail({
 
         {/* Dynamic Footer based on Role/Status */}
         <div className="p-8 bg-white border-t border-stone-100 shrink-0">
-          {propuesta.status === 'abierta' && (
+          {(propuesta.status === 'abierta' || propuesta.status === 'en_objeciones' || propuesta.status === 'integrando') && (
             <div className="flex flex-col gap-4">
               {!userResponse ? (
                 <button 
@@ -128,13 +145,16 @@ export function PropuestaDetail({
                   </button>
                 </div>
               )}
-
-              {isAuthor && propuesta.activeObjectionsCount > 0 && (
-                <button className="w-full py-4 bg-amber-50 text-amber-700 border border-amber-200 font-bold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> Integrar objeciones activas
-                </button>
-              )}
             </div>
+          )}
+
+          {isAuthor && propuesta.activeObjectionsCount > 0 && (propuesta.status === 'en_objeciones' || propuesta.status === 'integrando') && (
+            <button 
+              onClick={() => setShowIntegrationModal(true)}
+              className="w-full mt-4 py-4 bg-amber-50 text-amber-700 border border-amber-200 font-bold text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all hover:bg-amber-100 shadow-sm active:scale-95"
+            >
+              <AlertCircle className="w-4 h-4" /> Integrar objeciones activas
+            </button>
           )}
 
           {propuesta.status === 'acordada' && (
@@ -149,13 +169,93 @@ export function PropuestaDetail({
         <ResponseModal
           propuestaId={propuestaId}
           memberId={currentUserId}
+          totalMembers={members.length}
           existingResponse={userResponse}
           onClose={() => setShowResponseModal(false)}
-          onSuccess={() => {
-            // Refresco automático vía snapshot del hook
-          }}
+          onSuccess={() => {}}
         />
       )}
+
+      {showIntegrationModal && (
+        <IntegrationModal
+          initialDescription={propuesta.description}
+          onClose={() => setShowIntegrationModal(false)}
+          onConfirm={handleIntegrate}
+        />
+      )}
+    </div>
+  );
+}
+
+interface IntegrationModalProps {
+  initialDescription: string;
+  onClose: () => void;
+  onConfirm: (desc: string, note: string) => void;
+}
+
+function IntegrationModal({ initialDescription, onClose, onConfirm }: IntegrationModalProps) {
+  const [description, setDescription] = useState(initialDescription);
+  const [note, setNote] = useState('');
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200" onClick={onClose}>
+      <div 
+        className="bg-[#F9F7F1] w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 p-8 flex flex-col gap-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-6 h-6 text-amber-600" />
+            <h3 className="font-serif text-2xl text-stone-800">Integrar Objeciones</h3>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
+            <X className="w-5 h-5 text-stone-400" />
+          </button>
+        </div>
+
+        <p className="text-xs text-stone-500 leading-relaxed">
+          Edita la propuesta para resolver las objeciones planteadas. Al publicar esta versión, se resetearán todas las respuestas anteriores para iniciar un nuevo ciclo de consentimiento.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 block">Nueva Propuesta</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full h-40 p-4 bg-white border border-stone-200 rounded-2xl text-sm text-stone-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all resize-none"
+              placeholder="Describe la versión mejorada..."
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 block">Nota de Integración (Opcional)</label>
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full p-4 bg-white border border-stone-200 rounded-2xl text-sm text-stone-700 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
+              placeholder="Ej: He ajustado el punto 3 según lo hablado..."
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button 
+            onClick={onClose}
+            className="flex-1 py-4 text-stone-500 font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-stone-100 transition-all"
+          >
+            Cancelar
+          </button>
+          <button 
+            onClick={() => onConfirm(description, note)}
+            disabled={!description.trim()}
+            className="flex-2 py-4 px-8 bg-amber-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-amber-700 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+          >
+            Publicar v-integrada
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

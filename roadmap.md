@@ -123,3 +123,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] Propuestas entre comunidades.
   - [ ] IA para sugerir si una objeción es válida S3.
   - [ ] Plantillas de propuestas predefinidas.
+- [ ] **Deuda Técnica Firestore (Auditoría 2026-05-16)**:
+  - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.
+  - [ ] **[Bajo]** Migración de datos: Asegurar `userPositions: {}` y `totalResponsesCount: 0` en documentos antiguos (si existieran fuera de test).
+  - [ ] **[Bajo]** Implementar un script de "Sanity Check" periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).

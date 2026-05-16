@@ -25,11 +25,29 @@ export const PropuestaCard: React.FC<PropuestaCardProps> = ({
   onDelete
 }) => {
   const isAuthor = propuesta.authorId === currentUserId;
-  const hasResponded = respuestas.some(r => r.memberId === currentUserId);
+  const userPosition = propuesta.userPositions?.[currentUserId];
+  const hasResponded = !!userPosition;
   const requiresAttention = propuesta.status === 'abierta' && !hasResponded;
+
+  // Mapeo de tipos de respuesta a etiquetas legibles
+  const positionLabels: Record<string, string> = {
+    consentimiento: 'Consentimiento',
+    preocupacion: 'Preocupación',
+    duda: 'Duda / Aclaración',
+    objecion: 'Objeción'
+  };
 
   // Mapeo de estados a variantes de EntityCard
   const getStatusConfig = (): { label: string; variant: EntityVariant; icon: any } => {
+    // Si el usuario ya participó, mostrar su posición como prioridad absoluta
+    if (hasResponded) {
+      return { 
+        label: `Tu posición: ${positionLabels[userPosition]}`, 
+        variant: userPosition === 'objecion' ? 'warning' : 'success', 
+        icon: userPosition === 'objecion' ? AlertCircle : CheckCircle2 
+      };
+    }
+
     switch (propuesta.status) {
       case 'borrador':
         return { label: 'Borrador', variant: 'neutral', icon: Pencil };
@@ -45,6 +63,8 @@ export const PropuestaCard: React.FC<PropuestaCardProps> = ({
         return { label: 'Integrando', variant: 'info', icon: Pencil };
       case 'acordada':
         return { label: 'Acordada', variant: 'success', icon: CheckCircle2 };
+      case 'caducada':
+        return { label: 'Caducada (Sin quórum)', variant: 'neutral', icon: XCircle };
       case 'descartada':
         return { label: 'Descartada', variant: 'neutral', icon: XCircle };
       default:
@@ -58,7 +78,7 @@ export const PropuestaCard: React.FC<PropuestaCardProps> = ({
     { icon: User, text: isAuthor ? 'Tu propuesta' : 'Autor' },
     { 
       icon: MessageSquare, 
-      text: `${respuestas.length}/${totalMiembros} respuestas`,
+      text: `${propuesta.totalResponsesCount || 0}/${totalMiembros} respuestas`,
       tooltip: 'Participación de la comunidad'
     },
     { 
