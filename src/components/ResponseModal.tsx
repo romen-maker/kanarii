@@ -28,17 +28,19 @@ export function ResponseModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Validación inline para objeciones
+    // Validación inline para objeciones y dudas
     if (type === 'objecion' && content.trim().length < 10) {
       setError('Una objeción requiere una justificación clara (mín. 10 caracteres)');
+    } else if (type === 'duda' && content.trim().length < 5) {
+      setError('Por favor, formula tu duda de forma clara para que el autor pueda responderte');
     } else {
       setError(null);
     }
   }, [type, content]);
 
   const handleSubmit = async () => {
-    if (type === 'objecion' && !content.trim()) {
-      setError('La justificación es obligatoria para una objeción');
+    if ((type === 'objecion' || type === 'duda') && !content.trim()) {
+      setError(type === 'objecion' ? 'La justificación es obligatoria para una objeción' : 'Debes escribir tu duda o aclaración');
       return;
     }
 
@@ -147,12 +149,16 @@ export function ResponseModal({
           {(type === 'objecion' || type === 'preocupacion' || type === 'duda') && (
             <div className="space-y-2 animate-in slide-in-from-top-4">
               <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block ml-1">
-                {type === 'objecion' ? 'Argumento del daño (Obligatorio)' : 'Contexto adicional'}
+                {type === 'objecion' ? 'Argumento del daño (Obligatorio)' : (type === 'duda' ? 'Pregunta / Aclaración (Obligatorio)' : 'Contexto adicional')}
               </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder={type === 'objecion' ? "Explica por qué esta propuesta causará un daño a la comunidad..." : "Escribe aquí tus dudas o preocupaciones..."}
+                placeholder={
+                  type === 'objecion' 
+                    ? "Explica por qué esta propuesta causará un daño a la comunidad..." 
+                    : (type === 'duda' ? "¿Qué necesitas entender mejor?" : "Escribe aquí tus preocupaciones...")
+                }
                 className={`
                   w-full min-h-[120px] p-4 rounded-2xl border-2 bg-stone-50 text-sm text-stone-700 focus:outline-none transition-all
                   ${error ? 'border-rose-200 focus:border-rose-400' : 'border-stone-100 focus:border-stone-300'}
