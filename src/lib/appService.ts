@@ -1083,6 +1083,13 @@ export async function migrarFichaPendiente(email: string, uid: string): Promise<
     if (snap.exists()) {
       const data = snap.data();
       
+      // Ignorar documentos expirados (sustituto del TTL para Spark Plan)
+      if (data.expiresAt && data.expiresAt.toDate() < new Date()) {
+        console.log(`🧹 Limpiando ficha pendiente caducada para ${email}`);
+        await deleteDoc(pendingRef);
+        return false;
+      }
+      
       // La ficha pendiente ya viene con la estructura de saveFicha (o casi)
       // Si el onboarding guardó 'kanarii_pendingFicha', esa es la estructura de fichaFull
       // Si guardó el formData plano, tendríamos un problema, pero syncPendingOnboarding
