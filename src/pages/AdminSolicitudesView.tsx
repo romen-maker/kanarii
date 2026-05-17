@@ -18,18 +18,15 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { useComunidadActions } from '../hooks/useComunidadActions';
 import { 
   SolicitudAcceso, 
   Invitacion,
-  listenSolicitudes, 
-  listenInvitaciones,
   getAppUserDoc,
   getFichaById,
   Ficha
 } from '../lib/appService';
+import { useAdminSolicitudesLogic } from '../hooks/useAdminSolicitudesLogic';
 
 // --- COMPONENTES AUXILIARES ---
 
@@ -271,110 +268,34 @@ const InvitacionCard: React.FC<{
 // --- VISTA PRINCIPAL ---
 
 export function AdminSolicitudesView() {
-  const { appUser } = useAuth();
   const { comunidad } = useComunidad();
-  const { resolverSolicitudAcceso, crearInvitacionCodigo, desactivarInvitacionCodigo } = useComunidadActions();
+  const hook = useAdminSolicitudesLogic();
   
-  const [solicitudes, setSolicitudes] = useState<SolicitudAcceso[]>([]);
-  const [invitaciones, setInvitaciones] = useState<Invitacion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pendientes' | 'resueltas' | 'codigos'>('pendientes');
-  
-  // Estados para generador de códigos
-  const [newCodeType, setNewCodeType] = useState<'permanente' | 'unico_uso' | 'caduca'>('permanente');
-  const [newCodeExpiration, setNewCodeExpiration] = useState<string>('');
-  const [newCodeMaxUses, setNewCodeMaxUses] = useState<string>('');
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
-  const [isCopying, setIsCopying] = useState(false);
-
-  // Estado para confirmación de rechazo
-  const [confirmReject, setConfirmReject] = useState<SolicitudAcceso | null>(null);
-  const [isExecutingAction, setIsExecutingAction] = useState<string | null>(null);
-
-  const isAdmin = appUser?.role === 'admin';
-  const isCommunityAdmin = isAdmin || (comunidad && comunidad.adminUids?.includes(appUser?.uid || ''));
-
-  useEffect(() => {
-    if (!comunidad?.id || !isCommunityAdmin) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubSolicitudes = listenSolicitudes(comunidad.id, (list) => {
-      setSolicitudes(list);
-      setLoading(false);
-    });
-
-    const unsubInvitaciones = listenInvitaciones(comunidad.id, (list) => {
-      setInvitaciones(list);
-    });
-
-    return () => {
-      unsubSolicitudes();
-      unsubInvitaciones();
-    };
-  }, [comunidad?.id, isCommunityAdmin]);
-
-  const handleAction = async (solicitud: SolicitudAcceso, decision: 'aprobada' | 'rechazada') => {
-    if (!comunidad?.id || !appUser?.uid) return;
-    
-    setIsExecutingAction(solicitud.id!);
-    try {
-      await resolverSolicitudAcceso(comunidad.id, solicitud.id!, decision, appUser.uid, {
-        successMessage: decision === 'aprobada' ? '¡Solicitud aprobada! El miembro ya tiene acceso.' : 'Solicitud rechazada.',
-        onSuccess: () => {
-          if (confirmReject) setConfirmReject(null);
-        }
-      });
-    } catch (error) {
-      // Error manejado por perform
-    } finally {
-      setIsExecutingAction(null);
-    }
-  };
-
-  const handleGenerateCode = async () => {
-    if (!comunidad?.id || !appUser?.uid) return;
-    
-    setIsExecutingAction('generating');
-    try {
-      const opciones: Partial<Invitacion> = {
-        tipo: newCodeType,
-        usosMaximos: newCodeType === 'unico_uso' ? 1 : (newCodeMaxUses ? parseInt(newCodeMaxUses) : null),
-        expiraEn: newCodeType === 'caduca' && newCodeExpiration ? new Date(newCodeExpiration) as any : null
-      };
-      
-      const codigo = await crearInvitacionCodigo(comunidad.id, appUser.uid, opciones, {
-        successMessage: 'Código generado correctamente.'
-      });
-      
-      if (codigo) setGeneratedCode(codigo);
-    } catch (error) {
-      // Error manejado por perform
-    } finally {
-      setIsExecutingAction(null);
-    }
-  };
-
-  const handleDesactivar = async (codigo: string) => {
-    setIsExecutingAction(codigo);
-    try {
-      await desactivarInvitacionCodigo(codigo, {
-        successMessage: 'Código desactivado.'
-      });
-    } catch (error) {
-      // Error manejado por perform
-    } finally {
-      setIsExecutingAction(null);
-    }
-  };
-
-  const handleCopyCode = () => {
-    if (!generatedCode) return;
-    navigator.clipboard.writeText(generatedCode);
-    setIsCopying(true);
-    setTimeout(() => setIsCopying(false), 2000);
-  };
+  const {
+    loading,
+    isCommunityAdmin,
+    activeTab,
+    setActiveTab,
+    solicitudes,
+    invitaciones,
+    pendientes,
+    resueltas,
+    confirmReject,
+    isExecutingAction,
+    newCodeType,
+    setNewCodeType,
+    newCodeExpiration,
+    setNewCodeExpiration,
+    newCodeMaxUses,
+    setNewCodeMaxUses,
+    generatedCode,
+    isCopying,
+    handleApprove,
+    handleReject,
+    handleGenerateCode,
+    handleDesactivar,
+    handleCopyCode
+  } = hook;
 
   if (!isCommunityAdmin && !loading) {
     return (
@@ -400,8 +321,7 @@ export function AdminSolicitudesView() {
     );
   }
 
-  const pendientes = solicitudes.filter(s => s.estado === 'pendiente');
-  const resueltas = solicitudes.filter(s => s.estado !== 'pendiente');
+  // pendientes y resueltas ya vienen del hook
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] p-6 pb-24">
@@ -599,7 +519,7 @@ export function AdminSolicitudesView() {
                   <SolicitudCard 
                     key={sol.id} 
                     solicitud={sol} 
-                    onApprove={() => handleAction(sol, 'aprobada')}
+                    onApprove={() => handleApprove(sol)}
                     onReject={() => setConfirmReject(sol)}
                     isExecuting={isExecutingAction === sol.id}
                   />
