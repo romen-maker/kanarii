@@ -4,8 +4,8 @@ import { useComunidad } from '../contexts/ComunidadContext';
 import { useServicios } from '../hooks/useServicios';
 import { useAcuerdos } from '../hooks/useAcuerdos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { useEntityActions } from '../hooks/useEntityActions';
-import { createServicio, createAcuerdo, updateAcuerdo, updateServicio, deleteServicio, Servicio, Acuerdo } from '../lib/appService';
+import { useServicioActions } from '../hooks/useServicioActions';
+import { Servicio, Acuerdo } from '../lib/appService';
 import { ServicioCard } from '../components/ServicioCard';
 import { CreateServicioModal } from '../components/CreateServicioModal';
 import { CreateAcuerdoModal } from '../components/CreateAcuerdoModal';
@@ -27,7 +27,7 @@ export default function MarketplaceView() {
   const { servicios, loading: loadingServicios } = useServicios(currentCommunityId || '');
   const { acuerdos, loading: loadingAcuerdos } = useAcuerdos(currentCommunityId || '');
   const { members } = useCommunityMembers(currentCommunityId || '');
-  const { perform, isSubmitting } = useEntityActions();
+  const { publishServicio, editServicio, removeServicio, proposeAcuerdo, editAcuerdo, isExecuting: isSubmitting } = useServicioActions();
   const { startDelete, pendingId } = useUndoableDelete();
 
   const [activeTab, setActiveTab] = useState<'servicios' | 'mis_acuerdos'>('servicios');
@@ -57,24 +57,34 @@ export default function MarketplaceView() {
       isActive: servicioToEdit ? servicioToEdit.isActive : true
     };
 
-    await perform(servicioToEdit ? updateServicio(servicioToEdit.id!, payload) : createServicio(payload), {
-      successMessage: servicioToEdit ? "Servicio actualizado ✨" : "Servicio catalogado con éxito ✨",
-      onSuccess: () => {
-        setIsCreateServicioOpen(false);
-        setServicioToEdit(null);
-      }
-    });
+    if (servicioToEdit) {
+      await editServicio(servicioToEdit.id!, payload, {
+        successMessage: "Servicio actualizado ✨",
+        onSuccess: () => {
+          setIsCreateServicioOpen(false);
+          setServicioToEdit(null);
+        }
+      });
+    } else {
+      await publishServicio(payload, {
+        successMessage: "Servicio catalogado con éxito ✨",
+        onSuccess: () => {
+          setIsCreateServicioOpen(false);
+          setServicioToEdit(null);
+        }
+      });
+    }
   };
 
   const handleToggleServicioStatus = async (servicio: Servicio) => {
-    await perform(updateServicio(servicio.id!, { isActive: !servicio.isActive }), {
+    await editServicio(servicio.id!, { isActive: !servicio.isActive }, {
       successMessage: servicio.isActive ? "Servicio pausado" : "Servicio reactivado"
     });
   };
 
   const handleDeleteServicio = async (id: string) => {
     startDelete(id, {
-      onDelete: (tid) => perform(deleteServicio(tid)),
+      onDelete: (tid) => removeServicio(tid),
       successMessage: "Servicio eliminado definitivamente"
     });
   };
@@ -82,7 +92,7 @@ export default function MarketplaceView() {
   const handleCreateAcuerdo = async (data: any) => {
     if (!servicioToRequest) return;
     
-    await perform(createAcuerdo({
+    await proposeAcuerdo({
       servicioId: servicioToRequest.id!,
       providerId: servicioToRequest.providerId,
       solicitanteId: appUser?.uid || '',
@@ -91,7 +101,7 @@ export default function MarketplaceView() {
       terms: data.terms,
       exchangeType: data.exchangeType,
       fechaPropuesta: data.fechaPropuesta
-    }), {
+    }, {
       successMessage: "Propuesta enviada. ¡Suerte con el intercambio! 🤝",
       onSuccess: () => setServicioToRequest(null)
     });
@@ -263,13 +273,13 @@ export default function MarketplaceView() {
                     {!isSolicitante && acuerdo.status === 'pendiente' && (
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => perform(updateAcuerdo(acuerdo.id!, { status: 'en_curso' }), { successMessage: "¡Acuerdo aceptado! 🤝" })}
+                          onClick={() => editAcuerdo(acuerdo.id!, { status: 'en_curso' }, { successMessage: "¡Acuerdo aceptado! 🤝" })}
                           className="px-4 py-2 bg-[#6B705C] text-white rounded-xl text-xs font-bold hover:bg-[#4A4E4D] transition-all"
                         >
                           Aceptar
                         </button>
                         <button 
-                          onClick={() => perform(updateAcuerdo(acuerdo.id!, { status: 'cancelada' }), { successMessage: "Acuerdo declinado." })}
+                          onClick={() => editAcuerdo(acuerdo.id!, { status: 'cancelada' }, { successMessage: "Acuerdo declinado." })}
                           className="px-4 py-2 bg-stone-100 text-stone-500 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all"
                         >
                           Declinar
@@ -279,7 +289,7 @@ export default function MarketplaceView() {
 
                     {acuerdo.status === 'en_curso' && (
                       <button 
-                        onClick={() => perform(updateAcuerdo(acuerdo.id!, { status: 'completada' }), { successMessage: "¡Intercambio finalizado! ✨" })}
+                        onClick={() => editAcuerdo(acuerdo.id!, { status: 'completada' }, { successMessage: "¡Intercambio finalizado! ✨" })}
                         className="px-4 py-2 border-2 border-[#C1E1C1] text-[#2C4C3B] rounded-xl text-xs font-bold hover:bg-[#C1E1C1] transition-all"
                       >
                         Marcar Completado
