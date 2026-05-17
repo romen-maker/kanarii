@@ -217,7 +217,7 @@ export function FichaView() {
                     <Edit2 className="w-4 h-4" />
                     <span className="text-sm font-medium">Editar</span>
                   </button>
-                  {displayFicha?.communityId && (
+                  {appUser?.communityIds && appUser.communityIds.length > 0 && (
                     <button
                       onClick={() => setShowLeaveModal(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-200"
