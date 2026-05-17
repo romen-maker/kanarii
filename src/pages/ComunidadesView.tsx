@@ -5,15 +5,10 @@ import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Comunidad, 
-  Invitacion, 
-  SolicitudAcceso,
   getComunidadesPublicas, 
-  validateInvitacion, 
-  useInvitacion, 
-  solicitarUnirse,
   getSolicitudPendiente
 } from '../lib/appService';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
@@ -77,7 +72,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 
 export function ComunidadesView() {
   const { appUser } = useAuth();
-  const { perform, isExecuting } = useEntityActions();
+  const { redeemInvitacion, solicitarAcceso, isExecuting } = useComunidadActions();
   const navigate = useNavigate();
   
   const [inviteCode, setInviteCode] = useState('');
@@ -114,7 +109,7 @@ export function ComunidadesView() {
     const code = codeOverride || inviteCode;
     if (!code.trim()) return;
 
-    await perform(useInvitacion(code.trim().toLowerCase(), appUser!.uid), {
+    await redeemInvitacion(code.trim().toLowerCase(), appUser!.uid, {
       successMessage: '¡Bienvenido a la comunidad! ✨',
       errorMessage: 'Código inválido, caducado o agotado.',
       onSuccess: () => navigate('/')
@@ -126,7 +121,7 @@ export function ComunidadesView() {
 
     setIsSubmitting(true);
     try {
-      await perform(solicitarUnirse(selectedComunidad.slug, appUser!.uid, solicitudMsg), {
+      await solicitarAcceso(selectedComunidad.slug, appUser!.uid, solicitudMsg, {
         successMessage: 'Tu solicitud ha sido enviada. El equipo la revisará pronto.',
         onSuccess: () => {
           setPendingRequests(prev => ({ ...prev, [selectedComunidad.slug]: true }));

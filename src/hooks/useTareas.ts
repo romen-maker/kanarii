@@ -11,11 +11,12 @@ import { useAuth } from '../contexts/AuthContext';
 export function useTareas(communityId?: string) {
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { appUser } = useAuth();
-  const [key, setKey] = useState(0);
+  const [version, setVersion] = useState(0);
 
   const reload = useCallback(() => {
-    setKey(prev => prev + 1);
+    setVersion(prev => prev + 1);
   }, []);
 
   useEffect(() => {
@@ -49,13 +50,21 @@ export function useTareas(communityId?: string) {
       })) as Tarea[];
       setTareas(data);
       setLoading(false);
+      setError(null);
     }, (err) => {
       handleFirestoreError(err, OperationType.GET, 'tareas');
+      setError(err instanceof Error ? err : new Error('Error al cargar tareas'));
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [appUser, communityId, key]);
+  }, [appUser, communityId, version]);
 
-  return { items: tareas, loading, reload };
+  return { 
+    items: tareas, 
+    tareas,
+    loading, 
+    error,
+    reload 
+  };
 }

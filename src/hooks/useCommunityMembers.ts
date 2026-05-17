@@ -1,57 +1,47 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, getDocs, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { handleFirestoreError, OperationType } from '../lib/error-handler';
-
-export interface CommunityMember {
-  userId: string;
-  nombre: string;
-}
+import { 
+  subscribeToCollection, 
+  getCommunityMembersQuery,
+  CommunityMember 
+} from '../lib/appService';
 
 /**
- * Hook para gestionar la lista de miembros de la comunidad con cache eficiente.
- * Cumple con la regla [MANDATO DRY] al centralizar la resolución de nombres.
+ * Hook para gestionar la lista de miembros de la comunidad en tiempo real.
+ * [MANDATO DRY] Centraliza la resolución de nombres y cumple el contrato estándar.
  */
 export function useCommunityMembers(communityId?: string) {
   const [members, setMembers] = useState<CommunityMember[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
 
-  const fetchMembers = useCallback(async () => {
+  const reload = useCallback(() => {
+    setVersion(v => v + 1);
+  }, []);
+
+  useEffect(() => {
     if (!communityId) {
       setMembers([]);
-      setLoadingMembers(false);
+      setLoading(false);
       return;
     }
 
-    try {
-      setLoadingMembers(true);
-      const q = query(
-        collection(db, 'community_members'),
-        where('communityId', '==', communityId)
-      );
-      const snapshot = await getDocs(q);
-      const membersData: CommunityMember[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        // Intentamos sacar el nombre de varios sitios por si la ficha es parcial
-        const nombre = data.datosOnboarding?.nombre || data.datosPersona?.nombre || data.nombre || 'Miembro';
-        const uid = data.userId || doc.id;
+    setLoading(true);
+    const q = getCommunityMembersQuery(communityId);
+    
+    // Suscripción real-time centralizada
+    const unsubscribe = subscribeToCollection(
+      q,
+      (data) => {
+        setMembers(data as CommunityMember[]);
+        setLoading(false);
+        setError(null);
+      },
+      `community_members/${communityId}`
+    );
 
-        if (uid && !membersData.some(m => m.userId === uid)) {
-          membersData.push({ userId: uid, nombre });
-        }
-      });
-      setMembers(membersData);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.GET, 'community_members');
-    } finally {
-      setLoadingMembers(false);
-    }
-  }, [communityId]);
-
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+    return () => unsubscribe();
+  }, [communityId, version]);
 
   /**
    * Helper síncrono para obtener un nombre desde el estado cargado.
@@ -62,5 +52,12 @@ export function useCommunityMembers(communityId?: string) {
     return mem ? mem.nombre : 'Cargando...';
   }, [members]);
 
-  return { members, loadingMembers, getMemberName, refreshMembers: fetchMembers };
+  return { 
+    members, 
+    loading,
+    loadingMembers: loading, // Aliasing para compatibilidad con componentes actuales
+    error,
+    getMemberName, 
+    reload 
+  };
 }

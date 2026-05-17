@@ -3,13 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTareas } from '../hooks/useTareas';
 import { useProyectos } from '../hooks/useProyectos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { useTareaActions } from '../hooks/useTareaActions';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { 
   Tarea, 
-  saveTarea, 
-  deleteTarea, 
-  updateTareaEstado,
   getTareaNextState,
   getTareaPrevState
 } from '../lib/appService';
@@ -34,7 +31,7 @@ export function TareasPanel() {
   const { appUser } = useAuth();
   const { currentCommunityId } = useComunidad();
   const { startDelete, pendingId } = useUndoableDelete();
-  const { perform, isSubmitting } = useEntityActions();
+  const { addTarea, editTarea, removeTarea, updateEstado, isExecuting: isSubmitting } = useTareaActions();
   
   // Hooks de Entidad
   const { items: tareas, loading: loadingTareas } = useTareas(currentCommunityId || 'arteara');
@@ -79,21 +76,28 @@ export function TareasPanel() {
       communityId: currentCommunityId || 'arteara'
     };
     
-    await perform(saveTarea(payload, tareaToEdit?.id), {
-      successMessage: tareaToEdit ? "Tarea actualizada" : "Tarea creada ✨",
-      onSuccess: closeModal
-    });
+    const action = tareaToEdit 
+      ? editTarea(tareaToEdit.id!, payload, {
+          successMessage: "Tarea actualizada",
+          onSuccess: closeModal
+        })
+      : addTarea(payload, {
+          successMessage: "Tarea creada ✨",
+          onSuccess: closeModal
+        });
+    
+    await action;
   };
 
   const handleUpdateEstado = async (id: string, nuevoEstado: Tarea['estado'], previo?: Tarea['estado']) => {
-    await perform(updateTareaEstado(id, nuevoEstado, previo), {
+    await updateEstado(id, nuevoEstado, previo, {
       successMessage: `Tarea ${nuevoEstado.replace('_', ' ')}`
     });
   };
 
   const handleDelete = (id: string) => {
     startDelete(id, {
-      onDelete: (tid) => perform(deleteTarea(tid)),
+      onDelete: (tid) => removeTarea(tid),
       successMessage: "Tarea eliminada definitivamente"
     });
   };

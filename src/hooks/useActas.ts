@@ -8,11 +8,12 @@ import { useAuth } from '../contexts/AuthContext';
 export function useActas(communityId?: string) {
   const [actas, setActas] = useState<Acta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { appUser } = useAuth();
-  const [key, setKey] = useState(0);
+  const [version, setVersion] = useState(0);
 
   const reload = useCallback(() => {
-    setKey(prev => prev + 1);
+    setVersion(prev => prev + 1);
   }, []);
 
   useEffect(() => {
@@ -36,12 +37,19 @@ export function useActas(communityId?: string) {
       (data) => {
         setActas(data as Acta[]);
         setLoading(false);
+        setError(null);
       },
       'actas'
     );
 
     return () => unsubscribe();
-  }, [appUser, communityId, key]);
+  }, [appUser, communityId, version]);
 
-  return { actas, loadingActas: loading, reload };
+  return { 
+    actas, 
+    loading,
+    loadingActas: loading, 
+    error,
+    reload 
+  };
 }

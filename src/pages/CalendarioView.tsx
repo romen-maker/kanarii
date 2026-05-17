@@ -11,8 +11,8 @@ import { useComunidad } from '../contexts/ComunidadContext';
 import { useEventos } from '../hooks/useEventos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useAuth } from '../contexts/AuthContext';
-import { useEntityActions } from '../hooks/useEntityActions';
-import { createEvento, updateEvento, deleteEvento, Evento } from '../lib/appService';
+import { useEventoActions } from '../hooks/useEventoActions';
+import { Evento } from '../lib/appService';
 import { CreateEventoModal } from '../components/CreateEventoModal';
 import { Plus, Calendar as CalendarIcon, List } from 'lucide-react';
 
@@ -41,7 +41,7 @@ export default function CalendarioView() {
   const { currentCommunityId } = useComunidad();
   const { eventos, loading } = useEventos(currentCommunityId || appUser?.communityId || 'arteara');
   const { members } = useCommunityMembers(currentCommunityId || 'arteara');
-  const { perform, isSubmitting } = useEntityActions();
+  const { addEvento, editEvento, isExecuting: isSubmitting } = useEventoActions();
   
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
@@ -68,12 +68,12 @@ export default function CalendarioView() {
     };
 
     if (selectedEvento?.id) {
-      await perform(updateEvento(selectedEvento.id, payload), {
+      await editEvento(selectedEvento.id, payload, {
         successMessage: "Evento actualizado correctamente",
         onSuccess: () => setIsModalOpen(false)
       });
     } else {
-      await perform(createEvento(payload), {
+      await addEvento(payload, {
         successMessage: "Evento creado en el calendario ✨",
         onSuccess: () => setIsModalOpen(false)
       });

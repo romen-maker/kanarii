@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Propuesta, 
   PropuestaRespuesta, 
@@ -18,18 +18,34 @@ export function usePropuestaDetail(propuestaId: string) {
   const [respuestas, setRespuestas] = useState<PropuestaRespuesta[]>([]);
   const [hilos, setHilos] = useState<PropuestaHilo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
+
+  const reload = useCallback(() => {
+    setVersion(v => v + 1);
+  }, []);
 
   useEffect(() => {
     if (!propuestaId) return;
     setLoading(true);
 
     // 1. Suscripción a la propuesta (doc principal)
-    const unsubProp = onSnapshot(doc(db, 'propuestas', propuestaId), (snap) => {
-      if (snap.exists()) {
-        setPropuesta({ id: snap.id, ...snap.data() } as Propuesta);
+    const unsubProp = onSnapshot(
+      doc(db, 'propuestas', propuestaId), 
+      (snap) => {
+        if (snap.exists()) {
+          setPropuesta({ id: snap.id, ...snap.data() } as Propuesta);
+          setError(null);
+        } else {
+          setError(new Error('La propuesta no existe'));
+        }
+        setLoading(false);
+      },
+      (err) => {
+        setError(err);
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    );
 
     // 2. Suscripción a respuestas
     const unsubRes = listenPropuestaResponses(propuestaId, (data) => {
@@ -46,12 +62,14 @@ export function usePropuestaDetail(propuestaId: string) {
       unsubRes();
       unsubHilos();
     };
-  }, [propuestaId]);
+  }, [propuestaId, version]);
 
   return {
     propuesta,
     respuestas,
     hilos,
-    loading
+    loading,
+    error,
+    reload
   };
 }

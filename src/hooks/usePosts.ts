@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Post, getPostsQuery, subscribeToCollection } from '../lib/appService';
 
 export function usePosts(communityId: string) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
+
+  const reload = useCallback(() => {
+    setVersion(v => v + 1);
+  }, []);
 
   useEffect(() => {
     if (!communityId) return;
@@ -16,12 +21,13 @@ export function usePosts(communityId: string) {
       (data) => {
         setPosts(data as Post[]);
         setLoading(false);
+        setError(null);
       },
       'posts'
     );
 
     return () => unsubscribe();
-  }, [communityId]);
+  }, [communityId, version]);
 
-  return { posts, loading, error };
+  return { posts, loading, error, reload };
 }

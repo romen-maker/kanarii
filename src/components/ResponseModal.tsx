@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { PropuestaRespuesta, registerPropuestaResponse } from '../lib/appService';
+import { PropuestaRespuesta } from '../lib/appService';
 import { X, CheckCircle2, MessageSquare, HelpCircle, AlertCircle, Send } from 'lucide-react';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { usePropuestaActions } from '../hooks/usePropuestaActions';
 
 interface ResponseModalProps {
   propuestaId: string;
@@ -22,7 +22,7 @@ export function ResponseModal({
   onClose,
   onSuccess
 }: ResponseModalProps) {
-  const { perform } = useEntityActions();
+  const { submitResponse } = usePropuestaActions();
   const [type, setType] = useState<ResponseType>(existingResponse?.type || 'consentimiento');
   const [content, setContent] = useState(existingResponse?.content || '');
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export function ResponseModal({
       updatedAt: new Date()
     };
 
-    await perform(registerPropuestaResponse(propuestaId, respuesta, totalMembers, existingResponse?.type), {
+    await submitResponse(propuestaId, respuesta, totalMembers, existingResponse?.type, {
       successMessage: 'Tu participación ha sido registrada ✨',
       onSuccess: () => {
         onSuccess();

@@ -93,6 +93,22 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] **Directorio Global**: Pantalla `/soberania` con navegación por tabs (Catálogo / Mis Acuerdos) y filtros por talento/recurso y categoría.
   - [x] **Cierre y Feedback**: Flujo de estados para acuerdos, permitiendo marcar como completado directamente desde la UI.
 
+## 🎨 Sesión de Coherencia Visual & UI Transversal (Próxima Sesión de Diseño 🎯)
+- [ ] **Estandarizar validación de formularios (`<FieldError />`)**
+  - Crear componente atómico `<FieldError message={error} />` con estilo unificado.
+  - Eliminar el uso de toasts para errores de validación de inputs.
+  - Implementar validación inline consistente en todos los formularios (Proyectos, Tareas, Catálogo, Propuestas).
+- [ ] **Estandarizar cabeceras de página (`<PageHeader />`)**
+  - Crear componente reutilizable `<PageHeader title="..." subtitle="..." action={...} />`.
+  - Aplicar en Gobernanza, Tareas, Proyectos, Actas y Catálogo para unificar estilo visual y subtítulos de contexto.
+- [ ] **Unificar contenedores de página (`<PageContainer />`)** (Propuesta de Antigravity 💡)
+  - Crear un contenedor de layout común que unifique el espaciado global (`padding`, `max-w-5xl`), comportamiento responsive y el tono cálido de fondo de Kanarii (`#FDFBF7`), evitando "saltos" de pantalla en navegación.
+- [ ] **Estandarizar el disparador de apertura en tarjetas (Triggers Consistent)**
+  - Resolver inconsistencias: En Gobernanza, hacer clic en cualquier parte de la tarjeta la abre directamente. En Tareas, exige hacer clic en el icono de editar (lápiz). Unificar a un patrón reactivo consistente.
+- [ ] **Homogeneizar ventanas emergentes (Modales vs Paneles Laterales / Drawers)**
+  - Resolver inconsistencias: En Actas se utiliza un panel lateral deslizante (Drawer), mientras que en el resto de la aplicación se usan modales de pantalla central. Definir cuándo se usa Drawer (ej: lectura profunda/actas) y cuándo Modal (ej: acciones rápidas/formularios) y aplicarlo coherentemente.
+
+
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
 - [ ] **3.2 Gestión de visitas / recién llegados**
@@ -112,11 +128,32 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] **4.4 PWA instalable**
   - [ ] Soporte `manifest.json` y Service Workers para uso como App Nativa.
 
+## 🚨 Bugs Críticos & Deuda Operativa (Prioridad Alta)
+- [ ] **Corregir reactividad en el inicio de sesión con Google**
+  - *Problema:* A veces, tras iniciar sesión con Google, la aplicación no transiciona ni redirige de forma automática, requiriendo una recarga manual (`F5`) por parte del usuario para que el estado de sesión se refleje en la UI.
+  - *Causa probable:* Falta de propagación reactiva o desincronización entre el observer `onAuthStateChanged` en `AuthContext.tsx` y el enrutador de React Router durante el flujo de autenticación popup/redirect de Firebase.
+- [ ] **Auditar flujo de validación de códigos de invitación (Toast "Código inválido")**
+  - *Problema:* El toast de "Código inválido" se dispara a veces de manera confusa. Es muy probable que esto ocurra porque el usuario ya es miembro de la comunidad (por lo que el código de invitación ya no se puede redimir/no aplica), y no por un fallo en el refactor del código.
+  - *Acción:* Revisar la lógica de validación para diferenciar entre un código verdaderamente inválido y el caso en que el usuario ya pertenezca a la comunidad, mostrando un feedback preciso en este último escenario.
+- [ ] **Resolver conflicto de mayúsculas/minúsculas en input de código de invitación (Bug de UX)**
+  - *Problema:* El input del formulario de invitación aplica visualmente `text-transform: uppercase` en CSS (o llama a `.toUpperCase()` en el handler), pero el backend guarda y compara los códigos estrictamente en minúsculas. Esto genera incompatibilidad y fallos en la validación.
+  - *Acción:* Estandarizar el flujo normalizando el input a minúsculas (`.toLowerCase()`) de manera transparente en la validación antes de comparar con la base de datos, o asegurar la consistencia del almacenamiento en la colección de invitaciones.
+- [ ] **Auditar e implementar la interacción detallada en el Marketplace (Catálogo de Servicios)**
+  - *Problema:* Al intentar interactuar o hacer clic sobre una tarjeta de servicio de otro miembro en la vista de Catálogo / Marketplace, la aplicación no realiza ninguna acción (no se abre ningún detalle, modal de contacto, ni panel lateral).
+  - *Acción:* Auditar y completar el flujo de interacción del Marketplace para que al hacer clic se despliegue información detallada del servicio o se facilite el contacto/intercambio con el oferente.
+
+
+
 ## 🛠️ BACKLOG / FUTURAS MEJORAS
 - [ ] Búsqueda global (Command+K) para proyectos, tareas y actas.
 - [ ] Exportación de actas a PDF.
 - [ ] RAG (Retrieval Augmented Generation) sobre el histórico de actas.
 - [ ] Notificaciones push para nuevas tareas asignadas.
+- [ ] **Tablón**: Añadir botón para editar post directamente desde la lista o vista principal.
+- [ ] **Tablón**: Añadir botón para eliminar post.
+- [ ] **Gobernanza**: Añadir botón para eliminar acta.
+- [ ] **Administración**: Añadir funcionalidad para eliminar/desvincular a un miembro de la comunidad (funcionalidad no existente actualmente).
+- [ ] **Propuestas**: Arreglar validación de descripción (hacerla obligatoria u opcional, revisar bug "error al procesar solicitud").
 - [ ] **Alternativa a Passwordless**: Evaluar implementación de un sistema opcional de Contraseñas / Email tradicional si la adopción de Magic Link genera fricción a largo plazo.
 - [ ] **Evolución Propuestas (Post-2.4)**:
   - [ ] Notificaciones push cuando hay propuesta nueva.
@@ -127,3 +164,6 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.
   - [ ] **[Bajo]** Migración de datos: Asegurar `userPositions: {}` y `totalResponsesCount: 0` en documentos antiguos (si existieran fuera de test).
   - [ ] **[Bajo]** Implementar un script de "Sanity Check" periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
+
+## 📐 Decisiones de Arquitectura
+- **2026-05-17 — Exclusión de Módulos de HD del Patrón DRY Actions**: Se decide de forma consciente y deliberada mantener el acceso directo a `appService` en los módulos de Fichas (`FichaView.tsx`, `FichaPreview.tsx`), Cruce (`CruceView.tsx`) y Administración General (`AdminPanel.tsx`). Estos componentes manejan flujos altamente acoplados al ciclo de vida del usuario de Firebase, sincronización diferida de estados de onboarding, enriquecimientos astrales y cálculos complejos de Diseño Humano, por lo que requieren control directo y granular y no se benefician de la abstracción genérica de `useEntityActions`.

@@ -8,33 +8,41 @@ import { Propuesta, getPropuestasQuery, subscribeToCollection } from '../lib/app
 export function usePropuestas(communityId: string) {
   const [propuestas, setPropuestas] = useState<Propuesta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
 
-  const loadPropuestas = useCallback(() => {
-    if (!communityId) return;
+  const reload = useCallback(() => {
+    setVersion(v => v + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!communityId) {
+      setPropuestas([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    
     const q = getPropuestasQuery(communityId);
-    return subscribeToCollection(
+    
+    const unsubscribe = subscribeToCollection(
       q, 
       (data) => {
         setPropuestas(data as Propuesta[]);
         setLoading(false);
+        setError(null);
       },
       'Listar propuestas'
     );
-  }, [communityId]);
 
-  useEffect(() => {
-    const unsubscribe = loadPropuestas();
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [loadPropuestas]);
+    return () => unsubscribe();
+  }, [communityId, version]);
 
   return { 
     items: propuestas, 
     propuestas, // Alias para conveniencia
     loading, 
-    reload: loadPropuestas 
+    error,
+    reload 
   };
 }

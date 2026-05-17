@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Evento, getEventosQuery, subscribeToCollection } from '../lib/appService';
 
 export function useEventos(communityId: string) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
+
+  const reload = useCallback(() => {
+    setVersion(v => v + 1);
+  }, []);
 
   useEffect(() => {
     if (!communityId) return;
@@ -22,12 +27,13 @@ export function useEventos(communityId: string) {
         }));
         setEventos(transformedData);
         setLoading(false);
+        setError(null);
       },
       'eventos'
     );
 
     return () => unsubscribe();
-  }, [communityId]);
+  }, [communityId, version]);
 
-  return { eventos, loading, error };
+  return { eventos, loading, error, reload };
 }

@@ -3,9 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { useActaActions } from '../hooks/useActaActions';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { Acta, deleteActa } from '../lib/appService';
+import { Acta } from '../lib/appService';
 import { 
   Leaf, Plus, Calendar, User as UserIcon, Users, 
   CheckSquare, Search, BookOpen, Clock, FileText, Trash2, Edit
@@ -21,13 +21,19 @@ export function ActasPanel() {
   const { actas, loadingActas, reload } = useActas(currentCommunityId || 'arteara');
   const { items: tareas } = useTareas(currentCommunityId || 'arteara');
   const { members, loadingMembers, getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
-  const { perform } = useEntityActions();
+  const { removeActa } = useActaActions();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [actaSeleccionada, setActaSeleccionada] = useState<Acta | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { startDelete, pendingId } = useUndoableDelete();
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditModalOpen(false);
+    reload();
+  };
 
   const filteredActas = useMemo(() => {
     return actas.filter(a => 
@@ -47,7 +53,7 @@ export function ActasPanel() {
     if (actaSeleccionada?.id === id) setActaSeleccionada(null);
     
     startDelete(id, {
-      onDelete: (id) => perform(deleteActa(id)),
+      onDelete: (id) => removeActa(id),
       successMessage: "Acta eliminada definitivamente"
     });
   };
@@ -124,15 +130,14 @@ export function ActasPanel() {
                       id={acta.id!}
                       title={acta.titulo}
                       subtitle={acta.contexto}
-                      status={recent ? { label: 'Reciente', variant: 'info', icon: Clock } : undefined}
+                      status={recent ? { label: 'Reciente', variant: 'info', icon: Clock } : { label: 'Registrada', variant: 'neutral', icon: FileText }}
                       metadata={[
                         { icon: UserIcon, text: getMemberName(acta.facilitador), tooltip: "Facilitador" },
                         { icon: Calendar, text: dateTs.toLocaleDateString(), tooltip: "Fecha" },
                         { icon: Users, text: `${acta.participantes.length} Asistentes`, tooltip: "Participantes" },
                         { icon: CheckSquare, text: `${acta.decisiones.length} Decisiones`, tooltip: "Acuerdos" }
                       ]}
-                      isSelected={actaSeleccionada?.id === acta.id}
-                      variant="compact"
+                      className={actaSeleccionada?.id === acta.id ? 'border-stone-800 bg-stone-50/50 shadow-md ring-1 ring-stone-800/10' : ''}
                     />
                   </div>
                 );

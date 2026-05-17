@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Post, Respuesta, getRespuestas, createRespuesta, updatePost, deletePost } from '../lib/appService';
+import { Post, Respuesta, getRespuestas } from '../lib/appService';
+import { usePostActions } from '../hooks/usePostActions';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,7 +24,7 @@ const CATEGORIAS = [
 
 export function PostDetailModal({ post, members, onClose }: PostDetailModalProps) {
   const { appUser } = useAuth();
-  const { perform, isSubmitting: isActionSubmitting } = useEntityActions();
+  const { editPost, removePost, addRespuesta, isExecuting: isActionSubmitting } = usePostActions();
   const { startDelete } = useUndoableDelete();
   
   const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
@@ -70,18 +71,17 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
     if (!nuevaRespuesta.trim() || !post.id || !appUser) return;
 
     setIsSubmittingRes(true);
-    try {
-      await createRespuesta(post.id, {
-        texto: nuevaRespuesta.trim(),
-        autor_uid: appUser.uid
-      });
-      setNuevaRespuesta('');
-      await loadRespuestas();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmittingRes(false);
-    }
+    await addRespuesta(post.id, {
+      texto: nuevaRespuesta.trim(),
+      autor_uid: appUser.uid
+    }, {
+      successMessage: 'Respuesta publicada',
+      onSuccess: async () => {
+        setNuevaRespuesta('');
+        await loadRespuestas();
+      }
+    });
+    setIsSubmittingRes(false);
   };
 
   // Sincronizar editData cuando el post cambia externamente
@@ -95,14 +95,14 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
 
   const handleUpdateEstado = async (nuevoEstado: Post['estado']) => {
     if (!post.id) return;
-    await perform(updatePost(post.id, { estado: nuevoEstado }), {
+    await editPost(post.id, { estado: nuevoEstado }, {
       successMessage: `Estado actualizado a ${nuevoEstado.replace('_', ' ')}`
     });
   };
 
   const handleSaveEdit = async () => {
     if (!post.id) return;
-    await perform(updatePost(post.id, editData), {
+    await editPost(post.id, editData, {
       successMessage: "Publicación actualizada correctamente",
       onSuccess: () => setIsEditing(false)
     });
@@ -111,7 +111,7 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
   const handleDelete = () => {
     if (!post.id) return;
     startDelete(post.id, {
-      onDelete: (id) => perform(deletePost(id)),
+      onDelete: (id) => removePost(id),
       successMessage: "Publicación eliminada",
       onSuccess: onClose
     });
@@ -266,7 +266,7 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
                     <button
                       onClick={() => {
                         if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
-                          perform(deletePost(post.id!), {
+                          removePost(post.id!, {
                             successMessage: "Publicación eliminada",
                             onSuccess: onClose
                           });

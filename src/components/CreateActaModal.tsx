@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { X, CheckSquare, Plus, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
-import { useEntityActions } from '../hooks/useEntityActions';
-import { Acta, saveTarea, saveActa } from '../lib/appService';
+import { useActaActions } from '../hooks/useActaActions';
+import { useTareaActions } from '../hooks/useTareaActions';
+import { Acta } from '../lib/appService';
 
 interface CreateActaModalProps {
   onClose: () => void;
@@ -15,7 +16,8 @@ interface CreateActaModalProps {
 export function CreateActaModal({ onClose, members, actaToEdit, communityId }: CreateActaModalProps) {
   const { appUser } = useAuth();
   const toast = useToast();
-  const { perform } = useEntityActions();
+  const { addActa, editActa } = useActaActions();
+  const { addTarea } = useTareaActions();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -41,7 +43,7 @@ export function CreateActaModal({ onClose, members, actaToEdit, communityId }: C
       const tareasIds: string[] = actaToEdit?.tareasDerivadas || [];
       for (const tarea of formData.tareasDerivadas) {
         if (tarea.titulo.trim()) {
-          const tId = await saveTarea({
+          const tId = await addTarea({
             titulo: tarea.titulo,
             asignadaA: tarea.asignadaA || undefined,
             descripcion: tarea.descripcion || undefined,
@@ -68,13 +70,16 @@ export function CreateActaModal({ onClose, members, actaToEdit, communityId }: C
         communityId
       };
 
-      await perform(saveActa(finalData, actaToEdit?.id), {
+      const options = {
         successMessage: actaToEdit ? "Acta actualizada ✨" : "Acta guardada con éxito 📄",
-        onSuccess: () => onClose(),
-        onError: (err) => {
-          console.error("Error saving acta:", err);
-        }
-      });
+        onSuccess: () => onClose()
+      };
+
+      if (actaToEdit) {
+        await editActa(actaToEdit.id!, finalData, options);
+      } else {
+        await addActa(finalData, options);
+      }
       
     } catch (err) {
       console.error("Excepción en handleSubmit:", err);

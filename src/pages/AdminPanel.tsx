@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Ficha, ensureSeedData, Tarea } from '../lib/appService';
+import { Ficha, ensureSeedData, Tarea, getUserFicha } from '../lib/appService';
 import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useToast } from '../hooks/useToast';
-import { useFichas } from '../hooks/useFichas';
+
 import { useTareas } from '../hooks/useTareas';
 
 function getDatosPersona(ficha: Ficha) {
@@ -28,7 +28,7 @@ export function AdminPanel() {
   const { appUser, logout } = useAuth();
   const { currentCommunityId } = useComunidad();
   const navigate = useNavigate();
-  const { fichas, loading: loadingFichas } = useFichas(currentCommunityId);
+  const { members, loading: loadingMembers } = useCommunityMembers(currentCommunityId);
   const { items: tareas, loading: loadingTareas, reload: fetchTareas } = useTareas(currentCommunityId);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'todos' | RolComunitario>('todos');
@@ -106,15 +106,22 @@ export function AdminPanel() {
     setSortConfig({ key, direction });
   };
 
-  const filteredFichas = fichas.filter(f => {
-    const datos = getDatosPersona(f);
-    if (!datos || !datos.nombre) return false;
-    if (roleFilter !== 'todos' && datos.rol !== roleFilter) return false;
+  const filteredMembers = members.filter(m => {
+    if (roleFilter !== 'todos' && m.rol !== roleFilter) return false;
     return (
-      (datos.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (datos.rol_comunidad?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (m.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (m.rol_comunidad?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
   });
+
+  const handleSelectMember = async (userId: string) => {
+    try {
+      const fullProfile = await getUserFicha(userId);
+      setSelectedFicha(fullProfile);
+    } catch (err) {
+      toast.error('No se pudo cargar el perfil completo');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
@@ -190,27 +197,26 @@ export function AdminPanel() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  {loadingFichas ? (
+                  {loadingMembers ? (
                     <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando comunidad...</td></tr>
-                  ) : filteredFichas.length === 0 ? (
+                  ) : filteredMembers.length === 0 ? (
                     <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No se encontraron miembros</td></tr>
-                  ) : filteredFichas.map(ficha => {
-                    const datos = getDatosPersona(ficha);
+                  ) : filteredMembers.map(member => {
                     return (
-                      <tr key={ficha.id} className="hover:bg-[#FDFBF7] transition-colors group">
+                      <tr key={member.userId} className="hover:bg-[#FDFBF7] transition-colors group">
                         <td className="px-6 py-4">
-                          <div className="font-medium text-stone-800">{datos.nombre}</div>
-                          <div className="text-xs text-stone-400">{datos.rol_comunidad || 'Sin rol definido'}</div>
+                          <div className="font-medium text-stone-800">{member.nombre}</div>
+                          <div className="text-xs text-stone-400">{member.rol_comunidad || 'Sin rol definido'}</div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${ficha.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
-                            <span className="text-xs font-medium text-stone-600 capitalize">{datos.rol || 'Miembro'}</span>
+                            <span className={`w-2 h-2 rounded-full ${member.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
+                            <span className="text-xs font-medium text-stone-600 capitalize">{member.rol || 'Miembro'}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-stone-500">{datos.antiguedad_anos || 0} años</td>
+                        <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => setSelectedFicha(ficha)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all">
+                          <button onClick={() => handleSelectMember(member.userId)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all">
                             <Search className="w-4 h-4" />
                           </button>
                         </td>

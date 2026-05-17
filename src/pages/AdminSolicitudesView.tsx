@@ -20,15 +20,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { useComunidadActions } from '../hooks/useComunidadActions';
 import { 
   SolicitudAcceso, 
   Invitacion,
-  resolverSolicitud, 
   listenSolicitudes, 
   listenInvitaciones,
-  createInvitacion,
-  desactivarInvitacion,
   getAppUserDoc,
   getFichaById,
   Ficha
@@ -276,7 +273,7 @@ const InvitacionCard: React.FC<{
 export function AdminSolicitudesView() {
   const { appUser } = useAuth();
   const { comunidad } = useComunidad();
-  const { perform } = useEntityActions();
+  const { resolverSolicitudAcceso, crearInvitacionCodigo, desactivarInvitacionCodigo } = useComunidadActions();
   
   const [solicitudes, setSolicitudes] = useState<SolicitudAcceso[]>([]);
   const [invitaciones, setInvitaciones] = useState<Invitacion[]>([]);
@@ -323,7 +320,7 @@ export function AdminSolicitudesView() {
     
     setIsExecutingAction(solicitud.id!);
     try {
-      await perform(resolverSolicitud(comunidad.id, solicitud.id!, decision, appUser.uid), {
+      await resolverSolicitudAcceso(comunidad.id, solicitud.id!, decision, appUser.uid, {
         successMessage: decision === 'aprobada' ? '¡Solicitud aprobada! El miembro ya tiene acceso.' : 'Solicitud rechazada.',
         onSuccess: () => {
           if (confirmReject) setConfirmReject(null);
@@ -347,7 +344,7 @@ export function AdminSolicitudesView() {
         expiraEn: newCodeType === 'caduca' && newCodeExpiration ? new Date(newCodeExpiration) as any : null
       };
       
-      const codigo = await perform(createInvitacion(comunidad.id, appUser.uid, opciones), {
+      const codigo = await crearInvitacionCodigo(comunidad.id, appUser.uid, opciones, {
         successMessage: 'Código generado correctamente.'
       });
       
@@ -362,7 +359,7 @@ export function AdminSolicitudesView() {
   const handleDesactivar = async (codigo: string) => {
     setIsExecutingAction(codigo);
     try {
-      await perform(desactivarInvitacion(codigo), {
+      await desactivarInvitacionCodigo(codigo, {
         successMessage: 'Código desactivado.'
       });
     } catch (error) {
