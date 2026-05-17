@@ -26,9 +26,11 @@ export function useComunidadActions() {
     solicitudId: string,
     decision: 'aprobada' | 'rechazada',
     adminUid: string,
+    motivoRechazo?: string,
+    detalleRechazo?: string,
     options?: Parameters<typeof perform>[1]
   ) => {
-    return perform(resolverSolicitud(communityId, solicitudId, decision, adminUid), options);
+    return perform(resolverSolicitud(communityId, solicitudId, decision, adminUid, motivoRechazo, detalleRechazo), options);
   };
 
   const crearInvitacionCodigo = async (

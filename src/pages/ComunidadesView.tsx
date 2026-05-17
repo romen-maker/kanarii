@@ -6,7 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Comunidad, 
   getComunidadesPublicas, 
-  getSolicitudPendiente
+  getSolicitudPendiente,
+  getUltimaSolicitud,
+  SolicitudAcceso
 } from '../lib/appService';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -84,7 +86,7 @@ export function ComunidadesView() {
   const [showManifiesto, setShowManifiesto] = useState(false);
   const [showSolicitud, setShowSolicitud] = useState(false);
   const [solicitudMsg, setSolicitudMsg] = useState('');
-  const [pendingRequests, setPendingRequests] = useState<Record<string, boolean>>({});
+  const [userRequests, setUserRequests] = useState<Record<string, SolicitudAcceso | null>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -97,12 +99,12 @@ export function ComunidadesView() {
     setComunidades(list);
     
     if (appUser) {
-      const pending: Record<string, boolean> = {};
+      const requests: Record<string, SolicitudAcceso | null> = {};
       for (const c of list) {
-        const sol = await getSolicitudPendiente(c.slug, appUser.uid);
-        if (sol) pending[c.slug] = true;
+        const sol = await getUltimaSolicitud(c.slug, appUser.uid);
+        requests[c.slug] = sol;
       }
-      setPendingRequests(pending);
+      setUserRequests(requests);
     }
     setLoading(false);
   };
@@ -136,7 +138,14 @@ export function ComunidadesView() {
       await solicitarAcceso(selectedComunidad.slug, appUser!.uid, solicitudMsg, {
         successMessage: 'Tu solicitud ha sido enviada. El equipo la revisará pronto.',
         onSuccess: () => {
-          setPendingRequests(prev => ({ ...prev, [selectedComunidad.slug]: true }));
+          setUserRequests(prev => ({
+            ...prev,
+            [selectedComunidad.slug]: {
+              estado: 'pendiente',
+              mensaje: solicitudMsg,
+              creadoEn: { toDate: () => new Date() }
+            } as any
+          }));
           setShowSolicitud(false);
           setSolicitudMsg('');
         }
@@ -220,7 +229,9 @@ export function ComunidadesView() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {comunidades.map(comunidad => {
                 const isMember = appUser?.communityIds?.includes(comunidad.slug);
-                const hasPending = pendingRequests[comunidad.slug];
+                const latestRequest = userRequests[comunidad.slug];
+                const hasPending = latestRequest?.estado === 'pendiente';
+                const hasRejected = latestRequest?.estado === 'rechazada';
                 
                 return (
                   <motion.div 
@@ -271,6 +282,24 @@ export function ComunidadesView() {
                         Ver manifiesto
                       </button>
 
+                      {hasRejected && (latestRequest?.motivoRechazo || latestRequest?.detalleRechazo) && (
+                        <div className="bg-red-50/50 border border-red-100/50 rounded-2xl p-4 mt-1 text-left">
+                          <div className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">
+                            Solicitud Rechazada
+                          </div>
+                          {latestRequest.motivoRechazo && (
+                            <p className="text-sm font-semibold text-stone-700">
+                              {latestRequest.motivoRechazo}
+                            </p>
+                          )}
+                          {latestRequest.detalleRechazo && (
+                            <p className="text-xs text-[#8A817C] mt-1 italic leading-relaxed">
+                              "{latestRequest.detalleRechazo}"
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       {isMember ? (
                         <div className="w-full flex items-center justify-center gap-2 text-sm font-bold text-green-600 bg-green-50 py-3 rounded-xl border border-green-100">
                           <CheckCircle2 className="w-5 h-5" />
@@ -289,7 +318,7 @@ export function ComunidadesView() {
                           className="w-full flex items-center justify-center gap-2 bg-[#CB997E] hover:bg-[#B58368] text-white py-3 rounded-xl font-bold transition-all shadow-md group"
                         >
                           <MessageSquare className="w-5 h-5" />
-                          Solicitar acceso
+                          {hasRejected ? 'Volver a solicitar acceso' : 'Solicitar acceso'}
                         </button>
                       ) : (
                         <div className="flex gap-2">

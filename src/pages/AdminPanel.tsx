@@ -266,7 +266,7 @@ export function AdminPanel() {
                     <div key={baja.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-stone-800">{baja.nombre || 'Miembro'}</span>
+                          <span className="font-semibold text-stone-800">{baja.nombreUsuario || 'Miembro'}</span>
                           <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
                             {baja.motivo}
                           </span>
