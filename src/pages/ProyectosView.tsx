@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  crearProyecto, 
-  solicitarColaboracion, 
-  Proyecto, 
-  getUserFicha, 
-  Ficha, 
-  aprobarColaborador, 
-  rechazarSolicitud, 
-  actualizarEstadoProyecto, 
-  deleteProyecto
-} from '../lib/appService';
+import { Proyecto } from '../lib/appService';
+import { useProyectoActions } from '../hooks/useProyectoActions';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { Briefcase, Plus, Search, Play, Pause, CheckCircle2, Star, Users, UserPlus } from 'lucide-react';
 import { useToast } from '../components/Toaster';
@@ -19,7 +10,7 @@ import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { useProyectos } from '../hooks/useProyectos';
 import { useTareas } from '../hooks/useTareas';
 import { useFicha } from '../hooks/useFicha';
-import { useEntityActions } from '../hooks/useEntityActions';
+
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
 import { ProjectDetailOverlay } from '../components/ProjectDetailOverlay';
@@ -41,7 +32,14 @@ export function ProyectosView() {
   
   const { getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
   const { startDelete } = useUndoableDelete();
-  const { perform } = useEntityActions();
+  const { 
+    addProyecto, 
+    submitSolicitud, 
+    acceptColaborador, 
+    rejectSolicitud, 
+    updateEstado, 
+    removeProyecto 
+  } = useProyectoActions();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Proyecto | null>(null);
@@ -70,7 +68,7 @@ export function ProyectosView() {
       solicitudes_uid: [],
       creadoEn: new Date().toISOString()
     };
-    await perform(crearProyecto(finalData), {
+    await addProyecto(finalData, {
       successMessage: "Proyecto lanzado con éxito 🚀",
       onSuccess: () => setShowCreateModal(false)
     });
@@ -78,25 +76,25 @@ export function ProyectosView() {
 
   const handleSolicitar = async (pid: string) => {
     if (!appUser) return;
-    await perform(solicitarColaboracion(pid, appUser.uid), {
+    await submitSolicitud(pid, appUser.uid, {
       successMessage: "Energía enviada a la iniciativa ✨"
     });
   };
 
   const handleAprobar = async (pid: string, uid: string) => {
-    await perform(aprobarColaborador(pid, uid), {
+    await acceptColaborador(pid, uid, {
       successMessage: "Colaborador integrado al equipo"
     });
   };
 
   const handleRechazar = async (pid: string, uid: string) => {
-    await perform(rechazarSolicitud(pid, uid), {
+    await rejectSolicitud(pid, uid, {
       successMessage: "Solicitud gestionada"
     });
   };
 
   const handleUpdateEstado = async (pid: string, nuevoEstado: Proyecto['estado']) => {
-    await perform(actualizarEstadoProyecto(pid, nuevoEstado), {
+    await updateEstado(pid, nuevoEstado, {
       successMessage: `Estado actualizado a ${nuevoEstado.replace('_', ' ')}`
     });
   };
@@ -198,7 +196,7 @@ export function ProyectosView() {
           onRechazar={handleRechazar}
           onSolicitar={handleSolicitar}
           onDelete={(id) => startDelete(id, {
-            onDelete: (pid) => perform(deleteProyecto(pid)),
+            onDelete: (pid) => removeProyecto(pid),
             onSuccess: () => setSelectedProject(null),
             successMessage: 'Proyecto eliminado'
           })}
