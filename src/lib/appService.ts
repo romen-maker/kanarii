@@ -750,11 +750,21 @@ export async function deleteProyecto(id: string): Promise<void> {
   }
 }
 
-export async function getMemberInfo(uid: string): Promise<any | null> {
+export async function getMemberInfo(uid: string, communityId?: string): Promise<any | null> {
   try {
-    const docRef = doc(db, 'community_members', uid);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) return { id: snap.id, ...snap.data() };
+    let snap = null;
+    if (communityId) {
+      const docRef = doc(db, 'community_members', `${communityId}_${uid}`);
+      snap = await getDoc(docRef);
+    } else {
+      const q = query(collection(db, 'community_members'), where('userId', '==', uid));
+      const querySnap = await getDocs(q);
+      if (!querySnap.empty) {
+        snap = querySnap.docs[0];
+      }
+    }
+    
+    if (snap && snap.exists()) return { id: snap.id, ...snap.data() };
     
     // Fallback to users collection
     const userRef = doc(db, 'users', uid);
@@ -1073,6 +1083,29 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
  * Evita duplicar lógica entre guardado normal y migración desde pendiente.
  */
 export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: boolean = true) {
+  // Intentar resolver communityId de forma inteligente si no viene explícito (ej: tras onboarding)
+  let commId = fichaFull.communityId || fichaFull.datosOnboarding?.communityId || fichaFull.datosPersona?.communityId || null;
+  
+  if (!commId) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        commId = userData.communityId || (userData.communityIds && userData.communityIds[0]) || null;
+      }
+    } catch (err) {
+      console.error("Error al recuperar communityId del usuario:", err);
+    }
+  }
+
+  // Sincronizar el communityId resuelto en la estructura de la ficha para mantener coherencia en profiles y fichas
+  if (commId) {
+    fichaFull.communityId = commId;
+    if (fichaFull.datosOnboarding) fichaFull.datosOnboarding.communityId = commId;
+    if (fichaFull.datosPersona) fichaFull.datosPersona.communityId = commId;
+  }
+
   // 1) Guardar en /profiles/{userId}
   try {
     const profileRef = doc(db, 'profiles', userId);
@@ -1087,25 +1120,27 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     throw err;
   }
 
-  // 2) Guardar en /community_members/{userId}
-  try {
-    const memberRef = doc(db, 'community_members', userId);
-    const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
-    await setDoc(memberRef, {
-      userId,
-      communityId: fichaFull.communityId || fichaFull.datosOnboarding?.communityId || fichaFull.datosPersona?.communityId || null,
-      nombre: base.nombre || fichaFull.nombre || 'Sin Nombre',
-      tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
-      elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
-      autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
-      antiguedad_anos: base.antiguedad_anos || 0,
-      rol_comunidad: base.rol_comunidad || 'miembro',
-      estado: fichaFull.estado,
-      creadoEn: fichaFull.createdAt || serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-  } catch (err) {
-    handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
+  // 2) Guardar en /community_members/{communityId}_{userId} (Clave compuesta multi-comunidad)
+  if (commId) {
+    try {
+      const memberRef = doc(db, 'community_members', `${commId}_${userId}`);
+      const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
+      await setDoc(memberRef, {
+        userId,
+        communityId: commId,
+        nombre: base.nombre || fichaFull.nombre || 'Sin Nombre',
+        tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
+        elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
+        autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
+        antiguedad_anos: base.antiguedad_anos || 0,
+        rol_comunidad: base.rol_comunidad || 'miembro',
+        estado: fichaFull.estado || 'activo',
+        creadoEn: fichaFull.createdAt || serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (err) {
+      handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
+    }
   }
 
   // 3) Mantener en /fichas para compatibilidad hacia atrás
@@ -1992,6 +2027,58 @@ export async function resolverSolicitud(
     await batch.commit();
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, 'Resolver solicitud');
+    throw error;
+  }
+}
+
+export async function removerMiembroComunidad(userId: string, communityId: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      throw new Error('El usuario no existe');
+    }
+    
+    const userData = userSnap.data();
+    const communityIds: string[] = userData.communityIds || [];
+    const newCommunityIds = communityIds.filter(id => id !== communityId);
+    const newPrimaryCommunityId = newCommunityIds[0] ?? null;
+
+    const batch = writeBatch(db);
+
+    // 1. Actualizar el documento de usuario
+    batch.update(userRef, {
+      communityIds: newCommunityIds,
+      communityId: newPrimaryCommunityId,
+      updatedAt: serverTimestamp()
+    });
+
+    // 2. Eliminar el miembro de community_members usando la clave compuesta
+    const memberRef = doc(db, 'community_members', `${communityId}_${userId}`);
+    batch.delete(memberRef);
+
+    // 3. Actualizar la Ficha (tanto en profiles como en fichas si existen)
+    const profileRef = doc(db, 'profiles', userId);
+    const profileSnap = await getDoc(profileRef);
+    if (profileSnap.exists()) {
+      batch.update(profileRef, {
+        communityId: newPrimaryCommunityId,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    const fichaRef = doc(db, 'fichas', userId);
+    const fichaSnap = await getDoc(fichaRef);
+    if (fichaSnap.exists()) {
+      batch.update(fichaRef, {
+        communityId: newPrimaryCommunityId,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'community_members');
     throw error;
   }
 }

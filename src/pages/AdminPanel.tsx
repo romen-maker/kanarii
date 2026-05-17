@@ -1,12 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Ficha, ensureSeedData, Tarea, getUserFicha } from '../lib/appService';
-import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown } from 'lucide-react';
+import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useNavigate } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useToast } from '../hooks/useToast';
+import { useComunidadActions } from '../hooks/useComunidadActions';
 
 import { useTareas } from '../hooks/useTareas';
 
@@ -37,6 +38,16 @@ export function AdminPanel() {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const { getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
   const toast = useToast();
+  
+  const { expulsarMiembro } = useComunidadActions();
+  const [memberToExpel, setMemberToExpel] = useState<any | null>(null);
+
+  const handleConfirmExpulsar = async () => {
+    if (!memberToExpel || !currentCommunityId) return;
+    const target = memberToExpel;
+    setMemberToExpel(null);
+    await expulsarMiembro(target.userId, currentCommunityId);
+  };
 
   useEffect(() => {
     if (appUser) {
@@ -216,9 +227,16 @@ export function AdminPanel() {
                         </td>
                         <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => handleSelectMember(member.userId)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all">
-                            <Search className="w-4 h-4" />
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            <button onClick={() => handleSelectMember(member.userId)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all" title="Ver Ficha">
+                              <Search className="w-4 h-4" />
+                            </button>
+                            {member.userId !== appUser?.uid && (
+                              <button onClick={() => setMemberToExpel(member)} className="p-2 hover:bg-red-50 text-stone-400 hover:text-red-600 rounded-lg transition-all" title="Expulsar Miembro">
+                                <UserMinus className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -348,6 +366,31 @@ export function AdminPanel() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {memberToExpel && (
+        <div className="fixed inset-0 bg-stone-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-[#EAE2D6] shadow-xl animate-in fade-in zoom-in-95 duration-250">
+            <h3 className="font-serif text-lg text-stone-800 mb-2">¿Confirmas la expulsión?</h3>
+            <p className="text-sm text-stone-500 mb-6">
+              Estás a punto de expulsar a <strong className="text-stone-700">{memberToExpel.nombre}</strong> de la comunidad. Esta acción eliminará su membresía y desvinculará sus registros.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={() => setMemberToExpel(null)}
+                className="px-4 py-2 border border-stone-200 hover:bg-stone-50 text-stone-600 rounded-xl text-sm font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleConfirmExpulsar}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                Confirmar Expulsión
+              </button>
             </div>
           </div>
         </div>

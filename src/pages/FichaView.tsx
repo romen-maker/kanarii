@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFicha } from '../hooks/useFicha';
-import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin } from 'lucide-react';
+import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,6 +10,7 @@ import { saveFicha, saveManual, DatosOnboarding } from '../lib/appService';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
+import { useComunidadActions } from '../hooks/useComunidadActions';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -42,6 +43,9 @@ export function FichaView() {
   const [fichaEditadaDesdeGeneracion, setFichaEditadaDesdeGeneracion] = useState(false);
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [geoMessage, setGeoMessage] = useState('');
+  
+  const { abandonarComunidad } = useComunidadActions();
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   
   function getDatosPersona(ficha: any) {
     return ficha?.datosPersona ?? ficha?.datosOnboarding ?? {};
@@ -87,6 +91,16 @@ export function FichaView() {
   if (loadingFicha || (!ficha && !localFicha)) return null;
   const displayFicha = localFicha || ficha;
   const datos = getDatosPersona(displayFicha);
+
+  const handleLeaveCommunity = async () => {
+    if (!appUser || !displayFicha?.communityId) return;
+    setShowLeaveConfirm(false);
+    await abandonarComunidad(appUser.uid, displayFicha.communityId, {
+      onSuccess: () => {
+        navigate('/comunidades');
+      }
+    });
+  };
 
   const onSubmit = async (data: FichaFormData) => {
     if (!appUser || !displayFicha?.id) return;
@@ -154,13 +168,24 @@ export function FichaView() {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => setEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Editar</span>
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Editar</span>
+                  </button>
+                  {displayFicha?.communityId && (
+                    <button
+                      onClick={() => setShowLeaveConfirm(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-200"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm font-medium">Salir de la Comunidad</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10 pt-2">
@@ -416,6 +441,47 @@ export function FichaView() {
           </div>
         )}
       </div>
+
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full border border-[#EAE2D6] shadow-2xl relative overflow-hidden animate-scaleIn">
+            <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
+            <div className="flex flex-col gap-4">
+              <div className="p-3 bg-red-50 rounded-full w-fit text-red-600">
+                <LogOut className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-serif text-stone-900 mb-2">¿Abandonar esta comunidad?</h3>
+                <p className="text-stone-600 text-sm leading-relaxed">
+                  Estás a punto de salir de la comunidad. Perderás el acceso a sus tableros de proyectos, tareas, actas y tablón.
+                </p>
+                <div className="mt-4 p-3 bg-stone-50 rounded-2xl border border-stone-100 flex gap-2.5 items-start">
+                  <span className="text-amber-500 font-bold text-base leading-none">⚠️</span>
+                  <p className="text-xs text-stone-500 leading-normal">
+                    Tu ficha comunitaria y tu manual galáctico no se borrarán, pero ya no estarás listado como miembro de esta comunidad.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowLeaveConfirm(false)}
+                  className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLeaveCommunity}
+                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
+                >
+                  Sí, Salir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

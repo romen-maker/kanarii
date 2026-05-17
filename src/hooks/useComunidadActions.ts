@@ -5,6 +5,7 @@ import {
   resolverSolicitud, 
   createInvitacion, 
   desactivarInvitacion,
+  removerMiembroComunidad,
   Invitacion
 } from '../lib/appService';
 
@@ -42,12 +43,29 @@ export function useComunidadActions() {
     return perform(desactivarInvitacion(codigo), options);
   };
 
+  const abandonarComunidad = async (userId: string, communityId: string, options?: Parameters<typeof perform>[1]) => {
+    return perform(removerMiembroComunidad(userId, communityId), {
+      successMessage: 'Has salido de la comunidad con éxito',
+      ...options
+    });
+  };
+
+  const expulsarMiembro = async (userId: string, communityId: string, options?: Parameters<typeof perform>[1]) => {
+    return perform(removerMiembroComunidad(userId, communityId), {
+      successMessage: 'Miembro expulsado con éxito',
+      ...options
+    });
+  };
+
   return {
     redeemInvitacion,
     solicitarAcceso,
     resolverSolicitudAcceso,
     crearInvitacionCodigo,
     desactivarInvitacionCodigo,
+    abandonarComunidad,
+    expulsarMiembro,
     isExecuting
   };
 }
+
