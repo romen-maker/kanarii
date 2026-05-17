@@ -18,7 +18,7 @@ import { EntityCard } from '../components/ui/EntityCard';
 export function ActasPanel() {
   const { appUser } = useAuth();
   const { currentCommunityId } = useComunidad();
-  const { actas, loadingActas, reload } = useActas(currentCommunityId || 'arteara');
+  const { items: actas, loading, reload } = useActas(currentCommunityId || 'arteara');
   const { items: tareas } = useTareas(currentCommunityId || 'arteara');
   const { members, loadingMembers, getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
   const { removeActa } = useActaActions();
@@ -67,7 +67,7 @@ export function ActasPanel() {
     return diffDays <= 7;
   };
 
-  if (loadingActas || loadingMembers) {
+  if (loading || loadingMembers) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDFBF7]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div>
