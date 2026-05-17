@@ -46,9 +46,8 @@ export function useActas(communityId?: string) {
   }, [appUser, communityId, version]);
 
   return { 
-    actas, 
+    items: actas,
     loading,
-    loadingActas: loading, 
     error,
     reload 
   };
