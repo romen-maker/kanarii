@@ -6,7 +6,7 @@ import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, Histor
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha, saveManual, DatosOnboarding } from '../lib/appService';
+import { saveFicha, saveManual, DatosOnboarding, getComunidades, Comunidad } from '../lib/appService';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
@@ -45,7 +45,13 @@ export function FichaView() {
   const [geoMessage, setGeoMessage] = useState('');
   
   const { abandonarComunidad } = useComunidadActions();
-  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveStep, setLeaveStep] = useState<1 | 2 | 3>(1);
+  const [leaveCommunityId, setLeaveCommunityId] = useState('');
+  const [leaveMotivo, setLeaveMotivo] = useState('');
+  const [leaveComentario, setLeaveComentario] = useState('');
+  const [userCommunities, setUserCommunities] = useState<Comunidad[]>([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
   
   function getDatosPersona(ficha: any) {
     return ficha?.datosPersona ?? ficha?.datosOnboarding ?? {};
@@ -58,6 +64,9 @@ export function FichaView() {
   });
 
   const watchRol = watch("rol");
+
+  const displayFicha = localFicha || ficha;
+  const datos = getDatosPersona(displayFicha);
 
   const handleVerificarUbicacion = async () => {
     const lugarStr = getValues("lugar");
@@ -88,14 +97,46 @@ export function FichaView() {
     }
   }, [ficha, loadingFicha]);
 
+  useEffect(() => {
+    if (showLeaveModal && appUser?.communityIds) {
+      setLoadingCommunities(true);
+      getComunidades().then(comms => {
+        const filtered = comms.filter(c => appUser.communityIds?.includes(c.id));
+        setUserCommunities(filtered);
+        
+        // Auto-seleccionar la comunidad actual
+        if (displayFicha?.communityId && appUser.communityIds.includes(displayFicha.communityId)) {
+          setLeaveCommunityId(displayFicha.communityId);
+        } else if (filtered.length > 0) {
+          setLeaveCommunityId(filtered[0].id);
+        }
+        
+        // Si pertenece a 1 sola comunidad, salta directamente al paso 2
+        if (appUser.communityIds.length <= 1) {
+          setLeaveStep(2);
+        } else {
+          setLeaveStep(1);
+        }
+        setLoadingCommunities(false);
+      }).catch(err => {
+        console.error("Failed to load user communities:", err);
+        setLoadingCommunities(false);
+      });
+    }
+  }, [showLeaveModal, appUser, displayFicha]);
+
   if (loadingFicha || (!ficha && !localFicha)) return null;
-  const displayFicha = localFicha || ficha;
-  const datos = getDatosPersona(displayFicha);
 
   const handleLeaveCommunity = async () => {
-    if (!appUser || !displayFicha?.communityId) return;
-    setShowLeaveConfirm(false);
-    await abandonarComunidad(appUser.uid, displayFicha.communityId, {
+    if (!appUser || !leaveCommunityId) return;
+    
+    const feedback = {
+      motivo: leaveMotivo,
+      comentario: leaveComentario
+    };
+    
+    setShowLeaveModal(false);
+    await abandonarComunidad(appUser.uid, leaveCommunityId, feedback, {
       onSuccess: () => {
         navigate('/comunidades');
       }
@@ -178,7 +219,7 @@ export function FichaView() {
                   </button>
                   {displayFicha?.communityId && (
                     <button
-                      onClick={() => setShowLeaveConfirm(true)}
+                      onClick={() => setShowLeaveModal(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-200"
                     >
                       <LogOut className="w-4 h-4" />
@@ -442,41 +483,205 @@ export function FichaView() {
         )}
       </div>
 
-      {showLeaveConfirm && (
+      {showLeaveModal && (
         <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full border border-[#EAE2D6] shadow-2xl relative overflow-hidden animate-scaleIn">
-            <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
-            <div className="flex flex-col gap-4">
-              <div className="p-3 bg-red-50 rounded-full w-fit text-red-600">
-                <LogOut className="w-6 h-6" />
-              </div>
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full border border-[#EAE2D6] shadow-2xl relative overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
+            <div className="absolute top-0 left-0 w-full h-2 bg-[#CB997E]"></div>
+            
+            {/* Header del modal */}
+            <div className="flex justify-between items-center mb-6 border-b border-stone-100 pb-4">
               <div>
-                <h3 className="text-xl font-serif text-stone-900 mb-2">¿Abandonar esta comunidad?</h3>
-                <p className="text-stone-600 text-sm leading-relaxed">
-                  Estás a punto de salir de la comunidad. Perderás el acceso a sus tableros de proyectos, tareas, actas y tablón.
-                </p>
-                <div className="mt-4 p-3 bg-stone-50 rounded-2xl border border-stone-100 flex gap-2.5 items-start">
-                  <span className="text-amber-500 font-bold text-base leading-none">⚠️</span>
-                  <p className="text-xs text-stone-500 leading-normal">
-                    Tu ficha comunitaria y tu manual galáctico no se borrarán, pero ya no estarás listado como miembro de esta comunidad.
+                <h3 className="text-xl font-serif text-stone-900">Salir de la Comunidad</h3>
+                <p className="text-xs text-stone-400 font-bold uppercase tracking-wider mt-1">Paso {leaveStep} de 3</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowLeaveModal(false);
+                  setLeaveStep(1);
+                  setLeaveMotivo('');
+                  setLeaveComentario('');
+                }} 
+                className="p-1.5 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenido según el paso */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              {leaveStep === 1 && (
+                <div className="space-y-4">
+                  <div className="text-sm text-stone-600 mb-2">
+                    Perteneces a múltiples comunidades. ¿De cuál de ellas deseas salir?
+                  </div>
+                  {loadingCommunities ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-stone-400">
+                      <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                      <span className="text-sm">Cargando tus comunidades...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {userCommunities.map(comm => (
+                        <label 
+                          key={comm.id} 
+                          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${
+                            leaveCommunityId === comm.id 
+                              ? 'border-[#CB997E] bg-[#FDFBF7] shadow-sm' 
+                              : 'border-stone-200 hover:border-stone-300'
+                          }`}
+                        >
+                          <input 
+                            type="radio" 
+                            name="leave-community" 
+                            checked={leaveCommunityId === comm.id}
+                            onChange={() => setLeaveCommunityId(comm.id)}
+                            className="text-[#CB997E] focus:ring-[#CB997E] h-4 w-4 border-stone-300"
+                          />
+                          <div className="flex-1">
+                            <span className="font-serif font-medium text-stone-800 text-base">{comm.nombre}</span>
+                            {comm.descripcion && (
+                              <p className="text-xs text-stone-400 line-clamp-1 mt-0.5">{comm.descripcion}</p>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {leaveStep === 2 && (
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-sm text-stone-600">
+                      Para ayudarnos a cuidar y mejorar la convivencia en Kanarii, por favor comparte el motivo principal de tu baja.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-stone-400 uppercase tracking-widest block mb-1">Motivo (Obligatorio)</label>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {[
+                        "Me voy a vivir a otro lugar",
+                        "No tengo tiempo",
+                        "No me siento alineado/a",
+                        "Conflicto no resuelto",
+                        "Motivo personal",
+                        "Otro"
+                      ].map((motivo) => (
+                        <button
+                          key={motivo}
+                          type="button"
+                          onClick={() => setLeaveMotivo(motivo)}
+                          className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                            leaveMotivo === motivo
+                              ? 'bg-[#4A4E4D] text-white border-[#4A4E4D]'
+                              : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+                          }`}
+                        >
+                          {motivo}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-stone-400 uppercase tracking-widest block mb-1">Comentario libre (Opcional)</label>
+                    <textarea
+                      value={leaveComentario}
+                      onChange={(e) => setLeaveComentario(e.target.value)}
+                      rows={3}
+                      placeholder="Comparte cualquier detalle, sugerencia de mejora o agradecimiento..."
+                      className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D] text-sm resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {leaveStep === 3 && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex gap-3.5 items-start">
+                    <span className="text-red-500 font-bold text-lg leading-none shrink-0 mt-0.5">⚠️</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-red-800">Consecuencias de la salida</h4>
+                      <ul className="list-disc list-inside text-xs text-red-700 leading-normal mt-1.5 space-y-1">
+                        <li>Perderás el acceso a los tableros de proyectos, tareas, actas y tablón.</li>
+                        <li>No estarás listado como miembro activo de la comunidad.</li>
+                        <li>Se revocarán tus permisos de edición e interacción.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-[#FDFBF7] rounded-2xl border border-[#EAE2D6] flex gap-3.5 items-start">
+                    <span className="text-teal-600 font-bold text-lg leading-none shrink-0 mt-0.5">✓</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-stone-800">Qué conservarás en tu perfil</h4>
+                      <ul className="list-disc list-inside text-xs text-stone-600 leading-normal mt-1.5 space-y-1">
+                        <li>Tu ficha de identidad comunitaria no se borrará.</li>
+                        <li>Tu Manual de Usuario Humano seguirá siendo tuyo y accesible.</li>
+                        <li>Tus contribuciones previas quedarán registradas históricamente.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-stone-400 text-center italic mt-2">
+                    Podrás volver a solicitar acceso o unirte con un código de invitación en cualquier momento.
                   </p>
                 </div>
+              )}
+            </div>
+
+            {/* Footer / Botones */}
+            <div className="flex justify-between items-center mt-8 border-t border-stone-100 pt-4">
+              <div>
+                {leaveStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (leaveStep === 2 && appUser?.communityIds && appUser.communityIds.length <= 1) {
+                        return;
+                      }
+                      setLeaveStep((prev) => (prev - 1) as any);
+                    }}
+                    className="px-5 py-2.5 border border-stone-200 hover:bg-stone-50 text-stone-600 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    Atrás
+                  </button>
+                )}
               </div>
-              <div className="flex gap-3 justify-end mt-4">
+              
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowLeaveConfirm(false)}
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    setLeaveStep(1);
+                    setLeaveMotivo('');
+                    setLeaveComentario('');
+                  }}
                   className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition-colors"
                 >
                   Cancelar
                 </button>
-                <button
-                  type="button"
-                  onClick={handleLeaveCommunity}
-                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
-                >
-                  Sí, Salir
-                </button>
+
+                {leaveStep < 3 ? (
+                  <button
+                    type="button"
+                    disabled={leaveStep === 1 ? !leaveCommunityId : !leaveMotivo}
+                    onClick={() => setLeaveStep((prev) => (prev + 1) as any)}
+                    className="px-5 py-2.5 bg-[#A5A58D] hover:bg-[#6B705C] text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    Continuar
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleLeaveCommunity}
+                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
+                  >
+                    Confirmar y Salir
+                  </button>
+                )}
               </div>
             </div>
           </div>
