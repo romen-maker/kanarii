@@ -10,6 +10,7 @@ import {
 } from '../lib/appService';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useToast } from '../components/Toaster';
 
 /**
  * TODO: Revisión sistémica de visibilidad de inputs en toda la app.
@@ -73,6 +74,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 export function ComunidadesView() {
   const { appUser } = useAuth();
   const { redeemInvitacion, solicitarAcceso, isExecuting } = useComunidadActions();
+  const { success: toastSuccess, error: toastError } = useToast();
   const navigate = useNavigate();
   
   const [inviteCode, setInviteCode] = useState('');
@@ -106,13 +108,23 @@ export function ComunidadesView() {
   };
 
   const handleJoinByCode = async (codeOverride?: string) => {
-    const code = codeOverride || inviteCode;
-    if (!code.trim()) return;
+    const rawCode = codeOverride || inviteCode;
+    // Sanitizado robusto: remover todos los espacios intermedios/extremos y pasar a minúsculas
+    const code = rawCode.replace(/\s+/g, '').toLowerCase();
+    if (!code) return;
 
-    await redeemInvitacion(code.trim().toLowerCase(), appUser!.uid, {
+    await redeemInvitacion(code, appUser!.uid, {
       successMessage: '¡Bienvenido a la comunidad! ✨',
-      errorMessage: 'Código inválido, caducado o agotado.',
-      onSuccess: () => navigate('/')
+      errorMessage: null, // Silenciamos el toast genérico para tomar el control total en la vista
+      onSuccess: () => navigate('/'),
+      onError: (err: any) => {
+        if (err?.message === 'YA_ES_MIEMBRO') {
+          toastSuccess('Ya eres miembro de esta comunidad. ¡Te redirigimos! 🚀');
+          navigate('/');
+        } else {
+          toastError('Código inválido, caducado o agotado.');
+        }
+      }
     });
   };
 
@@ -176,7 +188,7 @@ export function ComunidadesView() {
                 value={inviteCode}
                 onChange={e => setInviteCode(e.target.value)}
                 placeholder="ej: sabio-monte-42"
-                className="w-full sm:w-48 rounded-xl border-[#EAE2D6] bg-[#F9F7F1] focus:border-[#CB997E] focus:ring-[#CB997E] transition-all uppercase placeholder:normal-case"
+                className="w-full sm:w-48 rounded-xl border-[#EAE2D6] bg-[#F9F7F1] focus:border-[#CB997E] focus:ring-[#CB997E] transition-all placeholder:normal-case"
               />
               <button 
                 onClick={() => handleJoinByCode()}

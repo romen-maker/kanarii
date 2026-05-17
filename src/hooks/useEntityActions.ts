@@ -3,7 +3,7 @@ import { useToast } from '../components/Toaster'; // Corregido el path relativo 
 
 interface ActionOptions {
   successMessage?: string;
-  errorMessage?: string;
+  errorMessage?: string | null;
   onSuccess?: (result?: any) => void;
   onError?: (error?: any) => void;
 }
@@ -35,8 +35,10 @@ export function useEntityActions() {
       return result;
     } catch (err) {
       console.error("useEntityActions error:", err);
-      const errorMsg = options.errorMessage || 'Error al procesar la solicitud';
-      toastError(errorMsg);
+      if (options.errorMessage !== null) {
+        const errorMsg = options.errorMessage || 'Error al procesar la solicitud';
+        toastError(errorMsg);
+      }
       if (options.onError) {
         options.onError(err);
       }

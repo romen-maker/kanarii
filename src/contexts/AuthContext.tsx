@@ -10,7 +10,7 @@ import {
   isSignInWithEmailLink
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { AppUser, getAppUser, updateAppUserConsent, guardarFichaPendiente, migrarFichaPendiente } from '../lib/appService';
+import { AppUser, getAppUser, listenAppUser, updateAppUserConsent, guardarFichaPendiente, migrarFichaPendiente } from '../lib/appService';
 
 interface AuthContextType {
   user: User | null;
@@ -37,12 +37,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeAppUser: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Limpiar suscripción previa a appUser si existía
+      if (unsubscribeAppUser) {
+        unsubscribeAppUser();
+        unsubscribeAppUser = null;
+      }
+
       setUser(firebaseUser);
       try {
         if (firebaseUser) {
+          // 1. Asegurar la creación/migración inicial en Firestore
           const profile = await getAppUser(firebaseUser.uid, firebaseUser.email!);
           setAppUser(profile);
+
+          // 2. Suscribirse en tiempo real a los cambios del documento del usuario
+          unsubscribeAppUser = listenAppUser(firebaseUser.uid, (updatedProfile) => {
+            if (updatedProfile) {
+              setAppUser(updatedProfile);
+            }
+          });
         } else {
           setAppUser(null);
         }
@@ -53,7 +69,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeAppUser) {
+        unsubscribeAppUser();
+      }
+    };
   }, []);
 
   const login = async () => {
