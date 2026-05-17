@@ -132,6 +132,13 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] **Corregir reactividad en el inicio de sesión con Google**
   - *Problema:* A veces, tras iniciar sesión con Google, la aplicación no transiciona ni redirige de forma automática, requiriendo una recarga manual (`F5`) por parte del usuario para que el estado de sesión se refleje en la UI.
   - *Causa probable:* Falta de propagación reactiva o desincronización entre el observer `onAuthStateChanged` en `AuthContext.tsx` y el enrutador de React Router durante el flujo de autenticación popup/redirect de Firebase.
+- [ ] **Auditar flujo de validación de códigos de invitación (Toast "Código inválido")**
+  - *Problema:* El toast de "Código inválido" se dispara a veces de manera confusa. Es muy probable que esto ocurra porque el usuario ya es miembro de la comunidad (por lo que el código de invitación ya no se puede redimir/no aplica), y no por un fallo en el refactor del código.
+  - *Acción:* Revisar la lógica de validación para diferenciar entre un código verdaderamente inválido y el caso en que el usuario ya pertenezca a la comunidad, mostrando un feedback preciso en este último escenario.
+- [ ] **Resolver conflicto de mayúsculas/minúsculas en input de código de invitación (Bug de UX)**
+  - *Problema:* El input del formulario de invitación aplica visualmente `text-transform: uppercase` en CSS (o llama a `.toUpperCase()` en el handler), pero el backend guarda y compara los códigos estrictamente en minúsculas. Esto genera incompatibilidad y fallos en la validación.
+  - *Acción:* Estandarizar el flujo normalizando el input a minúsculas (`.toLowerCase()`) de manera transparente en la validación antes de comparar con la base de datos, o asegurar la consistencia del almacenamiento en la colección de invitaciones.
+
 
 ## 🛠️ BACKLOG / FUTURAS MEJORAS
 - [ ] Búsqueda global (Command+K) para proyectos, tareas y actas.
@@ -141,6 +148,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] **Tablón**: Añadir botón para editar post directamente desde la lista o vista principal.
 - [ ] **Tablón**: Añadir botón para eliminar post.
 - [ ] **Gobernanza**: Añadir botón para eliminar acta.
+- [ ] **Administración**: Añadir funcionalidad para eliminar/desvincular a un miembro de la comunidad (funcionalidad no existente actualmente).
 - [ ] **Propuestas**: Arreglar validación de descripción (hacerla obligatoria u opcional, revisar bug "error al procesar solicitud").
 - [ ] **Alternativa a Passwordless**: Evaluar implementación de un sistema opcional de Contraseñas / Email tradicional si la adopción de Magic Link genera fricción a largo plazo.
 - [ ] **Evolución Propuestas (Post-2.4)**:
