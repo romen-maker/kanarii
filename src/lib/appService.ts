@@ -2015,13 +2015,65 @@ export async function resolverSolicitud(
       resueltoEn: serverTimestamp()
     });
     
-    // 2. Si es aprobada, añadir comunidad al usuario
+    // 2. Si es aprobada, añadir comunidad al usuario y registrar en community_members
     if (decision === 'aprobada') {
       const userRef = doc(db, 'users', solicitud.solicitante_uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      
       batch.update(userRef, {
         communityIds: arrayUnion(communityId),
+        ...(!userData.communityId ? { communityId: communityId } : {}),
         updatedAt: serverTimestamp()
       });
+      
+      // Intentar obtener el perfil para extraer campos de ficha
+      const profileRef = doc(db, 'profiles', solicitud.solicitante_uid);
+      const profileSnap = await getDoc(profileRef);
+      const memberRef = doc(db, 'community_members', `${communityId}_${solicitud.solicitante_uid}`);
+      
+      if (profileSnap.exists()) {
+        const profileData = profileSnap.data();
+        const base = profileData.datosPersona || profileData.datosOnboarding || {};
+        
+        batch.set(memberRef, {
+          userId: solicitud.solicitante_uid,
+          communityId: communityId,
+          nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+          tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
+          elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
+          autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
+          antiguedad_anos: base.antiguedad_anos || 0,
+          rol_comunidad: base.rol_comunidad || 'miembro',
+          estado: 'activo',
+          creadoEn: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        // Propagar communityId al perfil si no lo tenía
+        if (!profileData.communityId) {
+          batch.update(profileRef, {
+            communityId: communityId,
+            'datosOnboarding.communityId': communityId,
+            'datosPersona.communityId': communityId
+          });
+        }
+      } else {
+        // Miembro básico si no hay perfil aún
+        batch.set(memberRef, {
+          userId: solicitud.solicitante_uid,
+          communityId: communityId,
+          nombre: userData.displayName || userData.email || 'Sin Nombre',
+          tipo_hd: '',
+          elemento_dominante: '',
+          autoridad_hd: '',
+          antiguedad_anos: 0,
+          rol_comunidad: 'miembro',
+          estado: 'activo',
+          creadoEn: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
     }
     
     await batch.commit();
