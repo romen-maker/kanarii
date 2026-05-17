@@ -2363,3 +2363,74 @@ export function listenPropuestaHilos(propuestaId: string, callback: (mensajes: P
     callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropuestaHilo)));
   });
 }
+
+// --- BAJAS Y FEEDBACK DE SALIDA ---
+
+export interface FeedbackSalida {
+  id?: string;
+  userId: string;
+  nombreUsuario: string;
+  communityId: string;
+  motivo: string;
+  comentario?: string;
+  fecha: any;
+}
+
+export async function registrarSalidaComunidad(
+  userId: string,
+  communityId: string,
+  motivo: string,
+  comentario: string
+): Promise<void> {
+  try {
+    let nombreUsuario = 'Miembro';
+    const profileRef = doc(db, 'profiles', userId);
+    const profileSnap = await getDoc(profileRef);
+    if (profileSnap.exists()) {
+      const pData = profileSnap.data();
+      nombreUsuario = pData.datosPersona?.nombre || pData.nombre || 'Miembro';
+    } else {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        nombreUsuario = userSnap.data().displayName || 'Miembro';
+      }
+    }
+
+    await addDoc(collection(db, 'community_exits'), {
+      userId,
+      nombreUsuario,
+      communityId,
+      motivo,
+      comentario: comentario || '',
+      fecha: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'Registrar feedback de salida');
+    throw error;
+  }
+}
+
+export function listenBajasRecientes(
+  communityId: string,
+  callback: (bajas: FeedbackSalida[]) => void
+): () => void {
+  const q = query(
+    collection(db, 'community_exits'),
+    where('communityId', '==', communityId)
+  );
+  return onSnapshot(q, (snap) => {
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as FeedbackSalida));
+    list.sort((a, b) => {
+      const getMs = (ts: any) => {
+        if (!ts) return 0;
+        if (ts.seconds) return ts.seconds * 1000;
+        if (ts.toDate) return ts.toDate().getTime();
+        return new Date(ts).getTime() || 0;
+      };
+      return getMs(b.fecha) - getMs(a.fecha);
+    });
+    callback(list);
+  });
+}
+

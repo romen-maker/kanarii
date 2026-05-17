@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Ficha, ensureSeedData, Tarea, getUserFicha } from '../lib/appService';
+import { Ficha, ensureSeedData, Tarea, getUserFicha, listenBajasRecientes, FeedbackSalida } from '../lib/appService';
 import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -41,6 +41,15 @@ export function AdminPanel() {
   
   const { expulsarMiembro } = useComunidadActions();
   const [memberToExpel, setMemberToExpel] = useState<any | null>(null);
+  const [bajas, setBajas] = useState<FeedbackSalida[]>([]);
+
+  useEffect(() => {
+    if (!currentCommunityId) return;
+    const unsubscribe = listenBajasRecientes(currentCommunityId, (lista) => {
+      setBajas(lista);
+    });
+    return () => unsubscribe();
+  }, [currentCommunityId]);
 
   const handleConfirmExpulsar = async () => {
     if (!memberToExpel || !currentCommunityId) return;
@@ -244,6 +253,38 @@ export function AdminPanel() {
                 </tbody>
               </table>
             </div>
+
+            {/* Sección de Bajas Recientes */}
+            {bajas.length > 0 && (
+              <div className="mt-8 bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className="w-5 h-5 text-red-500" />
+                  <h2 className="font-serif text-xl text-[#4A4E4D]">Bajas Recientes</h2>
+                </div>
+                <div className="space-y-4">
+                  {bajas.map((baja) => (
+                    <div key={baja.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-stone-800">{baja.nombre || 'Miembro'}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
+                            {baja.motivo}
+                          </span>
+                        </div>
+                        {baja.comentario && (
+                          <p className="text-sm text-stone-600 italic mt-1.5">
+                            "{baja.comentario}"
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-xs text-stone-400 font-medium">
+                        {baja.fecha?.toDate ? baja.fecha.toDate().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date(baja.fecha).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
