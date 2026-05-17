@@ -93,6 +93,22 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] **Directorio Global**: Pantalla `/soberania` con navegación por tabs (Catálogo / Mis Acuerdos) y filtros por talento/recurso y categoría.
   - [x] **Cierre y Feedback**: Flujo de estados para acuerdos, permitiendo marcar como completado directamente desde la UI.
 
+## 🎨 Sesión de Coherencia Visual & UI Transversal (Próxima Sesión de Diseño 🎯)
+- [ ] **Estandarizar validación de formularios (`<FieldError />`)**
+  - Crear componente atómico `<FieldError message={error} />` con estilo unificado.
+  - Eliminar el uso de toasts para errores de validación de inputs.
+  - Implementar validación inline consistente en todos los formularios (Proyectos, Tareas, Catálogo, Propuestas).
+- [ ] **Estandarizar cabeceras de página (`<PageHeader />`)**
+  - Crear componente reutilizable `<PageHeader title="..." subtitle="..." action={...} />`.
+  - Aplicar en Gobernanza, Tareas, Proyectos, Actas y Catálogo para unificar estilo visual y subtítulos de contexto.
+- [ ] **Unificar contenedores de página (`<PageContainer />`)** (Propuesta de Antigravity 💡)
+  - Crear un contenedor de layout común que unifique el espaciado global (`padding`, `max-w-5xl`), comportamiento responsive y el tono cálido de fondo de Kanarii (`#FDFBF7`), evitando "saltos" de pantalla en navegación.
+- [ ] **Estandarizar el disparador de apertura en tarjetas (Triggers Consistent)**
+  - Resolver inconsistencias: En Gobernanza, hacer clic en cualquier parte de la tarjeta la abre directamente. En Tareas, exige hacer clic en el icono de editar (lápiz). Unificar a un patrón reactivo consistente.
+- [ ] **Homogeneizar ventanas emergentes (Modales vs Paneles Laterales / Drawers)**
+  - Resolver inconsistencias: En Actas se utiliza un panel lateral deslizante (Drawer), mientras que en el resto de la aplicación se usan modales de pantalla central. Definir cuándo se usa Drawer (ej: lectura profunda/actas) y cuándo Modal (ej: acciones rápidas/formularios) y aplicarlo coherentemente.
+
+
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
 - [ ] **3.2 Gestión de visitas / recién llegados**
@@ -111,6 +127,11 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] Encolado de "Generar manual" si no hay conexión.
 - [ ] **4.4 PWA instalable**
   - [ ] Soporte `manifest.json` y Service Workers para uso como App Nativa.
+
+## 🚨 Bugs Críticos & Deuda Operativa (Prioridad Alta)
+- [ ] **Corregir reactividad en el inicio de sesión con Google**
+  - *Problema:* A veces, tras iniciar sesión con Google, la aplicación no transiciona ni redirige de forma automática, requiriendo una recarga manual (`F5`) por parte del usuario para que el estado de sesión se refleje en la UI.
+  - *Causa probable:* Falta de propagación reactiva o desincronización entre el observer `onAuthStateChanged` en `AuthContext.tsx` y el enrutador de React Router durante el flujo de autenticación popup/redirect de Firebase.
 
 ## 🛠️ BACKLOG / FUTURAS MEJORAS
 - [ ] Búsqueda global (Command+K) para proyectos, tareas y actas.
