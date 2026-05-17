@@ -2434,3 +2434,49 @@ export function listenBajasRecientes(
   });
 }
 
+// --- GESTIÓN DE MIEMBROS DE COMUNIDAD (CRUD) ---
+
+/**
+ * Crea un nuevo miembro de comunidad.
+ */
+export async function createCommunityMember(member: Partial<CommunityMember>): Promise<string> {
+  try {
+    const docRef = await addDoc(colCommunityMembers, {
+      ...member,
+      creadoEn: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, 'community_members');
+    throw err;
+  }
+}
+
+/**
+ * Actualiza un miembro de comunidad existente.
+ */
+export async function updateCommunityMember(id: string, cambios: Partial<CommunityMember>): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'community_members', id), {
+      ...cambios,
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `community_members/${id}`);
+    throw err;
+  }
+}
+
+/**
+ * Elimina un miembro de comunidad.
+ */
+export async function deleteCommunityMember(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'community_members', id));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `community_members/${id}`);
+    throw err;
+  }
+}
+
