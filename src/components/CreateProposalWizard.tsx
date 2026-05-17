@@ -1,8 +1,8 @@
 // TODO: Fase Posterior - Arreglar bug de validación de formulario (error al procesar solicitud) cuando la descripción está vacía
 import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, ArrowLeft, Send, User, Calendar, Info, Gavel } from 'lucide-react';
-import { Propuesta, createPropuesta, updatePropuesta } from '../lib/appService';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { Propuesta } from '../lib/appService';
+import { usePropuestaActions } from '../hooks/usePropuestaActions';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 
 interface CreateProposalWizardProps {
@@ -18,7 +18,7 @@ export function CreateProposalWizard({
   onClose,
   onSuccess
 }: CreateProposalWizardProps) {
-  const { perform } = useEntityActions();
+  const { addPropuesta, editPropuesta } = usePropuestaActions();
   const { members } = useCommunityMembers(communityId);
 
   const [step, setStep] = useState(1);
@@ -51,10 +51,10 @@ export function CreateProposalWizard({
       };
 
       if (proposalId) {
-        await updatePropuesta(proposalId, data);
+        await editPropuesta(proposalId, data);
         return proposalId;
       } else if (reason.length >= 5) {
-        const id = await createPropuesta(data);
+        const id = await addPropuesta(data);
         setProposalId(id);
         return id;
       }
@@ -98,7 +98,7 @@ export function CreateProposalWizard({
     }
     setIsSubmitting(true);
     try {
-      await perform(updatePropuesta(proposalId, { status: 'abierta' }), {
+      await editPropuesta(proposalId, { status: 'abierta' }, {
         successMessage: 'Propuesta publicada a la comunidad 🕊️',
         onSuccess: () => {
           onSuccess();

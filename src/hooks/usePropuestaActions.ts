@@ -1,5 +1,12 @@
 import { useEntityActions } from './useEntityActions';
-import { createPropuesta, updatePropuesta, deletePropuesta } from '../lib/appService';
+import { 
+  createPropuesta, 
+  updatePropuesta, 
+  deletePropuesta, 
+  integratePropuestaObjeciones, 
+  registerPropuestaResponse,
+  PropuestaRespuesta
+} from '../lib/appService';
 
 export function usePropuestaActions() {
   const { perform, isExecuting } = useEntityActions();
@@ -16,10 +23,31 @@ export function usePropuestaActions() {
     return perform(deletePropuesta(id), options);
   };
 
+  const integrateObjeciones = async (
+    propuestaId: string, 
+    newDescription: string, 
+    integrationNote: string, 
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(integratePropuestaObjeciones(propuestaId, newDescription, integrationNote), options);
+  };
+
+  const submitResponse = async (
+    propuestaId: string, 
+    respuesta: PropuestaRespuesta, 
+    totalMembers: number, 
+    oldType?: PropuestaRespuesta['type'], 
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(registerPropuestaResponse(propuestaId, respuesta, totalMembers, oldType), options);
+  };
+
   return {
     addPropuesta,
     editPropuesta,
     removePropuesta,
+    integrateObjeciones,
+    submitResponse,
     isExecuting
   };
 }

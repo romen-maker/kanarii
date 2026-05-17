@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Propuesta, PropuestaRespuesta, PropuestaHilo, integratePropuestaObjeciones } from '../lib/appService';
+import { Propuesta, PropuestaRespuesta, PropuestaHilo } from '../lib/appService';
 import { usePropuestaDetail } from '../hooks/usePropuestaDetail';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
-import { useEntityActions } from '../hooks/useEntityActions';
+import { usePropuestaActions } from '../hooks/usePropuestaActions';
 import { ResponseModal } from './ResponseModal';
 import { S3Timeline } from './S3Timeline';
 import { ConsentGrid } from './ConsentGrid';
@@ -25,7 +25,7 @@ export function PropuestaDetail({
 }: PropuestaDetailProps) {
   const { propuesta, respuestas, hilos, loading } = usePropuestaDetail(propuestaId);
   const { members } = useCommunityMembers(propuesta?.communityId);
-  const { perform } = useEntityActions();
+  const { integrateObjeciones } = usePropuestaActions();
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
@@ -43,7 +43,7 @@ export function PropuestaDetail({
   const userResponse = respuestas.find(r => r.memberId === currentUserId);
 
   const handleIntegrate = async (newDescription: string, note: string) => {
-    await perform(integratePropuestaObjeciones(propuestaId, newDescription, note), {
+    await integrateObjeciones(propuestaId, newDescription, note, {
       loadingMessage: 'Publicando versión integrada...',
       successMessage: 'Propuesta evolucionada con éxito'
     });
