@@ -29,6 +29,12 @@ export function ActasPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const { startDelete, pendingId } = useUndoableDelete();
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditModalOpen(false);
+    reload();
+  };
+
   const filteredActas = useMemo(() => {
     return actas.filter(a => 
       (a.titulo.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -124,15 +130,14 @@ export function ActasPanel() {
                       id={acta.id!}
                       title={acta.titulo}
                       subtitle={acta.contexto}
-                      status={recent ? { label: 'Reciente', variant: 'info', icon: Clock } : undefined}
+                      status={recent ? { label: 'Reciente', variant: 'info', icon: Clock } : { label: 'Registrada', variant: 'neutral', icon: FileText }}
                       metadata={[
                         { icon: UserIcon, text: getMemberName(acta.facilitador), tooltip: "Facilitador" },
                         { icon: Calendar, text: dateTs.toLocaleDateString(), tooltip: "Fecha" },
                         { icon: Users, text: `${acta.participantes.length} Asistentes`, tooltip: "Participantes" },
                         { icon: CheckSquare, text: `${acta.decisiones.length} Decisiones`, tooltip: "Acuerdos" }
                       ]}
-                      isSelected={actaSeleccionada?.id === acta.id}
-                      variant="compact"
+                      className={actaSeleccionada?.id === acta.id ? 'border-stone-800 bg-stone-50/50 shadow-md ring-1 ring-stone-800/10' : ''}
                     />
                   </div>
                 );

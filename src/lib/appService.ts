@@ -12,6 +12,8 @@ export const colPosts = collection(db, 'posts');
 export const colServicios = collection(db, 'servicios');
 export const colAcuerdos = collection(db, 'acuerdos');
 export const colPropuestas = collection(db, 'propuestas');
+export const colProfiles = collection(db, 'profiles');
+export const colCommunityMembers = collection(db, 'community_members');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas);
@@ -31,6 +33,16 @@ export const getPostsQuery = (communityId: string) => query(colPosts, where('com
 export const getServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId), where('isActive', '==', true));
 export const getAcuerdosQuery = (communityId: string) => query(colAcuerdos, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
 export const getPropuestasQuery = (communityId: string) => query(colPropuestas, where('communityId', '==', communityId), orderBy('createdAt', 'desc'));
+
+export const getProfilesQuery = (communityId: string) => query(
+  colProfiles, 
+  where('communityId', '==', communityId)
+);
+
+export const getCommunityMembersQuery = (communityId: string) => query(
+  colCommunityMembers, 
+  where('communityId', '==', communityId)
+);
 
 /**
  * Helper genérico para suscripciones en tiempo real.
@@ -394,6 +406,21 @@ export interface Ficha {
   datosBrutos?: any;
   datosPersona?: any;
   perfilVisual?: any;
+}
+
+export interface CommunityMember {
+  id?: string;
+  userId: string;
+  communityId: string | null;
+  nombre: string;
+  tipo_hd?: string;
+  elemento_dominante?: string;
+  autoridad_hd?: string;
+  antiguedad_anos?: number;
+  rol_comunidad?: string;
+  estado?: string;
+  creadoEn?: any;
+  updatedAt?: any;
 }
 
 export interface Tarea {
