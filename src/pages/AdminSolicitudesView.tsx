@@ -113,6 +113,22 @@ const SolicitudCard: React.FC<{
             </p>
           </div>
 
+          {solicitud.estado === 'rechazada' && (solicitud.motivoRechazo || solicitud.detalleRechazo) && (
+            <div className="bg-red-50/50 border border-red-100/50 rounded-2xl p-4">
+              <div className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">
+                Motivo del Rechazo
+              </div>
+              <p className="text-sm font-semibold text-stone-700">
+                {solicitud.motivoRechazo}
+              </p>
+              {solicitud.detalleRechazo && (
+                <p className="text-xs text-stone-500 mt-1 italic leading-relaxed">
+                  "{solicitud.detalleRechazo}"
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Ficha vinculada */}
           {!loadingProfile && (
             <div className="bg-[#F9F7F1]/50 border border-[#EAE2D6]/40 rounded-2xl p-4 space-y-3">
@@ -281,6 +297,7 @@ export function AdminSolicitudesView() {
     pendientes,
     resueltas,
     confirmReject,
+    setConfirmReject,
     isExecutingAction,
     newCodeType,
     setNewCodeType,
@@ -296,6 +313,16 @@ export function AdminSolicitudesView() {
     handleDesactivar,
     handleCopyCode
   } = hook;
+
+  const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [detalleRechazo, setDetalleRechazo] = useState('');
+
+  useEffect(() => {
+    if (!confirmReject) {
+      setMotivoRechazo('');
+      setDetalleRechazo('');
+    }
+  }, [confirmReject]);
 
   if (!isCommunityAdmin && !loading) {
     return (
@@ -562,29 +589,67 @@ export function AdminSolicitudesView() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-6"
+              className="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-left"
             >
               <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-8 h-8" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-stone-800">¿Rechazar solicitud?</h3>
+              <div className="space-y-2 text-center">
+                <h3 className="text-xl font-bold text-stone-800">Rechazar solicitud</h3>
                 <p className="text-sm text-stone-500 leading-relaxed">
                   Esta persona no podrá unirse a <span className="font-bold">{comunidad?.nombre}</span> con esta solicitud. Podrá volver a solicitarlo más adelante.
                 </p>
               </div>
+
+              {/* Dropdown de motivo */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-widest px-1">
+                  Motivo del rechazo <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={motivoRechazo}
+                  onChange={(e) => setMotivoRechazo(e.target.value)}
+                  className="w-full bg-[#F9F7F1] border-2 border-stone-100 rounded-2xl px-4 py-3 text-sm text-stone-700 focus:border-[#CB997E] focus:ring-0 transition-all outline-none"
+                >
+                  <option value="" disabled>Selecciona un motivo...</option>
+                  <option value="No cumple el perfil de la comunidad">No cumple el perfil de la comunidad</option>
+                  <option value="Comunidad con cupo completo">Comunidad con cupo completo</option>
+                  <option value="Información insuficiente en la solicitud">Información insuficiente en la solicitud</option>
+                  <option value="Sin respuesta del solicitante">Sin respuesta del solicitante</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              {/* Textarea de detalles */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-widest px-1">
+                  Detalle adicional (opcional)
+                </label>
+                <textarea
+                  value={detalleRechazo}
+                  onChange={(e) => setDetalleRechazo(e.target.value)}
+                  placeholder="Añade un contexto adicional si lo deseas..."
+                  rows={3}
+                  className="w-full bg-[#F9F7F1] border-2 border-stone-100 rounded-2xl px-4 py-3 text-sm text-stone-700 focus:border-[#CB997E] focus:ring-0 transition-all outline-none resize-none"
+                />
+              </div>
+
               <div className="flex flex-col gap-3 pt-2">
                 <button
-                  onClick={() => handleAction(confirmReject, 'rechazada')}
-                  disabled={isExecutingAction === confirmReject.id}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-2xl font-bold transition-all shadow-md disabled:opacity-50"
+                  onClick={() => handleReject(confirmReject, motivoRechazo, detalleRechazo)}
+                  disabled={isExecutingAction === confirmReject.id || !motivoRechazo}
+                  className="w-full bg-red-500 hover:bg-red-600 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none text-white py-3 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
                 >
-                  {isExecutingAction === confirmReject.id ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Sí, rechazar'}
+                  {isExecutingAction === confirmReject.id ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    'Confirmar rechazo'
+                  )}
                 </button>
                 <button
                   onClick={() => setConfirmReject(null)}
                   disabled={isExecutingAction === confirmReject.id}
-                  className="w-full py-2 text-[#8A817C] font-bold hover:bg-[#F9F7F1] rounded-xl transition-colors"
+                  className="w-full py-2 text-[#8A817C] font-bold hover:bg-[#F9F7F1] rounded-xl transition-colors text-center"
                 >
                   Cancelar
                 </button>

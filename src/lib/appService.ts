@@ -107,6 +107,8 @@ export interface SolicitudAcceso {
   creadoEn: any;
   resueltoPor?: string;
   resueltoEn?: any;
+  motivoRechazo?: string;
+  detalleRechazo?: string;
 }
 
 
@@ -1994,11 +1996,38 @@ export async function getSolicitudPendiente(communityId: string, uid: string): P
   }
 }
 
+export async function getUltimaSolicitud(communityId: string, uid: string): Promise<SolicitudAcceso | null> {
+  try {
+    const q = query(
+      collection(db, 'comunidades', communityId, 'solicitudes'),
+      where('solicitante_uid', '==', uid)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    
+    // Convertir y ordenar en memoria por creadoEn descendente
+    const docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SolicitudAcceso));
+    docs.sort((a, b) => {
+      const timeA = a.creadoEn?.toDate?.()?.getTime() || 0;
+      const timeB = b.creadoEn?.toDate?.()?.getTime() || 0;
+      return timeB - timeA;
+    });
+    
+    return docs[0];
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, 'Consultar última solicitud');
+    return null;
+  }
+}
+
+
 export async function resolverSolicitud(
   communityId: string,
   solicitudId: string,
   decision: 'aprobada' | 'rechazada',
-  adminUid: string
+  adminUid: string,
+  motivoRechazo?: string,
+  detalleRechazo?: string
 ): Promise<void> {
   try {
     const solRef = doc(db, 'comunidades', communityId, 'solicitudes', solicitudId);
@@ -2009,11 +2038,18 @@ export async function resolverSolicitud(
     const batch = writeBatch(db);
     
     // 1. Actualizar solicitud
-    batch.update(solRef, {
+    const cambiosSolicitud: any = {
       estado: decision,
       resueltoPor: adminUid,
       resueltoEn: serverTimestamp()
-    });
+    };
+    
+    if (decision === 'rechazada') {
+      if (motivoRechazo) cambiosSolicitud.motivoRechazo = motivoRechazo;
+      if (detalleRechazo !== undefined) cambiosSolicitud.detalleRechazo = detalleRechazo;
+    }
+    
+    batch.update(solRef, cambiosSolicitud);
     
     // 2. Si es aprobada, añadir comunidad al usuario y registrar en community_members
     if (decision === 'aprobada') {

@@ -96,17 +96,30 @@ export function useAdminSolicitudesLogic() {
   /**
    * Aprobar o rechazar una solicitud de acceso
    */
-  const handleAction = useCallback(async (solicitud: SolicitudAcceso, decision: 'aprobada' | 'rechazada') => {
+  const handleAction = useCallback(async (
+    solicitud: SolicitudAcceso, 
+    decision: 'aprobada' | 'rechazada',
+    motivoRechazo?: string,
+    detalleRechazo?: string
+  ) => {
     if (!comunidad?.id || !appUser?.uid) return;
     
     setIsExecutingAction(solicitud.id!);
     try {
-      await resolverSolicitudAcceso(comunidad.id, solicitud.id!, decision, appUser.uid, {
-        successMessage: decision === 'aprobada' ? '¡Solicitud aprobada! El miembro ya tiene acceso.' : 'Solicitud rechazada.',
-        onSuccess: () => {
-          if (confirmReject) setConfirmReject(null);
+      await resolverSolicitudAcceso(
+        comunidad.id, 
+        solicitud.id!, 
+        decision, 
+        appUser.uid, 
+        motivoRechazo,
+        detalleRechazo,
+        {
+          successMessage: decision === 'aprobada' ? '¡Solicitud aprobada! El miembro ya tiene acceso.' : 'Solicitud rechazada.',
+          onSuccess: () => {
+            if (confirmReject) setConfirmReject(null);
+          }
         }
-      });
+      );
     } catch (error) {
       // Error manejado por perform
     } finally {
@@ -204,7 +217,8 @@ export function useAdminSolicitudesLogic() {
     
     // Acciones
     handleApprove: (solicitud: SolicitudAcceso) => handleAction(solicitud, 'aprobada'),
-    handleReject: (solicitud: SolicitudAcceso) => handleAction(solicitud, 'rechazada'),
+    handleReject: (solicitud: SolicitudAcceso, motivoRechazo?: string, detalleRechazo?: string) => 
+      handleAction(solicitud, 'rechazada', motivoRechazo, detalleRechazo),
     handleGenerateCode,
     handleDesactivar,
     handleCopyCode
