@@ -138,6 +138,10 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] **Resolver conflicto de mayúsculas/minúsculas en input de código de invitación (Bug de UX)**
   - *Problema:* El input del formulario de invitación aplica visualmente `text-transform: uppercase` en CSS (o llama a `.toUpperCase()` en el handler), pero el backend guarda y compara los códigos estrictamente en minúsculas. Esto genera incompatibilidad y fallos en la validación.
   - *Acción:* Estandarizar el flujo normalizando el input a minúsculas (`.toLowerCase()`) de manera transparente en la validación antes de comparar con la base de datos, o asegurar la consistencia del almacenamiento en la colección de invitaciones.
+- [ ] **Auditar e implementar la interacción detallada en el Marketplace (Catálogo de Servicios)**
+  - *Problema:* Al intentar interactuar o hacer clic sobre una tarjeta de servicio de otro miembro en la vista de Catálogo / Marketplace, la aplicación no realiza ninguna acción (no se abre ningún detalle, modal de contacto, ni panel lateral).
+  - *Acción:* Auditar y completar el flujo de interacción del Marketplace para que al hacer clic se despliegue información detallada del servicio o se facilite el contacto/intercambio con el oferente.
+
 
 
 ## 🛠️ BACKLOG / FUTURAS MEJORAS
@@ -160,3 +164,6 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.
   - [ ] **[Bajo]** Migración de datos: Asegurar `userPositions: {}` y `totalResponsesCount: 0` en documentos antiguos (si existieran fuera de test).
   - [ ] **[Bajo]** Implementar un script de "Sanity Check" periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
+
+## 📐 Decisiones de Arquitectura
+- **2026-05-17 — Exclusión de Módulos de HD del Patrón DRY Actions**: Se decide de forma consciente y deliberada mantener el acceso directo a `appService` en los módulos de Fichas (`FichaView.tsx`, `FichaPreview.tsx`), Cruce (`CruceView.tsx`) y Administración General (`AdminPanel.tsx`). Estos componentes manejan flujos altamente acoplados al ciclo de vida del usuario de Firebase, sincronización diferida de estados de onboarding, enriquecimientos astrales y cálculos complejos de Diseño Humano, por lo que requieren control directo y granular y no se benefician de la abstracción genérica de `useEntityActions`.
