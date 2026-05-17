@@ -185,6 +185,52 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
 }
 
 /**
+ * Se suscribe en tiempo real a los cambios del documento del usuario en Firestore.
+ */
+export function listenAppUser(uid: string, callback: (user: AppUser | null) => void): () => void {
+  const userDocRef = doc(db, 'users', uid);
+  return onSnapshot(userDocRef, async (snap) => {
+    try {
+      if (snap.exists()) {
+        const userData = snap.data();
+        
+        // Mapear IDs de comunidades de forma segura
+        let communityIds = userData.communityIds;
+        if (!communityIds && userData.communityId) {
+          communityIds = [userData.communityId];
+        } else if (!communityIds) {
+          communityIds = [];
+        }
+
+        // Consultar existencia de ficha en paralelo
+        const [fichasSnapshot, profilesSnap] = await Promise.all([
+          getDocs(query(collection(db, 'fichas'), where('userId', '==', uid))),
+          getDoc(doc(db, 'profiles', uid))
+        ]);
+        const hasFicha = !fichasSnapshot.empty || profilesSnap.exists();
+
+        callback({
+          uid,
+          email: userData.email || '',
+          displayName: userData.displayName || '',
+          role: userData.role ?? 'member',
+          hasConsented: userData.hasConsented ?? false,
+          communityIds,
+          communityId: communityIds[0] ?? null,
+          hasFicha
+        });
+      } else {
+        callback(null);
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.GET, `listenAppUser/${uid}`);
+      callback(null);
+    }
+  });
+}
+
+
+/**
  * Actualiza el consentimiento del usuario.
  */
 export async function updateAppUserConsent(uid: string): Promise<void> {
@@ -1835,6 +1881,17 @@ export async function useInvitacion(codigo: string, uid: string): Promise<void> 
     const inv = await validateInvitacion(codigo);
     if (!inv) throw new Error('Invitación no válida o agotada');
 
+    // Comprobar si el usuario ya es miembro de esta comunidad
+    const userDocRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const communityIds = userData.communityIds || [];
+      if (communityIds.includes(inv.communityId)) {
+        throw new Error('YA_ES_MIEMBRO');
+      }
+    }
+
     const batch = writeBatch(db);
     
     // 1. Actualizar invitación
@@ -1862,8 +1919,10 @@ export async function useInvitacion(codigo: string, uid: string): Promise<void> 
     if (fichaSnap.exists()) {
       await _writeFichaRaw(uid, { communityId: inv.communityId }, true);
     }
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');
+  } catch (error: any) {
+    if (error.message !== 'YA_ES_MIEMBRO') {
+      handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');
+    }
     throw error;
   }
 }
