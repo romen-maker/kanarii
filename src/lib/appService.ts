@@ -649,11 +649,23 @@ export function listenAcuerdosPendientesAsProvider(
     colAcuerdos,
     where('communityId', '==', communityId),
     where('providerId', '==', providerId),
-    where('status', '==', 'pendiente')
+    where('status', 'in', ['pendiente', 'en_curso'])
   );
   
   return onSnapshot(q, (snap) => {
-    callback(snap.size);
+    const now = new Date();
+    const count = snap.docs.filter(doc => {
+      const d = doc.data();
+      if (d.status === 'pendiente') return true;
+      if (d.status === 'en_curso') {
+        const fecha = d.fechaPropuesta?.toDate?.() ?? 
+          (d.fechaPropuesta instanceof Date ? d.fechaPropuesta : 
+          (d.fechaPropuesta ? new Date(d.fechaPropuesta) : null));
+        return fecha && fecha < now;
+      }
+      return false;
+    }).length;
+    callback(count);
   }, (err) => {
     console.error("Error in listenAcuerdosPendientesAsProvider:", err);
     callback(0);

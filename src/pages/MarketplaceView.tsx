@@ -252,6 +252,15 @@ export default function MarketplaceView() {
                 const otroUsuarioUid = isSolicitante ? acuerdo.providerId : acuerdo.solicitanteId;
                 const servicio = servicios.find(s => s.id === acuerdo.servicioId);
 
+                const isExpired = (() => {
+                  const fecha = acuerdo.fechaPropuesta?.toDate?.() ?? 
+                    (acuerdo.fechaPropuesta instanceof Date ? acuerdo.fechaPropuesta : 
+                    (acuerdo.fechaPropuesta ? new Date(acuerdo.fechaPropuesta) : null));
+                  return fecha && fecha < new Date() && 
+                    acuerdo.status !== 'completada' && 
+                    acuerdo.status !== 'cancelada';
+                })();
+
                 return (
                   <div key={acuerdo.id} className="bg-white p-5 rounded-3xl border border-[#EAE2D6] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -269,6 +278,11 @@ export default function MarketplaceView() {
                           }`}>
                             {acuerdo.status.replace('_', ' ')}
                           </span>
+                          {isExpired && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-700 border border-red-200">
+                              Fecha vencida
+                            </span>
+                          )}
                           <span className="text-[10px] text-stone-400 italic">
                             Tipo: {acuerdo.exchangeType}
                           </span>
