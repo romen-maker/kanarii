@@ -9,6 +9,7 @@ import { Servicio, Acuerdo } from '../lib/appService';
 import { ServicioCard } from '../components/ServicioCard';
 import { CreateServicioModal } from '../components/CreateServicioModal';
 import { CreateAcuerdoModal } from '../components/CreateAcuerdoModal';
+import { ServicioDetailModal } from '../components/ServicioDetailModal';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { Heart, Package, Plus, Filter, Search, Handshake } from 'lucide-react';
 
@@ -36,6 +37,10 @@ export default function MarketplaceView() {
   const [isCreateServicioOpen, setIsCreateServicioOpen] = useState(false);
   const [servicioToEdit, setServicioToEdit] = useState<Servicio | null>(null);
   const [servicioToRequest, setServicioToRequest] = useState<Servicio | null>(null);
+  const [selectedServicioId, setSelectedServicioId] = useState<string | null>(null);
+
+  const selectedServicioForDetail = servicios.find(s => s.id === selectedServicioId) || null;
+  console.log("DEBUG MarketplaceView:", { selectedServicioId, selectedServicioForDetail, totalServicios: servicios.length });
 
   const filteredServicios = servicios.filter(s => {
     if (s.id === pendingId) return false;
@@ -100,7 +105,7 @@ export default function MarketplaceView() {
       status: 'pendiente',
       terms: data.terms,
       exchangeType: data.exchangeType,
-      fechaPropuesta: data.fechaPropuesta
+      fechaPropuesta: data.fechaPropuesta || null
     }, {
       successMessage: "Propuesta enviada. ¡Suerte con el intercambio! 🤝",
       onSuccess: () => setServicioToRequest(null)
@@ -221,6 +226,7 @@ export default function MarketplaceView() {
                   onEdit={() => { setServicioToEdit(servicio); setIsCreateServicioOpen(true); }}
                   onToggleStatus={() => handleToggleServicioStatus(servicio)}
                   onDelete={() => handleDeleteServicio(servicio.id!)}
+                  onClick={() => setSelectedServicioId(servicio.id!)}
                 />
               ))}
             </div>
@@ -321,6 +327,38 @@ export default function MarketplaceView() {
           onSubmit={handleCreateAcuerdo}
         />
       )}
+
+      <ServicioDetailModal
+        isOpen={!!selectedServicioForDetail}
+        onClose={() => setSelectedServicioId(null)}
+        servicio={selectedServicioForDetail}
+        nombreAutor={selectedServicioForDetail ? getMemberName(selectedServicioForDetail.providerId) : undefined}
+        isOwner={selectedServicioForDetail ? selectedServicioForDetail.providerId === appUser?.uid : false}
+        onSolicitar={() => {
+          if (selectedServicioForDetail) {
+            setServicioToRequest(selectedServicioForDetail);
+            setSelectedServicioId(null);
+          }
+        }}
+        onEdit={() => {
+          if (selectedServicioForDetail) {
+            setServicioToEdit(selectedServicioForDetail);
+            setIsCreateServicioOpen(true);
+            setSelectedServicioId(null);
+          }
+        }}
+        onToggleStatus={() => {
+          if (selectedServicioForDetail) {
+            handleToggleServicioStatus(selectedServicioForDetail);
+          }
+        }}
+        onDelete={() => {
+          if (selectedServicioForDetail) {
+            handleDeleteServicio(selectedServicioForDetail.id!);
+            setSelectedServicioId(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -545,7 +545,7 @@ export interface Acuerdo {
   status: 'pendiente' | 'en_curso' | 'completada' | 'cancelada';
   exchangeType?: 'tiempo' | 'especie' | 'economico' | 'regalo';
   terms: string;
-  fechaPropuesta?: any;
+  fechaPropuesta?: Date | null;
   linkedEventId?: string | null;
   feedback?: {
     gratitud: string;

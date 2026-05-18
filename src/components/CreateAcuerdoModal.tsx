@@ -23,7 +23,7 @@ export function CreateAcuerdoModal({ servicio, isSubmitting, onClose, onSubmit }
     onSubmit({
       ...formData,
       terms: formData.terms.trim(),
-      fechaPropuesta: formData.fechaPropuesta ? new Date(formData.fechaPropuesta) : undefined
+      fechaPropuesta: formData.fechaPropuesta ? new Date(formData.fechaPropuesta) : null
     });
   };
 
