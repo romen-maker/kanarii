@@ -14,6 +14,9 @@ export function BottomNav() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
 
+  const isAdmin = appUser?.role === 'admin';
+  const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+
   useEffect(() => {
     if (!comunidad?.id || !appUser?.uid) {
       setAcuerdosPendingCount(0);
@@ -48,9 +51,6 @@ export function BottomNav() {
 
   // Items extra que no están en el config (Explorar y Solicitudes)
   const extraNavItems = [];
-  
-  const isAdmin = appUser?.role === 'admin';
-  const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
 
   if (hasCommunities) {
     extraNavItems.push({
