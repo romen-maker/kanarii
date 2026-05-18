@@ -27,7 +27,7 @@ export default function MarketplaceView() {
   const { currentCommunityId } = useComunidad();
   const { servicios, loading: loadingServicios } = useServicios(currentCommunityId || '');
   const { acuerdos, loading: loadingAcuerdos } = useAcuerdos(currentCommunityId || '');
-  const { members } = useCommunityMembers(currentCommunityId || '');
+  const { members, getMemberName } = useCommunityMembers(currentCommunityId || '');
   const { publishServicio, editServicio, removeServicio, proposeAcuerdo, editAcuerdo, isExecuting: isSubmitting } = useServicioActions();
   const { startDelete, pendingId } = useUndoableDelete();
 
@@ -110,10 +110,6 @@ export default function MarketplaceView() {
       successMessage: "Propuesta enviada. ¡Suerte con el intercambio! 🤝",
       onSuccess: () => setServicioToRequest(null)
     });
-  };
-
-  const getMemberName = (uid: string) => {
-    return members.find(m => m.userId === uid)?.nombre || 'Miembro';
   };
 
   return (
