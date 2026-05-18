@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
+import { listenAcuerdosPendientesAsProvider } from '../lib/appService';
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -11,9 +12,28 @@ export function BottomNav() {
   const { appUser, logout } = useAuth();
   const { comunidad } = useComunidad();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
 
-  const isAdmin = appUser?.role === 'admin';
-  const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+  useEffect(() => {
+    if (!comunidad?.id || !appUser?.uid) {
+      setAcuerdosPendingCount(0);
+      return;
+    }
+
+    try {
+      const unsubscribe = listenAcuerdosPendientesAsProvider(
+        comunidad.id,
+        appUser.uid,
+        (count) => {
+          setAcuerdosPendingCount(count);
+        }
+      );
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error suscribiéndose a acuerdos pendientes:", error);
+      setAcuerdosPendingCount(0);
+    }
+  }, [comunidad?.id, appUser?.uid]);
 
   // Filtramos por pertenencia a comunidades
   const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
@@ -29,6 +49,9 @@ export function BottomNav() {
   // Items extra que no están en el config (Explorar y Solicitudes)
   const extraNavItems = [];
   
+  const isAdmin = appUser?.role === 'admin';
+  const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+
   if (hasCommunities) {
     extraNavItems.push({
       label: 'Explorar comunidades',
@@ -59,6 +82,9 @@ export function BottomNav() {
     navigate(path);
   };
 
+  const isMarketplaceInMore = moreNavItems.some(item => item.label === 'Marketplace');
+  const showMoreDot = isMarketplaceInMore && acuerdosPendingCount > 0 && location.pathname !== '/soberania';
+
   return (
     <>
       <div 
@@ -78,7 +104,12 @@ export function BottomNav() {
                 isReallyActive ? 'text-[#6B705C]' : 'text-stone-400'
               }`}
             >
-              <item.icon className="w-5 h-5" />
+              <div className="relative">
+                <item.icon className="w-5 h-5" />
+                {item.label === 'Marketplace' && acuerdosPendingCount > 0 && !isReallyActive && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </div>
               <span className="text-[10px] uppercase tracking-wide">{item.label}</span>
               {isReallyActive && <div className="w-1 h-1 rounded-full bg-[#6B705C] absolute bottom-1" />}
             </button>
@@ -87,11 +118,16 @@ export function BottomNav() {
         
         <button
           onClick={() => setIsMoreMenuOpen(true)}
-          className={`flex flex-col items-center justify-center flex-1 h-full min-h-[56px] space-y-1 transition-colors ${
+          className={`flex flex-col items-center justify-center flex-1 h-full min-h-[56px] space-y-1 relative transition-colors ${
             isMoreMenuOpen ? 'text-[#6B705C]' : 'text-stone-400'
           }`}
         >
-          <MoreHorizontal className="w-5 h-5" />
+          <div className="relative">
+            <MoreHorizontal className="w-5 h-5" />
+            {showMoreDot && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+            )}
+          </div>
           <span className="text-[10px] uppercase tracking-wide">Más</span>
         </button>
       </div>
@@ -111,7 +147,12 @@ export function BottomNav() {
                   onClick={() => { setIsMoreMenuOpen(false); navigate(item.href); }}
                   className="w-full text-left px-5 py-4 rounded-2xl font-medium text-[#4A4E4D] hover:bg-[#EAE2D6] transition-colors flex items-center gap-3"
                 >
-                  <item.icon className={`w-5 h-5 ${(item as any).color ? '' : 'text-stone-400'}`} style={{ color: (item as any).color }} />
+                  <div className="relative">
+                    <item.icon className={`w-5 h-5 ${(item as any).color ? '' : 'text-stone-400'}`} style={{ color: (item as any).color }} />
+                    {item.label === 'Marketplace' && acuerdosPendingCount > 0 && location.pathname !== '/soberania' && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                    )}
+                  </div>
                   {item.label}
                 </button>
               ))}
@@ -135,3 +176,4 @@ export function BottomNav() {
     </>
   );
 }
+

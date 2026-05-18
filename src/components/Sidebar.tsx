@@ -3,7 +3,7 @@ import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck, Scale } from '
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { listenSolicitudes } from '../lib/appService';
+import { listenSolicitudes, listenAcuerdosPendientesAsProvider } from '../lib/appService';
 import { useState, useEffect } from 'react';
 
 export function Sidebar() {
@@ -12,6 +12,7 @@ export function Sidebar() {
   const { user, appUser, logout } = useAuth();
   const { comunidad, comunidades, setCommunityId } = useComunidad();
   const [pendingCount, setPendingCount] = useState(0);
+  const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
@@ -34,6 +35,27 @@ export function Sidebar() {
       setPendingCount(0);
     }
   }, [comunidad?.id, isCommunityAdmin, appUser?.uid]);
+
+  useEffect(() => {
+    if (!comunidad?.id || !appUser?.uid) {
+      setAcuerdosPendingCount(0);
+      return;
+    }
+
+    try {
+      const unsubscribe = listenAcuerdosPendientesAsProvider(
+        comunidad.id,
+        appUser.uid,
+        (count) => {
+          setAcuerdosPendingCount(count);
+        }
+      );
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error suscribiéndose a acuerdos pendientes:", error);
+      setAcuerdosPendingCount(0);
+    }
+  }, [comunidad?.id, appUser?.uid]);
   
   // Dividimos los items en principales y admin
   const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
@@ -76,10 +98,16 @@ export function Sidebar() {
             >
               <item.icon className={`w-5 h-5 ${isActive ? 'text-[#6B705C]' : 'text-stone-400 group-hover:text-stone-600'}`} />
               <span className="text-sm">{item.label}</span>
+              {item.label === 'Marketplace' && acuerdosPendingCount > 0 && !isActive && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                  {acuerdosPendingCount}
+                </span>
+              )}
               {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6B705C]" />}
             </button>
           );
         })}
+
 
         {/* Explorar comunidades (Solo si ya es miembro) */}
         {appUser?.communityIds && appUser.communityIds.length > 0 && (

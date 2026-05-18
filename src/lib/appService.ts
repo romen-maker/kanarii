@@ -640,6 +640,27 @@ export async function getAcuerdosByUser(uid: string, role: 'provider' | 'solicit
   }
 }
 
+export function listenAcuerdosPendientesAsProvider(
+  communityId: string,
+  providerId: string,
+  callback: (count: number) => void
+) {
+  const q = query(
+    colAcuerdos,
+    where('communityId', '==', communityId),
+    where('providerId', '==', providerId),
+    where('status', '==', 'pendiente')
+  );
+  
+  return onSnapshot(q, (snap) => {
+    callback(snap.size);
+  }, (err) => {
+    console.error("Error in listenAcuerdosPendientesAsProvider:", err);
+    callback(0);
+  });
+}
+
+
 export async function crearProyecto(proyecto: Proyecto): Promise<string> {
   try {
     const cleanData = { ...proyecto };
