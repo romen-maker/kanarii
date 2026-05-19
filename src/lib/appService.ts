@@ -542,7 +542,7 @@ export interface Acuerdo {
   providerId: string;
   solicitanteId: string;
   communityId: string;
-  status: 'pendiente' | 'en_curso' | 'completada' | 'cancelada';
+  status: 'pendiente' | 'contraoferta' | 'en_curso' | 'completada' | 'cancelada';
   exchangeType?: 'tiempo' | 'especie' | 'economico' | 'regalo';
   terms: string;
   fechaPropuesta?: Date | null;
@@ -552,6 +552,16 @@ export interface Acuerdo {
     oportunidadMejora: string;
     creadoEn: any;
   };
+  historial?: Array<{
+    fecha: any;
+    autorId: string;
+    tipo: 'propuesta' | 'contraoferta' | 'aceptacion' | 'cancelacion';
+    terminos: {
+      exchangeType?: string;
+      terms: string;
+      fechaPropuesta?: Date | null;
+    };
+  }>;
   creadoEn: any;
   actualizadoEn: any;
 }
@@ -627,6 +637,27 @@ export async function updateAcuerdo(id: string, cambios: Partial<Acuerdo>): Prom
     throw err;
   }
 }
+export { arrayUnion } from 'firebase/firestore';
+
+export async function updateAcuerdoStatus(
+  acuerdoId: string,
+  update: Partial<Pick<Acuerdo, 
+    'status' | 'exchangeType' | 
+    'terms' | 'fechaPropuesta' | 'actualizadoEn'>> & {
+      historial?: any;
+    }
+): Promise<void> {
+  try {
+    const ref = doc(db, 'acuerdos', acuerdoId);
+    await updateDoc(ref, { 
+      ...update, 
+      actualizadoEn: serverTimestamp() 
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `acuerdos/${acuerdoId}`);
+    throw err;
+  }
+}
 
 export async function getAcuerdosByUser(uid: string, role: 'provider' | 'solicitante'): Promise<Acuerdo[]> {
   try {
@@ -649,7 +680,7 @@ export function listenAcuerdosPendientesAsProvider(
     colAcuerdos,
     where('communityId', '==', communityId),
     where('providerId', '==', providerId),
-    where('status', 'in', ['pendiente', 'en_curso'])
+    where('status', 'in', ['pendiente', 'en_curso', 'contraoferta'])
   );
   
   return onSnapshot(q, (snap) => {
@@ -657,6 +688,7 @@ export function listenAcuerdosPendientesAsProvider(
     const count = snap.docs.filter(doc => {
       const d = doc.data();
       if (d.status === 'pendiente') return true;
+      if (d.status === 'contraoferta') return true;
       if (d.status === 'en_curso') {
         const fecha = d.fechaPropuesta?.toDate?.() ?? 
           (d.fechaPropuesta instanceof Date ? d.fechaPropuesta : 
@@ -681,7 +713,7 @@ export function listenAcuerdosActivosAsSolicitante(
     colAcuerdos,
     where('communityId', '==', communityId),
     where('solicitanteId', '==', solicitanteId),
-    where('status', 'in', ['en_curso', 'cancelada'])
+    where('status', 'in', ['en_curso', 'cancelada', 'contraoferta'])
   );
   return onSnapshot(q, snap => {
     const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));

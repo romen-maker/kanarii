@@ -5,6 +5,7 @@ import {
   deleteServicio, 
   createAcuerdo, 
   updateAcuerdo,
+  updateAcuerdoStatus,
   Servicio,
   Acuerdo
 } from '../lib/appService';
@@ -32,12 +33,21 @@ export function useServicioActions() {
     return perform(updateAcuerdo(id, updates), options);
   };
 
+  const editAcuerdoStatus = async (
+    id: string,
+    update: Parameters<typeof updateAcuerdoStatus>[1],
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(updateAcuerdoStatus(id, update), options);
+  };
+
   return {
     publishServicio,
     editServicio,
     removeServicio,
     proposeAcuerdo,
     editAcuerdo,
+    editAcuerdoStatus,
     isExecuting
   };
 }

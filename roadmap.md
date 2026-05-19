@@ -162,11 +162,29 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] IA para sugerir si una objeción es válida S3.
   - [ ] Plantillas de propuestas predefinidas.
 - [ ] **Evolución de Marketplace y Acuerdos**:
-  - [ ] **feat(acuerdos): badge nav para solicitante**: El listener actual solo cuenta acuerdos donde eres `providerId`. Necesita incluir también acuerdos donde eres `solicitanteId` con status recién cambiado.
-  - [ ] **feat(acuerdos): flujo de negociación/contrapropuesta**:
-    - Permitir que la contraparte modifique `terms`/`exchangeType` antes de aceptar (contrapropuesta).
-    - Toast con deshacer al cancelar o eliminar un acuerdo.
-    - Modal de detalle de acuerdo para ambas partes.
+  - [/] **feat(acuerdos): badge nav para solicitante**: El listener actual solo cuenta acuerdos donde eres `providerId`. Necesita incluir también acuerdos donde eres `solicitanteId` con status recién cambiado. (Implementando versión simplificada).
+  - [ ] **feat(acuerdos): sistema de notificaciones leído/no leído**:
+    - Añadir campo `vistoPorSolicitante: boolean` en interfaz `Acuerdo`.
+    - Cuando proveedor acepta/cancela, marcar `false`.
+    - Cuando solicitante entra a pestaña Mis Acuerdos, batch update a `true`.
+    - Badge desaparece solo cuando realmente ha visto el cambio, no solo por navegar a `/soberania`.
+    - Necesario para multi-dispositivo y UX precisa.
+    - Prioridad: post-MVP, antes de escalar usuarios.
+  - [ ] **[DISEÑADO] feat(notifications): sistema de badges reactivos para Gobernanza**:
+    - Mismo patrón que `listenAcuerdosActivosAsSolicitante` aplicado a:
+      - Propuestas pendientes de voto del usuario
+      - Tensiones asignadas al usuario sin resolver  
+      - Actas pendientes de ratificación
+    - Considerar extraer un hook genérico `usePendingActionsCount(communityId, userId, query)` que centralice la lógica de badge para cualquier sección — evita duplicar listeners en Sidebar y BottomNav.
+  - [ ] **[DISEÑADO] feat(acuerdos): flujo de negociación/contrapropuesta**:
+    - **Nuevos estados en tipo Acuerdo**:
+      - `status: 'pendiente' | 'contraoferta' | 'en_curso' | 'completada' | 'cancelada'`
+    - **Nuevo campo**:
+      - `historial: Array<{ fecha: Timestamp, autorId: string, tipo: 'propuesta' | 'contraoferta' | 'aceptacion' | 'cancelacion', terminos: { horas, exchangeType, descripcion } }>`
+    - **Flujo UI**:
+      - El proveedor ve un acuerdo pendiente → botón "Contraofertar" abre modal con campos editables.
+      - El solicitante recibe badge + ve contraoferta → puede Aceptar, Declinar o volver a Contraofertar.
+      - Al cancelar → toast con deshacer usando el mismo patrón de `useUndoableDelete` existente.
   - [ ] **feat(admin): panel de acuerdos con estadísticas**: Panel administrativo para ver acuerdos con filtros de estado y métricas (totales, valor intercambiado, etc.).
 - [ ] **Deuda Técnica Firestore (Auditoría 2026-05-16)**:
   - [x] **[Alto] Modelado 1:1 de community_members**: La colección `community_members` utiliza `{userId}` directamente como ID de documento. Esto limita a un usuario a pertenecer a una única comunidad activa en el listado. Para escalar a multi-comunidad real en el futuro, se requerirá migrar el ID a `{communityId}_{userId}` o crear una subcolección/relación independiente `memberships`. [MIGRADO Y COMPLETADO EL 2026-05-17]
@@ -179,4 +197,4 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 
 ---
 
-*Última actualización: 17 May 2026*
+*Última actualización: 19 May 2026*

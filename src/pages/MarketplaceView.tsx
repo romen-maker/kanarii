@@ -6,10 +6,11 @@ import { useServicios } from '../hooks/useServicios';
 import { useAcuerdos } from '../hooks/useAcuerdos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useServicioActions } from '../hooks/useServicioActions';
-import { Servicio, Acuerdo } from '../lib/appService';
+import { Servicio, Acuerdo, arrayUnion } from '../lib/appService';
 import { ServicioCard } from '../components/ServicioCard';
 import { CreateServicioModal } from '../components/CreateServicioModal';
 import { CreateAcuerdoModal } from '../components/CreateAcuerdoModal';
+import { ContraofertaModal } from '../components/ContraofertaModal';
 import { ServicioDetailModal } from '../components/ServicioDetailModal';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { Heart, Package, Plus, Filter, Search, Handshake } from 'lucide-react';
@@ -29,8 +30,9 @@ export default function MarketplaceView() {
   const { servicios, loading: loadingServicios } = useServicios(currentCommunityId || '');
   const { acuerdos, loading: loadingAcuerdos } = useAcuerdos(currentCommunityId || '');
   const { members, getMemberName } = useCommunityMembers(currentCommunityId || '');
-  const { publishServicio, editServicio, removeServicio, proposeAcuerdo, editAcuerdo, isExecuting: isSubmitting } = useServicioActions();
+  const { publishServicio, editServicio, removeServicio, proposeAcuerdo, editAcuerdo, editAcuerdoStatus, isExecuting: isSubmitting } = useServicioActions();
   const { startDelete, pendingId } = useUndoableDelete();
+  const { startDelete: startDeclineAcuerdo, pendingId: pendingDeclineId } = useUndoableDelete();
 
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<'servicios' | 'mis_acuerdos'>(
@@ -42,6 +44,7 @@ export default function MarketplaceView() {
   const [servicioToEdit, setServicioToEdit] = useState<Servicio | null>(null);
   const [servicioToRequest, setServicioToRequest] = useState<Servicio | null>(null);
   const [selectedServicioId, setSelectedServicioId] = useState<string | null>(null);
+  const [acuerdoToCounter, setAcuerdoToCounter] = useState<Acuerdo | null>(null);
 
   const selectedServicioForDetail = servicios.find(s => s.id === selectedServicioId) || null;
 
@@ -108,11 +111,71 @@ export default function MarketplaceView() {
       status: 'pendiente',
       terms: data.terms,
       exchangeType: data.exchangeType,
-      fechaPropuesta: data.fechaPropuesta || null
+      fechaPropuesta: data.fechaPropuesta || null,
+      historial: [
+        {
+          fecha: new Date(),
+          autorId: appUser?.uid || '',
+          tipo: 'propuesta',
+          terminos: {
+            exchangeType: data.exchangeType,
+            terms: data.terms,
+            fechaPropuesta: data.fechaPropuesta || null
+          }
+        }
+      ]
     }, {
       successMessage: "Propuesta enviada. ¡Suerte con el intercambio! 🤝",
       onSuccess: () => setServicioToRequest(null)
     });
+  };
+
+  const handleDeclineAcuerdo = (acuerdo: Acuerdo) => {
+    startDeclineAcuerdo(acuerdo.id!, {
+      onDelete: async (id) => {
+        await editAcuerdoStatus(id, {
+          status: 'cancelada',
+          historial: arrayUnion({
+            fecha: new Date(),
+            autorId: appUser?.uid || '',
+            tipo: 'cancelacion',
+            terminos: {
+              exchangeType: acuerdo.exchangeType || '',
+              terms: acuerdo.terms,
+              fechaPropuesta: acuerdo.fechaPropuesta || null
+            }
+          })
+        });
+      },
+      successMessage: "Acuerdo cancelado.",
+      undoMessage: "Cancelación deshecha.",
+      errorMessage: "Error al cancelar acuerdo."
+    });
+  };
+
+  const handleContraofertaSubmit = async (data: { terms: string; exchangeType: Acuerdo['exchangeType']; fechaPropuesta: Date | null }) => {
+    if (!acuerdoToCounter) return;
+    try {
+      await editAcuerdoStatus(acuerdoToCounter.id!, {
+        status: 'contraoferta',
+        exchangeType: data.exchangeType,
+        terms: data.terms,
+        fechaPropuesta: data.fechaPropuesta,
+        historial: arrayUnion({
+          fecha: new Date(),
+          autorId: appUser?.uid || '',
+          tipo: 'contraoferta',
+          terminos: {
+            exchangeType: data.exchangeType || '',
+            terms: data.terms,
+            fechaPropuesta: data.fechaPropuesta
+          }
+        })
+      });
+      setAcuerdoToCounter(null);
+    } catch (err) {
+      console.error('Error al enviar contraoferta:', err);
+    }
   };
 
   return (
@@ -246,36 +309,68 @@ export default function MarketplaceView() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
-              {acuerdos.map(acuerdo => {
+              {acuerdos.filter(a => a.id !== pendingDeclineId).map(acuerdo => {
                 const isSolicitante = acuerdo.solicitanteId === appUser?.uid;
                 const otroUsuarioUid = isSolicitante ? acuerdo.providerId : acuerdo.solicitanteId;
                 const servicio = servicios.find(s => s.id === acuerdo.servicioId);
 
                 const isExpired = (() => {
-                  const fecha = acuerdo.fechaPropuesta?.toDate?.() ?? 
-                    (acuerdo.fechaPropuesta instanceof Date ? acuerdo.fechaPropuesta : 
-                    (acuerdo.fechaPropuesta ? new Date(acuerdo.fechaPropuesta) : null));
+                  const fp = acuerdo.fechaPropuesta as any;
+                  const fecha = fp?.toDate?.() ?? 
+                    (fp instanceof Date ? fp : 
+                    (fp ? new Date(fp) : null));
                   return fecha && fecha < new Date() && 
                     acuerdo.status !== 'completada' && 
                     acuerdo.status !== 'cancelada';
                 })();
 
+                const ultimoAutor = acuerdo.historial?.at(-1)?.autorId;
+                const puedoActuar = 
+                  acuerdo.status === 'pendiente' 
+                    ? !isSolicitante  // solo provider
+                    : ultimoAutor !== appUser?.uid; // turno alterno
+
+                const bgClass = acuerdo.status === 'contraoferta' 
+                  ? 'bg-purple-50/40 border-purple-200' 
+                  : 'bg-white';
+
+                const iconBgClass = acuerdo.status === 'pendiente' 
+                  ? 'bg-amber-50 text-amber-500' 
+                  : acuerdo.status === 'contraoferta'
+                  ? 'bg-purple-100 text-purple-600'
+                  : acuerdo.status === 'en_curso' 
+                  ? 'bg-blue-50 text-blue-500' 
+                  : 'bg-green-50 text-green-500';
+
+                const badgeClass = acuerdo.status === 'pendiente' 
+                  ? 'bg-amber-100 text-amber-700' 
+                  : acuerdo.status === 'contraoferta'
+                  ? 'bg-purple-100 text-purple-700'
+                  : acuerdo.status === 'en_curso' 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'bg-green-100 text-green-700';
+
+                const statusLabel = acuerdo.status === 'contraoferta' 
+                  ? 'CONTRAOFERTA' 
+                  : acuerdo.status.replace('_', ' ');
+
                 return (
-                  <div key={acuerdo.id} className="bg-white p-5 rounded-3xl border border-[#EAE2D6] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-2xl ${acuerdo.status === 'pendiente' ? 'bg-amber-50 text-amber-500' : acuerdo.status === 'en_curso' ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'}`}>
+                  <div key={acuerdo.id} className={`p-5 rounded-3xl border border-[#EAE2D6] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${bgClass}`}>
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className={`p-3 rounded-2xl ${iconBgClass}`}>
                         <Handshake className="w-6 h-6" />
                       </div>
-                      <div>
-                        <h4 className="font-bold text-stone-800">{servicio?.title || 'Servicio'}</h4>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-stone-800 truncate">{servicio?.title || 'Servicio'}</h4>
                         <p className="text-sm text-stone-500 mt-1">Con {getMemberName(otroUsuarioUid)}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                            acuerdo.status === 'pendiente' ? 'bg-amber-100 text-amber-700' :
-                            acuerdo.status === 'en_curso' ? 'bg-blue-100 text-blue-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {acuerdo.status.replace('_', ' ')}
+                        
+                        <div className="text-xs text-stone-600 mt-2 bg-stone-50 p-2.5 rounded-xl border border-stone-100 whitespace-pre-line max-w-xl">
+                          {acuerdo.terms}
+                        </div>
+
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeClass}`}>
+                            {statusLabel}
                           </span>
                           {isExpired && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-700 border border-red-200">
@@ -285,34 +380,77 @@ export default function MarketplaceView() {
                           <span className="text-[10px] text-stone-400 italic">
                             Tipo: {acuerdo.exchangeType}
                           </span>
+                          {acuerdo.fechaPropuesta && (
+                            <span className="text-[10px] text-stone-400">
+                              Fecha: {(() => {
+                                const fp = acuerdo.fechaPropuesta as any;
+                                const f = fp.toDate ? fp.toDate() : new Date(fp);
+                                return f.toLocaleDateString();
+                              })()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    {!isSolicitante && acuerdo.status === 'pendiente' && (
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => editAcuerdo(acuerdo.id!, { status: 'en_curso' }, { successMessage: "¡Acuerdo aceptado! 🤝" })}
-                          className="px-4 py-2 bg-[#6B705C] text-white rounded-xl text-xs font-bold hover:bg-[#4A4E4D] transition-all"
-                        >
-                          Aceptar
-                        </button>
-                        <button 
-                          onClick={() => editAcuerdo(acuerdo.id!, { status: 'cancelada' }, { successMessage: "Acuerdo declinado." })}
-                          className="px-4 py-2 bg-stone-100 text-stone-500 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all"
-                        >
-                          Declinar
-                        </button>
+                    {(acuerdo.status === 'pendiente' || acuerdo.status === 'contraoferta') && (
+                      <div className="flex flex-col sm:flex-row gap-2 self-end md:self-center">
+                        {puedoActuar ? (
+                          <>
+                            <button 
+                              onClick={() => editAcuerdoStatus(acuerdo.id!, { 
+                                status: 'en_curso',
+                                historial: arrayUnion({
+                                  fecha: new Date(),
+                                  autorId: appUser?.uid || '',
+                                  tipo: 'aceptacion',
+                                  terminos: {
+                                    exchangeType: acuerdo.exchangeType || '',
+                                    terms: acuerdo.terms,
+                                    fechaPropuesta: acuerdo.fechaPropuesta || null
+                                  }
+                                })
+                              }, { successMessage: "¡Acuerdo aceptado! 🤝" })}
+                              className="px-4 py-2 bg-[#6B705C] text-white rounded-xl text-xs font-bold hover:bg-[#4A4E4D] transition-all"
+                            >
+                              Aceptar
+                            </button>
+                            <button 
+                              onClick={() => setAcuerdoToCounter(acuerdo)}
+                              className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all"
+                            >
+                              Contraofertar
+                            </button>
+                            <button 
+                              onClick={() => handleDeclineAcuerdo(acuerdo)}
+                              className="px-4 py-2 bg-stone-100 text-stone-500 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all"
+                            >
+                              Declinar
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-stone-400 italic px-3 py-1 bg-stone-50 rounded-lg">
+                            Esperando respuesta del otro miembro...
+                          </span>
+                        )}
                       </div>
                     )}
 
                     {acuerdo.status === 'en_curso' && (
-                      <button 
-                        onClick={() => editAcuerdo(acuerdo.id!, { status: 'completada' }, { successMessage: "¡Intercambio finalizado! ✨" })}
-                        className="px-4 py-2 border-2 border-[#C1E1C1] text-[#2C4C3B] rounded-xl text-xs font-bold hover:bg-[#C1E1C1] transition-all"
-                      >
-                        Marcar Completado
-                      </button>
+                      <div className="flex gap-2 self-end md:self-center">
+                        <button 
+                          onClick={() => editAcuerdo(acuerdo.id!, { status: 'completada' }, { successMessage: "¡Intercambio finalizado! ✨" })}
+                          className="px-4 py-2 border-2 border-[#C1E1C1] text-[#2C4C3B] rounded-xl text-xs font-bold hover:bg-[#C1E1C1] transition-all"
+                        >
+                          Marcar Completado
+                        </button>
+                        <button 
+                          onClick={() => handleDeclineAcuerdo(acuerdo)}
+                          className="px-4 py-2 bg-stone-100 text-stone-500 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
@@ -338,6 +476,16 @@ export default function MarketplaceView() {
           isSubmitting={isSubmitting}
           onClose={() => setServicioToRequest(null)}
           onSubmit={handleCreateAcuerdo}
+        />
+      )}
+
+      {acuerdoToCounter && (
+        <ContraofertaModal
+          acuerdo={acuerdoToCounter}
+          currentUserId={appUser?.uid || ''}
+          onClose={() => setAcuerdoToCounter(null)}
+          onSubmit={handleContraofertaSubmit}
+          isSubmitting={isSubmitting}
         />
       )}
 
