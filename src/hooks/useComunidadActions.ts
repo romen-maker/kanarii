@@ -8,6 +8,9 @@ import {
   removerMiembroComunidad,
   registrarSalidaComunidad,
   createComunidad,
+  updateComunidad,
+  deleteComunidad,
+  unirseComunidadDirecto,
   Invitacion
 } from '../lib/appService';
 
@@ -82,6 +85,38 @@ export function useComunidadActions() {
     });
   };
 
+  const actualizarComunidad = async (
+    slug: string,
+    data: Parameters<typeof updateComunidad>[1],
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(updateComunidad(slug, data), {
+      successMessage: 'Configuración de la comunidad actualizada con éxito',
+      ...options
+    });
+  };
+
+  const eliminarComunidad = async (
+    slug: string,
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(deleteComunidad(slug), {
+      successMessage: 'Comunidad eliminada con éxito',
+      ...options
+    });
+  };
+
+  const unirseComunidad = async (
+    slug: string,
+    uid: string,
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(unirseComunidadDirecto(slug, uid), {
+      successMessage: 'Te has unido a la comunidad con éxito',
+      ...options
+    });
+  };
+
   return {
     redeemInvitacion,
     solicitarAcceso,
@@ -91,7 +126,9 @@ export function useComunidadActions() {
     abandonarComunidad,
     expulsarMiembro,
     registrarNuevaComunidad,
+    actualizarComunidad,
+    eliminarComunidad,
+    unirseComunidad,
     isExecuting
   };
 }
-

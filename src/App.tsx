@@ -21,6 +21,7 @@ import { AdminSolicitudesView } from './pages/AdminSolicitudesView';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import MarketplaceView from './pages/MarketplaceView';
 import { RegistroComunidadView } from './pages/RegistroComunidadView';
+import { FichaComunidadView } from './pages/FichaComunidadView';
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
 
@@ -82,6 +83,7 @@ function AppContent() {
           <Route path="/admin/solicitudes" element={<ProtectedRoute><AdminSolicitudesView /></ProtectedRoute>} />
           <Route path="/soberania" element={<ProtectedRoute><MarketplaceView /></ProtectedRoute>} />
           <Route path="/gobernanza" element={<ProtectedRoute><PropuestasView /></ProtectedRoute>} />
+          <Route path="/c/:slug" element={<FichaComunidadView />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>
         

@@ -2076,6 +2076,128 @@ export async function createComunidad(data: {
 }
 
 
+export async function updateComunidad(
+  slug: string,
+  data: {
+    nombre: string;
+    descripcion: string;
+    manifiesto?: string;
+    esPublica: boolean;
+    requiereAprobacion: boolean;
+    tags?: string[];
+    ubicacion?: {
+      municipio: string;
+      region: string;
+      pais: string;
+      lat?: number;
+      lng?: number;
+    };
+    tipo?: 'finca' | 'ecoaldea' | 'cohousing' | 'urbano' | 'nomada' | 'otro';
+    capacidad?: number;
+    logoUrl?: string;
+  }
+): Promise<void> {
+  try {
+    const comRef = doc(db, 'comunidades', slug);
+    await updateDoc(comRef, {
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      manifiesto: data.manifiesto || '',
+      esPublica: data.esPublica,
+      requiereAprobacion: data.requiereAprobacion,
+      tags: data.tags || [],
+      ubicacion: data.ubicacion || null,
+      tipo: data.tipo || 'otro',
+      capacidad: data.capacidad || 0,
+      logoUrl: data.logoUrl || '',
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'Actualizar comunidad');
+    throw error;
+  }
+}
+
+export async function deleteComunidad(slug: string): Promise<void> {
+  try {
+    // 1. Obtener todos los miembros asociados a la comunidad
+    const membersQuery = query(colCommunityMembers, where('communityId', '==', slug));
+    const membersSnap = await getDocs(membersQuery);
+    const memberUids = membersSnap.docs.map(d => d.data().userId as string);
+    
+    const batch = writeBatch(db);
+    
+    // 2. Eliminar el documento de la comunidad
+    batch.delete(doc(db, 'comunidades', slug));
+    
+    // 3. Eliminar todos los registros de community_members de esa comunidad
+    membersSnap.docs.forEach(d => {
+      batch.delete(d.ref);
+    });
+    
+    // 4. Actualizar perfiles de los usuarios que eran miembros
+    for (const uid of memberUids) {
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const newCommunityIds = (userData.communityIds || []).filter((id: string) => id !== slug);
+        const newActiveId = userData.communityId === slug ? (newCommunityIds[0] || null) : userData.communityId;
+        
+        batch.update(userRef, {
+          communityIds: newCommunityIds,
+          communityId: newActiveId,
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      const profileRef = doc(db, 'profiles', uid);
+      const profileSnap = await getDoc(profileRef);
+      if (profileSnap.exists()) {
+        const profileData = profileSnap.data();
+        const newCommunityIds = (profileData.communityIds || []).filter((id: string) => id !== slug);
+        const newActiveId = profileData.communityId === slug ? (newCommunityIds[0] || null) : profileData.communityId;
+        
+        batch.update(profileRef, {
+          communityIds: newCommunityIds,
+          communityId: newActiveId,
+          'datosOnboarding.communityId': newActiveId,
+          'datosPersona.communityId': newActiveId,
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      const fichaRef = doc(db, 'fichas', uid);
+      const fichaSnap = await getDoc(fichaRef);
+      if (fichaSnap.exists()) {
+        const fichaData = fichaSnap.data();
+        if (fichaData.communityId === slug) {
+          const newCommunityIds = (userSnap.exists() ? userSnap.data().communityIds || [] : []).filter((id: string) => id !== slug);
+          batch.update(fichaRef, {
+            communityId: newCommunityIds[0] || null,
+            updatedAt: serverTimestamp()
+          });
+        }
+      }
+    }
+    
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'Eliminar comunidad');
+    throw error;
+  }
+}
+
+export function listenComunidades(callback: (list: Comunidad[]) => void): () => void {
+  return onSnapshot(colComunidades, (snap) => {
+    const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comunidad));
+    callback(list);
+  }, (err) => {
+    console.error("Error in listenComunidades:", err);
+  });
+}
+
+
 /**
  * Genera un código de invitación legible (adjetivo-sustantivo-número).
  */
@@ -2363,6 +2485,85 @@ export async function resolverSolicitud(
     throw error;
   }
 }
+
+export async function unirseComunidadDirecto(communityId: string, uid: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) throw new Error('El usuario no existe');
+    const userData = userSnap.data();
+    const communityIds = userData.communityIds || [];
+    if (communityIds.includes(communityId)) {
+      throw new Error('YA_ES_MIEMBRO');
+    }
+
+    const batch = writeBatch(db);
+
+    batch.update(userRef, {
+      communityIds: arrayUnion(communityId),
+      ...(!userData.communityId ? { communityId: communityId } : {}),
+      updatedAt: serverTimestamp()
+    });
+
+    const profileRef = doc(db, 'profiles', uid);
+    const profileSnap = await getDoc(profileRef);
+    const memberRef = doc(db, 'community_members', `${communityId}_${uid}`);
+
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+
+      batch.set(memberRef, {
+        userId: uid,
+        communityId: communityId,
+        nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+        tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
+        elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
+        autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
+        antiguedad_anos: base.antiguedad_anos || 0,
+        rol_comunidad: base.rol_comunidad || 'miembro',
+        estado: 'activo',
+        creadoEn: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      if (!profileData.communityId) {
+        batch.update(profileRef, {
+          communityId: communityId,
+          'datosOnboarding.communityId': communityId,
+          'datosPersona.communityId': communityId
+        });
+      }
+    } else {
+      batch.set(memberRef, {
+        userId: uid,
+        communityId: communityId,
+        nombre: userData.displayName || userData.email || 'Sin Nombre',
+        tipo_hd: '',
+        elemento_dominante: '',
+        autoridad_hd: '',
+        antiguedad_anos: 0,
+        rol_comunidad: 'miembro',
+        estado: 'activo',
+        creadoEn: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    // Propagar communityId a fichas si existe
+    const fichaRef = doc(db, 'fichas', uid);
+    const fichaSnap = await getDoc(fichaRef);
+    if (fichaSnap.exists()) {
+      await _writeFichaRaw(uid, { communityId: communityId }, true);
+    }
+
+    await batch.commit();
+  } catch (error: any) {
+    handleFirestoreError(error, OperationType.UPDATE, 'Unirse directamente');
+    throw error;
+  }
+}
+
 
 export async function removerMiembroComunidad(userId: string, communityId: string): Promise<void> {
   try {

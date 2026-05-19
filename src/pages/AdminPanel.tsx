@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Ficha, ensureSeedData, Tarea, getUserFicha, listenBajasRecientes, FeedbackSalida, Acuerdo, Servicio } from '../lib/appService';
-import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale, Eye, Ban, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale, Eye, Ban, ArrowRight, CheckCircle2, Settings, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -42,6 +42,11 @@ export function AdminPanel() {
   const handleTabChange = (tabId: string) => {
     setSearchParams({ tab: tabId });
   };
+
+  const isAdmin = appUser?.role === 'admin';
+  const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+
+  console.log('[DEBUG AdminPanel] appUser:', { uid: appUser?.uid, role: appUser?.role }, 'comunidad:', { slug: comunidad?.slug, adminUids: comunidad?.adminUids }, 'isCommunityAdmin:', isCommunityAdmin);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity },

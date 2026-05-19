@@ -11,7 +11,7 @@ import {
   SolicitudAcceso
 } from '../lib/appService';
 import { useComunidadActions } from '../hooks/useComunidadActions';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useToast } from '../components/Toaster';
 
 /**
@@ -246,13 +246,15 @@ export function ComunidadesView() {
                     className="bg-white border border-[#EAE2D6] rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
                   >
                     <div className="flex justify-between items-start mb-4">
-                      <div className="w-14 h-14 bg-[#F9F7F1] rounded-2xl flex items-center justify-center overflow-hidden border border-[#EAE2D6]">
-                        {comunidad.logoUrl ? (
-                          <img src={comunidad.logoUrl} alt={comunidad.nombre} className="w-full h-full object-cover" />
-                        ) : (
-                          <Compass className="w-7 h-7 text-[#A5A58D]" />
-                        )}
-                      </div>
+                      <Link to={`/c/${comunidad.slug}`} className="block shrink-0">
+                        <div className="w-14 h-14 bg-[#F9F7F1] rounded-2xl flex items-center justify-center overflow-hidden border border-[#EAE2D6] hover:border-[#CB997E] transition-colors">
+                          {comunidad.logoUrl ? (
+                            <img src={comunidad.logoUrl} alt={comunidad.nombre} className="w-full h-full object-cover" />
+                          ) : (
+                            <Compass className="w-7 h-7 text-[#A5A58D]" />
+                          )}
+                        </div>
+                      </Link>
                       <div className="flex flex-col items-end gap-2">
                         {comunidad.plan === 'pro' && (
                           <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
@@ -270,23 +272,22 @@ export function ComunidadesView() {
                     </div>
 
                     <div className="flex-1 space-y-2">
-                      <h3 className="text-xl font-bold text-stone-800">{comunidad.nombre}</h3>
+                      <Link to={`/c/${comunidad.slug}`} className="inline-block hover:text-[#CB997E] transition-colors">
+                        <h3 className="text-xl font-bold text-stone-800">{comunidad.nombre}</h3>
+                      </Link>
                       <p className="text-stone-500 text-sm line-clamp-3 leading-relaxed">
                         {comunidad.descripcion}
                       </p>
                     </div>
 
                     <div className="pt-6 mt-auto flex flex-col gap-3">
-                      <button 
-                        onClick={() => {
-                          setSelectedComunidad(comunidad);
-                          setShowManifiesto(true);
-                        }}
+                      <Link 
+                        to={`/c/${comunidad.slug}`}
                         className="w-full flex items-center justify-center gap-2 text-sm font-bold text-[#A5A58D] hover:text-[#6B705C] bg-[#F9F7F1] py-2 rounded-xl transition-colors"
                       >
-                        <Info className="w-4 h-4" />
-                        Ver manifiesto
-                      </button>
+                        <Compass className="w-4 h-4" />
+                        Ver comunidad
+                      </Link>
 
                       {hasRejected && (latestRequest?.motivoRechazo || latestRequest?.detalleRechazo) && (
                         <div className="bg-red-50/50 border border-red-100/50 rounded-2xl p-4 mt-1 text-left">

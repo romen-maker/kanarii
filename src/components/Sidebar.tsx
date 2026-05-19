@@ -97,7 +97,13 @@ export function Sidebar() {
   }).length;
   
   // Dividimos los items en principales y admin
-  const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
+  const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin || !!comunidad?.id;
+
+  // Filtrar comunidades para el selector
+  const userComunidades = comunidades.filter(c => {
+    if (isAdmin) return true;
+    return (appUser?.communityIds || []).includes(c.id) || (comunidad?.id === c.id);
+  });
 
   const mainNavItems = navigationConfig.filter(item => {
     if (item.adminOnly) return false;
@@ -218,14 +224,14 @@ export function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-[#4A4E4D] truncate">{user?.displayName || 'Miembro'}</p>
-            {comunidades.length > 1 ? (
+            {userComunidades.length > 1 ? (
               <div className="relative group/sel">
                 <select
                   value={comunidad?.id || ''}
                   onChange={(e) => setCommunityId(e.target.value)}
                   className="appearance-none bg-transparent border-none p-0 pr-4 text-[10px] text-[#A5A58D] font-bold focus:ring-0 cursor-pointer w-full truncate"
                 >
-                  {comunidades.map(c => (
+                  {userComunidades.map(c => (
                     <option key={c.id} value={c.id}>{c.nombre}</option>
                   ))}
                 </select>

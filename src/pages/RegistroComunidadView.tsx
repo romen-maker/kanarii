@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Loader2, AlertCircle, CheckCircle2, Sparkles, X, Leaf, MapPin, Users, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { getComunidad } from '../lib/appService';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useToast } from '../components/Toaster';
@@ -69,6 +70,7 @@ function TagChip({ tag, onRemove }: { tag: string; onRemove?: () => void }) {
 
 export function RegistroComunidadView() {
   const { appUser } = useAuth();
+  const { setCommunityId } = useComunidad();
   const navigate = useNavigate();
   const toast = useToast();
   const { registrarNuevaComunidad, isExecuting } = useComunidadActions();
@@ -125,7 +127,10 @@ export function RegistroComunidadView() {
         adminUids: [appUser.uid],
       }, {
         successMessage: '🎉 ¡Tu comunidad ha sido creada!',
-        onSuccess: () => navigate(`/admin?tab=comunidad&nueva=true&slug=${form.slug}&nombre=${encodeURIComponent(form.nombre)}`),
+        onSuccess: () => {
+          setCommunityId(form.slug);
+          navigate(`/admin?tab=comunidad&nueva=true&slug=${form.slug}&nombre=${encodeURIComponent(form.nombre)}`);
+        },
         onError: (err: any) => {
           if (err?.message?.includes('SLUG_ALREADY_EXISTS')) { setStep(0); setError('Ese identificador ya está en uso. Elige otro.'); }
           else setError('Ocurrió un error al crear la comunidad. Inténtalo de nuevo.');
