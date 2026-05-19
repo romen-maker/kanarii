@@ -21,6 +21,7 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
   const handleGoogleLogin = async () => {
     try {
       await login();
+      onClose?.();
     } catch (err) {
       console.error("Google login error:", err);
     }

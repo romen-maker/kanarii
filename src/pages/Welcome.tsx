@@ -21,7 +21,11 @@ export function Welcome() {
       // 2. Si no tiene comunidades, forzar descubrimiento
       if (!appUser.communityIds || appUser.communityIds.length === 0) {
         navigate('/comunidades');
+        return;
       }
+
+      // 3. Si ya tiene comunidades, redirigir automáticamente a su ficha/tribu
+      navigate('/ficha');
     }
   }, [appUser, navigate]);
 

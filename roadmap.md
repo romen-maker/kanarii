@@ -79,6 +79,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Panel de Administración de Solicitudes: Aprobación/Rechazo en tiempo real con vista previa de ficha (Paso 3 ✅).
   - [x] Paso 4: Generación de códigos de invitación desde el panel admin (Completado ✅).
   - [x] Selector de comunidad en Sidebar para usuarios multi-comunidad.
+  - [x] Flujo de Rechazo Estructurado: Modal con motivos obligatorios, detalle libre y visualización simétrica para admin y solicitante (Completado ✅).
 - [x] **2.6 Onboarding y Seguridad de Autenticación (Completado ✅)**
   - [x] **AuthGateModal Reutilizable**: Sistema de autenticación *just-in-time* escapable con soporte para Google y Magic Link (con detección de errores de proveedor).
   - [x] **Persistencia Cross-Device**: Guardado de fichas en `/fichas_pendientes` (Firestore) antes de la autenticación para evitar pérdida de datos.
@@ -129,7 +130,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] Soporte `manifest.json` y Service Workers para uso como App Nativa.
 
 ## 🚨 Bugs Críticos & Deuda Operativa (Prioridad Alta)
-- [ ] **Corregir reactividad en el inicio de sesión con Google**
+- [/] **Corregir reactividad en el inicio de sesión con Google**
   - *Problema:* A veces, tras iniciar sesión con Google, la aplicación no transiciona ni redirige de forma automática, requiriendo una recarga manual (`F5`) por parte del usuario para que el estado de sesión se refleje en la UI.
   - *Causa probable:* Falta de propagación reactiva o desincronización entre el observer `onAuthStateChanged` en `AuthContext.tsx` y el enrutador de React Router durante el flujo de autenticación popup/redirect de Firebase.
 - [ ] **Auditar flujo de validación de códigos de invitación (Toast "Código inválido")**
@@ -138,7 +139,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 - [ ] **Resolver conflicto de mayúsculas/minúsculas en input de código de invitación (Bug de UX)**
   - *Problema:* El input del formulario de invitación aplica visualmente `text-transform: uppercase` en CSS (o llama a `.toUpperCase()` en el handler), pero el backend guarda y compara los códigos estrictamente en minúsculas. Esto genera incompatibilidad y fallos en la validación.
   - *Acción:* Estandarizar el flujo normalizando el input a minúsculas (`.toLowerCase()`) de manera transparente en la validación antes de comparar con la base de datos, o asegurar la consistencia del almacenamiento en la colección de invitaciones.
-- [ ] **Auditar e implementar la interacción detallada en el Marketplace (Catálogo de Servicios)**
+- [/] **Auditar e implementar la interacción detallada en el Marketplace (Catálogo de Servicios)**
   - *Problema:* Al intentar interactuar o hacer clic sobre una tarjeta de servicio de otro miembro en la vista de Catálogo / Marketplace, la aplicación no realiza ninguna acción (no se abre ningún detalle, modal de contacto, ni panel lateral).
   - *Acción:* Auditar y completar el flujo de interacción del Marketplace para que al hacer clic se despliegue información detallada del servicio o se facilite el contacto/intercambio con el oferente.
 
@@ -160,6 +161,13 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] Propuestas entre comunidades.
   - [ ] IA para sugerir si una objeción es válida S3.
   - [ ] Plantillas de propuestas predefinidas.
+- [ ] **Evolución de Marketplace y Acuerdos**:
+  - [ ] **feat(acuerdos): badge nav para solicitante**: El listener actual solo cuenta acuerdos donde eres `providerId`. Necesita incluir también acuerdos donde eres `solicitanteId` con status recién cambiado.
+  - [ ] **feat(acuerdos): flujo de negociación/contrapropuesta**:
+    - Permitir que la contraparte modifique `terms`/`exchangeType` antes de aceptar (contrapropuesta).
+    - Toast con deshacer al cancelar o eliminar un acuerdo.
+    - Modal de detalle de acuerdo para ambas partes.
+  - [ ] **feat(admin): panel de acuerdos con estadísticas**: Panel administrativo para ver acuerdos con filtros de estado y métricas (totales, valor intercambiado, etc.).
 - [ ] **Deuda Técnica Firestore (Auditoría 2026-05-16)**:
   - [x] **[Alto] Modelado 1:1 de community_members**: La colección `community_members` utiliza `{userId}` directamente como ID de documento. Esto limita a un usuario a pertenecer a una única comunidad activa en el listado. Para escalar a multi-comunidad real en el futuro, se requerirá migrar el ID a `{communityId}_{userId}` o crear una subcolección/relación independiente `memberships`. [MIGRADO Y COMPLETADO EL 2026-05-17]
   - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.
@@ -168,3 +176,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 
 ## 📐 Decisiones de Arquitectura
 - **2026-05-17 — Exclusión de Módulos de HD del Patrón DRY Actions**: Se decide de forma consciente y deliberada mantener el acceso directo a `appService` en los módulos de Fichas (`FichaView.tsx`, `FichaPreview.tsx`), Cruce (`CruceView.tsx`) y Administración General (`AdminPanel.tsx`). Estos componentes manejan flujos altamente acoplados al ciclo de vida del usuario de Firebase, sincronización diferida de estados de onboarding, enriquecimientos astrales y cálculos complejos de Diseño Humano, por lo que requieren control directo y granular y no se benefician de la abstracción genérica de `useEntityActions`.
+
+---
+
+*Última actualización: 17 May 2026*
