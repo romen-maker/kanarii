@@ -80,6 +80,14 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [x] Paso 4: Generación de códigos de invitación desde el panel admin (Completado ✅).
   - [x] Selector de comunidad en Sidebar para usuarios multi-comunidad.
   - [x] Flujo de Rechazo Estructurado: Modal con motivos obligatorios, detalle libre y visualización simétrica para admin y solicitante (Completado ✅).
+  - [ ] **[PRÓXIMO SPRINT] feat(onboarding): flujo de registro de nueva comunidad** (es bloqueante para el crecimiento de la plataforma):
+    - **Flujo en 4 pasos** (sin recargar página):
+      - **PASO 1 — Identidad**: Nombre, slug único (auto-generado, editable), descripción corta, manifiesto/visión (opcional).
+      - **PASO 2 — Lugar físico**: Municipio, isla/región, país, coordenadas o selector de mapa, tipo (finca / ecoaldea / cohousing / espacio urbano / nómada / otro), superficie aproximada (opcional), capacidad estimada de miembros (opcional).
+      - **PASO 3 — Cultura y acceso**: ¿Pública o privada?, ¿requiere aprobación para unirse?, tags de valores (ej: permacultura, S3, soberanía alimentaria...), logo e imagen de portada (opcional).
+      - **PASO 4 — Confirmación**: Resumen visual del perfil creado, asignación automática del fundador como admin de la comunidad, botón "Crear comunidad".
+    - **Post-creación**: Redirige a `/admin?tab=comunidad` de la nueva comunidad con mensaje de bienvenida, se crea el documento en `/comunidades/{slug}` con `adminUids: [uid_fundador]`.
+    - **Vista pública de comunidad (`/c/{slug}`)**: Nombre, logo, descripción, ubicación en mapa, tipo de espacio y capacidad, miembros visibles (si la comunidad es pública), servicios activos en el Marketplace, botón "Solicitar unirme" (si requiere aprobación) o "Unirme" (si es pública).
 - [x] **2.6 Onboarding y Seguridad de Autenticación (Completado ✅)**
   - [x] **AuthGateModal Reutilizable**: Sistema de autenticación *just-in-time* escapable con soporte para Google y Magic Link (con detección de errores de proveedor).
   - [x] **Persistencia Cross-Device**: Guardado de fichas en `/fichas_pendientes` (Firestore) antes de la autenticación para evitar pérdida de datos.
@@ -199,6 +207,17 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
       - El proveedor ve un acuerdo pendiente → botón "Contraofertar" abre modal con campos editables.
       - El solicitante recibe badge + ve contraoferta → puede Aceptar, Declinar o volver a Contraofertar.
       - Al cancelar → toast con deshacer usando el mismo patrón de `useUndoableDelete` existente.
+  - [ ] **[DISEÑADO] feat(marketplace): marketplace global inter-comunidad con selector** (backlog post-MVP):
+    - **Propósito**: El Marketplace pasa de ser por comunidad a ser global.
+    - **Cambios implicados**:
+      - Vista pública de servicios/recursos de TODAS las comunidades, filtrables por:
+        - Comunidad
+        - Tipo (servicio / recurso)
+        - Tipo de intercambio (tiempo, dinero, especie)
+        - Categoría
+      - Al picar en una comunidad desde el marketplace o desde el directorio, se abre su ficha pública: nombre, descripción, ubicación, miembros visibles, métricas públicas y servicios activos.
+      - Los acuerdos siguen siendo entre miembros de cualquier comunidad (inter-comunidad posible).
+      - Requiere refactor de queries: eliminar filtro `communityId` en `getServiciosQuery` para la vista global, mantenerlo para las vistas de cada comunidad.
   - [ ] **[DISEÑADO] feat(admin): sistema de roles y estructura de panel multi-nivel**:
     - **Roles**:
       - `superadmin` (1 usuario, Romén): ve todas las comunidades, métricas globales de uso de la app.
