@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useServicios } from '../hooks/useServicios';
@@ -31,7 +32,10 @@ export default function MarketplaceView() {
   const { publishServicio, editServicio, removeServicio, proposeAcuerdo, editAcuerdo, isExecuting: isSubmitting } = useServicioActions();
   const { startDelete, pendingId } = useUndoableDelete();
 
-  const [activeTab, setActiveTab] = useState<'servicios' | 'mis_acuerdos'>('servicios');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<'servicios' | 'mis_acuerdos'>(
+    location.state?.initialTab || 'servicios'
+  );
   const [filterTipo, setFilterTipo] = useState<'talento' | 'recurso' | null>(null);
   const [filterCategoria, setFilterCategoria] = useState<string | null>(null);
   const [isCreateServicioOpen, setIsCreateServicioOpen] = useState(false);

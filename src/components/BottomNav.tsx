@@ -78,8 +78,16 @@ export function BottomNav() {
     ...availableNavItems.filter(item => item.adminOnly)
   ];
 
-  const handleNav = (path: string) => {
-    navigate(path);
+  const handleNav = (item: any) => {
+    if (item.label === 'Marketplace') {
+      navigate(item.href, { 
+        state: acuerdosPendingCount > 0 
+          ? { initialTab: 'mis_acuerdos' } 
+          : undefined 
+      });
+    } else {
+      navigate(item.href);
+    }
   };
 
   const isMarketplaceInMore = moreNavItems.some(item => item.label === 'Marketplace');
@@ -99,7 +107,7 @@ export function BottomNav() {
           return (
             <button
               key={idx}
-              onClick={() => handleNav(item.href)}
+              onClick={() => handleNav(item)}
               className={`flex flex-col items-center justify-center flex-1 h-full min-h-[56px] space-y-1 relative transition-colors ${
                 isReallyActive ? 'text-[#6B705C]' : 'text-stone-400'
               }`}
@@ -144,7 +152,18 @@ export function BottomNav() {
               {moreNavItems.map((item, idx) => (
                 <button
                   key={idx}
-                  onClick={() => { setIsMoreMenuOpen(false); navigate(item.href); }}
+                  onClick={() => { 
+                    setIsMoreMenuOpen(false); 
+                    if (item.label === 'Marketplace') {
+                      navigate(item.href, { 
+                        state: acuerdosPendingCount > 0 
+                          ? { initialTab: 'mis_acuerdos' } 
+                          : undefined 
+                      });
+                    } else {
+                      navigate(item.href);
+                    }
+                  }}
                   className="w-full text-left px-5 py-4 rounded-2xl font-medium text-[#4A4E4D] hover:bg-[#EAE2D6] transition-colors flex items-center gap-3"
                 >
                   <div className="relative">

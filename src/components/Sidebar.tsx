@@ -89,7 +89,17 @@ export function Sidebar() {
           return (
             <button
               key={idx}
-              onClick={() => navigate(item.href)}
+              onClick={() => {
+                if (item.label === 'Marketplace') {
+                  navigate(item.href, { 
+                    state: acuerdosPendingCount > 0 
+                      ? { initialTab: 'mis_acuerdos' } 
+                      : undefined 
+                  });
+                } else {
+                  navigate(item.href);
+                }
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                 isActive 
                   ? 'bg-[#EAE2D6] text-[#4A4E4D] font-medium shadow-sm' 
