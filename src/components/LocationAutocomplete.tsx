@@ -9,7 +9,7 @@ interface NominatimResult {
   address: any;
 }
 
-export function LocationAutocomplete({ onSelect, onEnter, disabled }: { onSelect: (data: { ciudad: string, latitud: number, longitud: number, timezone: string, lugarNormalizado?: string }) => void, onEnter?: (query: string) => void, disabled?: boolean }) {
+export function LocationAutocomplete({ onSelect, onEnter, disabled }: { onSelect: (data: { ciudad: string, latitud: number, longitud: number, timezone: string, lugarNormalizado?: string, address?: any }) => void, onEnter?: (query: string) => void, disabled?: boolean }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,8 @@ export function LocationAutocomplete({ onSelect, onEnter, disabled }: { onSelect
       ciudad: r.display_name,
       latitud,
       longitud,
-      timezone
+      timezone,
+      address: r.address
     });
     setQuery(r.display_name);
     setResults([]);

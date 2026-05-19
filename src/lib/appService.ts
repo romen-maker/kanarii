@@ -74,6 +74,16 @@ export interface Comunidad {
   requiereAprobacion?: boolean;
   adminUids?: string[];
   plan?: 'free' | 'pro';
+  tags?: string[];
+  ubicacion?: {
+    municipio: string;
+    region: string;
+    pais: string;
+    lat?: number;
+    lng?: number;
+  };
+  tipo?: 'finca' | 'ecoaldea' | 'cohousing' | 'urbano' | 'nomada' | 'otro';
+  capacidad?: number;
 }
 
 export interface AppUser {
@@ -1918,6 +1928,153 @@ export async function getComunidadesPublicas(): Promise<Comunidad[]> {
     return [];
   }
 }
+
+export async function createComunidad(data: {
+  nombre: string;
+  slug: string;
+  descripcion: string;
+  manifiesto?: string;
+  esPublica: boolean;
+  requiereAprobacion: boolean;
+  tags?: string[];
+  ubicacion?: {
+    municipio: string;
+    region: string;
+    pais: string;
+    lat?: number;
+    lng?: number;
+  };
+  tipo?: 'finca' | 'ecoaldea' | 'cohousing' | 'urbano' | 'nomada' | 'otro';
+  capacidad?: number;
+  logoUrl?: string;
+  adminUids: string[];
+}): Promise<void> {
+  try {
+    const comRef = doc(db, 'comunidades', data.slug);
+    const comSnap = await getDoc(comRef);
+    if (comSnap.exists()) {
+      throw new Error('SLUG_ALREADY_EXISTS');
+    }
+
+    const founderUid = data.adminUids[0];
+    if (!founderUid) {
+      throw new Error('NO_ADMIN_UID_PROVIDED');
+    }
+
+    const batch = writeBatch(db);
+
+    // 1. Crear documento en /comunidades/{slug}
+    const comDocData = {
+      nombre: data.nombre,
+      slug: data.slug,
+      descripcion: data.descripcion,
+      manifiesto: data.manifiesto || '',
+      esPublica: data.esPublica,
+      requiereAprobacion: data.requiereAprobacion,
+      tags: data.tags || [],
+      ubicacion: data.ubicacion || null,
+      tipo: data.tipo || 'otro',
+      capacidad: data.capacidad || 0,
+      logoUrl: data.logoUrl || '',
+      adminUids: data.adminUids,
+      plan: 'free',
+      creadoEn: serverTimestamp()
+    };
+    batch.set(comRef, comDocData);
+
+    // 2. Intentar obtener el perfil del fundador para rellenar campos de miembro
+    const profileRef = doc(db, 'profiles', founderUid);
+    const profileSnap = await getDoc(profileRef);
+    
+    // Obtener datos básicos de usuario
+    const userRef = doc(db, 'users', founderUid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    
+    let nombreFundador = 'Fundador/a';
+    let tipoHd = '';
+    let elementoDominante = '';
+    let autoridadHd = '';
+
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+      nombreFundador = base.nombre || profileData.nombre || userData.displayName || userData.email || nombreFundador;
+      if (profileData.datosBrutos?.diseno_humano) {
+        tipoHd = profileData.datosBrutos.diseno_humano.tipo || '';
+        autoridadHd = profileData.datosBrutos.diseno_humano.autoridad || '';
+      }
+      if (profileData.datosBrutos?.carta_astral_completa) {
+        elementoDominante = profileData.datosBrutos.carta_astral_completa.elemento_dominante || '';
+      }
+    } else {
+      nombreFundador = userData.displayName || userData.email || nombreFundador;
+    }
+
+    // 3. Crear el miembro en /community_members/{slug}_{uid}
+    const memberRef = doc(db, 'community_members', `${data.slug}_${founderUid}`);
+    const memberDocData = {
+      userId: founderUid,
+      communityId: data.slug,
+      nombre: nombreFundador,
+      tipo_hd: tipoHd,
+      elemento_dominante: elementoDominante,
+      autoridad_hd: autoridadHd,
+      antiguedad_anos: 0,
+      rol_comunidad: 'Fundador/a',
+      rol: 'admin', // el creador es admin
+      estado: 'activo',
+      creadoEn: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    batch.set(memberRef, memberDocData);
+
+    // 4. Actualizar /users/{uid} con el nuevo communityId
+    let existingCommunityIds: string[] = [];
+    let hasCurrentCommunity = false;
+
+    if (userSnap.exists()) {
+      existingCommunityIds = userData.communityIds || [];
+      hasCurrentCommunity = !!userData.communityId;
+    }
+
+    batch.update(userRef, {
+      communityIds: arrayUnion(data.slug),
+      ...(!hasCurrentCommunity ? { communityId: data.slug } : {}),
+      updatedAt: serverTimestamp()
+    });
+
+    // 5. Propagar al perfil si existe
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      batch.update(profileRef, {
+        communityIds: arrayUnion(data.slug),
+        ...(!profileData.communityId ? { 
+          communityId: data.slug,
+          'datosOnboarding.communityId': data.slug,
+          'datosPersona.communityId': data.slug
+        } : {}),
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    // 6. Propagar a Ficha si existe
+    const fichaRef = doc(db, 'fichas', founderUid);
+    const fichaSnap = await getDoc(fichaRef);
+    if (fichaSnap.exists()) {
+      batch.update(fichaRef, {
+        communityId: data.slug,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'Registrar comunidad');
+    throw error;
+  }
+}
+
 
 /**
  * Genera un código de invitación legible (adjetivo-sustantivo-número).

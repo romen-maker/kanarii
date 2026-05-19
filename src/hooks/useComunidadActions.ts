@@ -7,6 +7,7 @@ import {
   desactivarInvitacion,
   removerMiembroComunidad,
   registrarSalidaComunidad,
+  createComunidad,
   Invitacion
 } from '../lib/appService';
 
@@ -71,6 +72,16 @@ export function useComunidadActions() {
     });
   };
 
+  const registrarNuevaComunidad = async (
+    data: Parameters<typeof createComunidad>[0],
+    options?: Parameters<typeof perform>[1]
+  ) => {
+    return perform(createComunidad(data), {
+      successMessage: 'Comunidad registrada con éxito',
+      ...options
+    });
+  };
+
   return {
     redeemInvitacion,
     solicitarAcceso,
@@ -79,6 +90,7 @@ export function useComunidadActions() {
     desactivarInvitacionCodigo,
     abandonarComunidad,
     expulsarMiembro,
+    registrarNuevaComunidad,
     isExecuting
   };
 }

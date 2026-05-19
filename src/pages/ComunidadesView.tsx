@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Compass, ShieldCheck, Ticket, Key, Info, MessageSquare, ArrowRight, Loader2, X, CheckCircle2 } from 'lucide-react';
+import { Compass, ShieldCheck, Ticket, Key, Info, MessageSquare, ArrowRight, Loader2, X, CheckCircle2, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -212,11 +212,17 @@ export function ComunidadesView() {
 
         {/* Sección 2: Directorio */}
         <section className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-2xl font-serif text-[#4A4E4D]">Comunidades disponibles</h2>
-            <span className="text-sm font-medium text-[#8A817C] bg-[#EAE2D6] px-3 py-1 rounded-full">
-              {comunidades.length} espacios
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-[#8A817C] bg-[#EAE2D6] px-3 py-1 rounded-full">
+                {comunidades.length} espacios
+              </span>
+              <button onClick={() => navigate('/nueva-comunidad')}
+                className="flex items-center gap-2 px-4 py-2 bg-[#6B705C] hover:bg-[#4A4E4D] text-white rounded-xl text-sm font-bold transition-all shadow-md">
+                <Plus className="w-4 h-4" />Crear comunidad
+              </button>
+            </div>
           </div>
 
           {comunidades.length === 0 ? (

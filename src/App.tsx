@@ -20,6 +20,7 @@ import { ComunidadesView } from './pages/ComunidadesView';
 import { AdminSolicitudesView } from './pages/AdminSolicitudesView';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import MarketplaceView from './pages/MarketplaceView';
+import { RegistroComunidadView } from './pages/RegistroComunidadView';
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
 
@@ -77,6 +78,7 @@ function AppContent() {
           <Route path="/calendario" element={<ProtectedRoute><CalendarioView /></ProtectedRoute>} />
           <Route path="/tablon" element={<ProtectedRoute><Tablon /></ProtectedRoute>} />
           <Route path="/comunidades" element={<ProtectedRoute><ComunidadesView /></ProtectedRoute>} />
+          <Route path="/nueva-comunidad" element={<ProtectedRoute><RegistroComunidadView /></ProtectedRoute>} />
           <Route path="/admin/solicitudes" element={<ProtectedRoute><AdminSolicitudesView /></ProtectedRoute>} />
           <Route path="/soberania" element={<ProtectedRoute><MarketplaceView /></ProtectedRoute>} />
           <Route path="/gobernanza" element={<ProtectedRoute><PropuestasView /></ProtectedRoute>} />

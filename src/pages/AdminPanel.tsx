@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Ficha, ensureSeedData, Tarea, getUserFicha, listenBajasRecientes, FeedbackSalida, Acuerdo, Servicio } from '../lib/appService';
-import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale, Eye, Ban } from 'lucide-react';
+import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale, Eye, Ban, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -32,7 +32,7 @@ type RolComunitario = 'propietario' | 'miembro' | 'voluntario';
 
 export function AdminPanel() {
   const { appUser, logout } = useAuth();
-  const { currentCommunityId } = useComunidad();
+  const { currentCommunityId, comunidad } = useComunidad();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -327,6 +327,45 @@ export function AdminPanel() {
             </button>
           </div>
         </div>
+
+        {/* Banner de bienvenida si la comunidad se acaba de crear */}
+        {searchParams.get('nueva') === 'true' && (
+          <div className="mb-8 p-6 bg-[#F4F1DE]/80 border border-[#E07A5F]/30 rounded-2xl flex items-start gap-4 shadow-sm relative overflow-hidden backdrop-blur-sm">
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#E07A5F]" />
+            <div className="p-3 bg-[#E07A5F]/10 text-[#E07A5F] rounded-xl shrink-0">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <h3 className="text-lg font-serif font-bold text-[#E07A5F]">¡Comunidad creada con éxito!</h3>
+              <p className="text-stone-600 text-sm leading-relaxed font-sans">
+                Te damos la bienvenida a <strong>{searchParams.get('nombre') || comunidad?.nombre || 'tu nueva comunidad'}</strong>. Ya eres el/la fundador/a de este espacio. Puedes empezar a invitar a miembros, configurar proyectos, gestionar el tablón y la economía local.
+              </p>
+              <div className="pt-2 flex gap-4">
+                <a
+                  href={`/c/${searchParams.get('slug') || comunidad?.slug || ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-bold text-[#E07A5F] hover:text-[#C55A3F] flex items-center gap-1 transition-colors"
+                >
+                  Ver ficha pública <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete('nueva');
+                newParams.delete('nombre');
+                newParams.delete('slug');
+                setSearchParams(newParams);
+              }}
+              className="text-stone-400 hover:text-stone-600 p-1.5 rounded-lg hover:bg-stone-100 transition-all shrink-0 font-sans"
+              aria-label="Cerrar banner"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* Navigation Tabs */}
         <div className="flex border-b border-[#EAE2D6] overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:gap-6 mb-8 scroll-smooth">
