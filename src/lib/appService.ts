@@ -466,6 +466,7 @@ export interface CommunityMember {
   autoridad_hd?: string;
   antiguedad_anos?: number;
   rol_comunidad?: string;
+  rol?: string;
   estado?: string;
   creadoEn?: any;
   updatedAt?: any;
@@ -484,6 +485,7 @@ export interface Tarea {
   updatedAt?: any;
   proyectoId?: string;
   communityId: string;
+  prioridad?: 'alta' | 'media' | 'normal' | 'baja' | string;
 }
 
 export interface Acta {
