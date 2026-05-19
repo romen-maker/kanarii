@@ -49,8 +49,9 @@ export function useCommunityMembers(communityId?: string) {
   const getMemberName = useCallback((uid?: string) => {
     if (!uid) return 'Comunidad';
     const mem = members.find(m => m.userId === uid);
-    return mem ? mem.nombre : 'Cargando...';
-  }, [members]);
+    if (mem) return mem.nombre;
+    return loading ? 'Cargando...' : 'Miembro';
+  }, [members, loading]);
 
   return { 
     members, 
