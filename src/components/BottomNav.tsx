@@ -4,7 +4,7 @@ import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale } from 'lucide-reac
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
-import { listenAcuerdosPendientesAsProvider } from '../lib/appService';
+import { listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, Acuerdo } from '../lib/appService';
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ export function BottomNav() {
   const { comunidad } = useComunidad();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
+  const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
@@ -37,6 +38,44 @@ export function BottomNav() {
       setAcuerdosPendingCount(0);
     }
   }, [comunidad?.id, appUser?.uid]);
+
+  useEffect(() => {
+    if (!comunidad?.id || !appUser?.uid) {
+      setAcuerdosSolicitante([]);
+      return;
+    }
+
+    try {
+      const unsubscribe = listenAcuerdosActivosAsSolicitante(
+        comunidad.id,
+        appUser.uid,
+        (acuerdos) => {
+          setAcuerdosSolicitante(acuerdos);
+        }
+      );
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error suscribiéndose a acuerdos activos del solicitante:", error);
+      setAcuerdosSolicitante([]);
+    }
+  }, [comunidad?.id, appUser?.uid]);
+
+  useEffect(() => {
+    if (location.pathname === '/soberania' && appUser?.uid) {
+      localStorage.setItem(`kanarii_last_soberania_visit_${appUser.uid}`, new Date().toISOString());
+    }
+  }, [location.pathname, appUser?.uid]);
+
+  const lastVisitKey = appUser?.uid ? `kanarii_last_soberania_visit_${appUser.uid}` : null;
+  const lastVisitStr = lastVisitKey ? localStorage.getItem(lastVisitKey) : null;
+  const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0);
+
+  const acuerdosSolicitanteCount = acuerdosSolicitante.filter(a => {
+    const updatedTime = a.actualizadoEn?.toDate?.() ?? 
+      (a.actualizadoEn instanceof Date ? a.actualizadoEn : 
+      (a.actualizadoEn ? new Date(a.actualizadoEn) : new Date(0)));
+    return updatedTime > lastVisit;
+  }).length;
 
   // Filtramos por pertenencia a comunidades
   const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
@@ -81,7 +120,7 @@ export function BottomNav() {
   const handleNav = (item: any) => {
     if (item.label === 'Marketplace') {
       navigate(item.href, { 
-        state: acuerdosPendingCount > 0 
+        state: (acuerdosPendingCount > 0 || acuerdosSolicitanteCount > 0)
           ? { initialTab: 'mis_acuerdos' } 
           : undefined 
       });
@@ -91,7 +130,7 @@ export function BottomNav() {
   };
 
   const isMarketplaceInMore = moreNavItems.some(item => item.label === 'Marketplace');
-  const showMoreDot = isMarketplaceInMore && acuerdosPendingCount > 0 && location.pathname !== '/soberania';
+  const showMoreDot = isMarketplaceInMore && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && location.pathname !== '/soberania';
 
   return (
     <>
@@ -114,7 +153,7 @@ export function BottomNav() {
             >
               <div className="relative">
                 <item.icon className="w-5 h-5" />
-                {item.label === 'Marketplace' && acuerdosPendingCount > 0 && !isReallyActive && (
+                {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && !isReallyActive && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </div>
@@ -156,7 +195,7 @@ export function BottomNav() {
                     setIsMoreMenuOpen(false); 
                     if (item.label === 'Marketplace') {
                       navigate(item.href, { 
-                        state: acuerdosPendingCount > 0 
+                        state: (acuerdosPendingCount > 0 || acuerdosSolicitanteCount > 0)
                           ? { initialTab: 'mis_acuerdos' } 
                           : undefined 
                       });
@@ -168,7 +207,7 @@ export function BottomNav() {
                 >
                   <div className="relative">
                     <item.icon className={`w-5 h-5 ${(item as any).color ? '' : 'text-stone-400'}`} style={{ color: (item as any).color }} />
-                    {item.label === 'Marketplace' && acuerdosPendingCount > 0 && location.pathname !== '/soberania' && (
+                    {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && location.pathname !== '/soberania' && (
                       <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                     )}
                   </div>

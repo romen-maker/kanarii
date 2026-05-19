@@ -148,7 +148,21 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 ## 🛠️ BACKLOG / FUTURAS MEJORAS
 - [ ] Búsqueda global (Command+K) para proyectos, tareas y actas.
 - [ ] Exportación de actas a PDF.
-- [ ] RAG (Retrieval Augmented Generation) sobre el histórico de actas.
+- [ ] **[DISEÑO PENDIENTE] feat(rag): memoria colectiva de la comunidad con chat consultivo (backlog post-MVP)**:
+  - **Propósito**: permitir consultar en lenguaje natural toda la información de la comunidad (actas, acuerdos, fichas, cruces, propuestas S3).
+  - **Decisiones de diseño pendientes (a investigar)**:
+    - Qué colecciones indexar y con qué nivel de privacidad.
+    - Quién puede consultar qué (solo admin vs todos los miembros).
+    - Qué tipos de preguntas priorizar (operativas, históricas, relacionales, estratégicas).
+  - **Stack técnico propuesto (fase 1 - Google)**:
+    - Firebase Genkit + `text-embedding-004`
+    - Firestore Vector Search
+    - Cloud Functions como orquestador
+    - Gemini como LLM
+  - **Stack técnico propuesto (fase 2 - soberano)**:
+    - Ollama (Llama 3 / Mistral) para LLM y embeddings
+    - pgvector sobre PostgreSQL
+    - LangChain/LlamaIndex como orquestador
 - [ ] Notificaciones push para nuevas tareas asignadas.
 - [ ] **Tablón**: Añadir botón para editar post directamente desde la lista o vista principal.
 - [ ] **Tablón**: Añadir botón para eliminar post.
@@ -162,12 +176,46 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] IA para sugerir si una objeción es válida S3.
   - [ ] Plantillas de propuestas predefinidas.
 - [ ] **Evolución de Marketplace y Acuerdos**:
-  - [ ] **feat(acuerdos): badge nav para solicitante**: El listener actual solo cuenta acuerdos donde eres `providerId`. Necesita incluir también acuerdos donde eres `solicitanteId` con status recién cambiado.
-  - [ ] **feat(acuerdos): flujo de negociación/contrapropuesta**:
-    - Permitir que la contraparte modifique `terms`/`exchangeType` antes de aceptar (contrapropuesta).
-    - Toast con deshacer al cancelar o eliminar un acuerdo.
-    - Modal de detalle de acuerdo para ambas partes.
-  - [ ] **feat(admin): panel de acuerdos con estadísticas**: Panel administrativo para ver acuerdos con filtros de estado y métricas (totales, valor intercambiado, etc.).
+  - [/] **feat(acuerdos): badge nav para solicitante**: El listener actual solo cuenta acuerdos donde eres `providerId`. Necesita incluir también acuerdos donde eres `solicitanteId` con status recién cambiado. (Implementando versión simplificada).
+  - [ ] **feat(acuerdos): sistema de notificaciones leído/no leído**:
+    - Añadir campo `vistoPorSolicitante: boolean` en interfaz `Acuerdo`.
+    - Cuando proveedor acepta/cancela, marcar `false`.
+    - Cuando solicitante entra a pestaña Mis Acuerdos, batch update a `true`.
+    - Badge desaparece solo cuando realmente ha visto el cambio, no solo por navegar a `/soberania`.
+    - Necesario para multi-dispositivo y UX precisa.
+    - Prioridad: post-MVP, antes de escalar usuarios.
+  - [ ] **[DISEÑADO] feat(notifications): sistema de badges reactivos para Gobernanza**:
+    - Mismo patrón que `listenAcuerdosActivosAsSolicitante` aplicado a:
+      - Propuestas pendientes de voto del usuario
+      - Tensiones asignadas al usuario sin resolver  
+      - Actas pendientes de ratificación
+    - Considerar extraer un hook genérico `usePendingActionsCount(communityId, userId, query)` que centralice la lógica de badge para cualquier sección — evita duplicar listeners en Sidebar y BottomNav.
+  - [ ] **[DISEÑADO] feat(acuerdos): flujo de negociación/contrapropuesta**:
+    - **Nuevos estados en tipo Acuerdo**:
+      - `status: 'pendiente' | 'contraoferta' | 'en_curso' | 'completada' | 'cancelada'`
+    - **Nuevo campo**:
+      - `historial: Array<{ fecha: Timestamp, autorId: string, tipo: 'propuesta' | 'contraoferta' | 'aceptacion' | 'cancelacion', terminos: { horas, exchangeType, descripcion } }>`
+    - **Flujo UI**:
+      - El proveedor ve un acuerdo pendiente → botón "Contraofertar" abre modal con campos editables.
+      - El solicitante recibe badge + ve contraoferta → puede Aceptar, Declinar o volver a Contraofertar.
+      - Al cancelar → toast con deshacer usando el mismo patrón de `useUndoableDelete` existente.
+  - [ ] **[DISEÑADO] feat(admin): sistema de roles y estructura de panel multi-nivel**:
+    - **Roles**:
+      - `superadmin` (1 usuario, Romén): ve todas las comunidades, métricas globales de uso de la app.
+      - `admin de comunidad`: múltiples por comunidad, gestionado como "círculo de coordinación" al estilo Sociocracia 3.0.
+        - Cualquier miembro puede ser elevado a admin por consentimiento del círculo.
+        - Mínimo 1 admin por comunidad (el fundador).
+        - Sin jerarquía entre admins de la misma comunidad.
+    - **Estructura Panel Admin (por comunidad)**:
+      - *Tab 1: Dashboard* — métricas de salud de la comunidad (miembros activos este mes, acuerdos completados vs cancelados, ratio de participación en gobernanza, tareas abiertas vs cerradas, top colaboradores).
+      - *Tab 2: Comunidad* — ya existe (miembros, roles, bajas).
+      - *Tab 3: Tareas & Proyectos* — ya existe.
+      - *Tab 4: Marketplace & Acuerdos* — próximo sprint.
+      - *Tab 5: Gobernanza* — futuro.
+    - **Panel Superadmin (separado, ruta `/superadmin`)**:
+      - Lista de todas las comunidades.
+      - Métricas de uso: DAU/MAU, acuerdos totales, comunidades activas.
+      - Gestión de admins de comunidad.
 - [ ] **Deuda Técnica Firestore (Auditoría 2026-05-16)**:
   - [x] **[Alto] Modelado 1:1 de community_members**: La colección `community_members` utiliza `{userId}` directamente como ID de documento. Esto limita a un usuario a pertenecer a una única comunidad activa en el listado. Para escalar a multi-comunidad real en el futuro, se requerirá migrar el ID a `{communityId}_{userId}` o crear una subcolección/relación independiente `memberships`. [MIGRADO Y COMPLETADO EL 2026-05-17]
   - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.
@@ -176,7 +224,20 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 
 ## 📐 Decisiones de Arquitectura
 - **2026-05-17 — Exclusión de Módulos de HD del Patrón DRY Actions**: Se decide de forma consciente y deliberada mantener el acceso directo a `appService` en los módulos de Fichas (`FichaView.tsx`, `FichaPreview.tsx`), Cruce (`CruceView.tsx`) y Administración General (`AdminPanel.tsx`). Estos componentes manejan flujos altamente acoplados al ciclo de vida del usuario de Firebase, sincronización diferida de estados de onboarding, enriquecimientos astrales y cálculos complejos de Diseño Humano, por lo que requieren control directo y granular y no se benefician de la abstracción genérica de `useEntityActions`.
+- **[ARQUITECTURA] chore(infra): estrategia de soberanía tecnológica — anti vendor lock-in (backlog técnico estratégico)**:
+  - **Principio**: usar infraestructura de Google mientras es gratuita, pero diseñar para migración soberana.
+  - **Acciones inmediatas**:
+    1. Abstraer todas las llamadas a Gemini detrás de un módulo `ai-adapter.ts` con interfaz genérica (`generateText`, `generateEmbedding`, `streamText`) para que cambiar de proveedor sea un cambio de configuración, no de código.
+    2. Documentar en `/docs/architecture.md` el mapa completo de dependencias y sus alternativas soberanas (Firestore→Supabase, Auth→Keycloak, Gemini→Ollama, Vector→pgvector).
+    3. Evitar usar APIs propietarias de Firebase que no tengan equivalente en Supabase/Appwrite sin dejar un comentario `// TODO: migration-risk`.
+  - **Alternativas soberanas mapeadas**:
+    - DB: Supabase (PostgreSQL) o Appwrite.
+    - Auth: Supabase Auth o Keycloak.
+    - IA: Ollama + Llama 3 / Mistral.
+    - Embeddings: nomic-embed-text (Ollama).
+    - Vector store: pgvector.
+    - Functions: Docker + VPS propio.
 
 ---
 
-*Última actualización: 17 May 2026*
+*Última actualización: 19 May 2026*

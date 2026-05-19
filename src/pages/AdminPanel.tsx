@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Ficha, ensureSeedData, Tarea, getUserFicha, listenBajasRecientes, FeedbackSalida } from '../lib/appService';
-import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus } from 'lucide-react';
+import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ManualViewer } from '../components/ManualViewer';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useToast } from '../hooks/useToast';
@@ -29,6 +29,23 @@ export function AdminPanel() {
   const { appUser, logout } = useAuth();
   const { currentCommunityId } = useComunidad();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Tab por defecto 'comunidad'. Respetamos ?tab= si ya existe en la URL.
+  const currentTab = searchParams.get('tab') || 'comunidad';
+  
+  const handleTabChange = (tabId: string) => {
+    setSearchParams({ tab: tabId });
+  };
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: Activity },
+    { id: 'comunidad', label: 'Comunidad', icon: Users },
+    { id: 'tareas-proyectos', label: 'Tareas & Proyectos', icon: FolderKanban },
+    { id: 'marketplace-acuerdos', label: 'Marketplace & Acuerdos', icon: Handshake },
+    { id: 'gobernanza', label: 'Gobernanza', icon: Scale },
+  ];
+
   const { members, loading: loadingMembers } = useCommunityMembers(currentCommunityId);
   const { items: tareas, loading: loadingTareas, reload: fetchTareas } = useTareas(currentCommunityId);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,7 +159,6 @@ export function AdminPanel() {
       toast.error('No se pudo cargar el perfil completo');
     }
   };
-
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
       <div className="w-full max-w-5xl">
@@ -161,184 +177,258 @@ export function AdminPanel() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
-            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Tareas Totales</div>
-            <div className="text-2xl font-serif text-[#4A4E4D]">{stats.total}</div>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
-            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Progreso Global</div>
-            <div className="text-2xl font-serif text-teal-600">{stats.completedPct}%</div>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
-            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Top Colaborador</div>
-            <div className="text-lg font-medium text-[#4A4E4D] truncate">{stats.topMember}</div>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
-            <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Cerradas (7d)</div>
-            <div className="text-2xl font-serif text-[#CB997E]">+{stats.weeklyCompleted}</div>
-          </div>
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-[#EAE2D6] overflow-x-auto whitespace-nowrap scrollbar-none gap-2 md:gap-6 mb-8 scroll-smooth">
+          {tabs.map((tab) => {
+            const IconComponent = tab.icon;
+            const isActive = currentTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm transition-all duration-200 ${
+                  isActive
+                    ? 'border-[#CB997E] text-[#CB997E]'
+                    : 'border-transparent text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <IconComponent className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex rounded-xl bg-stone-100 p-1 mb-8 w-fit mx-auto md:mx-0">
-          <button onClick={() => setActiveTab('comunidad')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'comunidad' ? 'bg-white text-[#4A4E4D] shadow-sm' : 'text-stone-500'}`}>
-            <div className="flex items-center gap-2"><Users className="w-4 h-4" /> Comunidad</div>
-          </button>
-          <button onClick={() => setActiveTab('tareas')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tareas' ? 'bg-white text-[#4A4E4D] shadow-sm' : 'text-stone-500'}`}>
-            <div className="flex items-center gap-2"><LayoutList className="w-4 h-4" /> Tareas Globales</div>
-          </button>
-        </div>
+        {currentTab === 'dashboard' && (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <Activity className="w-12 h-12 mb-4 opacity-30"/>
+            <h3 className="text-lg font-medium">
+              Salud de la Comunidad
+            </h3>
+            <p className="text-sm mt-1">
+              Disponible próximamente
+            </p>
+          </div>
+        )}
 
-        {activeTab === 'comunidad' ? (
-          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
-            <div className="p-6 border-b border-[#F9F7F1] flex flex-col md:flex-row gap-4 justify-between items-center">
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 w-4 h-4" />
-                <input type="text" placeholder="Buscar por nombre o rol..." className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#EAE2D6] outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        {currentTab === 'comunidad' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+                <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Tareas Totales</div>
+                <div className="text-2xl font-serif text-[#4A4E4D]">{stats.total}</div>
               </div>
-              <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                <Filter className="w-4 h-4 text-stone-400 shrink-0" />
-                {(['todos', 'propietario', 'miembro', 'voluntario'] as const).map(role => (
-                  <button key={role} onClick={() => setRoleFilter(role)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all whitespace-nowrap ${roleFilter === role ? 'bg-[#4A4E4D] text-white border-[#4A4E4D]' : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}`}>
-                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                  </button>
-                ))}
+              <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+                <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Progreso Global</div>
+                <div className="text-2xl font-serif text-teal-600">{stats.completedPct}%</div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+                <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Top Colaborador</div>
+                <div className="text-lg font-medium text-[#4A4E4D] truncate">{stats.topMember}</div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border border-[#EAE2D6] shadow-sm">
+                <div className="text-stone-400 text-xs font-bold uppercase tracking-wider mb-1">Cerradas (7d)</div>
+                <div className="text-2xl font-serif text-[#CB997E]">+{stats.weeklyCompleted}</div>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-stone-50 text-stone-400 text-[10px] uppercase font-bold tracking-widest">
-                  <tr>
-                    <th className="px-6 py-4">Nombre / Rol en Comunidad</th>
-                    <th className="px-6 py-4">Estado / Rol Comunitario</th>
-                    <th className="px-6 py-4">Antigüedad</th>
-                    <th className="px-6 py-4 text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  {loadingMembers ? (
-                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando comunidad...</td></tr>
-                  ) : filteredMembers.length === 0 ? (
-                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No se encontraron miembros</td></tr>
-                  ) : filteredMembers.map(member => {
-                    return (
-                      <tr key={member.userId} className="hover:bg-[#FDFBF7] transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-stone-800">{member.nombre}</div>
-                          <div className="text-xs text-stone-400">{member.rol_comunidad || 'Sin rol definido'}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${member.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
-                            <span className="text-xs font-medium text-stone-600 capitalize">{member.rol || 'Miembro'}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1">
-                            <button onClick={() => handleSelectMember(member.userId)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all" title="Ver Ficha">
-                              <Search className="w-4 h-4" />
-                            </button>
-                            {member.userId !== appUser?.uid && (
-                              <button onClick={() => setMemberToExpel(member)} className="p-2 hover:bg-red-50 text-stone-400 hover:text-red-600 rounded-lg transition-all" title="Expulsar Miembro">
-                                <UserMinus className="w-4 h-4" />
-                              </button>
+            <div className="flex rounded-xl bg-stone-100 p-1 mb-8 w-fit mx-auto md:mx-0">
+              <button onClick={() => setActiveTab('comunidad')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'comunidad' ? 'bg-white text-[#4A4E4D] shadow-sm' : 'text-stone-500'}`}>
+                <div className="flex items-center gap-2"><Users className="w-4 h-4" /> Comunidad</div>
+              </button>
+              <button onClick={() => setActiveTab('tareas')} className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tareas' ? 'bg-white text-[#4A4E4D] shadow-sm' : 'text-stone-500'}`}>
+                <div className="flex items-center gap-2"><LayoutList className="w-4 h-4" /> Tareas Globales</div>
+              </button>
+            </div>
+
+            {activeTab === 'comunidad' ? (
+              <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
+                <div className="p-6 border-b border-[#F9F7F1] flex flex-col md:flex-row gap-4 justify-between items-center">
+                  <div className="relative w-full md:w-96">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 w-4 h-4" />
+                    <input type="text" placeholder="Buscar por nombre o rol..." className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-[#EAE2D6] outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                    <Filter className="w-4 h-4 text-stone-400 shrink-0" />
+                    {(['todos', 'propietario', 'miembro', 'voluntario'] as const).map(role => (
+                      <button key={role} onClick={() => setRoleFilter(role)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all whitespace-nowrap ${roleFilter === role ? 'bg-[#4A4E4D] text-white border-[#4A4E4D]' : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}`}>
+                        {role.charAt(0).toUpperCase() + role.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-stone-50 text-stone-400 text-[10px] uppercase font-bold tracking-widest">
+                      <tr>
+                        <th className="px-6 py-4">Nombre / Rol en Comunidad</th>
+                        <th className="px-6 py-4">Estado / Rol Comunitario</th>
+                        <th className="px-6 py-4">Antigüedad</th>
+                        <th className="px-6 py-4 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {loadingMembers ? (
+                        <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando comunidad...</td></tr>
+                      ) : filteredMembers.length === 0 ? (
+                        <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No se encontraron miembros</td></tr>
+                      ) : filteredMembers.map(member => {
+                        return (
+                          <tr key={member.userId} className="hover:bg-[#FDFBF7] transition-colors group">
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-stone-800">{member.nombre}</div>
+                              <div className="text-xs text-stone-400">{member.rol_comunidad || 'Sin rol definido'}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${member.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
+                                <span className="text-xs font-medium text-stone-600 capitalize">{member.rol || 'Miembro'}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end gap-1">
+                                <button onClick={() => handleSelectMember(member.userId)} className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all" title="Ver Ficha">
+                                  <Search className="w-4 h-4" />
+                                </button>
+                                {member.userId !== appUser?.uid && (
+                                  <button onClick={() => setMemberToExpel(member)} className="p-2 hover:bg-red-50 text-stone-400 hover:text-red-600 rounded-lg transition-all" title="Expulsar Miembro">
+                                    <UserMinus className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Sección de Bajas Recientes */}
+                {bajas.length > 0 && (
+                  <div className="mt-8 bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock className="w-5 h-5 text-red-500" />
+                      <h2 className="font-serif text-xl text-[#4A4E4D]">Bajas Recientes</h2>
+                    </div>
+                    <div className="space-y-4">
+                      {bajas.map((baja) => (
+                        <div key={baja.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-stone-800">{baja.nombreUsuario || 'Miembro'}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
+                                {baja.motivo}
+                              </span>
+                            </div>
+                            {baja.comentario && (
+                              <p className="text-sm text-stone-600 italic mt-1.5">
+                                "{baja.comentario}"
+                              </p>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Sección de Bajas Recientes */}
-            {bajas.length > 0 && (
-              <div className="mt-8 bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5 text-red-500" />
-                  <h2 className="font-serif text-xl text-[#4A4E4D]">Bajas Recientes</h2>
-                </div>
-                <div className="space-y-4">
-                  {bajas.map((baja) => (
-                    <div key={baja.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-stone-800">{baja.nombreUsuario || 'Miembro'}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
-                            {baja.motivo}
-                          </span>
+                          <div className="text-xs text-stone-400 font-medium">
+                            {baja.fecha?.toDate ? baja.fecha.toDate().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date(baja.fecha).toLocaleDateString()}
+                          </div>
                         </div>
-                        {baja.comentario && (
-                          <p className="text-sm text-stone-600 italic mt-1.5">
-                            "{baja.comentario}"
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-xs text-stone-400 font-medium">
-                        {baja.fecha?.toDate ? baja.fecha.toDate().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date(baja.fecha).toLocaleDateString()}
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
+                <div className="p-6 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
+                  <h2 className="font-serif text-xl text-[#4A4E4D]">Todas las Tareas</h2>
+                  <button onClick={() => fetchTareas()} className="p-2 text-stone-400 hover:text-[#4A4E4D] transition-colors">
+                    <RefreshCw className={`w-4 h-4 ${loadingTareas ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-stone-50/80 text-stone-400 text-[10px] uppercase font-bold tracking-widest border-b border-stone-100">
+                      <tr>
+                        <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('titulo')}>
+                          <div className="flex items-center gap-1">Título {sortConfig?.key === 'titulo' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <LayoutList className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
+                        </th>
+                        <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('asignadaA')}>
+                          <div className="flex items-center gap-1">Responsable {sortConfig?.key === 'asignadaA' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <Users className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
+                        </th>
+                        <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('estado')}>
+                          <div className="flex items-center gap-1">Estado {sortConfig?.key === 'estado' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <Clock className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
+                        </th>
+                        <th className="px-6 py-4">Prioridad</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {loadingTareas ? (
+                        <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando...</td></tr>
+                      ) : sortedTareas.length === 0 ? (
+                        <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No hay tareas registradas</td></tr>
+                      ) : sortedTareas.map(tarea => (
+                        <tr key={tarea.id} className="hover:bg-[#FDFBF7] transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-stone-800">{tarea.titulo}</div>
+                            {tarea.proyectoId && <div className="text-[10px] text-teal-600 font-bold uppercase tracking-tighter mt-0.5">Proyecto vinculado</div>}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-stone-600">
+                            {getMemberName(tarea.asignadaA)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${tarea.estado === 'completada' ? 'bg-teal-50 text-teal-600 border border-teal-100' : tarea.estado === 'en_progreso' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                              {tarea.estado.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                             <span className={`text-xs font-medium ${tarea.prioridad === 'alta' ? 'text-rose-500' : tarea.prioridad === 'media' ? 'text-amber-500' : 'text-stone-400'}`}>
+                               {tarea.prioridad?.toUpperCase() || 'NORMAL'}
+                             </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
+          </>
+        )}
+
+        {currentTab === 'tareas-proyectos' && (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <FolderKanban className="w-12 h-12 mb-4 opacity-30"/>
+            <h3 className="text-lg font-medium">
+              Tareas & Proyectos
+            </h3>
+            <p className="text-sm mt-1">
+              Disponible próximamente
+            </p>
           </div>
-        ) : (
-          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] overflow-hidden">
-            <div className="p-6 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
-              <h2 className="font-serif text-xl text-[#4A4E4D]">Todas las Tareas</h2>
-              <button onClick={() => reloadTareas()} className="p-2 text-stone-400 hover:text-[#4A4E4D] transition-colors">
-                <RefreshCw className={`w-4 h-4 ${loadingTareas ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-stone-50/80 text-stone-400 text-[10px] uppercase font-bold tracking-widest border-b border-stone-100">
-                  <tr>
-                    <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('titulo')}>
-                      <div className="flex items-center gap-1">Título {sortConfig?.key === 'titulo' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <LayoutList className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
-                    </th>
-                    <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('asignadaA')}>
-                      <div className="flex items-center gap-1">Responsable {sortConfig?.key === 'asignadaA' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <Users className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
-                    </th>
-                    <th className="px-6 py-4 cursor-pointer hover:text-stone-600 group" onClick={() => requestSort('estado')}>
-                      <div className="flex items-center gap-1">Estado {sortConfig?.key === 'estado' ? (sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <Clock className="w-3 h-3 opacity-0 group-hover:opacity-100" />}</div>
-                    </th>
-                    <th className="px-6 py-4">Prioridad</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  {loadingTareas ? (
-                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" /> Cargando...</td></tr>
-                  ) : sortedTareas.length === 0 ? (
-                    <tr><td colSpan={4} className="px-6 py-12 text-center text-stone-400 italic">No hay tareas registradas</td></tr>
-                  ) : sortedTareas.map(tarea => (
-                    <tr key={tarea.id} className="hover:bg-[#FDFBF7] transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-stone-800">{tarea.titulo}</div>
-                        {tarea.proyectoId && <div className="text-[10px] text-teal-600 font-bold uppercase tracking-tighter mt-0.5">Proyecto vinculado</div>}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-stone-600">
-                        {getMemberName(tarea.asignadaA)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${tarea.estado === 'completada' ? 'bg-teal-50 text-teal-600 border border-teal-100' : tarea.estado === 'en_progreso' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
-                          {tarea.estado.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className={`text-xs font-medium ${tarea.prioridad === 'alta' ? 'text-rose-500' : tarea.prioridad === 'media' ? 'text-amber-500' : 'text-stone-400'}`}>
-                           {tarea.prioridad?.toUpperCase() || 'NORMAL'}
-                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        )}
+
+        {currentTab === 'marketplace-acuerdos' && (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <Handshake className="w-12 h-12 mb-4 opacity-30"/>
+            <h3 className="text-lg font-medium">
+              Marketplace & Acuerdos
+            </h3>
+            <p className="text-sm mt-1">
+              Disponible próximamente
+            </p>
+          </div>
+        )}
+
+        {currentTab === 'gobernanza' && (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <Scale className="w-12 h-12 mb-4 opacity-30"/>
+            <h3 className="text-lg font-medium">
+              Gobernanza
+            </h3>
+            <p className="text-sm mt-1">
+              Disponible próximamente
+            </p>
           </div>
         )}
       </div>
@@ -370,7 +460,7 @@ export function AdminPanel() {
                       "{getDatosPersona(selectedFicha).tension || 'No hay tensiones registradas.'}"
                     </p>
                   </section>
-                  <ManualViewer manual={selectedFicha.manualGenerado || '# Sin manual generado'} />
+                  <ManualViewer content={selectedFicha.manualGenerado || '# Sin manual generado'} />
                 </div>
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm space-y-4">

@@ -3,7 +3,7 @@ import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck, Scale } from '
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { listenSolicitudes, listenAcuerdosPendientesAsProvider } from '../lib/appService';
+import { listenSolicitudes, listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, Acuerdo } from '../lib/appService';
 import { useState, useEffect } from 'react';
 
 export function Sidebar() {
@@ -13,6 +13,7 @@ export function Sidebar() {
   const { comunidad, comunidades, setCommunityId } = useComunidad();
   const [pendingCount, setPendingCount] = useState(0);
   const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
+  const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
@@ -56,6 +57,44 @@ export function Sidebar() {
       setAcuerdosPendingCount(0);
     }
   }, [comunidad?.id, appUser?.uid]);
+
+  useEffect(() => {
+    if (!comunidad?.id || !appUser?.uid) {
+      setAcuerdosSolicitante([]);
+      return;
+    }
+
+    try {
+      const unsubscribe = listenAcuerdosActivosAsSolicitante(
+        comunidad.id,
+        appUser.uid,
+        (acuerdos) => {
+          setAcuerdosSolicitante(acuerdos);
+        }
+      );
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error suscribiéndose a acuerdos activos del solicitante:", error);
+      setAcuerdosSolicitante([]);
+    }
+  }, [comunidad?.id, appUser?.uid]);
+
+  useEffect(() => {
+    if (location.pathname === '/soberania' && appUser?.uid) {
+      localStorage.setItem(`kanarii_last_soberania_visit_${appUser.uid}`, new Date().toISOString());
+    }
+  }, [location.pathname, appUser?.uid]);
+
+  const lastVisitKey = appUser?.uid ? `kanarii_last_soberania_visit_${appUser.uid}` : null;
+  const lastVisitStr = lastVisitKey ? localStorage.getItem(lastVisitKey) : null;
+  const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0);
+
+  const acuerdosSolicitanteCount = acuerdosSolicitante.filter(a => {
+    const updatedTime = a.actualizadoEn?.toDate?.() ?? 
+      (a.actualizadoEn instanceof Date ? a.actualizadoEn : 
+      (a.actualizadoEn ? new Date(a.actualizadoEn) : new Date(0)));
+    return updatedTime > lastVisit;
+  }).length;
   
   // Dividimos los items en principales y admin
   const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
@@ -92,7 +131,7 @@ export function Sidebar() {
               onClick={() => {
                 if (item.label === 'Marketplace') {
                   navigate(item.href, { 
-                    state: acuerdosPendingCount > 0 
+                    state: (acuerdosPendingCount > 0 || acuerdosSolicitanteCount > 0)
                       ? { initialTab: 'mis_acuerdos' } 
                       : undefined 
                   });
@@ -108,9 +147,9 @@ export function Sidebar() {
             >
               <item.icon className={`w-5 h-5 ${isActive ? 'text-[#6B705C]' : 'text-stone-400 group-hover:text-stone-600'}`} />
               <span className="text-sm">{item.label}</span>
-              {item.label === 'Marketplace' && acuerdosPendingCount > 0 && !isActive && (
+              {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && !isActive && (
                 <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
-                  {acuerdosPendingCount}
+                  {acuerdosPendingCount + acuerdosSolicitanteCount}
                 </span>
               )}
               {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6B705C]" />}
