@@ -240,6 +240,52 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.
   - [ ] **[Bajo]** Migración de datos: Asegurar `userPositions: {}` y `totalResponsesCount: 0` en documentos antiguos (si existieran fuera de test).
   - [ ] **[Bajo]** Implementar un script de "Sanity Check" periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
+## 🔁 Comunidades / UX
+- [ ] [ALTO] feat(comunidades): auto-switch de comunidad activa tras crear nueva comunidad
+  - Problema: al crear una nueva comunidad, el banner muestra
+    correctamente el nuevo espacio, pero el AdminPanel sigue
+    cargando los datos de la comunidad previamente activa.
+  - Comportamiento deseado:
+    1. Tras `registrarNuevaComunidad()` con éxito,
+       cambiar automáticamente la comunidad activa
+       al nuevo `slug`.
+    2. Reutilizar la misma lógica que ya usa el
+       selector de comunidad del Sidebar.
+    3. El redirect a `/admin?tab=comunidad&nueva=true`
+       debe abrir directamente el contexto del nuevo espacio.
+  - Nota arquitectónica:
+    esto no es un bug visual aislado; falta cerrar
+    el flujo completo de cambio de contexto tras alta.
+
+## 🚨 Seguridad (auditoría 2026-05-19)
+- [ ] [CRÍTICO] Implementar Firestore Rules reales
+  con validación de autenticación y communityId.
+  Bloqueante antes de cualquier crecimiento de usuarios.
+- [ ] [ALTO] Eliminar email hardcoded de admin en
+  appService.ts líneas 148, 154, 1887.
+  Reemplazar con campo role en Firestore.
+
+## ⚡ Performance Firestore (auditoría 2026-05-19)
+- [ ] [ALTO] Añadir `.limit(50)` a todos los hooks
+  de listas: usePosts, useServicios, useAcuerdos,
+  useEventos, usePropuestas, useActas, useFichas,
+  useProyectos, useTareas.
+- [ ] [MEDIO] Implementar paginación cursor-based
+  (`startAfter`) para listas que necesiten scroll
+  infinito real.
+- [ ] [BAJO] Crear índices compuestos en Firebase
+  Console para: `(communityId + fecha)`,
+  `(communityId + updatedAt)`, `(communityId + inicio)`.
+
+## 🧹 DRY & TypeScript (auditoría 2026-05-19)
+- [ ] [MEDIO] Crear hook genérico
+  `useFirestoreCollection` para eliminar patrón
+  loading/error duplicado en 10+ hooks.
+- [ ] [MEDIO] Reducir 47 usos de `any` —
+  priorizar `datosBrutos`, `perfilVisual` y
+  `configuracion` con interfaces específicas.
+- [ ] [BAJO] Centralizar formateo de fechas
+  en `dateUtils.ts` (7+ sitios duplicados).
 
 ## 📐 Decisiones de Arquitectura
 - **2026-05-17 — Exclusión de Módulos de HD del Patrón DRY Actions**: Se decide de forma consciente y deliberada mantener el acceso directo a `appService` en los módulos de Fichas (`FichaView.tsx`, `FichaPreview.tsx`), Cruce (`CruceView.tsx`) y Administración General (`AdminPanel.tsx`). Estos componentes manejan flujos altamente acoplados al ciclo de vida del usuario de Firebase, sincronización diferida de estados de onboarding, enriquecimientos astrales y cálculos complejos de Diseño Humano, por lo que requieren control directo y granular y no se benefician de la abstracción genérica de `useEntityActions`.
