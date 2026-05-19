@@ -44,7 +44,6 @@ export default function MarketplaceView() {
   const [selectedServicioId, setSelectedServicioId] = useState<string | null>(null);
 
   const selectedServicioForDetail = servicios.find(s => s.id === selectedServicioId) || null;
-  console.log("DEBUG MarketplaceView:", { selectedServicioId, selectedServicioForDetail, totalServicios: servicios.length });
 
   const filteredServicios = servicios.filter(s => {
     if (s.id === pendingId) return false;

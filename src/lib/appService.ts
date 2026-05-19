@@ -672,6 +672,26 @@ export function listenAcuerdosPendientesAsProvider(
   });
 }
 
+export function listenAcuerdosActivosAsSolicitante(
+  communityId: string,
+  solicitanteId: string,
+  callback: (acuerdos: Acuerdo[]) => void
+) {
+  const q = query(
+    colAcuerdos,
+    where('communityId', '==', communityId),
+    where('solicitanteId', '==', solicitanteId),
+    where('status', 'in', ['en_curso', 'cancelada'])
+  );
+  return onSnapshot(q, snap => {
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));
+    callback(data);
+  }, err => {
+    console.error('Error in listenAcuerdosActivosAsSolicitante:', err);
+    callback([]);
+  });
+}
+
 
 export async function crearProyecto(proyecto: Proyecto): Promise<string> {
   try {
