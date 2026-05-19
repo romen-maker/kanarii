@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Ficha, ensureSeedData, Tarea, getUserFicha, listenBajasRecientes, FeedbackSalida } from '../lib/appService';
-import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale } from 'lucide-react';
+import { Ficha, ensureSeedData, Tarea, getUserFicha, listenBajasRecientes, FeedbackSalida, Acuerdo, Servicio } from '../lib/appService';
+import { Leaf, Users, Search, X, RefreshCw, Clock, AlertCircle, Filter, LayoutList, ChevronUp, ChevronDown, UserMinus, Activity, FolderKanban, Handshake, Scale, Eye, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -8,8 +8,10 @@ import { ManualViewer } from '../components/ManualViewer';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useToast } from '../hooks/useToast';
 import { useComunidadActions } from '../hooks/useComunidadActions';
-
 import { useTareas } from '../hooks/useTareas';
+import { useAcuerdos } from '../hooks/useAcuerdos';
+import { useAllServicios } from '../hooks/useAllServicios';
+import { useServicioActions } from '../hooks/useServicioActions';
 
 function getDatosPersona(ficha: Ficha) {
   // Buscamos en orden de prioridad: datosPersona > datosOnboarding > Raíz de la ficha
@@ -59,6 +61,16 @@ export function AdminPanel() {
   const { expulsarMiembro } = useComunidadActions();
   const [memberToExpel, setMemberToExpel] = useState<any | null>(null);
   const [bajas, setBajas] = useState<FeedbackSalida[]>([]);
+
+  // Marketplace & Acuerdos state & hooks
+  const { acuerdos, loading: loadingAcuerdos } = useAcuerdos(currentCommunityId || '');
+  const { servicios: allServicios, loading: loadingServicios } = useAllServicios(currentCommunityId || '');
+  const { editServicio } = useServicioActions();
+
+  const [acuerdoSearchTerm, setAcuerdoSearchTerm] = useState('');
+  const [acuerdoStatusFilter, setAcuerdoStatusFilter] = useState<'todos' | 'pendiente' | 'en_curso' | 'completada' | 'cancelada' | 'contraoferta'>('todos');
+  const [selectedAcuerdo, setSelectedAcuerdo] = useState<Acuerdo | null>(null);
+  const [servicioToDeactivate, setServicioToDeactivate] = useState<Servicio | null>(null);
 
   useEffect(() => {
     if (!currentCommunityId) return;
@@ -134,6 +146,44 @@ export function AdminPanel() {
     }
     return sortableItems;
   }, [tareas, sortConfig, getMemberName]);
+
+  const agreementsStats = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const checkThisMonth = (ts: any) => {
+      if (!ts) return false;
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d >= startOfMonth;
+    };
+
+    const enCurso = acuerdos.filter(a => a.status === 'en_curso').length;
+    const requierenAtencion = acuerdos.filter(a => a.status === 'pendiente' || a.status === 'contraoferta').length;
+    const completadosEsteMes = acuerdos.filter(a => a.status === 'completada' && checkThisMonth(a.actualizadoEn || a.creadoEn)).length;
+    const canceladosEsteMes = acuerdos.filter(a => a.status === 'cancelada' && checkThisMonth(a.actualizadoEn || a.creadoEn)).length;
+
+    return { enCurso, requierenAtencion, completadosEsteMes, canceladosEsteMes };
+  }, [acuerdos]);
+
+  const filteredAcuerdos = useMemo(() => {
+    return acuerdos.filter(a => {
+      if (acuerdoStatusFilter !== 'todos' && a.status !== acuerdoStatusFilter) {
+        return false;
+      }
+      
+      const providerName = getMemberName(a.providerId).toLowerCase();
+      const solicitanteName = getMemberName(a.solicitanteId).toLowerCase();
+      const servicio = allServicios.find(s => s.id === a.servicioId);
+      const servicioTitle = (servicio?.title || '').toLowerCase();
+      
+      const term = acuerdoSearchTerm.toLowerCase();
+      return providerName.includes(term) || solicitanteName.includes(term) || servicioTitle.includes(term);
+    });
+  }, [acuerdos, allServicios, acuerdoStatusFilter, acuerdoSearchTerm, getMemberName]);
+
+  const activeServiciosList = useMemo(() => {
+    return allServicios.filter(s => s.isActive !== false);
+  }, [allServicios]);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -409,14 +459,263 @@ export function AdminPanel() {
         )}
 
         {currentTab === 'marketplace-acuerdos' && (
-          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-            <Handshake className="w-12 h-12 mb-4 opacity-30"/>
-            <h3 className="text-lg font-medium">
-              Marketplace & Acuerdos
-            </h3>
-            <p className="text-sm mt-1">
-              Disponible próximamente
-            </p>
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Tarjetas de Métricas */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-3xl border border-stone-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">Acuerdos Activos</p>
+                  <h4 className="text-2xl font-bold text-stone-800 mt-0.5">{agreementsStats.enCurso}</h4>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-stone-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">Requieren Atención</p>
+                  <h4 className="text-2xl font-bold text-stone-800 mt-0.5">{agreementsStats.requierenAtencion}</h4>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-stone-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
+                  <Handshake className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">Completados este mes</p>
+                  <h4 className="text-2xl font-bold text-stone-800 mt-0.5">{agreementsStats.completadosEsteMes}</h4>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-stone-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">Cancelados este mes</p>
+                  <h4 className="text-2xl font-bold text-stone-800 mt-0.5">{agreementsStats.canceladosEsteMes}</h4>
+                </div>
+              </div>
+            </div>
+
+            {/* Listado de Acuerdos */}
+            <div className="bg-white rounded-3xl border border-stone-100 shadow-sm p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-stone-800">Acuerdos del Marketplace</h3>
+                  <p className="text-xs text-stone-400 mt-0.5">Historial y estado de los intercambios entre miembros</p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {/* Buscador */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Buscar miembro o servicio..."
+                      value={acuerdoSearchTerm}
+                      onChange={(e) => setAcuerdoSearchTerm(e.target.value)}
+                      className="pl-9 pr-4 py-2 border border-stone-200 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-stone-50 w-full sm:w-64"
+                    />
+                  </div>
+                  
+                  {/* Filtro de Estado */}
+                  <div className="relative">
+                    <Filter className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                      value={acuerdoStatusFilter}
+                      onChange={(e: any) => setAcuerdoStatusFilter(e.target.value)}
+                      className="pl-9 pr-8 py-2 border border-stone-200 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-stone-50 appearance-none cursor-pointer"
+                    >
+                      <option value="todos">Todos los estados</option>
+                      <option value="pendiente">Pendiente</option>
+                      <option value="contraoferta">Contraoferta</option>
+                      <option value="en_curso">En curso</option>
+                      <option value="completada">Completada</option>
+                      <option value="cancelada">Cancelada</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {loadingAcuerdos || loadingServicios ? (
+                <div className="flex justify-center items-center py-12">
+                  <RefreshCw className="w-8 h-8 text-amber-500 animate-spin" />
+                </div>
+              ) : filteredAcuerdos.length === 0 ? (
+                <div className="text-center py-12 text-stone-400 border border-dashed border-stone-100 rounded-2xl">
+                  No se encontraron acuerdos con los filtros aplicados.
+                </div>
+              ) : (
+                <div className="overflow-x-auto -mx-6">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-stone-100 bg-stone-50/50 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                        <th className="px-6 py-3.5">Servicio</th>
+                        <th className="px-6 py-3.5">Proveedor</th>
+                        <th className="px-6 py-3.5">Solicitante</th>
+                        <th className="px-6 py-3.5">Tipo Intercambio</th>
+                        <th className="px-6 py-3.5">Estado</th>
+                        <th className="px-6 py-3.5">Fecha Propuesta</th>
+                        <th className="px-6 py-3.5 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-50 text-xs">
+                      {filteredAcuerdos.map((acuerdo) => {
+                        const servicio = allServicios.find(s => s.id === acuerdo.servicioId);
+                        
+                        let statusBadge = "bg-stone-50 text-stone-600 border border-stone-100";
+                        if (acuerdo.status === 'pendiente') statusBadge = "bg-amber-50 text-amber-600 border border-amber-100";
+                        else if (acuerdo.status === 'contraoferta') statusBadge = "bg-purple-50 text-purple-600 border border-purple-100";
+                        else if (acuerdo.status === 'en_curso') statusBadge = "bg-blue-50 text-blue-600 border border-blue-100";
+                        else if (acuerdo.status === 'completada') statusBadge = "bg-emerald-50 text-emerald-600 border border-emerald-100";
+                        else if (acuerdo.status === 'cancelada') statusBadge = "bg-rose-50 text-rose-600 border border-rose-100";
+
+                        let exchangeBadge = "bg-stone-100 text-stone-700";
+                        if (acuerdo.exchangeType === 'regalo') exchangeBadge = "bg-pink-50 text-pink-600 border border-pink-100";
+                        else if (acuerdo.exchangeType === 'tiempo') exchangeBadge = "bg-indigo-50 text-indigo-600 border border-indigo-100";
+                        else if (acuerdo.exchangeType === 'especie') exchangeBadge = "bg-teal-50 text-teal-600 border border-teal-100";
+                        else if (acuerdo.exchangeType === 'economico') exchangeBadge = "bg-amber-50 text-amber-600 border border-amber-100";
+
+                        const exchangeLabel = acuerdo.exchangeType
+                          ? {
+                              tiempo: 'Tiempo',
+                              especie: 'Especie',
+                              economico: 'Económico',
+                              regalo: 'Regalo'
+                            }[acuerdo.exchangeType] || acuerdo.exchangeType
+                          : '-';
+
+                         const fecha = acuerdo.creadoEn?.toDate?.();
+                         const fechaStr = fecha && !isNaN(fecha.getTime())
+                            ? fecha.toLocaleDateString('es-ES')
+                            : '—';
+
+                        return (
+                          <tr key={acuerdo.id} className="hover:bg-stone-50/50 transition-colors">
+                            <td className="px-6 py-4 font-semibold text-stone-700 max-w-[200px] truncate">
+                              {servicio?.title ? (
+                                servicio.title
+                              ) : (
+                                <span className="text-stone-400 font-normal italic">Servicio eliminado</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-stone-600">
+                              {getMemberName(acuerdo.providerId)}
+                            </td>
+                            <td className="px-6 py-4 text-stone-600">
+                              {getMemberName(acuerdo.solicitanteId)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${exchangeBadge}`}>
+                                {exchangeLabel}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadge}`}>
+                                {acuerdo.status === 'en_curso' ? 'En curso' : acuerdo.status === 'contraoferta' ? 'Contraoferta' : acuerdo.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-stone-400">
+                              {fechaStr}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => setSelectedAcuerdo(acuerdo)}
+                                className="p-1.5 hover:bg-stone-100 rounded-xl text-stone-400 hover:text-amber-600 transition-colors"
+                                title="Ver Detalles"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Listado de Servicios Activos */}
+            <div className="bg-white rounded-3xl border border-stone-100 shadow-sm p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-stone-800">Catálogo de Servicios Activos</h3>
+                <p className="text-xs text-stone-400 mt-0.5">Servicios publicados actualmente en la comunidad</p>
+              </div>
+
+              {loadingServicios ? (
+                <div className="flex justify-center items-center py-12">
+                  <RefreshCw className="w-8 h-8 text-amber-500 animate-spin" />
+                </div>
+              ) : activeServiciosList.length === 0 ? (
+                <div className="text-center py-12 text-stone-400 border border-dashed border-stone-100 rounded-2xl">
+                  No hay servicios activos en este momento.
+                </div>
+              ) : (
+                <div className="overflow-x-auto -mx-6">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-stone-100 bg-stone-50/50 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                        <th className="px-6 py-3.5">Servicio</th>
+                        <th className="px-6 py-3.5">Proveedor</th>
+                        <th className="px-6 py-3.5">Tipo</th>
+                        <th className="px-6 py-3.5">Categoría</th>
+                        <th className="px-6 py-3.5">Acuerdos Vinculados</th>
+                        <th className="px-6 py-3.5 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-50 text-xs">
+                      {activeServiciosList.map((servicio) => {
+                        const linkedCount = acuerdos.filter(a => a.servicioId === servicio.id).length;
+
+                        let typeBadge = "bg-stone-100 text-stone-700";
+                        if (servicio.type === 'talento') typeBadge = "bg-sky-50 text-sky-600 border border-sky-100";
+                        else if (servicio.type === 'recurso') typeBadge = "bg-amber-50 text-amber-600 border border-amber-100";
+
+                        return (
+                          <tr key={servicio.id} className="hover:bg-stone-50/50 transition-colors">
+                            <td className="px-6 py-4 font-semibold text-stone-700 max-w-[200px] truncate">
+                              {servicio.title}
+                            </td>
+                            <td className="px-6 py-4 text-stone-600">
+                              {getMemberName(servicio.providerId)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${typeBadge}`}>
+                                {servicio.type === 'talento' ? 'Talento' : 'Recurso'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-stone-450">
+                              {servicio.category || '-'}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold">
+                                {linkedCount}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => setServicioToDeactivate(servicio)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-[10px] font-bold uppercase transition-colors"
+                              >
+                                <Ban className="w-3.5 h-3.5" />
+                                Desactivar
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -521,6 +820,147 @@ export function AdminPanel() {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors"
               >
                 Confirmar Expulsión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedAcuerdo && (() => {
+        const servicio = allServicios.find(s => s.id === selectedAcuerdo.servicioId);
+        const formatTimestamp = (ts: any) => {
+          if (!ts) return 'N/A';
+          const date = ts.toDate ? ts.toDate() : new Date(ts);
+          return date.toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedAcuerdo(null)}>
+            <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+                <div className="flex items-center gap-3">
+                  <Handshake className="w-6 h-6 text-amber-600" />
+                  <div>
+                    <h2 className="text-xl font-bold text-stone-800">Detalles del Acuerdo</h2>
+                    <p className="text-xs text-stone-500">ID: {selectedAcuerdo.id}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedAcuerdo(null)} className="p-2 hover:bg-stone-100 text-stone-400 hover:text-stone-600 rounded-full transition-all">
+                  <X />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Info Principal */}
+                <div className="grid grid-cols-2 gap-4 bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Proveedor</span>
+                    <p className="font-semibold text-stone-700">{getMemberName(selectedAcuerdo.providerId)}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Solicitante</span>
+                    <p className="font-semibold text-stone-700">{getMemberName(selectedAcuerdo.solicitanteId)}</p>
+                  </div>
+                  <div className="col-span-2 pt-2 border-t border-stone-100">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Servicio Vinculado</span>
+                    <p className="font-semibold text-stone-800">{servicio?.title || 'Servicio'}</p>
+                    {servicio?.description && (
+                      <p className="text-xs text-stone-500 mt-1 italic">"{servicio.description}"</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Detalles del Acuerdo */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Términos del Acuerdo</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded-xl border border-stone-100 shadow-sm">
+                      <span className="text-xs text-stone-400">Tipo de Intercambio</span>
+                      <p className="text-sm font-medium text-stone-800 capitalize">{selectedAcuerdo.exchangeType}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-stone-100 shadow-sm">
+                      <span className="text-xs text-stone-400">Estado Actual</span>
+                      <p className="text-sm font-medium text-stone-800 capitalize">{selectedAcuerdo.status}</p>
+                    </div>
+                    {selectedAcuerdo.terms && (
+                      <div className="col-span-2 bg-white p-3 rounded-xl border border-stone-100 shadow-sm">
+                        <span className="text-xs text-stone-400">Detalles Adicionales</span>
+                        <p className="text-sm text-stone-700 mt-1">{selectedAcuerdo.terms}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Historial de Negociación */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Historial de Propuestas</h4>
+                  {selectedAcuerdo.historial && selectedAcuerdo.historial.length > 0 ? (
+                    <div className="relative pl-6 border-l border-stone-200 ml-3 space-y-6">
+                      {selectedAcuerdo.historial.map((hist, idx) => (
+                        <div key={idx} className="relative">
+                          <span className="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-stone-300 ring-4 ring-white"></span>
+                          <div className="text-xs text-stone-400 font-medium">
+                            {formatTimestamp(hist.fecha)}
+                          </div>
+                          <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 mt-1">
+                            <div className="text-xs font-semibold text-stone-600 mb-1">
+                              Acción de: {getMemberName(hist.autorId)} ({hist.tipo})
+                            </div>
+                            <p className="text-sm text-stone-700"><strong>Detalle:</strong> {hist.terminos.terms}</p>
+                            {hist.terminos.exchangeType && (
+                              <p className="text-xs text-stone-500 mt-1">
+                                <strong>Tipo:</strong> {hist.terminos.exchangeType}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-stone-500 italic">No hay historial registrado para este acuerdo.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {servicioToDeactivate && (
+        <div className="fixed inset-0 bg-stone-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-stone-200 shadow-xl animate-in fade-in zoom-in-95 duration-250">
+            <h3 className="font-serif text-lg text-stone-800 mb-2">¿Desactivar Servicio?</h3>
+            <p className="text-sm text-stone-500 mb-6 font-serif">
+              Estás a punto de desactivar el servicio <strong className="text-stone-700">"{servicioToDeactivate.title}"</strong>. 
+              Los miembros ya no podrán solicitar este servicio en el Marketplace.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={() => setServicioToDeactivate(null)}
+                className="px-4 py-2 border border-stone-200 hover:bg-stone-50 text-stone-600 rounded-xl text-sm font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={async () => {
+                  const target = servicioToDeactivate;
+                  setServicioToDeactivate(null);
+                  try {
+                    await editServicio(target.id, { isActive: false });
+                    toast.success('Servicio desactivado correctamente');
+                  } catch (err) {
+                    toast.error('No se pudo desactivar el servicio');
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                Desactivar
               </button>
             </div>
           </div>
