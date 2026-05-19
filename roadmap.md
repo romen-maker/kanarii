@@ -241,21 +241,9 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - [ ] **[Bajo]** Migración de datos: Asegurar `userPositions: {}` y `totalResponsesCount: 0` en documentos antiguos (si existieran fuera de test).
   - [ ] **[Bajo]** Implementar un script de "Sanity Check" periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
 ## 🔁 Comunidades / UX
-- [ ] [ALTO] feat(comunidades): auto-switch de comunidad activa tras crear nueva comunidad
-  - Problema: al crear una nueva comunidad, el banner muestra
-    correctamente el nuevo espacio, pero el AdminPanel sigue
-    cargando los datos de la comunidad previamente activa.
-  - Comportamiento deseado:
-    1. Tras `registrarNuevaComunidad()` con éxito,
-       cambiar automáticamente la comunidad activa
-       al nuevo `slug`.
-    2. Reutilizar la misma lógica que ya usa el
-       selector de comunidad del Sidebar.
-    3. El redirect a `/admin?tab=comunidad&nueva=true`
-       debe abrir directamente el contexto del nuevo espacio.
-  - Nota arquitectónica:
-    esto no es un bug visual aislado; falta cerrar
-    el flujo completo de cambio de contexto tras alta.
+- [x] [ALTO] feat(comunidades): auto-switch de comunidad activa tras crear nueva comunidad
+  - Solucionado: al crear una nueva comunidad, el banner y el selector cambian automáticamente al nuevo espacio en sesión/memoria y redirigen de forma limpia.
+- [x] [ALTO] feat(comunidades): CRUD de Configuración de Comunidad (Edición y Eliminación destructiva en ficha pública /c/:slug con confirmación de slug e inline para admin)
 
 ## 🚨 Seguridad (auditoría 2026-05-19)
 - [ ] [CRÍTICO] Implementar Firestore Rules reales
