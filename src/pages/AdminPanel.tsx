@@ -16,6 +16,7 @@ import { useProyectos } from '../hooks/useProyectos';
 import { useEventos } from '../hooks/useEventos';
 import { useFichas } from '../hooks/useFichas';
 import { getStatusBadgeClass, getExchangeBadgeClass, getExchangeLabel, getStatusLabel } from '../utils/badgeClasses';
+import { useDashboardStats } from '../components/AdminPanel/hooks/useDashboardStats';
 
 function getDatosPersona(ficha: Ficha) {
   // Buscamos en orden de prioridad: datosPersona > datosOnboarding > Raíz de la ficha
@@ -139,100 +140,7 @@ export function AdminPanel() {
     return { total, completedPct, topMember: memberName, weeklyCompleted };
   }, [tareas, getMemberName]);
 
-  const dashboardStats = useMemo(() => {
-    // 1. Personas
-    const totalMiembros = members.length;
-    const fichasCompletas = members.filter(m => fichas.some(f => f.userId === m.userId)).length;
-    
-    const isThisMonth = (dateVal: any) => {
-      if (!dateVal) return false;
-      const d = dateVal.toDate ? dateVal.toDate() : new Date(dateVal);
-      if (isNaN(d.getTime())) return false;
-      const now = new Date();
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    };
-    
-    const nuevosMiembros = members.filter(m => isThisMonth(m.creadoEn)).length;
-    
-    // 2. Actividad
-    const tareasAbiertas = tareas.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso').length;
-    const tareasCompletadas = tareas.filter(t => t.estado === 'completada').length;
-    const totalTareas = tareas.length;
-    const tareasRatio = totalTareas > 0 ? Math.round((tareasCompletadas / totalTareas) * 100) : 0;
-    
-    const proyectosActivos = proyectos.filter(p => p.estado !== 'completado').length;
-    const proyectosCompletados = proyectos.filter(p => p.estado === 'completado').length;
-    
-    const ahora = new Date();
-    const dentroDe30Dias = new Date();
-    dentroDe30Dias.setDate(ahora.getDate() + 30);
-    const eventosProximos = eventos.filter(e => {
-      const inicioDate = e.inicio instanceof Date ? e.inicio : new Date(e.inicio);
-      return inicioDate > ahora && inicioDate <= dentroDe30Dias;
-    }).length;
-    
-    // 3. Economía interna
-    const serviciosActivos = allServicios.filter(s => s.isActive).length;
-    const serviciosInactivos = allServicios.filter(s => !s.isActive).length;
-    const activeTalentos = allServicios.filter(s => s.isActive && s.type === 'talento').length;
-    const activeRecursos = allServicios.filter(s => s.isActive && s.type === 'recurso').length;
-    const acuerdosEnCurso = acuerdos.filter(a => a.status === 'en_curso').length;
-    const acuerdosCompletados = acuerdos.filter(a => a.status === 'completada').length;
-    
-    // 4. Gráfico de acuerdos últimos 6 meses
-    const chartData = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      chartData.push({
-        year: d.getFullYear(),
-        month: d.getMonth(),
-        label: d.toLocaleDateString('es-ES', { month: 'short' }),
-        count: 0
-      });
-    }
-    
-    acuerdos.forEach(acuerdo => {
-      const date = acuerdo.creadoEn?.toDate ? acuerdo.creadoEn.toDate() : (acuerdo.creadoEn ? new Date(acuerdo.creadoEn) : null);
-      if (!date || isNaN(date.getTime())) return;
-      
-      const mMatch = chartData.find(m => m.year === date.getFullYear() && m.month === date.getMonth());
-      if (mMatch) {
-        mMatch.count++;
-      }
-    });
-    
-    const maxAcuerdosPeriodo = Math.max(...chartData.map(m => m.count), 0);
-    
-    // 5. Lista de los 5 acuerdos más recientes
-    const recientes = [...acuerdos].sort((a, b) => {
-      const dateA = a.creadoEn?.toDate ? a.creadoEn.toDate().getTime() : (a.creadoEn ? new Date(a.creadoEn).getTime() : 0);
-      const dateB = b.creadoEn?.toDate ? b.creadoEn.toDate().getTime() : (b.creadoEn ? new Date(b.creadoEn).getTime() : 0);
-      return dateB - dateA;
-    }).slice(0, 5);
-    
-    return {
-      totalMiembros,
-      fichasCompletas,
-      nuevosMiembros,
-      tareasAbiertas,
-      tareasCompletadas,
-      totalTareas,
-      tareasRatio,
-      proyectosActivos,
-      proyectosCompletados,
-      eventosProximos,
-      serviciosActivos,
-      serviciosInactivos,
-      activeTalentos,
-      activeRecursos,
-      acuerdosEnCurso,
-      acuerdosCompletados,
-      chartData,
-      maxAcuerdosPeriodo,
-      recientes
-    };
-  }, [members, fichas, tareas, proyectos, eventos, allServicios, acuerdos]);
+  const dashboardStats = useDashboardStats({ members, fichas, tareas, proyectos, eventos, allServicios, acuerdos });
 
   const sortedTareas = useMemo(() => {
     let sortableItems = [...tareas];
