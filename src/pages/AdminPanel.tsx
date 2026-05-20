@@ -15,6 +15,7 @@ import { useServicioActions } from '../hooks/useServicioActions';
 import { useProyectos } from '../hooks/useProyectos';
 import { useEventos } from '../hooks/useEventos';
 import { useFichas } from '../hooks/useFichas';
+import { getStatusBadgeClass, getExchangeBadgeClass, getExchangeLabel, getStatusLabel } from '../utils/badgeClasses';
 
 function getDatosPersona(ficha: Ficha) {
   // Buscamos en orden de prioridad: datosPersona > datosOnboarding > Raíz de la ficha
@@ -56,14 +57,14 @@ export function AdminPanel() {
     { id: 'gobernanza', label: 'Gobernanza', icon: Scale },
   ];
 
-  const { members, loading: loadingMembers } = useCommunityMembers(currentCommunityId);
+  const { members, loading: loadingMembers, getMemberName } = useCommunityMembers(currentCommunityId);
   const { items: tareas, loading: loadingTareas, reload: fetchTareas } = useTareas(currentCommunityId);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'todos' | RolComunitario>('todos');
   const [selectedFicha, setSelectedFicha] = useState<Ficha | null>(null);
   const [activeTab, setActiveTab] = useState<'comunidad' | 'tareas'>('comunidad');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
-  const { getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');
+
   const toast = useToast();
   
   const { expulsarMiembro } = useComunidadActions();
@@ -661,27 +662,9 @@ export function AdminPanel() {
                           {dashboardStats.recientes.map((acuerdo) => {
                             const servicio = allServicios.find(s => s.id === acuerdo.servicioId);
                             
-                            let statusBadge = "bg-stone-50 text-stone-600 border border-stone-100";
-                            if (acuerdo.status === 'pendiente') statusBadge = "bg-amber-50 text-amber-600 border border-amber-100";
-                            else if (acuerdo.status === 'contraoferta') statusBadge = "bg-purple-50 text-purple-600 border border-purple-100";
-                            else if (acuerdo.status === 'en_curso') statusBadge = "bg-blue-50 text-blue-600 border border-blue-100";
-                            else if (acuerdo.status === 'completada') statusBadge = "bg-emerald-50 text-emerald-600 border border-emerald-100";
-                            else if (acuerdo.status === 'cancelada') statusBadge = "bg-rose-50 text-rose-600 border border-rose-100";
-
-                            let exchangeBadge = "bg-stone-100 text-stone-700";
-                            if (acuerdo.exchangeType === 'regalo') exchangeBadge = "bg-pink-50 text-pink-600 border border-pink-100";
-                            else if (acuerdo.exchangeType === 'tiempo') exchangeBadge = "bg-indigo-50 text-indigo-600 border border-indigo-100";
-                            else if (acuerdo.exchangeType === 'especie') exchangeBadge = "bg-teal-50 text-teal-600 border border-teal-100";
-                            else if (acuerdo.exchangeType === 'economico') exchangeBadge = "bg-amber-50 text-amber-600 border border-amber-100";
-
-                            const exchangeLabel = acuerdo.exchangeType
-                              ? {
-                                  tiempo: 'Tiempo',
-                                  especie: 'Especie',
-                                  economico: 'Económico',
-                                  regalo: 'Regalo'
-                                }[acuerdo.exchangeType] || acuerdo.exchangeType
-                              : '-';
+                            const statusBadge = getStatusBadgeClass(acuerdo.status);
+                            const exchangeBadge = getExchangeBadgeClass(acuerdo.exchangeType || '');
+                            const exchangeLabel = getExchangeLabel(acuerdo.exchangeType);
 
                             const fecha = acuerdo.creadoEn?.toDate?.();
                             const fechaStr = fecha && !isNaN(fecha.getTime())
@@ -712,7 +695,7 @@ export function AdminPanel() {
                                 
                                 <div className="flex flex-col items-end shrink-0 gap-1.5">
                                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${statusBadge}`}>
-                                    {acuerdo.status === 'en_curso' ? 'En curso' : acuerdo.status === 'contraoferta' ? 'Contraoferta' : acuerdo.status === 'pendiente' ? 'Pendiente' : acuerdo.status === 'completada' ? 'Completado' : 'Cancelado'}
+                                    {getStatusLabel(acuerdo.status)}
                                   </span>
                                   <span className="text-[10px] text-stone-400">{fechaStr}</span>
                                 </div>
@@ -1037,27 +1020,9 @@ export function AdminPanel() {
                       {filteredAcuerdos.map((acuerdo) => {
                         const servicio = allServicios.find(s => s.id === acuerdo.servicioId);
                         
-                        let statusBadge = "bg-stone-50 text-stone-600 border border-stone-100";
-                        if (acuerdo.status === 'pendiente') statusBadge = "bg-amber-50 text-amber-600 border border-amber-100";
-                        else if (acuerdo.status === 'contraoferta') statusBadge = "bg-purple-50 text-purple-600 border border-purple-100";
-                        else if (acuerdo.status === 'en_curso') statusBadge = "bg-blue-50 text-blue-600 border border-blue-100";
-                        else if (acuerdo.status === 'completada') statusBadge = "bg-emerald-50 text-emerald-600 border border-emerald-100";
-                        else if (acuerdo.status === 'cancelada') statusBadge = "bg-rose-50 text-rose-600 border border-rose-100";
-
-                        let exchangeBadge = "bg-stone-100 text-stone-700";
-                        if (acuerdo.exchangeType === 'regalo') exchangeBadge = "bg-pink-50 text-pink-600 border border-pink-100";
-                        else if (acuerdo.exchangeType === 'tiempo') exchangeBadge = "bg-indigo-50 text-indigo-600 border border-indigo-100";
-                        else if (acuerdo.exchangeType === 'especie') exchangeBadge = "bg-teal-50 text-teal-600 border border-teal-100";
-                        else if (acuerdo.exchangeType === 'economico') exchangeBadge = "bg-amber-50 text-amber-600 border border-amber-100";
-
-                        const exchangeLabel = acuerdo.exchangeType
-                          ? {
-                              tiempo: 'Tiempo',
-                              especie: 'Especie',
-                              economico: 'Económico',
-                              regalo: 'Regalo'
-                            }[acuerdo.exchangeType] || acuerdo.exchangeType
-                          : '-';
+                        const statusBadge = getStatusBadgeClass(acuerdo.status);
+                        const exchangeBadge = getExchangeBadgeClass(acuerdo.exchangeType || '');
+                        const exchangeLabel = getExchangeLabel(acuerdo.exchangeType);
 
                          const fecha = acuerdo.creadoEn?.toDate?.();
                          const fechaStr = fecha && !isNaN(fecha.getTime())
@@ -1086,7 +1051,7 @@ export function AdminPanel() {
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadge}`}>
-                                {acuerdo.status === 'en_curso' ? 'En curso' : acuerdo.status === 'contraoferta' ? 'Contraoferta' : acuerdo.status}
+                                {getStatusLabel(acuerdo.status)}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-stone-400">
