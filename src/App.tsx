@@ -22,6 +22,7 @@ import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import MarketplaceView from './pages/MarketplaceView';
 import { RegistroComunidadView } from './pages/RegistroComunidadView';
 import { FichaComunidadView } from './pages/FichaComunidadView';
+import KanariiTourPage from './pages/KanariiTourPage';
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
 
@@ -34,7 +35,7 @@ function AppContent() {
     success("¡Sistema de feedback activo! ✨");
   }, []);
 
-  const hideNavRoutes = ['/', '/contexto', '/onboarding'];
+  const hideNavRoutes = ['/', '/contexto', '/onboarding', '/tour'];
   const showNav = appUser !== null && !hideNavRoutes.includes(location.pathname);
 
   return (
@@ -84,6 +85,7 @@ function AppContent() {
           <Route path="/soberania" element={<ProtectedRoute><MarketplaceView /></ProtectedRoute>} />
           <Route path="/gobernanza" element={<ProtectedRoute><PropuestasView /></ProtectedRoute>} />
           <Route path="/c/:slug" element={<FichaComunidadView />} />
+          <Route path="/tour" element={<KanariiTourPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>
         
