@@ -116,7 +116,7 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
   - Resolver inconsistencias: En Gobernanza, hacer clic en cualquier parte de la tarjeta la abre directamente. En Tareas, exige hacer clic en el icono de editar (lápiz). Unificar a un patrón reactivo consistente.
 - [ ] **Homogeneizar ventanas emergentes (Modales vs Paneles Laterales / Drawers)**
   - Resolver inconsistencias: En Actas se utiliza un panel lateral deslizante (Drawer), mientras que en el resto de la aplicación se usan modales de pantalla central. Definir cuándo se usa Drawer (ej: lectura profunda/actas) y cuándo Modal (ej: acciones rápidas/formularios) y aplicarlo coherentemente.
-
+- [ ] **[DISEÑADO] feat(ux): animaciones educativas y onboarding visual** → Ver especificación completa en [`docs/animated-onboarding.md`](./docs/animated-onboarding.md). 8 animaciones priorizadas por impacto pedagógico. Alta prioridad: `WelcomeHeroSections` (A7) y `GovernanceFlowAnimation` (A1, prompt listo para integración).
 
 ## 🌍 Fase 3 — Espacios y escala
 - [x] **3.1 Múltiples espacios/tribus (Adelantado a 2.5 ✅)**
@@ -293,4 +293,4 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
 
 ---
 
-*Última actualización: 19 May 2026*
+*Última actualización: 20 May 2026*
