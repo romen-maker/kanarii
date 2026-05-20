@@ -24,11 +24,14 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+// Contador monotónico para evitar duplicate keys cuando dos toasts se disparan en el mismo ms
+let toastIdCounter = 0;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((message: string, type: ToastType, action?: ToastAction) => {
-    const id = Date.now();
+    const id = ++toastIdCounter;
     setToasts(prev => [...prev, { id, message, type, action }]);
     
     // Si hay una acción de deshacer, quizás queremos que dure un poco más

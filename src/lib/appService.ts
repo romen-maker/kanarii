@@ -68,6 +68,7 @@ export interface Comunidad {
   slug: string;
   descripcion: string;
   logoUrl?: string;
+  bannerUrl?: string;
   creadoEn: any;
   manifiesto?: string;
   esPublica?: boolean;
@@ -481,6 +482,12 @@ export interface CommunityMember {
   estado?: string;
   creadoEn?: any;
   updatedAt?: any;
+  // Campos de perfil visual (copiados del perfil del usuario para evitar joins)
+  photoURL?: string;
+  displayName?: string;
+  email?: string;
+  // Arquetipo de rol comunitario (Sprint 3)
+  arquetipo_s3?: 'Enlazador' | 'Guardián' | 'Creador' | 'Facilitador' | 'Tejedor' | 'Representante' | string;
 }
 
 export interface Tarea {
@@ -1225,6 +1232,21 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     try {
       const memberRef = doc(db, 'community_members', `${commId}_${userId}`);
       const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
+      // Intentar obtener photoURL/displayName/email del documento de usuario
+      let memberPhotoURL = '';
+      let memberDisplayName = '';
+      let memberEmail = '';
+      try {
+        const userDocRef = doc(db, 'users', userId);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const ud = userDocSnap.data();
+          memberPhotoURL = ud.photoURL || '';
+          memberDisplayName = ud.displayName || '';
+          memberEmail = ud.email || '';
+        }
+      } catch (_) { /* silencioso: datos opcionales */ }
+
       await setDoc(memberRef, {
         userId,
         communityId: commId,
@@ -1235,6 +1257,9 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
         antiguedad_anos: base.antiguedad_anos || 0,
         rol_comunidad: base.rol_comunidad || 'miembro',
         estado: fichaFull.estado || 'activo',
+        photoURL: memberPhotoURL,
+        displayName: memberDisplayName,
+        email: memberEmail,
         creadoEn: fichaFull.createdAt || serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
@@ -1947,6 +1972,7 @@ export async function createComunidad(data: {
   tipo?: 'finca' | 'ecoaldea' | 'cohousing' | 'urbano' | 'nomada' | 'otro';
   capacidad?: number;
   logoUrl?: string;
+  bannerUrl?: string;
   adminUids: string[];
 }): Promise<void> {
   try {
@@ -1976,6 +2002,7 @@ export async function createComunidad(data: {
       tipo: data.tipo || 'otro',
       capacidad: data.capacidad || 0,
       logoUrl: data.logoUrl || '',
+      bannerUrl: data.bannerUrl || '',
       adminUids: data.adminUids,
       plan: 'free',
       creadoEn: serverTimestamp()
@@ -2024,6 +2051,9 @@ export async function createComunidad(data: {
       rol_comunidad: 'Fundador/a',
       rol: 'admin', // el creador es admin
       estado: 'activo',
+      photoURL: userData.photoURL || '',
+      displayName: userData.displayName || '',
+      email: userData.email || '',
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -2095,6 +2125,7 @@ export async function updateComunidad(
     tipo?: 'finca' | 'ecoaldea' | 'cohousing' | 'urbano' | 'nomada' | 'otro';
     capacidad?: number;
     logoUrl?: string;
+    bannerUrl?: string;
   }
 ): Promise<void> {
   try {
@@ -2110,6 +2141,7 @@ export async function updateComunidad(
       tipo: data.tipo || 'otro',
       capacidad: data.capacidad || 0,
       logoUrl: data.logoUrl || '',
+      bannerUrl: data.bannerUrl || '',
       updatedAt: serverTimestamp()
     });
   } catch (error) {
@@ -2449,6 +2481,9 @@ export async function resolverSolicitud(
           antiguedad_anos: base.antiguedad_anos || 0,
           rol_comunidad: base.rol_comunidad || 'miembro',
           estado: 'activo',
+          photoURL: userData.photoURL || '',
+          displayName: userData.displayName || '',
+          email: userData.email || '',
           creadoEn: serverTimestamp(),
           updatedAt: serverTimestamp()
         }, { merge: true });
@@ -2473,6 +2508,9 @@ export async function resolverSolicitud(
           antiguedad_anos: 0,
           rol_comunidad: 'miembro',
           estado: 'activo',
+          photoURL: userData.photoURL || '',
+          displayName: userData.displayName || '',
+          email: userData.email || '',
           creadoEn: serverTimestamp(),
           updatedAt: serverTimestamp()
         }, { merge: true });
@@ -2523,6 +2561,9 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         antiguedad_anos: base.antiguedad_anos || 0,
         rol_comunidad: base.rol_comunidad || 'miembro',
         estado: 'activo',
+        photoURL: userData.photoURL || '',
+        displayName: userData.displayName || '',
+        email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
@@ -2545,6 +2586,9 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         antiguedad_anos: 0,
         rol_comunidad: 'miembro',
         estado: 'activo',
+        photoURL: userData.photoURL || '',
+        displayName: userData.displayName || '',
+        email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });

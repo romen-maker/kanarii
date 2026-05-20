@@ -73,6 +73,7 @@ export function ConfiguracionComunidadPanel({ onUpdated, onCancel }: { onUpdated
   const [descripcion, setDescripcion] = useState('');
   const [manifiesto, setManifiesto] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [bannerUrl, setBannerUrl] = useState('');
 
   // Ubicación
   const [municipio, setMunicipio] = useState('');
@@ -103,6 +104,7 @@ export function ConfiguracionComunidadPanel({ onUpdated, onCancel }: { onUpdated
       setDescripcion(comunidad.descripcion || '');
       setManifiesto(comunidad.manifiesto || '');
       setLogoUrl(comunidad.logoUrl || '');
+      setBannerUrl(comunidad.bannerUrl || '');
       setMunicipio(comunidad.ubicacion?.municipio || '');
       setRegion(comunidad.ubicacion?.region || '');
       setPais(comunidad.ubicacion?.pais || '');
@@ -151,6 +153,7 @@ export function ConfiguracionComunidadPanel({ onUpdated, onCancel }: { onUpdated
       descripcion: descripcion.trim(),
       manifiesto: manifiesto.trim(),
       logoUrl: logoUrl.trim(),
+      bannerUrl: bannerUrl.trim(),
       ubicacion: {
         municipio: municipio.trim(),
         region: region.trim(),
@@ -236,7 +239,7 @@ export function ConfiguracionComunidadPanel({ onUpdated, onCancel }: { onUpdated
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-stone-700">Nombre de la comunidad <span className="text-red-400">*</span></label>
               <input 
@@ -256,6 +259,17 @@ export function ConfiguracionComunidadPanel({ onUpdated, onCancel }: { onUpdated
                 value={logoUrl} 
                 onChange={e => setLogoUrl(e.target.value)} 
                 placeholder="https://ejemplo.com/logo.png" 
+                className="w-full rounded-xl border-[#EAE2D6] bg-[#F9F7F1] focus:border-[#CB997E] focus:ring-[#CB997E] p-3 text-stone-800"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-stone-700">URL de la Portada / Banner <span className="text-stone-400 font-normal">(opcional)</span></label>
+              <input 
+                type="url" 
+                value={bannerUrl} 
+                onChange={e => setBannerUrl(e.target.value)} 
+                placeholder="https://ejemplo.com/portada.jpg" 
                 className="w-full rounded-xl border-[#EAE2D6] bg-[#F9F7F1] focus:border-[#CB997E] focus:ring-[#CB997E] p-3 text-stone-800"
               />
             </div>

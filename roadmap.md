@@ -235,6 +235,14 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
       - Lista de todas las comunidades.
       - Métricas de uso: DAU/MAU, acuerdos totales, comunidades activas.
       - Gestión de admins de comunidad.
+    - **fix(miembros): migración de community_member docs 
+      existentes para rellenar displayName/email/photoURL 
+      desde /users/{uid}. Los docs creados antes del fix 
+      no tienen estos campos y muestran el email en lugar 
+      del nombre en la ficha pública.
+      Solución: script de migración one-shot o Cloud Function
+      triggered on community_member read si displayName vacío.
+
 - [ ] **Deuda Técnica Firestore (Auditoría 2026-05-16)**:
   - [x] **[Alto] Modelado 1:1 de community_members**: La colección `community_members` utiliza `{userId}` directamente como ID de documento. Esto limita a un usuario a pertenecer a una única comunidad activa en el listado. Para escalar a multi-comunidad real en el futuro, se requerirá migrar el ID a `{communityId}_{userId}` o crear una subcolección/relación independiente `memberships`. [MIGRADO Y COMPLETADO EL 2026-05-17]
   - [ ] **[Medio]** Estandarizar campo `reason` a `purpose` en `/propuestas` para coherencia con el resto del sistema.

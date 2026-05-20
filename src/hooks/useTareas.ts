@@ -20,7 +20,7 @@ export function useTareas(communityId?: string) {
   }, []);
 
   useEffect(() => {
-    if (!appUser) {
+    if (!appUser && !communityId) {
       setTareas([]);
       setLoading(false);
       return;
@@ -29,7 +29,7 @@ export function useTareas(communityId?: string) {
     setLoading(true);
     
     // Si no se pasa communityId, intentamos usar el del usuario o fallamos a un valor seguro
-    const activeCommunityId = communityId || appUser.communityId;
+    const activeCommunityId = communityId || appUser?.communityId;
     
     if (!activeCommunityId) {
       setTareas([]);

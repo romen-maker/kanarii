@@ -20,13 +20,13 @@ export function useProyectos(communityId?: string) {
   }, []);
 
   useEffect(() => {
-    if (!appUser) {
+    if (!appUser && !communityId) {
       setProyectos([]);
       setLoading(false);
       return;
     }
 
-    const activeCommunityId = communityId || appUser.communityId;
+    const activeCommunityId = communityId || appUser?.communityId;
     
     if (!activeCommunityId) {
       setProyectos([]);

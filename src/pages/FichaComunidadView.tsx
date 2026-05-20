@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { MapPin, Users, CheckCircle2, Lock, Globe, BookOpen, ArrowLeft, Loader2, MessageSquare, AlertTriangle, Settings, Eye } from 'lucide-react';
+import { MapPin, Users, CheckCircle2, Lock, Globe, BookOpen, ArrowLeft, Loader2, MessageSquare, AlertTriangle, Settings, Eye, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -10,6 +9,9 @@ import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useToast } from '../components/Toaster';
 import { AuthGateModal } from '../components/AuthGateModal';
 import { ConfiguracionComunidadPanel } from '../components/ConfiguracionComunidadPanel';
+import { useCommunityMembers } from '../hooks/useCommunityMembers';
+import { useTareas } from '../hooks/useTareas';
+import { useProyectos } from '../hooks/useProyectos';
 
 export function FichaComunidadView() {
   const { slug } = useParams<{ slug: string }>();
@@ -26,9 +28,15 @@ export function FichaComunidadView() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginMode, setLoginMode] = useState<'login' | 'onboarding'>('login');
   const [isEditingMode, setIsEditingMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<'presentacion' | 'miembros' | 'actividad'>('presentacion');
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+  const isMember = appUser?.communityIds?.includes(comunidad?.slug || '') || false;
+
+  const { members, loading: loadingMembers } = useCommunityMembers(comunidad?.slug);
+  const { items: tareas, loading: loadingTareas } = useTareas(comunidad?.slug);
+  const { items: proyectos, loading: loadingProyectos } = useProyectos(comunidad?.slug);
 
   const handleToggleEdit = () => {
     if (!isEditingMode && comunidad) {
@@ -64,7 +72,6 @@ export function FichaComunidadView() {
       await unirseComunidad(comunidad.slug, appUser.uid, {
         onSuccess: () => {
           toast.success('¡Te has unido a la comunidad! Bienvenido/a. 🎉');
-          // Forzar la recarga o redirección al panel de la comunidad
           navigate(`/admin`);
         }
       });
@@ -79,7 +86,6 @@ export function FichaComunidadView() {
       await solicitarAcceso(comunidad.slug, appUser.uid, solicitudMsg, {
         onSuccess: async () => {
           toast.success('Tu solicitud de acceso ha sido enviada con éxito.');
-          // Actualizar estado de solicitud local
           const req = await getUltimaSolicitud(comunidad.slug, appUser.uid);
           setLatestRequest(req);
           setSolicitudMsg('');
@@ -104,7 +110,6 @@ export function FichaComunidadView() {
     );
   }
 
-  // 1. Error 404 si la comunidad no existe
   if (!comunidad) {
     return (
       <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6 text-stone-800">
@@ -130,8 +135,6 @@ export function FichaComunidadView() {
     );
   }
 
-  // 2. Si la comunidad es privada y el usuario no pertenece a ella
-  const isMember = appUser?.communityIds?.includes(comunidad.slug) || false;
   const isPrivate = comunidad.esPublica === false;
 
   if (isPrivate && !isMember) {
@@ -164,13 +167,13 @@ export function FichaComunidadView() {
     );
   }
 
-  // Determinar los estados de las solicitudes si requiere aprobación
   const hasPending = latestRequest?.estado === 'pendiente';
   const hasRejected = latestRequest?.estado === 'rechazada';
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] p-6 pb-24 text-stone-800 font-sans">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#FDFBF7] p-4 md:p-6 pb-24 text-stone-800 font-sans">
+      <div className="max-w-6xl mx-auto space-y-6">
+        
         {/* Cabecera y Botón de Volver */}
         <div className="flex items-center justify-between">
           <Link
@@ -183,49 +186,43 @@ export function FichaComunidadView() {
         </div>
 
         {/* Ficha Principal de la Comunidad */}
-        <div className="bg-white border border-[#EAE2D6] rounded-[2.5rem] shadow-xl overflow-hidden">
-          {/* Banner superior con fondo terracota suave */}
-          <div className="h-32 bg-gradient-to-r from-[#CB997E]/30 to-[#A5A58D]/30 flex items-end px-8 pb-4 relative">
-            {/* Logo de la comunidad */}
-            {!isEditingMode && (
-              <div className="absolute -bottom-8 left-8 w-24 h-24 rounded-[1.8rem] bg-white border-2 border-[#EAE2D6] shadow-md flex items-center justify-center overflow-hidden">
-                {comunidad.logoUrl ? (
-                  <img
-                    src={comunidad.logoUrl}
-                    alt={comunidad.nombre}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-3xl font-serif text-[#6B705C] font-bold">
-                    {comunidad.nombre.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-            )}
+        <div className="bg-white border border-[#EAE2D6] rounded-[2.5rem] shadow-xl overflow-hidden relative">
+          
+          {/* Portada / Banner */}
+          {comunidad.bannerUrl ? (
+            <div 
+              className="h-48 md:h-64 bg-cover bg-center w-full" 
+              style={{ backgroundImage: `url(${comunidad.bannerUrl})` }} 
+            />
+          ) : (
+            <div 
+              className="h-48 md:h-64 w-full" 
+              style={{ background: 'linear-gradient(135deg, oklch(0.72 0.08 60), oklch(0.58 0.12 140))' }} 
+            />
+          )}
 
-            {/* Botón de configuración/edición visible solo para admins */}
-            {isCommunityAdmin && (
-              <button
-                onClick={handleToggleEdit}
-                className="absolute top-4 right-4 bg-white/80 hover:bg-white backdrop-blur-sm border border-[#EAE2D6] p-2.5 rounded-full text-stone-700 shadow-sm hover:shadow transition-all z-10 flex items-center gap-1.5 font-semibold text-xs uppercase tracking-wider px-4"
-              >
-                {isEditingMode ? (
-                  <>
-                    <Eye className="w-4 h-4 text-[#A5A58D]" />
-                    Ver Ficha Pública
-                  </>
-                ) : (
-                  <>
-                    <Settings className="w-4 h-4 text-[#CB997E]" />
-                    Configuración
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          {/* Botón de configuración/edición visible solo para admins */}
+          {isCommunityAdmin && (
+            <button
+              onClick={handleToggleEdit}
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white backdrop-blur-sm border border-[#EAE2D6] p-2.5 rounded-2xl text-stone-700 shadow-md hover:shadow-lg transition-all z-10 flex items-center gap-1.5 font-semibold text-xs uppercase tracking-wider px-4 animate-fade-in"
+            >
+              {isEditingMode ? (
+                <>
+                  <Eye className="w-4 h-4 text-[#A5A58D]" />
+                  Ver Ficha Pública
+                </>
+              ) : (
+                <>
+                  <Settings className="w-4 h-4 text-[#CB997E]" />
+                  Configuración
+                </>
+              )}
+            </button>
+          )}
 
           {isEditingMode ? (
-            <div className="p-8">
+            <div className="p-6 md:p-8">
               <ConfiguracionComunidadPanel
                 onUpdated={async () => {
                   setIsEditingMode(false);
@@ -242,209 +239,400 @@ export function FichaComunidadView() {
               />
             </div>
           ) : (
-            <div className="pt-12 px-8 pb-8 space-y-6">
-            {/* Título e Info Básica */}
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl md:text-4xl font-serif text-[#4A4E4D] font-bold">
-                  {comunidad.nombre}
-                </h1>
-                {/* Badges de Tipo y Capacidad */}
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-[#F9F7F1] text-[#6B705C] text-xs font-bold rounded-full border border-[#EAE2D6]">
-                    {comunidad.tipo ? comunidad.tipo.charAt(0).toUpperCase() + comunidad.tipo.slice(1) : 'Otro'}
-                  </span>
-                  {comunidad.capacidad && comunidad.capacidad > 0 && (
-                    <span className="px-3 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded-full flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {comunidad.capacidad} max.
+            <div className="p-6 md:p-8 space-y-8">
+              
+              {/* Bloque A: Info Básica y Logo Superpuesto */}
+              <div className="relative border-b border-[#EAE2D6] pb-6">
+                <div className="absolute -top-16 md:-top-20 left-0 w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-white border-2 border-[#EAE2D6] shadow-md flex items-center justify-center overflow-hidden z-10">
+                  {comunidad.logoUrl ? (
+                    <img
+                      src={comunidad.logoUrl}
+                      alt={comunidad.nombre}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl md:text-5xl font-serif text-[#6B705C] font-bold">
+                      {comunidad.nombre.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
-              </div>
 
-              {/* Ubicación */}
-              {comunidad.ubicacion && (
-                <div className="flex items-center gap-1.5 text-stone-500 text-sm font-medium">
-                  <MapPin className="w-4 h-4 text-[#CB997E]" />
-                  <span>
-                    {comunidad.ubicacion.municipio}, {comunidad.ubicacion.region}, {comunidad.ubicacion.pais}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Descripción */}
-            <p className="text-stone-600 text-base md:text-lg leading-relaxed max-w-3xl">
-              {comunidad.descripcion}
-            </p>
-
-            {/* Etiquetas (Tags) */}
-            {comunidad.tags && comunidad.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                {comunidad.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-[#FDFBF7] hover:bg-[#F9F7F1] border border-[#EAE2D6] text-stone-700 text-xs font-medium rounded-xl transition-all"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Manifiesto si existe */}
-            {comunidad.manifiesto && (
-              <div className="space-y-3 pt-4 border-t border-[#EAE2D6]">
-                <h3 className="text-lg font-serif text-[#4A4E4D] font-bold flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-[#A5A58D]" />
-                  Manifiesto de Convivencia
-                </h3>
-                <div className="bg-[#FDFBF7] border border-[#EAE2D6] rounded-2xl p-6 text-stone-700 prose prose-stone max-w-none prose-p:text-stone-600 prose-headings:font-serif prose-headings:text-[#4A4E4D]">
-                  <ReactMarkdown>{comunidad.manifiesto}</ReactMarkdown>
-                </div>
-              </div>
-            )}
-
-            {/* Sección de Acción / Unirse */}
-            <div className="pt-6 border-t border-[#EAE2D6]">
-              {isMember ? (
-                // Caso A: Ya es miembro de la comunidad
-                <div className="bg-green-50/50 border border-green-100 rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-green-950">Ya eres parte de este espacio</p>
-                      <p className="text-sm text-green-800">
-                        Tienes acceso a todas las herramientas del panel de administración y tablón de anuncios.
-                      </p>
+                <div className="pt-10 md:pt-0 md:pl-40 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="text-2xl md:text-4xl font-serif text-[#4A4E4D] font-bold">
+                        {comunidad.nombre}
+                      </h1>
+                      <span className="px-3 py-1 bg-[#F9F7F1] text-[#6B705C] text-xs font-bold rounded-full border border-[#EAE2D6] uppercase tracking-wider">
+                        {comunidad.tipo ? comunidad.tipo.charAt(0).toUpperCase() + comunidad.tipo.slice(1) : 'Otro'}
+                      </span>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => navigate('/admin')}
-                    className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-2xl font-bold transition-all shrink-0"
-                  >
-                    Ir al panel
-                  </button>
-                </div>
-              ) : !appUser ? (
-                // Caso B: El usuario no está logueado
-                <div className="bg-[#FDFBF7] border border-[#EAE2D6] rounded-3xl p-6 space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Globe className="w-6 h-6 text-[#CB997E] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-stone-800">Unete a la comunidad</p>
-                      <p className="text-sm text-stone-600">
-                        {comunidad.requiereAprobacion
-                          ? 'Esta comunidad requiere aprobación por parte de los administradores. Para enviar tu solicitud de acceso debes iniciar sesión primero.'
-                          : 'Esta comunidad es pública y no requiere aprobación. Inicia sesión para formar parte de ella al instante.'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button
-                      onClick={() => openLoginModal('login')}
-                      className="bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3.5 px-8 rounded-2xl font-bold transition-all shadow-md text-center"
-                    >
-                      {comunidad.requiereAprobacion
-                        ? 'Iniciar sesión para solicitar acceso'
-                        : 'Iniciar sesión para unirte'}
-                    </button>
-                    <button
-                      onClick={() => openLoginModal('onboarding')}
-                      className="border border-[#A5A58D] text-[#A5A58D] hover:bg-[#F9F7F1] py-3.5 px-8 rounded-2xl font-bold transition-all text-center"
-                    >
-                      Crear una cuenta nueva
-                    </button>
-                  </div>
-                </div>
-              ) : comunidad.requiereAprobacion ? (
-                // Caso C: Logueado, requiere aprobación
-                <div className="space-y-4">
-                  {hasPending ? (
-                    <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-6 flex items-start gap-3 text-[#1E3A8A]">
-                      <Loader2 className="w-6 h-6 text-blue-600 animate-spin shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-blue-950">Solicitud en revisión</p>
-                        <p className="text-sm text-blue-800">
-                          Tu solicitud de acceso para unirte a <strong>{comunidad.nombre}</strong> está en espera de revisión por parte de los administradores.
-                        </p>
-                        <div className="mt-3 bg-white/70 border border-blue-100 rounded-2xl p-4 text-stone-700 text-sm">
-                          <span className="font-bold text-xs uppercase tracking-widest text-[#CB997E] block mb-1">
-                            Tu mensaje:
-                          </span>
-                          "{latestRequest?.mensaje}"
-                        </div>
+
+                    {comunidad.ubicacion && (
+                      <div className="flex items-center gap-1.5 text-stone-500 text-sm font-medium">
+                        <MapPin className="w-4 h-4 text-[#CB997E]" />
+                        <span>
+                          {comunidad.ubicacion.municipio}, {comunidad.ubicacion.region}, {comunidad.ubicacion.pais}
+                        </span>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Ocupación / Capacidad */}
+                  <div className="w-full md:w-auto min-w-[240px] bg-[#F9F7F1]/50 border border-[#EAE2D6]/40 rounded-2xl p-4 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#8A817C] uppercase tracking-wider">
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4 text-[#A5A58D]" />
+                        {members.length} {members.length === 1 ? 'miembro' : 'miembros'}
+                      </span>
+                      {comunidad.capacidad && comunidad.capacidad > 0 ? (
+                        <span>Límite: {comunidad.capacidad}</span>
+                      ) : null}
                     </div>
-                  ) : (
-                    <div className="bg-[#FDFBF7] border border-[#EAE2D6] rounded-3xl p-6 space-y-4">
-                      <div>
-                        <p className="font-bold text-stone-800">Solicitar acceso</p>
-                        <p className="text-sm text-stone-600">
-                          Explica al equipo y residentes por qué deseas formar parte de este espacio. Los administradores revisarán tu solicitud.
+                    
+                    {comunidad.capacidad && comunidad.capacidad > 0 ? (
+                      <div className="space-y-1">
+                        <div className="w-full bg-stone-200/60 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className="bg-[#A5A58D] h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.min(100, (members.length / comunidad.capacidad) * 100)}%` }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-right text-stone-400 font-medium">
+                          {Math.round((members.length / comunidad.capacidad) * 100)}% de ocupación
                         </p>
                       </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
 
-                      {hasRejected && (
-                        <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 text-rose-900 text-sm">
-                          <p className="font-bold mb-1">Tu solicitud anterior fue rechazada:</p>
-                          {latestRequest?.motivoRechazo && (
-                            <p className="font-semibold text-stone-700">{latestRequest.motivoRechazo}</p>
-                          )}
-                          {latestRequest?.detalleRechazo && (
-                            <p className="text-stone-500 italic mt-0.5">"{latestRequest.detalleRechazo}"</p>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-stone-400 uppercase tracking-wider block">
-                          Mensaje de motivación (mínimo 20 caracteres)
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={solicitudMsg}
-                          onChange={(e) => setSolicitudMsg(e.target.value)}
-                          placeholder="Hola tribu, me gustaría unirme porque..."
-                          className="w-full bg-white border border-[#EAE2D6] rounded-2xl p-4 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-[#A5A58D] transition-all text-sm"
-                        />
-                      </div>
-
+              {/* Layout principal: 2 columnas en desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                {/* Columna Izquierda (2/3): Tabs y Contenido */}
+                <div className="md:col-span-2 space-y-6">
+                  
+                  {/* Barra de pestañas */}
+                  <div className="flex border-b border-[#EAE2D6] gap-2 overflow-x-auto scrollbar-none">
+                    {(['presentacion', 'miembros', 'actividad'] as const).map((tab) => (
                       <button
-                        onClick={handleSendRequest}
-                        disabled={isExecuting || solicitudMsg.trim().length < 20}
-                        className="bg-[#CB997E] hover:bg-[#B58368] text-white py-3 px-6 rounded-2xl font-bold transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-3 font-bold text-xs md:text-sm border-b-2 transition-all uppercase tracking-widest whitespace-nowrap ${
+                          activeTab === tab
+                            ? 'border-[#CB997E] text-[#CB997E]'
+                            : 'border-transparent text-stone-400 hover:text-stone-700'
+                        }`}
                       >
-                        <MessageSquare className="w-5 h-5" />
-                        Solicitar unirse
+                        {tab === 'presentacion' ? 'Presentación' : tab === 'miembros' ? 'Miembros' : 'Actividad'}
                       </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Caso D: Logueado, público sin aprobación
-                <div className="bg-[#FDFBF7] border border-[#EAE2D6] rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <p className="font-bold text-stone-800">Forma parte de esta comunidad</p>
-                    <p className="text-sm text-stone-600">
-                      Este es un espacio abierto a cualquier miembro de Kanarii. ¡Únete de inmediato!
-                    </p>
+                    ))}
                   </div>
-                  <button
-                    onClick={handleJoinDirect}
-                    disabled={isExecuting}
-                    className="bg-[#CB997E] hover:bg-[#B58368] text-white py-3.5 px-8 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
-                  >
-                    Unirse a la comunidad
-                  </button>
+
+                  {/* Vistas de pestañas con transiciones CSS nativas */}
+                  <div className="relative">
+                    
+                    {/* Tab: Presentación */}
+                    {activeTab === 'presentacion' && (
+                      <div className="space-y-6 transition-all duration-200 ease-out opacity-100 translate-y-0">
+                        <p className="text-stone-600 text-base md:text-lg leading-relaxed whitespace-pre-line">
+                          {comunidad.descripcion}
+                        </p>
+
+                        {/* Etiquetas */}
+                        {comunidad.tags && comunidad.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {comunidad.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-3 py-1.5 bg-[#F9F7F1] border border-[#EAE2D6] text-stone-700 text-xs font-semibold rounded-xl"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Manifiesto */}
+                        {comunidad.manifiesto && (
+                          <div className="space-y-3 pt-6 border-t border-stone-100">
+                            <h3 className="text-lg md:text-xl font-serif text-[#4A4E4D] font-bold flex items-center gap-2">
+                              <BookOpen className="w-5 h-5 text-[#A5A58D]" />
+                              Manifiesto de Convivencia
+                            </h3>
+                            <div className="bg-[#FDFBF7] border border-[#EAE2D6] rounded-3xl p-6 md:p-8 text-stone-700 prose prose-stone max-w-none prose-p:text-stone-600 prose-headings:font-serif prose-headings:text-[#4A4E4D]">
+                              <ReactMarkdown>{comunidad.manifiesto}</ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tab: Miembros */}
+                    {activeTab === 'miembros' && (
+                      <div className="space-y-6 transition-all duration-200 ease-out opacity-100 translate-y-0">
+                        {loadingMembers ? (
+                          <div className="flex justify-center py-12">
+                            <Loader2 className="w-8 h-8 animate-spin text-[#A5A58D]" />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {members.map((member) => {
+                                // FIX 1: Fallback inteligente de nombre → displayName → inicial del email
+                                const displayName = member.nombre && member.nombre !== 'Sin Nombre'
+                                  ? member.nombre
+                                  : member.displayName || (member.email ? member.email.split('@')[0] : 'Miembro');
+                                const avatarInitial = displayName.charAt(0).toUpperCase();
+
+                                return (
+                                  <div key={member.id} className="bg-[#F9F7F1]/30 border border-[#EAE2D6]/40 rounded-2xl p-4 flex items-center gap-3">
+                                    {member.photoURL ? (
+                                      <img src={member.photoURL} alt={displayName} className="w-12 h-12 rounded-full object-cover border border-[#EAE2D6]" />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-[#A5A58D]/10 text-[#6B705C] border border-[#EAE2D6] flex items-center justify-center font-bold text-lg">
+                                        {avatarInitial}
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-bold text-stone-800 truncate">{displayName}</p>
+                                      {member.rol_comunidad && (
+                                        <p className="text-xs text-[#CB997E] font-semibold">{member.rol_comunidad}</p>
+                                      )}
+                                      <div className="flex flex-wrap gap-1.5 mt-1">
+                                        {member.arquetipo_s3 && (
+                                          <span className="inline-block px-2 py-0.5 bg-[#CB997E]/10 text-[#CB997E] text-[10px] font-bold rounded-full border border-[#CB997E]/20">
+                                            {member.arquetipo_s3}
+                                          </span>
+                                        )}
+                                        {member.tipo_hd && (
+                                          <span className="inline-block px-2 py-0.5 bg-[#A5A58D]/10 text-[#6B705C] text-[10px] font-bold rounded-full border border-[#A5A58D]/20">
+                                            {member.tipo_hd}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {!isMember && (
+                              <div className="bg-[#F9F7F1]/50 border border-[#EAE2D6]/40 rounded-3xl p-6 text-center space-y-4 shadow-sm">
+                                <Users className="w-10 h-10 text-[#CB997E] mx-auto" />
+                                <div className="space-y-1">
+                                  <h4 className="text-lg font-bold text-stone-800">¿Quieres conocer más a los miembros?</h4>
+                                  <p className="text-sm text-stone-600 max-w-md mx-auto">
+                                    Únete a este espacio para poder ver perfiles completos, conectar con la comunidad y compartir proyectos.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tab: Actividad */}
+                    {activeTab === 'actividad' && (
+                      <div className="space-y-6 transition-all duration-200 ease-out opacity-100 translate-y-0">
+                        {loadingTareas || loadingProyectos ? (
+                          <div className="flex justify-center py-12">
+                            <Loader2 className="w-8 h-8 animate-spin text-[#A5A58D]" />
+                          </div>
+                        ) : (
+                          <>
+                            {/* Tareas */}
+                            <div className="space-y-3">
+                              <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Tareas Recientes</h4>
+                              {tareas.length === 0 ? (
+                                <div className="bg-[#F9F7F1]/20 border border-[#EAE2D6]/30 rounded-2xl p-6 text-center text-sm text-stone-500">
+                                  No hay tareas registradas.
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  {tareas.slice(0, 5).map((tarea) => (
+                                    <div key={tarea.id} className="bg-white border border-[#EAE2D6] rounded-2xl p-4 flex items-center justify-between gap-3 shadow-sm">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-stone-800 truncate">{tarea.titulo}</p>
+                                        {isMember && tarea.descripcion && (
+                                          <p className="text-sm text-stone-600 line-clamp-1 mt-0.5">{tarea.descripcion}</p>
+                                        )}
+                                      </div>
+                                      <div className="shrink-0 flex items-center gap-2">
+                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                                          tarea.estado === 'completada'
+                                            ? 'bg-green-50 text-green-700 border border-green-200'
+                                            : 'bg-stone-100 text-stone-600'
+                                        }`}>
+                                          {tarea.estado || 'pendiente'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Proyectos */}
+                            <div className="space-y-3 pt-4">
+                              <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Proyectos Activos</h4>
+                              {proyectos.length === 0 ? (
+                                <div className="bg-[#F9F7F1]/20 border border-[#EAE2D6]/30 rounded-2xl p-6 text-center text-sm text-stone-500">
+                                  No hay proyectos activos.
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  {proyectos.slice(0, 5).map((proyecto) => (
+                                    <div key={proyecto.id} className="bg-white border border-[#EAE2D6] rounded-2xl p-4 flex items-center justify-between gap-3 shadow-sm">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-stone-800 truncate">{proyecto.titulo}</p>
+                                        {isMember && proyecto.descripcion && (
+                                          <p className="text-sm text-stone-600 line-clamp-1 mt-0.5">{proyecto.descripcion}</p>
+                                        )}
+                                      </div>
+                                      <div className="shrink-0">
+                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                                          proyecto.estado === 'en_marcha'
+                                            ? 'bg-green-50 text-green-700 border border-green-200'
+                                            : 'bg-stone-100 text-stone-600'
+                                        }`}>
+                                          {proyecto.estado || 'planificado'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
                 </div>
-              )}
+
+                {/* Columna Derecha (1/3): CTAs de Acceso y Participación */}
+                <div className="space-y-6">
+                  <div className="bg-[#F9F7F1]/50 border border-[#EAE2D6] rounded-3xl p-6 shadow-md space-y-6 sticky top-6">
+                    <div>
+                      <h3 className="text-lg font-serif font-bold text-[#4A4E4D] mb-2">Participar en este espacio</h3>
+                      <p className="text-sm text-[#8A817C] leading-relaxed">
+                        {comunidad.esPublica
+                          ? 'Esta es una comunidad abierta. Puedes unirte para compartir recursos, tareas y coordinar acuerdos comunitarios.'
+                          : 'Este es un espacio privado y requiere solicitud de aprobación previa por parte de los administradores.'}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-[#EAE2D6] pt-6">
+                      {isMember ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-green-700 font-bold text-sm bg-green-50 border border-green-200 rounded-2xl p-4">
+                            <CheckCircle2 className="w-5 h-5 shrink-0" />
+                            <span>¡Ya eres miembro de este espacio!</span>
+                          </div>
+                          <button
+                            onClick={() => navigate('/admin')}
+                            className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                          >
+                            Ir al panel de control
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : !appUser ? (
+                        <div className="space-y-4">
+                          <button
+                            onClick={() => openLoginModal('login')}
+                            className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md text-center"
+                          >
+                            {comunidad.requiereAprobacion
+                              ? 'Iniciar sesión para solicitar acceso'
+                              : 'Iniciar sesión para unirte'}
+                          </button>
+                          <button
+                            onClick={() => openLoginModal('onboarding')}
+                            className="w-full border border-[#A5A58D] text-[#A5A58D] hover:bg-white py-3.5 px-6 rounded-2xl font-bold transition-all text-center"
+                          >
+                            Crear una cuenta nueva
+                          </button>
+                        </div>
+                      ) : comunidad.requiereAprobacion ? (
+                        <div className="space-y-4">
+                          {hasPending ? (
+                            <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-5 flex flex-col gap-3 text-[#1E3A8A]">
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="w-5 h-5 text-blue-600 animate-spin shrink-0" />
+                                <span className="font-bold text-sm">Solicitud en revisión</span>
+                              </div>
+                              <p className="text-xs text-blue-800">
+                                Tu solicitud está siendo evaluada por el equipo de administración.
+                              </p>
+                              {latestRequest?.mensaje && (
+                                <div className="bg-white/80 border border-blue-100 rounded-xl p-3 text-stone-700 text-xs italic">
+                                  "{latestRequest.mensaje}"
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {hasRejected && (
+                                <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 text-rose-900 text-xs">
+                                  <p className="font-bold mb-1">Tu solicitud anterior fue rechazada:</p>
+                                  {latestRequest?.motivoRechazo && (
+                                    <p className="font-semibold text-stone-700">{latestRequest.motivoRechazo}</p>
+                                  )}
+                                  {latestRequest?.detalleRechazo && (
+                                    <p className="text-stone-500 italic mt-0.5">"{latestRequest.detalleRechazo}"</p>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block">
+                                  Mensaje de motivación (mínimo 20 caracteres)
+                                </label>
+                                <textarea
+                                  rows={4}
+                                  value={solicitudMsg}
+                                  onChange={(e) => setSolicitudMsg(e.target.value)}
+                                  placeholder="Hola tribu, me gustaría unirme porque..."
+                                  className="w-full bg-white border border-[#EAE2D6] rounded-2xl p-3 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-[#A5A58D] transition-all text-sm outline-none"
+                                />
+                              </div>
+
+                              <button
+                                onClick={handleSendRequest}
+                                disabled={isExecuting || solicitudMsg.trim().length < 20}
+                                className="w-full bg-[#CB997E] hover:bg-[#B58368] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                              >
+                                <MessageSquare className="w-5 h-5" />
+                                Enviar Solicitud
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleJoinDirect}
+                          disabled={isExecuting}
+                          className="w-full bg-[#CB997E] hover:bg-[#B58368] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                          Unirse a la comunidad
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
             </div>
-          </div>
-        )}
+          )}
+
+        </div>
       </div>
-    </div>
 
       {/* Modal de login/onboarding */}
       <AuthGateModal

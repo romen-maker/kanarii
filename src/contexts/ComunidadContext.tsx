@@ -65,22 +65,34 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Sincronizar con el perfil del usuario (multi-membership)
   useEffect(() => {
-    if (appUser?.communityIds && appUser.communityIds.length > 0) {
-      // Si el usuario tiene comunidades y la actual no está entre ellas,
-      // la cambiamos a la primera que tenga, PERO solo si:
-      // 1. Ya terminamos de cargar (no está cargando la comunidad actual).
-      // 2. El usuario no es administrador directo del espacio actual (evita revertir tras la creación).
-      if (!appUser.communityIds.includes(currentCommunityId)) {
-        const isDirectAdmin = comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser.uid);
-        if (!isDirectAdmin && !loading) {
-          setCommunityId(appUser.communityIds[0]);
-        }
+    if (!appUser) return;
+
+    const ids = appUser.communityIds || [];
+
+    // Si el usuario no tiene ninguna comunidad → limpiar estado
+    if (ids.length === 0) {
+      setCommunityId('');
+      return;
+    }
+
+    // Si la comunidad activa ya no está entre las del usuario, cambiar a la primera
+    if (!ids.includes(currentCommunityId)) {
+      const isDirectAdmin = comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser.uid);
+      if (!isDirectAdmin && !loading) {
+        setCommunityId(ids[0]);
       }
     }
   }, [appUser, currentCommunityId, comunidad, loading]);
 
   // Cargar datos de la comunidad actual
   useEffect(() => {
+    // Guardia: no intentar cargar si no hay un ID válido
+    if (!currentCommunityId) {
+      setComunidad(null);
+      setLoading(false);
+      return;
+    }
+
     const loadComunidad = async () => {
       setLoading(true);
       const data = await getComunidad(currentCommunityId);
