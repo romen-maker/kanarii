@@ -3,6 +3,12 @@
 
 Kanarii es un sistema de gestión comunitaria diseñado para elevar la armonía y la eficiencia en grupos humanos. Combina herramientas operativas (Tareas, Proyectos, Actas) con una capa de inteligencia profunda basada en Human Design y Astrología para optimizar la colaboración.
 
+## Kanarii en el ecosistema KanAIrOS
+
+Kanarii es el primer nodo operativo de **KanAIrOS**, un sistema operativo para comunidades autosuficientes y conscientes. Mientras KanAIrOS define la visión, la infraestructura de agentes y el ecosistema completo, Kanarii es su módulo de gestión comunitaria: el espacio donde las comunidades crean propuestas, votan, incorporan miembros y se autoorganizan.
+
+> Esta app no es KanAIrOS — es la primera semilla viva dentro de él.
+
 ---
 
 ## ✨ Características Principales
