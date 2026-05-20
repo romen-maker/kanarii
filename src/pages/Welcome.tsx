@@ -11,6 +11,12 @@ export function Welcome() {
 
   useEffect(() => {
     if (appUser) {
+      // 0. Si no ha visto el onboarding, forzar recorrido pedagógico
+      if (!appUser.hasSeenOnboarding) {
+        navigate('/tour');
+        return;
+      }
+
       // 1. Prioridad: Ficha pendiente de onboarding
       const pendingFicha = localStorage.getItem('kanarii_pendingFicha');
       if (pendingFicha) {
@@ -97,6 +103,13 @@ export function Welcome() {
                 className="w-full py-4 px-6 text-[#A5A58D] hover:text-[#6B705C] transition-colors rounded-2xl text-lg font-medium"
               >
                 Ya soy parte (Iniciar sesión)
+              </button>
+
+              <button
+                onClick={() => navigate('/tour')}
+                className="w-full py-3 px-6 text-[#8A817C] hover:text-[#6B705C] transition-colors rounded-2xl text-sm font-medium"
+              >
+                Conocer la filosofía →
               </button>
             </>
           )}

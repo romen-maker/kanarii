@@ -299,6 +299,20 @@ Este documento describe las fases de desarrollo de Kanarii, marcando el progreso
     - Vector store: pgvector.
     - Functions: Docker + VPS propio.
 
+## Patrón: Tour Step Layout (pendiente refactor)
+
+Los componentes de src/components/onboarding/ son presentacionales puros
+pero actualmente reciben `progressTracker?: React.ReactNode` como prop,
+lo que requiere modificar N archivos para cambios en UI compartida del tour.
+
+DEUDA TÉCNICA: Crear `TourStepLayout.tsx` como wrapper común que incluya:
+- Escape hatch (fixed top-right)  
+- Progress tracker (static, debajo del contenido)
+- Cualquier elemento de UI global del tour
+
+Las animaciones pasarían a renderizar solo su contenido visual.
+Prioridad: baja — resolver cuando se añada una nueva animación al tour.
+
 ---
 
 *Última actualización: 20 May 2026*

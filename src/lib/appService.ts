@@ -96,6 +96,7 @@ export interface AppUser {
   hasFicha?: boolean;
   communityIds: string[];
   communityId?: string | null; // Compatibilidad: computed del primero
+  hasSeenOnboarding?: boolean;
 }
 
 export interface Invitacion {
@@ -190,7 +191,8 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
       hasConsented: userData.hasConsented ?? false,
       communityIds: communityIds,
       communityId: communityIds[0] ?? null,
-      hasFicha
+      hasFicha,
+      hasSeenOnboarding: userData.hasSeenOnboarding ?? false
     };
   } catch (err) {
     handleFirestoreError(err, OperationType.GET, `users/${uid}`);
@@ -231,7 +233,8 @@ export function listenAppUser(uid: string, callback: (user: AppUser | null) => v
           hasConsented: userData.hasConsented ?? false,
           communityIds,
           communityId: communityIds[0] ?? null,
-          hasFicha
+          hasFicha,
+          hasSeenOnboarding: userData.hasSeenOnboarding ?? false
         });
       } else {
         callback(null);
@@ -3057,4 +3060,34 @@ export async function deleteCommunityMember(id: string): Promise<void> {
     throw err;
   }
 }
+
+/**
+ * Marca el onboarding de un usuario como completado.
+ */
+export async function markOnboardingComplete(uid: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { hasSeenOnboarding: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `users/${uid}`);
+    throw err;
+  }
+}
+
+/**
+ * Verifica si un usuario ya ha visto el onboarding.
+ */
+export async function hasSeenOnboarding(uid: string): Promise<boolean> {
+  try {
+    const userSnap = await getDoc(doc(db, 'users', uid));
+    if (userSnap.exists()) {
+      return userSnap.data().hasSeenOnboarding ?? false;
+    }
+    return false;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `users/${uid}`);
+    throw err;
+  }
+}
+
 
