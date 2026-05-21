@@ -361,7 +361,7 @@ export default function MarketplaceView() {
                         <Handshake className="w-6 h-6" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-stone-800 truncate">{servicio?.title || 'Servicio'}</h4>
+                        <h4 className="font-bold text-stone-800 truncate">{servicio?.title ?? 'Servicio eliminado'}</h4>
                         <p className="text-sm text-stone-500 mt-1">Con {getMemberName(otroUsuarioUid)}</p>
                         
                         <div className="text-xs text-stone-600 mt-2 bg-stone-50 p-2.5 rounded-xl border border-stone-100 whitespace-pre-line max-w-xl">
