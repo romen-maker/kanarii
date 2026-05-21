@@ -213,7 +213,7 @@ export default function MarketplaceTab({
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => onSelectAcuerdo(acuerdo)}
+                          onClick={(e) => { e.stopPropagation(); onSelectAcuerdo(acuerdo); }}
                           className="p-1.5 hover:bg-stone-100 rounded-xl text-stone-400 hover:text-amber-600 transition-colors"
                           title="Ver Detalles"
                         >
