@@ -105,34 +105,13 @@ export default function AdminPanelModals({
                       <div className="text-stone-800 font-medium">{getDatosPersona(selectedFicha).antiguedad_anos || 0} años</div>
                     </div>
                   </div>
-                  {/* Selector de Arquetipo de Rol (solo admin) */}
+                  {/* Arquetipo de Rol (solo lectura) */}
                   <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm space-y-3">
                     <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Arquetipo de Rol</h3>
-                    <select
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-800 focus:ring-2 focus:ring-[#CB997E] outline-none"
-                      value={
-                        members.find(m => m.userId === selectedFicha?.userId)?.arquetipo_s3 || ''
-                      }
-                      onChange={async (e) => {
-                        const member = members.find(m => m.userId === selectedFicha?.userId);
-                        if (!member?.id) return;
-                        try {
-                          await updateCommunityMember(member.id, { arquetipo_s3: e.target.value || undefined } as any);
-                          toast.success('Arquetipo actualizado');
-                        } catch {
-                          toast.error('Error al actualizar arquetipo');
-                        }
-                      }}
-                    >
-                      <option value="">Sin asignar</option>
-                      <option value="Enlazador">Enlazador</option>
-                      <option value="Guardián">Guardián</option>
-                      <option value="Creador">Creador</option>
-                      <option value="Facilitador">Facilitador</option>
-                      <option value="Tejedor">Tejedor</option>
-                      <option value="Representante">Representante</option>
-                    </select>
-                    <p className="text-[10px] text-stone-400">Define el rol arquetípico del miembro en la comunidad.</p>
+                    <div className="w-full bg-stone-50 border border-stone-100 rounded-xl px-3 py-2 text-sm text-stone-800 font-medium">
+                      {members.find(m => m.userId === selectedFicha?.userId)?.arquetipo_s3 || 'Sin asignar'}
+                    </div>
+                    <p className="text-[10px] text-stone-400">Rol arquetípico asignado en la comunidad.</p>
                   </div>
                   {selectedFicha.datosBrutos && (
                     <div className="bg-[#4A4E4D] p-6 rounded-3xl text-white space-y-4 shadow-lg shadow-stone-200">
