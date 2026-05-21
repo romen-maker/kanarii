@@ -105,14 +105,6 @@ export default function AdminPanelModals({
                       <div className="text-stone-800 font-medium">{getDatosPersona(selectedFicha).antiguedad_anos || 0} años</div>
                     </div>
                   </div>
-                  {/* Arquetipo de Rol (solo lectura) */}
-                  <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm space-y-3">
-                    <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Arquetipo de Rol</h3>
-                    <div className="w-full bg-stone-50 border border-stone-100 rounded-xl px-3 py-2 text-sm text-stone-800 font-medium">
-                      {members.find(m => m.userId === selectedFicha?.userId)?.arquetipo_s3 || 'Sin asignar'}
-                    </div>
-                    <p className="text-[10px] text-stone-400">Rol arquetípico asignado en la comunidad.</p>
-                  </div>
                   {selectedFicha.datosBrutos && (
                     <div className="bg-[#4A4E4D] p-6 rounded-3xl text-white space-y-4 shadow-lg shadow-stone-200">
                       <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Diseño Humano</h3>
