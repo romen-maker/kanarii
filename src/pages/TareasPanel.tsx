@@ -125,6 +125,7 @@ export function TareasPanel() {
 
     return (
       <EntityCard
+        key={tarea.id}
         id={tarea.id!}
         title={tarea.titulo}
         subtitle={tarea.descripcion}
