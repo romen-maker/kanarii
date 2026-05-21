@@ -34,7 +34,7 @@ export default function ComunidadSubTab({
   }, [currentCommunityId]);
 
   const filteredMembers = members.filter(m => {
-    if (roleFilter !== 'todos' && m.rol !== roleFilter) return false;
+    if (roleFilter !== 'todos' && (m.rolComunitario || m.rol) !== roleFilter) return false;
     return (
       (m.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (m.rol_comunidad?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -106,7 +106,7 @@ export default function ComunidadSubTab({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${member.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
-                        <span className="text-xs font-medium text-stone-600 capitalize">{member.rol || 'Miembro'}</span>
+                        <span className="text-xs font-medium text-stone-600 capitalize">{(member.rolComunitario || member.rol) || 'Miembro'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>

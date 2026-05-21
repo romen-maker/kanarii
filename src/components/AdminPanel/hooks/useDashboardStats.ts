@@ -48,12 +48,12 @@ export function useDashboardStats(params: UseDashboardStatsParams): DashboardSta
   return useMemo(() => {
     // 1. Personas
     const totalMiembros = members.length;
-    const fichasCompletas = members.filter(m => fichas.some(f => f.userId === m.userId)).length;
+    const fichasCompletas = members.filter(m => fichas.some(f => (f.userId || f.id) === m.userId)).length;
     
     const isThisMonth = (dateVal: any) => {
       if (!dateVal) return false;
-      const d = dateVal.toDate ? dateVal.toDate() : new Date(dateVal);
-      if (isNaN(d.getTime())) return false;
+      const d = dateVal.toDate ? dateVal.toDate() : (typeof dateVal === 'string' || typeof dateVal === 'number' ? new Date(dateVal) : null);
+      if (!d || isNaN(d.getTime())) return false;
       const now = new Date();
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     };

@@ -481,7 +481,8 @@ export interface CommunityMember {
   autoridad_hd?: string;
   antiguedad_anos?: number;
   rol_comunidad?: string;
-  rol?: string;
+  rolComunitario?: string; // Nivel de membresía (propietario, miembro, voluntario)
+  rol?: string; // Deprecated: usar rolComunitario
   estado?: string;
   creadoEn?: any;
   updatedAt?: any;
@@ -1258,7 +1259,9 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
         elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
         antiguedad_anos: base.antiguedad_anos || 0,
-        rol_comunidad: base.rol_comunidad || 'miembro',
+        rol_comunidad: base.rol_comunidad || '',
+        rolComunitario: base.rol || 'miembro',
+        rol: base.rol || 'miembro',
         estado: fichaFull.estado || 'activo',
         photoURL: memberPhotoURL,
         displayName: memberDisplayName,
@@ -2052,6 +2055,7 @@ export async function createComunidad(data: {
       autoridad_hd: autoridadHd,
       antiguedad_anos: 0,
       rol_comunidad: 'Fundador/a',
+      rolComunitario: 'propietario',
       rol: 'admin', // el creador es admin
       estado: 'activo',
       photoURL: userData.photoURL || '',
@@ -2482,7 +2486,9 @@ export async function resolverSolicitud(
           elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
           autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
           antiguedad_anos: base.antiguedad_anos || 0,
-          rol_comunidad: base.rol_comunidad || 'miembro',
+          rol_comunidad: base.rol_comunidad || '',
+          rolComunitario: base.rol || 'miembro',
+          rol: base.rol || 'miembro',
           estado: 'activo',
           photoURL: userData.photoURL || '',
           displayName: userData.displayName || '',
@@ -2509,7 +2515,9 @@ export async function resolverSolicitud(
           elemento_dominante: '',
           autoridad_hd: '',
           antiguedad_anos: 0,
-          rol_comunidad: 'miembro',
+          rol_comunidad: '',
+          rolComunitario: 'miembro',
+          rol: 'miembro',
           estado: 'activo',
           photoURL: userData.photoURL || '',
           displayName: userData.displayName || '',
@@ -2562,7 +2570,9 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
         antiguedad_anos: base.antiguedad_anos || 0,
-        rol_comunidad: base.rol_comunidad || 'miembro',
+        rol_comunidad: base.rol_comunidad || '',
+        rolComunitario: base.rol || 'miembro',
+        rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
         displayName: userData.displayName || '',
