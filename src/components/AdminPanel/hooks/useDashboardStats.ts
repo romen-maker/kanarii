@@ -99,13 +99,15 @@ export function useDashboardStats(params: UseDashboardStatsParams): DashboardSta
     }
     
     acuerdos.forEach(acuerdo => {
-      const date = acuerdo.creadoEn?.toDate ? acuerdo.creadoEn.toDate() : (acuerdo.creadoEn ? new Date(acuerdo.creadoEn) : null);
+      if (!acuerdo.creadoEn) return;
+      const date = typeof acuerdo.creadoEn.toDate === 'function'
+        ? acuerdo.creadoEn.toDate()
+        : new Date(acuerdo.creadoEn);
       if (!date || isNaN(date.getTime())) return;
-      
-      const mMatch = chartData.find(m => m.year === date.getFullYear() && m.month === date.getMonth());
-      if (mMatch) {
-        mMatch.count++;
-      }
+      const mMatch = chartData.find(
+        m => m.year === date.getFullYear() && m.month === date.getMonth()
+      );
+      if (mMatch) mMatch.count++;
     });
     
     const maxAcuerdosPeriodo = Math.max(...chartData.map(m => m.count), 0);
