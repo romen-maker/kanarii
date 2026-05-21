@@ -200,7 +200,7 @@ export default function AdminPanelModals({
         };
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onCloseAcuerdo}>
+          <div key="modal-acuerdo" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onCloseAcuerdo}>
             <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
                 <div className="flex items-center gap-3">
