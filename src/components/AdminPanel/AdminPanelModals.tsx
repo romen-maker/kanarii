@@ -158,6 +158,7 @@ export default function AdminPanelModals({
       {/* Modal: Detalle de Acuerdo */}
       {selectedAcuerdo && (() => {
         const servicio = allServicios.find(s => s.id === selectedAcuerdo.servicioId);
+        const nombreServicio = servicio?.title ?? 'Servicio eliminado';
         const formatTimestamp = (ts: any) => {
           if (!ts) return 'N/A';
           const date = ts.toDate ? ts.toDate() : new Date(ts);
@@ -199,7 +200,7 @@ export default function AdminPanelModals({
                   </div>
                   <div className="col-span-2 pt-2 border-t border-stone-100">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400">Servicio Vinculado</span>
-                    <p className="font-semibold text-stone-800">{servicio?.title || 'Servicio'}</p>
+                    <p className="font-semibold text-stone-800">{nombreServicio}</p>
                     {servicio?.description && (
                       <p className="text-xs text-stone-500 mt-1 italic">"{servicio.description}"</p>
                     )}
