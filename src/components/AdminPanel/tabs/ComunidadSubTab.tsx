@@ -34,7 +34,9 @@ export default function ComunidadSubTab({
   }, [currentCommunityId]);
 
   const filteredMembers = members.filter(m => {
-    if (roleFilter !== 'todos' && (m.rolComunitario || m.rol) !== roleFilter) return false;
+    // En Firebase el campo es rolComunitario. Fallback a rol para legacy.
+    const level = m.rolComunitario || m.rol;
+    if (roleFilter !== 'todos' && level !== roleFilter) return false;
     return (
       (m.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (m.rol_comunidad?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -97,41 +99,44 @@ export default function ComunidadSubTab({
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map(member => (
-                  <tr key={member.userId} className="hover:bg-[#FDFBF7] transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-stone-800">{member.nombre}</div>
-                      <div className="text-xs text-stone-400">{member.rol_comunidad || 'Sin rol definido'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${member.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
-                        <span className="text-xs font-medium text-stone-600 capitalize">{(member.rolComunitario || member.rol) || 'Miembro'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => onSelectFicha(member.userId)}
-                          className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all"
-                          title="Ver Ficha"
-                        >
-                          <Search className="w-4 h-4" />
-                        </button>
-                        {member.userId !== appUserId && (
+                filteredMembers.map(member => {
+                  const level = member.rolComunitario || member.rol;
+                  return (
+                    <tr key={member.userId} className="hover:bg-[#FDFBF7] transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-stone-800">{member.nombre}</div>
+                        <div className="text-xs text-stone-400">{member.rol_comunidad || 'Sin rol definido'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${member.estado === 'completo' ? 'bg-teal-500' : 'bg-amber-500'}`} />
+                          <span className="text-xs font-medium text-stone-600 capitalize">{level || 'Miembro'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-stone-500">{member.antiguedad_anos || 0} años</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-1">
                           <button
-                            onClick={() => onExpelMember(member)}
-                            className="p-2 hover:bg-red-50 text-stone-400 hover:text-red-600 rounded-lg transition-all"
-                            title="Expulsar Miembro"
+                            onClick={() => onSelectFicha(member.userId)}
+                            className="p-2 hover:bg-[#EAE2D6]/30 text-stone-400 hover:text-[#4A4E4D] rounded-lg transition-all"
+                            title="Ver Ficha"
                           >
-                            <UserMinus className="w-4 h-4" />
+                            <Search className="w-4 h-4" />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {member.userId !== appUserId && (
+                            <button
+                              onClick={() => onExpelMember(member)}
+                              className="p-2 hover:bg-red-50 text-stone-400 hover:text-red-600 rounded-lg transition-all"
+                              title="Expulsar Miembro"
+                            >
+                              <UserMinus className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
