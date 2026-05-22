@@ -74,8 +74,26 @@ NECESITO INVESTIGAR: [pregunta específica de investigación]
 FORMATO DE RESPUESTA ESPERADO: [lo que necesitas: comparativa, ejemplo de código, decisión de arquitectura, etc.]
 ```
 
-### 6. Entrega
-Mostrar al usuario:
+### 6. Pausa y handoff a /session-start
+
+Mostrar al usuario el siguiente mensaje y **no continuar hasta recibir respuesta**:
+
+```
+✅ Sprint XX listo. Prompt de Perplexity generado.
+
+👉 Próximos pasos:
+   1. Copia el prompt del paso anterior y pégalo en Perplexity.
+   2. Cuando tengas los hallazgos, vuelve aquí o abre Cursor y ejecuta /session-start.
+   3. Pega los hallazgos de la investigación antes o junto al comando /session-start
+      para que queden integrados en el task file antes de empezar a codear.
+
+⏸ Este workflow queda en pausa. Hasta luego.
+```
+
+> **Nota para el agente:** No ejecutes `/session-start` automáticamente. El usuario necesita hacer la investigación en Perplexity antes de continuar. El handoff es intencional.
+
+### 7. Entrega (resumen previo a la pausa)
+Justo antes del mensaje de pausa del paso 6, mostrar al usuario:
 1. Resumen del estado del roadmap (3 líneas máximo).
 2. Las tareas del sprint seleccionadas con su tamaño.
 3. El prompt para Perplexity listo para copiar.
