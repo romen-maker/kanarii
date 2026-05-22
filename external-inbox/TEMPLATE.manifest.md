@@ -1,36 +1,30 @@
-# Manifiesto de Integración — [Nombre de la Feature]
+# Manifiesto de Entrada — external-inbox/
 
-> Copia este archivo a `inbox/[nombre-feature]/manifest.md` y rellénalo antes de pedir la integración a Antigravity.
+Usa esta plantilla para describir el código que depositas en `external-inbox/`.
+El agente leerá este manifiesto antes de integrar nada.
+
+> ⚠️ Este archivo SÍ está trackeado en Git (es la plantilla).
+> El código que deposites aquí NO se sube (está en .gitignore).
 
 ---
 
-## Objetivo funcional
-<!-- ¿Qué hace esta feature? ¿Qué problema resuelve para el usuario de Kanarii? -->
+## Archivo de entrada
+```
+external-inbox/NOMBRE-DEL-ARCHIVO.md
+```
 
-## Origen del código
-<!-- AI Studio / Gemini CLI / Kimi / Qwen / otro -->
-<!-- Modelo usado: -->
+## Origen
+<!-- De dónde viene: AI Studio / Gemini CLI / prototipo externo / otro -->
 
-## Archivos entregados
-- `archivo.tsx` — descripción breve
-- `hook.ts` — descripción breve
+## ¿Qué hace?
+<!-- Descripción en 1-3 líneas de lo que hace el código -->
 
-## Dónde debería vivir en Kanarii
-- Datos: `src/lib/appService.ts` → función `fetchXxx()`
-- Estado: `src/hooks/useXxx.ts`
-- UI: `src/components/ui/XxxCard.tsx`
-- Página: `src/pages/XxxPage.tsx`
+## Archivos del codebase que probablemente toca
+<!-- Lista los archivos o módulos que crees que afecta -->
+-
 
-## Dependencias nuevas propuestas
-- ninguna
+## Precauciones conocidas
+<!-- ¿Algo que el agente deba saber antes de integrar? Opcional -->
 
-## Qué partes son para copiar y cuáles son referencia
-- `archivo.tsx` → copiar (solo ajustar naming)
-- `hook.ts` → referencia (tiene lógica Firestore directa, hay que extraerla)
-
-## Contexto adicional para el agente
-<!-- Decisiones tomadas, alternativas descartadas, limitaciones del modelo que lo generó... -->
-
-## Estado
-- Generado: [fecha]
-- Integrado: pendiente
+## Prioridad
+<!-- Alta / Media / Baja -->

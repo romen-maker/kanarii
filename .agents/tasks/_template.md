@@ -7,7 +7,10 @@ Antigravity. Reduce el contexto inyectado en sesión y elimina la planificación
 verbal que consume tokens sin producir código.
 
 ## Cuándo activar
-Siempre que vayas a implementar una feature, fix o refactor de más de 30 min.
+Siempre que vayas a implementar una feature, fix o refactor que cumpla
+cualquiera de estas condiciones (basta con una):
+- Duración estimada de más de 30 minutos, **o**
+- Afecta a más de 2 archivos (nuevos o modificados).
 
 ## Los tres pasos
 
@@ -22,7 +25,7 @@ Activa la skill `implementar-feature-dry` para que mapee antes de actuar.
 
 ### E — Execution (la sesión completa)
 El agente trabaja contra el task file.
-Al terminar, actualiza el task file con estado `DONE` y archiva en `.agents/tasks/_done/`.
+Al terminar, actualiza el task file con estado `DONE` y archiva en `.agents/tasks/_archived/`.
 
 ## Instrucciones de ejecución para el agente
 - Plan compacto: máx. 10 líneas, sin Research Artifact previo.
