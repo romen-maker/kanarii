@@ -1,0 +1,8 @@
+{
+  "_info": "Plantilla. El agente sobreescribe este archivo al abrir sesión. Si status=template, no hay sesión activa.",
+  "task": "",
+  "sprint": "",
+  "opened": "",
+  "status": "template",
+  "caja": []
+}

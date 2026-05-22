@@ -21,10 +21,10 @@ Confirma con el usuario:
 ### 3. Descomposición Atómica
 Divide el trabajo en tareas (máximo 8). Para cada tarea, define:
 - **Descripción**: Una línea clara de la acción.
-- **Archivos Afetados**: Rutas probables (`src/hooks/`, `src/lib/appService.ts`, etc.).
+- **Archivos Afectados**: Rutas exactas en `.agents/tasks/` o `src/`.
 - **Dependencia**: ¿Qué tarea debe terminarse antes de empezar esta?
 - **Criterio de Aceptación**: ¿Cómo verificamos que esta tarea específica funciona? (Integra aquí pruebas manuales o automáticas necesarias).
-- **Complejidad**: S (Simple), M (Media), L (Larga).
+- **Complejidad**: S (Simple <1h), M (Media 1-3h), L (Larga 3h+).
 
 ### 4. Secuenciación y Dependencias
 - Ordena la lista de tareas de forma que la implementación sea fluida y sin bloqueos.
@@ -33,7 +33,7 @@ Divide el trabajo en tareas (máximo 8). Para cada tarea, define:
     - `architecture-audit` (si el código base necesita limpieza previa).
 
 ### 5. Entrega
-El resultado debe ser un artefacto con el plan de tareas detallado. Sugiere guardarlo en `docs/tasks/[nombre-feature].md` para su seguimiento.
+El resultado debe ser un artefacto con el plan de tareas detallado. Guardarlo en `.agents/tasks/task-XXX.md` usando la plantilla en `.agents/tasks/_template.md`.
 
 ## Restricciones
 - **Límite de Tareas**: Máximo 8 tareas por desglose. Si salen más, propón dividir el ítem original en dos.
@@ -42,4 +42,25 @@ El resultado debe ser un artefacto con el plan de tareas detallado. Sugiere guar
 
 ---
 
-*Última actualización: 15 May 2026*
+## Modo Sprint (integración con /sprint-planning)
+
+Cuando se activa desde el workflow `/sprint-planning` o el usuario dice "prepara el sprint", usar este modo:
+
+### Selección de tareas para el sprint
+1. Leer el sprint file activo en `docs/sprints/`.
+2. Filtrar ítems del roadmap sin ✅ y sin `⏸ Pausada`.
+3. Proponer 3-5 tareas siguiendo el equilibrio de tamaños:
+   - No más de 1 tarea **L** por sprint.
+   - Al menos 1 tarea **S** para garantizar momentum.
+   - Completar con tareas **M**.
+4. Para cada tarea propuesta, indicar: descripción, tamaño, dependencias y si ya tiene task file.
+
+### Marcado de tareas completadas
+Cuando el workflow `/session-close` cierra una tarea:
+1. Localizar la tarea en `docs/sprints/sprint-XX.md`.
+2. Actualizar estado a `✅ Hecho` con fecha.
+3. Si la tarea tiene task file → confirmar que está archivado en `.agents/tasks/_archived/`.
+
+---
+
+*Última actualización: 22 May 2026*
