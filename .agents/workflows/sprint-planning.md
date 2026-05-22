@@ -30,12 +30,32 @@ bash scripts/agent/check-session.sh
 - Leer el sprint file más reciente en `docs/sprints/` (si existe) para entender qué quedó pendiente.
 - Identificar ítems con estado `⏳ En progreso` o sin ✅.
 
+### 2b. Decisión sobre tareas incompletas
+
+> Este paso se ejecuta solo si el sprint anterior tiene tareas sin ✅.
+> No arrastrar por inercia — cada tarea incompleta requiere una decisión explícita.
+
+Para cada tarea sin ✅ del sprint anterior, estimar el porcentaje completado y aplicar esta regla:
+
+| Avance estimado | Destino | Acción |
+|---|---|---|
+| **> 70%** | Arrastra al sprint nuevo | Añadir como primera tarea, tamaño S, con nota `↩ continuación sprint anterior` |
+| **< 30%** | Vuelve al roadmap | Marcar como ⬜ Pendiente en `roadmap.md`; no entra al sprint nuevo |
+| **30–70%** | Decisión del usuario | Preguntar: ¿arrastra o vuelve al roadmap? Esperar respuesta antes de continuar |
+
+Al cerrar el sprint anterior:
+- Cambiar su estado de `🟡 En curso` a `🔴 Cerrado con pendientes`.
+- Añadir una línea en `## Notas de planning` del sprint anterior explicando qué quedó sin hacer y por qué.
+
+**El agente presenta la propuesta de decisión al usuario y espera confirmación antes de escribir nada.**
+
 ### 3. Vaciado del idea-inbox
 - Leer todos los archivos en `docs/idea-inbox/`.
 - Para cada idea capturada, clasificar en una de tres categorías:
   - **roadmap** → añadir al ítem correspondiente en `roadmap.md` o crear ítem nuevo.
   - **backlog** → anotar en sección `## Backlog` del roadmap.
   - **descartar** → registrar como descartada con motivo en una línea.
+- Si hay entradas con prefijo `AUDIT-` → activar **inbox-integrator Modo B** para procesarlas.
 - Presentar al usuario la clasificación propuesta antes de escribir. Esperar confirmación.
 - Una vez confirmado, aplicar cambios en `roadmap.md` y borrar los archivos procesados de `docs/idea-inbox/`.
 
@@ -60,7 +80,7 @@ Crear `docs/sprints/sprint-XX.md` (incrementar número respecto al último exist
 Reglas de selección de tareas:
 - **3 a 5 tareas** por sprint.
 - Equilibrio de tamaños: no más de 1 tarea L por sprint.
-- Prioridad: ítems bloqueantes primero, luego por orden del roadmap.
+- Prioridad: tareas arrastradas del sprint anterior primero, luego ítems bloqueantes, luego por orden del roadmap.
 - Tamaños: **S** = < 1h, **M** = 1-3h, **L** = 3h+.
 
 ### 5. Generación del prompt para Perplexity
@@ -95,6 +115,7 @@ Mostrar al usuario el siguiente mensaje y **no continuar hasta recibir respuesta
 ### 7. Entrega (resumen previo a la pausa)
 Justo antes del mensaje de pausa del paso 6, mostrar al usuario:
 1. Resumen del estado del roadmap (3 líneas máximo).
-2. Las tareas del sprint seleccionadas con su tamaño.
-3. El prompt para Perplexity listo para copiar.
-4. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.
+2. Decisiones tomadas sobre tareas incompletas del sprint anterior (si las hubo).
+3. Las tareas del sprint seleccionadas con su tamaño.
+4. El prompt para Perplexity listo para copiar.
+5. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.
