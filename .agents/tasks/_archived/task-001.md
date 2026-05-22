@@ -19,8 +19,12 @@ Archivos autorizados:
 - `src/App.tsx`
 
 ## Criterios de done
-- [ ] Reglas de seguridad implementadas en `firestore.rules` según la especificación provista.
-- [ ] `AuthContext.tsx` actualizado con el enum `AuthStatus` y libre de condiciones de carrera.
-- [ ] `ProtectedRoute` en `App.tsx` adaptado para leer `status` y evitar parpadeos/redirecciones prematuras.
-- [ ] Verificar que la aplicación compila correctamente sin errores de TypeScript.
-- [ ] Validar localmente que la aplicación inicia y autentica de forma reactiva y consistente.
+- [x] Reglas de seguridad implementadas en `firestore.rules` según la especificación provista.
+- [x] `AuthContext.tsx` actualizado con el enum `AuthStatus` y libre de condiciones de carrera.
+- [x] `ProtectedRoute` en `App.tsx` adaptado para leer `status` y evitar parpadeos/redirecciones prematuras.
+- [x] Verificar que la aplicación compila correctamente sin errores de TypeScript.
+- [x] Validar localmente que la aplicación inicia y autentica de forma reactiva y consistente.
+
+> [!WARNING]
+> Cierre administrativo de rescate: Los cambios correspondientes a esta tarea fueron commiteados por error directamente en la rama `main` en el commit `513940ef0db61c394e5f1a48d2cc04c5b4a48323`. Se cierra la sesión de forma administrativa.
+
