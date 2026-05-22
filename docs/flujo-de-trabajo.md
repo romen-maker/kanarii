@@ -39,6 +39,7 @@ SKILLS (capacidades especializadas, se activan por contexto)
 ├── implementar-feature-dry — Ejecuta el código dentro de la Caja
 ├── structure-guardian      — Auditoría manual de arquitectura (uso puntual)
 └── inbox-integrator        — Vacía idea-inbox → roadmap/backlog (lunes)
+                              También procesa auditorías externas (ver sección abajo)
 ```
 
 ---
@@ -108,6 +109,56 @@ C6  Borrar lock           → rm .agent-session.lock
 
 ---
 
+## Auditorías externas
+
+> **¿Cuándo aplica?** Cuando un agente externo (QwenCoder, revisión de PR, Gemini, Perplexity)
+> entrega un informe técnico con hallazgos, riesgos o recomendaciones — no código ejecutable.
+
+### Regla fundamental
+
+Una auditoría externa **nunca entra directamente al sprint activo**. Siempre aterriza en
+`docs/idea-inbox/` con prefijo `AUDIT-` y se procesa el siguiente lunes con `inbox-integrator`.
+Esto protege el sprint en curso de interferencias no planificadas.
+
+### Formato de captura de auditoría
+
+Crear o añadir en `docs/idea-inbox/YYYY-MM-DD.md` una entrada por cada hallazgo relevante:
+
+```markdown
+## AUDIT-NN — [Título del hallazgo]
+- **Idea:** [Acción concreta en una línea]
+- **Impacto estimado:** Poco / Mucho
+- **Contexto:** [Fuente de la auditoría + verificación propia si existe]
+- **Skill sugerida:** [skill de .agents/skills/ que debería ejecutarlo]
+- **Archivos afectados:** [lista de archivos, máx. 5]
+- **Capturado:** YYYY-MM-DD HH:MM
+```
+
+### Criterios de clasificación para inbox-integrator (lunes)
+
+| Prioridad en auditoría | Destino en roadmap | Acción |
+|---|---|---|
+| Crítico / P0 (seguridad, datos) | `[CRÍTICO]` en sección 🚨 Seguridad | Añadir antes que cualquier tarea del sprint siguiente |
+| Alto / P1 (arquitectura, flujos) | `[ALTO]` en sección correspondiente | Planificar en los próximos 2 sprints |
+| Medio / P2 (calidad, DRY) | `[MEDIO]` en 🧹 Calidad interna | Backlog con fecha estimada |
+| Bajo / P3 (limpieza, docs) | `[BAJO]` o backlog post-MVP | Sin fecha comprometida |
+| Falso positivo verificado | `descartar` | Documentar por qué en el mismo inbox |
+
+### Ejemplo real (auditoría QwenCoder, mayo 2026)
+
+```markdown
+## AUDIT-01 — Reglas Firestore faltantes
+- **Idea:** Añadir reglas para `community_exits`, `profiles` y `fichas`
+- **Impacto estimado:** Mucho
+- **Contexto:** Verificado en firestore.rules — colecciones usadas sin regla explícita.
+  Riesgo real: fallo silencioso de app, no brecha abierta (Firestore niega por defecto).
+- **Skill sugerida:** `firebase-security-rules-auditor`
+- **Archivos afectados:** `firestore.rules`
+- **Capturado:** 2026-05-22 21:36
+```
+
+---
+
 ## Formato de captura de ideas en vuelo
 
 Cuando lanzas una idea durante la sesión, el agente la escribe en `docs/idea-inbox/YYYY-MM-DD.md`:
@@ -163,6 +214,7 @@ Si necesitas forzar un reseteo manual: borra este archivo desde la raíz del pro
 | El task file no tiene contexto técnico y el agente improvisa | Investigación no integrada | En la siguiente sesión, ejecutar `/session-start` pegando los hallazgos. El paso 3b los integrará. |
 | El sprint tiene tareas pero no se sabe cuál empezar | Sprint file desactualizado | Abrir sprint file activo en `docs/sprints/` y revisar columna Estado. |
 | Una idea en vuelo no aparece en el inbox | idea-capture (rule en caveman.md) no activa | Verificar que caveman.md esté cargado como rule en el agente. |
+| Llega una auditoría externa durante el sprint | Sin procedimiento claro | Ver sección **Auditorías externas** arriba. Nunca tocar el sprint directamente. |
 
 ---
 
@@ -183,7 +235,7 @@ Si necesitas forzar un reseteo manual: borra este archivo desde la raíz del pro
 │   │   ├── implementar-feature-dry/
 │   │   ├── roadmap-a-tarea/
 │   │   ├── structure-guardian/
-│   │   └── inbox-integrator/
+│   │   └── inbox-integrator/    ← También procesa auditorías externas (AUDIT-)
 │   └── tasks/
 │       ├── task-XXX.md          ← Contrato de sesión activa
 │       └── _archived/           ← Tasks completadas
@@ -192,5 +244,5 @@ Si necesitas forzar un reseteo manual: borra este archivo desde la raíz del pro
     ├── sprints/
     │   └── sprint-XX.md         ← Fuente de verdad semanal
     └── idea-inbox/
-        └── YYYY-MM-DD.md        ← Ideas en vuelo (se vacía cada lunes)
+        └── YYYY-MM-DD.md        ← Ideas en vuelo + auditorías externas (AUDIT-)
 ```
