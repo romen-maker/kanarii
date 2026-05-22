@@ -1,11 +1,13 @@
 ---
 name: accesibilidad-comunitaria
-description: Revisa que una pantalla o feature de Kanarii sea usable por personas con distintos niveles de alfabetización digital, visibilidad reducida o poca experiencia con apps. Actívala al terminar una feature o cuando el usuario diga 'revisa accesibilidad'.
+description: Revisa que una pantalla o feature de Kanarii sea usable por personas con distintos niveles de alfabetización digital, visibilidad reducida o poca experiencia con apps. Scope específico: comunidades rurales, rango de edad amplio, dispositivos básicos. Actívala al terminar una feature o cuando el usuario diga 'revisa accesibilidad'.
 ---
 
 # Accesibilidad Comunitaria (Inclusión Digital)
 
 Esta habilidad asegura que Kanarii sea una herramienta inclusiva, usable por todos los miembros de la comunidad independientemente de su edad, visión o experiencia tecnológica. Prioriza la claridad, la confianza y la facilidad de uso sobre la estética pura.
+
+> 🌿 **Scope**: diseñada para el contexto específico de Kanarii — comunidades rurales, miembros con distintos niveles de alfabetización digital, dispositivos Android de gama media-baja. No es una skill genérica de UX.
 
 ## Instrucciones de Revisión
 
@@ -56,4 +58,4 @@ Propuestas concretas de modificación en:
 
 ---
 
-*Última actualización: 15 May 2026*
+*Última actualización: 22 May 2026*

@@ -9,3 +9,5 @@ coverage/
 scratch/
 .vite_cache/
 inbox/
+# .agent-session.lock se trackea como plantilla pero nunca debe commitearse con status=open
+# Para forzar reset manual: editar status a "template" o borrar el archivo
