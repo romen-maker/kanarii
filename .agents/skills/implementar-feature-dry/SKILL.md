@@ -1,59 +1,44 @@
 ---
 name: implementar-feature-dry
-description: Guía al agente paso a paso en cómo implementar cualquier feature nueva en Kanarii respetando la arquitectura DRY. Actívala antes de escribir cualquier código nuevo.
+description: Protocolo de implementación DRY para features de Kanarii. Activa siempre que vayas a escribir código. Verifica que no duplicas lógica antes de crear nada nuevo.
 ---
 
-# Implementación de Features DRY (Don't Repeat Yourself)
+# Implementar Feature — DRY First
 
-Esta habilidad es el protocolo obligatorio para añadir cualquier funcionalidad nueva a Kanarii. Su objetivo es asegurar que el código sea consistente, reutilizable y siga la arquitectura de 3 capas definida para el proyecto, evitando la duplicidad de lógica de Firebase y hooks.
+## Antes de escribir una sola línea
 
-## Proceso Obligatorio
+Responde estas preguntas en orden. Si alguna es SÍ, adapta en lugar de crear:
 
-### Fase 1: Mapeo y Análisis Previo
-Antes de escribir una sola línea de código, debes responder a estas preguntas analizando el repositorio:
-1. **Entidad de Datos**: ¿Qué entidad maneja esta feature? (ej. tareas, actas, eventos).
-2. **Consistencia de Nomenclatura**: ¿Los campos propuestos siguen `naming-convention.md`? 
-   - *Verificación*: Abrir `appService.ts` y comparar nombres de campos (ej: ¿usamos `authorId` o `creatorId` en otras partes?).
-3. **Hooks Existentes**: ¿Existe ya un hook `use[Entidad].ts` en `src/hooks/`? 
-   - *Regla*: Si existe, se reutiliza o extiende. No se crea uno nuevo para la misma entidad.
-4. **Servicios de Datos**: ¿Hay ya operaciones similares en `src/lib/appService.ts`?
-   - *Regla*: Toda interacción con Firestore vive en `appService.ts`. No se importa `firebase/firestore` en otros sitios.
-5. **Acciones y Mutaciones**: ¿La acción (crear, editar, borrar) está ya contemplada en `useEntityActions`?
-6. **UI Reutilizable**: ¿Qué componentes de `src/components/ui/` pueden usarse para esta feature?
+### 1. Hooks y lógica
+- ¿Ya existe un hook `use[Entidad]Actions.ts` para esta entidad?
+  (Ejemplos: `useActaActions`, `useComunidadActions`, `useFichaActions`)
+- ¿O un hook genérico reutilizable que cubra el caso?
 
-### Fase 2: Plan de Acción (Decisión)
-Presenta al usuario un plan estructurado antes de proceder:
-- **Reutilizar**: Lista de elementos existentes que se usarán tal cual.
-- **Extender**: Archivos existentes que necesitan modificaciones mínimas.
-- **Crear Nuevo**: Solo si no hay equivalente (especificando a qué capa pertenece).
-- **No Tocar**: Archivos que deben permanecer intactos para evitar efectos colaterales.
+### 2. Componentes
+- ¿Existe ya un componente que haga lo mismo o algo similar?
+- Si es similar al 80%+: extiende el existente con props, no crees uno nuevo.
 
-**DETENERSE**: Espera la aprobación del usuario antes de pasar a la fase de código.
+### 3. Datos y Firestore
+- ¿Los campos propuestos siguen `.agents/rules/naming-convention.md`?
+- ¿El modelo de datos encaja con las colecciones existentes sin añadir redundancia?
 
-### Fase 3: Implementación por Capas (Bottom-Up)
-Implementa siempre en este orden estricto:
-1. **Acceso a Datos**: `src/lib/appService.ts` (Nuevos métodos de Firestore).
-2. **Lógica de Estado**: Hooks de entidad (`useEntities`) o de acción (`useEntityActions`).
-3. **Presentación**: Componentes UI en `src/components/ui/`.
-4. **Composición**: Página o Panel final en `src/pages/` (debe ser "tonta", solo orquestar hooks y componentes).
+### 4. Servicios
+- ¿La llamada a Firestore ya existe en algún servicio (`services/`)?
 
-### Fase 4: Verificación Pre-commit
-Checklist final antes de dar la tarea por concluida:
-- [ ] Ninguna página importa `appService` o `firestore` directamente.
-- [ ] No hay `try/catch` con `toast` inline en las páginas (deben ir en `useEntityActions`).
-- [ ] Los componentes UI no contienen lógica de negocio.
-- [ ] Los nuevos hooks siguen la firma estándar: `{ items, loading, reload }`.
+### 5. Acciones y Mutaciones
+- ¿La acción (crear, editar, borrar) ya está contemplada en `use[Entidad]Actions.ts`
+  para la entidad afectada? Si no existe el hook, créalo tú primero.
 
-## Restricciones Críticas
-- **Prohibida la duplicidad**: Si una entidad ya tiene un hook, úsalo.
-- **Separación de responsabilidades**: La lógica de negocio NO vive en el JSX.
-- **Modularidad**: Si la feature afecta a más de 5 archivos, usa `roadmap-a-tarea` para dividirla.
+## Modularidad
+- Si la feature afecta a **6 o más archivos** (nuevos o modificados),
+  usa `roadmap-a-tarea` para dividirla en tareas más pequeñas antes de empezar.
 
-## Integración
-- Actívala **siempre** al inicio de una tarea técnica.
-- Úsala en conjunto con `architecture-audit` para validar el resultado final.
-- Si hay dudas de UX, consulta primero con `feature-ux-kanarii`.
+## Durante la implementación
+1. Un archivo a la vez.
+2. Tras cada archivo: compilación mental — ¿sigue funcionando el conjunto?
+3. Si surge un desvío: `idea-capture` lo anota, tú sigues.
 
----
-
-*Última actualización: 16 May 2026*
+## Al terminar
+- Revisa que no queden `TODO` o `console.log` de debug.
+- Actualiza el task file con estado `DONE`.
+- Activa `accesibilidad-comunitaria` si la feature tiene UI.

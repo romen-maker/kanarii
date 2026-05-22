@@ -24,7 +24,13 @@ bash scripts/agent/check-session.sh
 1. Leer el JSON: identificar `task`, `sprint`, `opened`.
 2. Avisar al usuario: `"⚠️ Sesión anterior sin cerrar: [task] abierta desde [opened]. Ejecutando cierre automático."`
 3. Hacer commit de cualquier cambio staged: `git add -A && git commit -m "chore: auto-close sesión anterior [task]"` (solo si hay cambios).
-4. Mover ideas pendientes de `docs/idea-inbox/` al sprint file activo como notas (sin clasificar — se clasifican el lunes).
+4. Mover ideas pendientes de `docs/idea-inbox/` al sprint file activo añadiéndolas al final del archivo bajo esta sección:
+   ```markdown
+   ## Ideas capturadas (pendientes de clasificar)
+   > Añadidas en cierre automático. Clasificar el lunes con /sprint-planning.
+   - [idea 1]
+   - [idea 2]
+   ```
 5. Marcar la tarea como `⏸ Pausada` en el sprint file.
 6. Borrar `.agent-session.lock`.
 7. Continuar con Fase 1 para abrir la nueva sesión.
@@ -35,7 +41,10 @@ bash scripts/agent/check-session.sh
 
 1. Leer el sprint file más reciente en `docs/sprints/`.
 2. Identificar la primera tarea con estado `⬜ Pendiente` o `⏸ Pausada`.
-3. Si no hay sprint activo → avisar: `"No hay sprint activo. Ejecuta /sprint-planning primero."`
+3. **Si no hay sprint activo** → avisar: `"No hay sprint activo. Ejecuta /sprint-planning primero."` y detener.
+4. **Si el sprint está activo pero todas las tareas son `✅ Hecho`** → avisar:
+   `"🎉 Sprint completo. Opciones: (A) ejecutar /sprint-planning anticipado, (B) elegir una tarea del backlog en roadmap.md."`
+   Esperar elección del usuario antes de continuar.
 
 ---
 

@@ -1,38 +1,37 @@
 ---
 name: doe-framework
-description: Estructura cualquier tarea de desarrollo en un contrato escrito (task file) antes de abrir Antigravity. Sigue el patrón Directive → Orchestration → Execution para reducir tokens y eliminar planificación verbal en sesión.
+description: Crea un task file (contrato escrito) antes de abrir Antigravity para cualquier tarea de desarrollo. Activa cuando la tarea dure más de 30 min estimados o afecte a más de 2 archivos.
 ---
 
-# DOE Framework (Directive → Orchestration → Execution)
-
-Antes de abrir una sesión de desarrollo, la tarea debe existir como contrato escrito en `.agents/tasks/task-XXX.md`. Esta skill guía la creación de ese contrato.
+# DOE Framework — Directive → Orchestration → Execution
 
 ## Cuándo activar
-- El workflow `/session-start` no encuentra un task file para la tarea seleccionada.
-- El usuario quiere implementar algo nuevo y no tiene el task file escrito.
-- Cualquier tarea de más de 30 minutos estimados.
+Siempre que se cumpla **cualquiera** de estas condiciones:
+- Duración estimada **superior a 30 minutos**, o
+- Tarea que modifica o crea **más de 2 archivos** (nuevos o existentes).
+
+Si ambas condiciones son falsas (tarea corta en 1–2 archivos), trabaja
+directamente sin task file.
 
 ## Los tres pasos
 
-### D — Directive (fuera de Antigravity, con Perplexity o en texto plano)
-Definir el contrato de la tarea. Usar siempre como base la plantilla oficial:
-→ `.agents/tasks/_template.md` ← **única fuente de verdad del contrato**
+### D — Directive
+1. Crear `.agents/tasks/task-XXX.md` usando la plantilla en `.agents/tasks/_template.md`.
+2. Rellenar: objetivo, Caja de archivos (lista explícita), criterios de done, dependencias.
+3. El número XXX es el siguiente disponible en `.agents/tasks/`.
 
-No inventar campos. No omitir secciones. Si un campo no aplica, dejarlo explícitamente vacío.
+### O — Orchestration
+1. Abrir Antigravity.
+2. Primer mensaje = contenido completo del task file. Sin añadir contexto extra.
+3. Activar `implementar-feature-dry` para que el agente mapee antes de actuar.
 
-### O — Orchestration (primer mensaje en Antigravity)
-Pegar el contenido completo del task file como primer mensaje de la sesión.
-El agente NO necesita contexto adicional — el task file es autosuficiente.
-Activar la skill `implementar-feature-dry` para que mapee antes de actuar.
+### E — Execution
+1. El agente trabaja exclusivamente contra el task file.
+2. Si surge un desvío → `idea-capture` lo anota en `docs/idea-inbox/`, no en el chat.
+3. Al terminar: estado `DONE` en el task file → mover a `.agents/tasks/_archived/task-XXX.md`.
 
-### E — Execution (la sesión completa)
-El agente trabaja contra el task file.
-Al terminar, actualizar el task file con estado `DONE`.
-El workflow `/session-close` lo archiva en `.agents/tasks/_archived/`.
-
-## Instrucciones para el agente al crear el task file
-- Leer primero los archivos que podrían verse afectados (no asumir estructura).
-- Proponer la lista de archivos de la Caja con rutas exactas.
-- Criterio de done: debe ser verificable sin ambigüedad ("el componente renderiza X" no "el componente funciona bien").
-- Tamaño estimado: S (<1h), M (1-3h), L (3h+).
-- Esperar confirmación del usuario antes de guardar el task file.
+## Instrucciones para el agente
+- Plan compacto: máx. 10 líneas antes de actuar.
+- Sin Walkthrough Artifact al final — resumen de 3 líneas máximo.
+- Espera aprobación entre fases cuando hay más de una fase.
+- No escanees el workspace completo — el task file tiene el contexto suficiente.
