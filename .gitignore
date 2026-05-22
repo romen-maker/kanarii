@@ -13,3 +13,9 @@ external-inbox/*
 !external-inbox/.gitkeep
 # .agent-session.lock se trackea como plantilla pero nunca debe commitearse con status=open
 # Para forzar reset manual: editar status a "template" o borrar el archivo
+
+# Temporales y Backups
+.tmp/
+backup/
+out.txt
+.firebase/

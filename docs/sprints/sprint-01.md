@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-001 | Implementar Firestore Rules reales alineadas con el modelo multi-comunidad y roles | L | ✅ Hecho | [task-001](file:///.agents/tasks/_archived/task-001.md) |
-| T-002 | Eliminar email de admin hardcoded en `appService.ts` y usar campo `role` en Firestore | S | ⬜ Pendiente | — |
+| T-002 | Eliminar email de admin hardcoded en `appService.ts` y usar campo `role` en Firestore | S | ✅ Hecho | [task-002](file:///.agents/tasks/_archived/task-002.md) |
 | T-003 | Corregir reactividad de sesión con Google (onAuthStateChanged y propagación a React Router) | M | ⬜ Pendiente | — |
 | T-004 | Corregir validación de invitaciones (normalizar mayúsculas/minúsculas y feedback preciso) | S | ⬜ Pendiente | — |
 | T-005 | Asegurar permisos de lectura/escritura en propuestas, acuerdos, servicios, actas y fichas | M | ⬜ Pendiente | — |

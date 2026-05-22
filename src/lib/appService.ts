@@ -155,18 +155,12 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
       } else if (!userData.communityIds) {
         userData.communityIds = [];
       }
-
-      // Verificación de rol administrativo (Hardcoded por seguridad inicial)
-      if (email === 'romenusabo3@gmail.com' && userData.role !== 'admin') {
-        userData.role = 'admin';
-        await updateDoc(userDocRef, { role: 'admin' });
-      }
     } else {
       // Crear nuevo usuario
-      const role = email === 'romenusabo3@gmail.com' ? 'admin' : 'user';
+      // Se elimina el hardcode del email administrativo. Por defecto el rol global es 'user'.
       userData = {
         email: email,
-        role,
+        role: 'user',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         communityIds: []
@@ -1924,10 +1918,9 @@ export async function seedArteara() {
   const ref = doc(db, 'comunidades', 'arteara');
   const snap = await getDoc(ref);
   
-  // Buscar UID del admin
-  const userQuery = query(collection(db, 'users'), where('email', '==', 'romenusabo3@gmail.com'));
-  const userSnap = await getDocs(userQuery);
-  const adminUid = userSnap.empty ? null : userSnap.docs[0].id;
+  // TODO / TEMP WORKAROUND: UID del administrador fundador para el entorno actual.
+  // Vinculación temporal de Arteara con un UID fijo como contingencia del entorno actual (ADR-006).
+  const adminUid = 'Ma5KgZgD7RYWl9jDjzBeGnFzeno2';
 
   const data: Partial<Comunidad> = {
     nombre: 'Arteara',
