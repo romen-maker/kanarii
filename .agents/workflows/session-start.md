@@ -41,84 +41,109 @@ bash scripts/agent/check-session.sh
 
 1. Leer el sprint file más reciente en `docs/sprints/`.
 2. Identificar la primera tarea con estado `⬜ Pendiente` o `⏸ Pausada`.
-3. **Si no hay sprint activo** → avisar: `"No hay sprint activo. Ejecuta /sprint-planning primero."` y detener.
-4. **Si el sprint está activo pero todas las tareas son `✅ Hecho`** → avisar:
-   `"🎉 Sprint completo. Opciones: (A) ejecutar /sprint-planning anticipado, (B) elegir una tarea del backlog en roadmap.md."`
-   Esperar elección del usuario antes de continuar.
+3. Mostrar al usuario: `"Tarea activa: [T-XXX] — [descripción]"`.
 
 ---
 
-## FASE 2 — Task file
+## FASE 2 — Creación o carga del task file
 
-1. Verificar si existe `.agents/tasks/task-XXX.md` para la tarea seleccionada.
-2. **Si existe** → leerlo y continuar a Fase 3.
-3. **Si no existe** → activar skill `doe-framework`:
-   - Usar `.agents/tasks/_template.md` como base.
-   - Crear el task file con el usuario antes de continuar.
-   - No avanzar a Fase 3 hasta que el task file esté escrito y confirmado.
+1. Comprobar si existe `.agents/tasks/task-XXX.md`.
+2. Si **existe** → leerlo y saltar al paso 3b.
+3. Si **no existe** → activar `doe-framework` para crearlo.
+
+### 3b. Investigación previa (obligatorio antes de cerrar el task file)
+
+Este paso aplica tanto si el task file es nuevo como si se retoma uno existente sin contexto técnico.
+
+**Si el usuario ha pegado hallazgos de Perplexity u otra fuente** en el mismo mensaje o justo antes de ejecutar `/session-start`:
+- Leerlos e incorporarlos en la sección `## Contexto técnico` del task file como **decisiones ya tomadas**, no como opciones abiertas.
+- Usar este formato mínimo:
+  ```markdown
+  ## Contexto técnico
+  > Fuente: Perplexity [fecha]
+
+  - **Decisión:** [patrón o solución elegida]
+  - **Por qué:** [razón en 1 línea]
+  - **Constraint clave:** [limitación técnica relevante]
+  - **Referencia:** [URL o doc]
+  ```
+
+**Si no hay investigación previa**, preguntar:
+```
+¿Tienes investigación previa para [T-XXX]?
+  S → pégala ahora y la integro en el task file antes de continuar.
+  N → continuar sin contexto técnico adicional.
+```
+- Si **N** → continuar a Fase 3.
+- Si **S** → esperar que el usuario pegue los hallazgos, incorporarlos con el formato anterior, y luego continuar a Fase 3.
+
+> **Nota para el agente:** No inventes ni asumas decisiones técnicas si no hay investigación. La sección `## Contexto técnico` solo se rellena con información real aportada por el usuario.
+
+4. No avanzar a Fase 3 hasta que el task file esté completo y confirmado.
 
 ---
 
-## FASE 3 — Declaración de Caja
+## FASE 3 — Declaración de la Caja
 
-1. Leer la sección `## Archivos afectados` del task file.
-2. Declarar la Caja explícitamente:
+1. Leer la sección `## Caja de archivos` del task file.
+2. Mostrar al usuario la lista de archivos autorizados:
    ```
-   📦 CAJA ACTIVA: Solo se modificarán estos archivos en esta sesión:
-   - [archivo 1]
-   - [archivo 2]
-   - [archivo N]
-   Cualquier modificación fuera de esta lista activa el Protocolo de Integridad de Caja.
+   📦 CAJA ACTIVA para [T-XXX]:
+   Archivos autorizados:
+     - src/hooks/useAssembly.ts
+     - src/types/assembly.ts
+   Cualquier modificación fuera de esta lista activará el Protocolo de Integridad de Caja.
    ```
-3. Activar la skill correspondiente a la tarea (ej: `implementar-feature-dry`, `debug-kanarii`).
+3. Activar la skill relevante según el tipo de tarea (por defecto: `implementar-feature-dry`).
 
 ---
 
-## FASE 4 — Crear lock de sesión
+## FASE 4 — Apertura del lock
 
-Escribir `.agent-session.lock` en la raíz con el estado actual:
-
+Crear `.agent-session.lock` en la raíz del proyecto con este contenido:
 ```json
 {
   "task": "task-XXX",
   "sprint": "sprint-XX",
-  "opened": "YYYY-MM-DDTHH:MM",
+  "opened": "[ISO 8601 timestamp]",
   "status": "open",
-  "caja": ["archivo1", "archivo2"]
+  "authorized_files": ["src/hooks/useAssembly.ts", "src/types/assembly.ts"]
 }
 ```
 
-Confirmar al usuario: `"✅ Sesión iniciada. Tarea: [descripción]. Caja declarada con [N] archivos."`
+Mostrar al usuario: `"🔒 Sesión abierta. Lock creado. Empezamos con [T-XXX]."`
 
 ---
 
-## PROTOCOLO DE CIERRE — /session-close
+## FASE 5 — Cierre de sesión (/session-close)
 
-> Ejecutar al terminar la sesión. Si no se ejecuta manualmente, el Modo Rescate lo hará automáticamente en la siguiente /session-start.
+> Ejecutar al finalizar la sesión. Si el usuario se va sin ejecutarlo, la **Fase 0** lo hará automáticamente en la próxima sesión.
 
-### Pasos de cierre
+### C1. Verificación de la Caja
+Ejecutar `git diff --name-only` y comparar con `authorized_files` del lock.
+- Si hay archivos no autorizados → revertir con `git checkout -- [archivo]` y registrar en el task file bajo `## Desviaciones`.
 
-**C1 — Verificación de Caja final**
-Ejecutar `git diff --name-only` y confirmar que solo hay archivos dentro de la Caja.
-Si hay archivos fuera → aplicar Protocolo de Integridad de Caja antes de continuar.
-
-**C2 — Commit atómico**
+### C2. Commit atómico
 ```bash
-git add [archivos de la Caja]
-git commit -m "[tipo]: [descripción de la tarea] — [task-XXX]"
+git add -A
+git commit -m "[tipo](T-XXX): [descripción breve de lo hecho]"
 ```
-Formato del mensaje: `feat:`, `fix:`, `refactor:`, `chore:` según corresponda.
 
-**C3 — Marcar tarea en sprint**
-Actualizar `docs/sprints/sprint-XX.md`:
-- Si completada: `✅ Hecho`
-- Si pausada: `⏸ Pausada` con nota del punto de parada.
+### C3. Actualización del sprint file
+- Si la tarea está completa → marcar `✅ Hecho` en `docs/sprints/sprint-XX.md`.
+- Si queda trabajo → marcar `⏸ Pausada` y añadir nota de dónde se quedó.
 
-**C4 — Archivar task file**
-Mover `.agents/tasks/task-XXX.md` a `.agents/tasks/_archived/task-XXX.md`.
+### C4. Archivado del task file
+Si estado = `DONE`:
+```bash
+mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
+```
 
-**C5 — Limpiar lock**
-Borrar `.agent-session.lock`.
+### C5. Limpieza del idea-inbox
+Mover las ideas del `docs/idea-inbox/` del día al sprint file activo bajo `## Ideas capturadas` para clasificar el lunes.
 
-**C6 — Confirmación final**
-`"✅ Sesión cerrada. [tarea] marcada como [estado]. Lock eliminado."`
+### C6. Borrar el lock
+```bash
+rm .agent-session.lock
+```
+Mostrar al usuario: `"✅ Sesión cerrada correctamente. Hasta la próxima."`
