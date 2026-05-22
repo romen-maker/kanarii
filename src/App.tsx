@@ -95,12 +95,32 @@ function AppContent() {
   );
 }
 
-function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) {
-  const { appUser, loading } = useAuth();
+function ProtectedRoute({ 
+  children, 
+  requireAdmin = false 
+}: { 
+  children: React.ReactNode; 
+  requireAdmin?: boolean;
+}) {
+  const { appUser, status } = useAuth();
   
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div></div>;
-  if (!appUser) return <Navigate to="/" />;
-  if (requireAdmin && appUser.role !== 'admin') return <Navigate to="/ficha" />;
+  // Estado indeterminado: mostrar loading, no redirigir todavía
+  if (status === 'checking') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800" />
+      </div>
+    );
+  }
+  
+  // Estado definitivo: ahora sí redirigir o renderizar
+  if (status === 'unauthenticated' || !appUser) {
+    return <Navigate to="/" replace />;
+  }
+  
+  if (requireAdmin && appUser.role !== 'admin') {
+    return <Navigate to="/ficha" replace />;
+  }
   
   return <>{children}</>;
 }

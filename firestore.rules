@@ -1,18 +1,102 @@
-rules_version='2'
+// firestore.rules — Kanarii v2
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 6, 10);
+
+    // ─── HELPERS ──────────────────────────────────────────────────────────────
+    // Una sola lectura que retorna el documento de membresía (o null).
+    // Firestore Rules cachea esto automáticamente dentro de la misma evaluación.
+    function getMembership(communityId) {
+      return get(/databases/$(database)/documents/communities/$(communityId)/members/$(request.auth.uid));
+    }
+
+    // Devuelve true si el usuario tiene el rol exacto pedido
+    function hasRole(communityId, role) {
+      let m = getMembership(communityId);
+      return m != null && m.data.role == role;
+    }
+
+    // Devuelve true si el usuario tiene al menos ese nivel de rol
+    // Orden: visitante < miembro < admin
+    function hasMinRole(communityId, minRole) {
+      let m = getMembership(communityId);
+      if (m == null) { return false; }
+      let role = m.data.role;
+      if (minRole == 'visitante') { return true; }
+      if (minRole == 'miembro')   { return role == 'miembro' || role == 'admin'; }
+      if (minRole == 'admin')     { return role == 'admin'; }
+      return false;
+    }
+
+    // Verifica que el uid del documento coincide con el usuario autenticado
+    function isOwner() {
+      return request.auth.uid == resource.data.uid;
+    }
+
+    // ─── USUARIOS GLOBALES ─────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+
+    // ─── COMUNIDADES ───────────────────────────────────────────────────────
+    match /communities/{communityId} {
+      // Leer comunidad: cualquier autenticado puede ver la ficha pública
+      allow read: if request.auth != null;
+      // Crear comunidad: cualquier autenticado
+      allow create: if request.auth != null
+                    && request.resource.data.createdBy == request.auth.uid;
+      // Actualizar/borrar: solo admin de esa comunidad
+      allow update, delete: if hasRole(communityId, 'admin');
+
+      // ─── MIEMBROS de una comunidad ───────────────────────────────────────
+      match /members/{uid} {
+        // Leer tu propia membresía, o si eres miembro de la comunidad
+        allow read: if request.auth.uid == uid
+                    || hasMinRole(communityId, 'miembro');
+        // Solo el admin puede crear/editar membresías (invitar, cambiar rol)
+        allow create, update: if hasRole(communityId, 'admin');
+        // Puedes salir tú mismo, o un admin puede expulsarte
+        allow delete: if request.auth.uid == uid
+                      || hasRole(communityId, 'admin');
+      }
+
+      // ─── PROPUESTAS (gobernanza S3) ──────────────────────────────────────
+      match /proposals/{proposalId} {
+        allow read:   if hasMinRole(communityId, 'visitante');
+        allow create: if hasMinRole(communityId, 'miembro')
+                      && request.resource.data.authorId == request.auth.uid;
+        allow update: if hasMinRole(communityId, 'miembro')
+                      && (isOwner() || hasRole(communityId, 'admin'));
+        allow delete: if isOwner() || hasRole(communityId, 'admin');
+      }
+
+      // ─── TAREAS ──────────────────────────────────────────────────────────
+      match /tasks/{taskId} {
+        allow read:   if hasMinRole(communityId, 'miembro');
+        allow create: if hasMinRole(communityId, 'miembro');
+        allow update: if hasMinRole(communityId, 'miembro')
+                      && (isOwner() || hasRole(communityId, 'admin'));
+        allow delete: if isOwner() || hasRole(communityId, 'admin');
+      }
+
+      // ─── MARKETPLACE / SERVICIOS ─────────────────────────────────────────
+      match /services/{serviceId} {
+        allow read:   if hasMinRole(communityId, 'visitante');
+        allow create: if hasMinRole(communityId, 'miembro')
+                      && request.resource.data.providerId == request.auth.uid;
+        allow update, delete: if isOwner() || hasRole(communityId, 'admin');
+      }
+    }
+
+    // ─── SOLICITUDES de membresía (colección global) ──────────────────────
+    match /joinRequests/{requestId} {
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete:
+        if request.auth.uid == resource.data.userId
+        || hasRole(resource.data.communityId, 'admin');
     }
   }
 }

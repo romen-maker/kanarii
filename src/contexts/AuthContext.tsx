@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { 
   User, 
   onAuthStateChanged, 
@@ -10,12 +10,23 @@ import {
   isSignInWithEmailLink
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { AppUser, getAppUser, listenAppUser, updateAppUserConsent, guardarFichaPendiente, migrarFichaPendiente } from '../lib/appService';
+import { 
+  AppUser, 
+  getAppUser, 
+  listenAppUser, 
+  updateAppUserConsent, 
+  guardarFichaPendiente, 
+  migrarFichaPendiente 
+} from '../lib/appService';
+
+// 3 estados explícitos — elimina el booleano `loading` ambiguo
+type AuthStatus = 'checking' | 'authenticated' | 'unauthenticated';
 
 interface AuthContextType {
   user: User | null;
   appUser: AppUser | null;
-  loading: boolean;
+  status: AuthStatus;
+  loading: boolean; // para compatibilidad
   login: () => Promise<void>;
   sendMagicLink: (email: string, ficha?: any, mode?: 'onboarding' | 'login') => Promise<void>;
   completeMagicLinkLogin: (email: string, link: string) => Promise<boolean>;
@@ -24,7 +35,6 @@ interface AuthContextType {
 }
 
 // Variable de módulo para persistir el email en memoria durante la sesión del navegador
-// (Sandbox constraint: evitamos localStorage para el email)
 let memoryEmail: string | null = null;
 export const getMemoryEmail = () => memoryEmail;
 export const setMemoryEmail = (email: string | null) => { memoryEmail = email; };
@@ -34,45 +44,50 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<AuthStatus>('checking');
+
+  // Ref para evitar setState en componente desmontado
+  const unsubscribeAppUserRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    let unsubscribeAppUser: (() => void) | null = null;
-
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Limpiar suscripción previa a appUser si existía
-      if (unsubscribeAppUser) {
-        unsubscribeAppUser();
-        unsubscribeAppUser = null;
+      // Limpiar listener previo del appUser ANTES de cualquier setState
+      if (unsubscribeAppUserRef.current) {
+        unsubscribeAppUserRef.current();
+        unsubscribeAppUserRef.current = null;
       }
 
-      setUser(firebaseUser);
-      try {
-        if (firebaseUser) {
-          // 1. Asegurar la creación/migración inicial en Firestore
-          const profile = await getAppUser(firebaseUser.uid, firebaseUser.email!);
-          setAppUser(profile);
+      if (!firebaseUser) {
+        // React 18 agrupa estos setters en un solo render
+        setUser(null);
+        setAppUser(null);
+        setStatus('unauthenticated');
+        return;
+      }
 
-          // 2. Suscribirse en tiempo real a los cambios del documento del usuario
-          unsubscribeAppUser = listenAppUser(firebaseUser.uid, (updatedProfile) => {
-            if (updatedProfile) {
-              setAppUser(updatedProfile);
-            }
-          });
-        } else {
-          setAppUser(null);
-        }
-      } catch (error: any) {
-        console.error("Auth error:", error);
-      } finally {
-        setLoading(false);
+      try {
+        const profile = await getAppUser(firebaseUser.uid, firebaseUser.email!);
+        
+        setUser(firebaseUser);
+        setAppUser(profile);
+        setStatus('authenticated');
+
+        // Suscripción en tiempo real
+        unsubscribeAppUserRef.current = listenAppUser(firebaseUser.uid, (updatedProfile) => {
+          if (updatedProfile) setAppUser(updatedProfile);
+        });
+      } catch (error) {
+        console.error('Auth profile error:', error);
+        setUser(null);
+        setAppUser(null);
+        setStatus('unauthenticated');
       }
     });
 
     return () => {
       unsubscribeAuth();
-      if (unsubscribeAppUser) {
-        unsubscribeAppUser();
+      if (unsubscribeAppUserRef.current) {
+        unsubscribeAppUserRef.current();
       }
     };
   }, []);
@@ -85,14 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendMagicLink = async (email: string, ficha?: any, mode?: 'onboarding' | 'login') => {
     const actionCodeSettings = {
-      // TODO PRODUCCIÓN: cambiar por dominio real
       url: window.location.origin + '/auth/callback',
       handleCodeInApp: true,
     };
     
-    // REGLA 1: Guard explícito. NO guardar en modo login.
     if (mode !== 'login' && ficha) {
-      // FIX 2: Guardar ficha pendiente ANTES del Magic Link
       await guardarFichaPendiente(email, ficha);
     }
 
@@ -102,9 +114,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const completeMagicLinkLogin = async (email: string, link: string): Promise<boolean> => {
     const result = await signInWithEmailLink(auth, email, link);
-    setMemoryEmail(null); // Limpiar tras éxito
+    setMemoryEmail(null);
     
-    // REGLA 2: Siempre intentar migrar tras login exitoso por Magic Link
     let migrada = false;
     if (result.user && result.user.email) {
       migrada = await migrarFichaPendiente(result.user.email, result.user.uid);
@@ -121,22 +132,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await updateAppUserConsent(user.uid);
       setAppUser({ ...appUser, hasConsented: true });
-    } catch(err) {
-      // El error ya se maneja en appService vía handleFirestoreError
+    } catch (err) {
       console.error("Error updating consent:", err);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      appUser, 
-      loading, 
-      login, 
+    <AuthContext.Provider value={{
+      user,
+      appUser,
+      status,
+      loading: status === 'checking',
+      login,
       sendMagicLink,
       completeMagicLinkLogin,
-      logout, 
-      updateConsent 
+      logout,
+      updateConsent,
     }}>
       {children}
     </AuthContext.Provider>

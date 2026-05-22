@@ -1,8 +1,5 @@
 ---
-name: session-start
 description: Inicia una sesión de desarrollo. Detecta sesiones colgadas, selecciona la tarea activa, declara la Caja de archivos y activa el modo ejecución. Incluye el protocolo de cierre /session-close como paso final.
-trigger: manual
-command: /session-start
 ---
 
 # Workflow: /session-start
@@ -22,18 +19,10 @@ bash scripts/agent/check-session.sh
 
 **Si devuelve un JSON** → hay una sesión sin cerrar. Ejecutar Modo Rescate:
 1. Leer el JSON: identificar `task`, `sprint`, `opened`.
-2. Avisar al usuario: `"⚠️ Sesión anterior sin cerrar: [task] abierta desde [opened]. Ejecutando cierre automático."`
-3. Hacer commit de cualquier cambio staged: `git add -A && git commit -m "chore: auto-close sesión anterior [task]"` (solo si hay cambios).
-4. Mover ideas pendientes de `docs/idea-inbox/` al sprint file activo añadiéndolas al final del archivo bajo esta sección:
-   ```markdown
-   ## Ideas capturadas (pendientes de clasificar)
-   > Añadidas en cierre automático. Clasificar el lunes con /sprint-planning.
-   - [idea 1]
-   - [idea 2]
-   ```
-5. Marcar la tarea como `⏸ Pausada` en el sprint file.
-6. Borrar `.agent-session.lock`.
-7. Continuar con Fase 1 para abrir la nueva sesión.
+2. Avisar al usuario: `"⚠️ Sesión anterior sin cerrar: [task] abierta desde [opened]. Preparando cierre automático para aprobación."`
+3. **No hacer commit automático aún.** Incluir el rescate dentro del plan para aprobación.
+4. Detectar cambios staged/unstaged e ideas pendientes.
+5. Continuar a Fase 1 y reflejar este rescate en el plan.
 
 ---
 
@@ -41,87 +30,131 @@ bash scripts/agent/check-session.sh
 
 1. Leer el sprint file más reciente en `docs/sprints/`.
 2. Identificar la primera tarea con estado `⬜ Pendiente` o `⏸ Pausada`.
-3. Mostrar al usuario: `"Tarea activa: [T-XXX] — [descripción]"`.
+3. Mostrar: `"Tarea activa detectada: [T-XXX] — [descripción]"`.
 
 ---
 
 ## FASE 2 — Creación o carga del task file
 
 1. Comprobar si existe `.agents/tasks/task-XXX.md`.
-2. Si **existe** → leerlo y saltar al paso 3b.
-3. Si **no existe** → activar `doe-framework` para crearlo.
-
-### 3b. Investigación previa (obligatorio antes de cerrar el task file)
-
-Este paso aplica tanto si el task file es nuevo como si se retoma uno existente sin contexto técnico.
-
-**Si el usuario ha pegado hallazgos de Perplexity u otra fuente** en el mismo mensaje o justo antes de ejecutar `/session-start`:
-- Leerlos e incorporarlos en la sección `## Contexto técnico` del task file como **decisiones ya tomadas**, no como opciones abiertas.
-- Usar este formato mínimo:
-  ```markdown
-  ## Contexto técnico
-  > Fuente: Perplexity [fecha]
-
-  - **Decisión:** [patrón o solución elegida]
-  - **Por qué:** [razón en 1 línea]
-  - **Constraint clave:** [limitación técnica relevante]
-  - **Referencia:** [URL o doc]
-  ```
-
-**Si no hay investigación previa**, preguntar:
-```
-¿Tienes investigación previa para [T-XXX]?
-  S → pégala ahora y la integro en el task file antes de continuar.
-  N → continuar sin contexto técnico adicional.
-```
-- Si **N** → continuar a Fase 3.
-- Si **S** → esperar que el usuario pegue los hallazgos, incorporarlos con el formato anterior, y luego continuar a Fase 3.
-
-> **Nota para el agente:** No inventes ni asumas decisiones técnicas si no hay investigación. La sección `## Contexto técnico` solo se rellena con información real aportada por el usuario.
-
-4. No avanzar a Fase 3 hasta que el task file esté completo y confirmado.
+2. Si existe → leerlo.
+3. Si no existe → activar `doe-framework` para crearlo.
+4. Integrar investigación previa si el usuario la aportó.
+5. Si no hay investigación, preguntar si desea añadirla antes de planificar.
+6. No avanzar hasta que el task file esté completo.
 
 ---
 
 ## FASE 3 — Declaración de la Caja
 
-1. Leer la sección `## Caja de archivos` del task file.
-2. Mostrar al usuario la lista de archivos autorizados:
-   ```
-   📦 CAJA ACTIVA para [T-XXX]:
-   Archivos autorizados:
-     - src/hooks/useAssembly.ts
-     - src/types/assembly.ts
-   Cualquier modificación fuera de esta lista activará el Protocolo de Integridad de Caja.
-   ```
-3. Activar la skill relevante según el tipo de tarea (por defecto: `implementar-feature-dry`).
+1. Leer `## Caja de archivos` del task file.
+2. Mostrar archivos autorizados.
+3. Identificar skill relevante, pero **no activarla aún** si implica ejecución operativa.
+
+---
+
+## FASE 3.5 — Plan para aprobación (NUEVA, OBLIGATORIA)
+
+1. Generar un plan de sesión estructurado.
+2. Incluir:
+   - contexto detectado,
+   - contexto técnico consolidado,
+   - caja autorizada,
+   - pasos concretos,
+   - validaciones,
+   - riesgos,
+   - impacto del modo rescate si existe.
+3. Presentarlo en formato listo para copiar/pegar a Antigravity.
+4. Detenerse y esperar respuesta del usuario.
+5. Verificación requerida
+Elegir una y justificarla:
+
+- **Sin revisión UI**
+  - Motivo: el cambio no altera pantallas, navegación ni estados visibles.
+  - Permite pedir commit tras validación técnica.
+
+- **Revisión UI mínima**
+  - Pantallas a comprobar:
+    - [ruta/pantalla 1]
+    - [ruta/pantalla 2]
+  - Comportamientos a comprobar:
+    - [estado loading]
+    - [redirect / guard / login / logout]
+  - Antes de pedir commit, el agente debe preguntar:
+    - `"Haz esta comprobación UI mínima y confirma con: UI OK"`
+
+- **Revisión UI obligatoria**
+  - Pantallas a comprobar:
+    - [...]
+  - Casos a comprobar:
+    - [...]
+  - Evidencia esperada:
+    - confirmación del usuario, o capturas, o preview revisado
+  - Antes de pedir commit, el agente debe preguntar:
+    - `"Revisa la UI indicada y confirma con: UI OK"`
+
+### Rama de trabajo obligatoria
+
+Antes de crear `.agent-session.lock` o modificar cualquier archivo, el agente debe comprobar la rama actual y, si está en `main` o `master`, crear y cambiarse obligatoriamente a una rama de trabajo específica para la tarea. 
+
+Convención de nombres: `feat/T-XXX-descripcion-corta` para nuevas funcionalidades, `fix/T-XXX-descripcion-corta` para correcciones, `refactor/T-XXX-descripcion-corta` para refactors sin cambio funcional, `docs/T-XXX-descripcion-corta` para documentación y `chore/T-XXX-descripcion-corta` para mantenimiento. 
+
+El nombre de rama propuesto debe aparecer dentro del plan para aprobación, y tras recibir `APROBADO` el primer paso operativo será crear/cambiar a esa rama; si no puede hacerlo o detecta que sigue en `main`/`master`, debe detener la ejecución y avisar al usuario.
+
+### Respuestas válidas
+- `APROBADO`
+- `APROBADO CON CAMBIOS: ...`
+- `CANCELAR`
+
+### Regla dura
+Hasta recibir `APROBADO`:
+- no crear `.agent-session.lock`
+- no editar archivos del proyecto
+- no ejecutar cambios sobre código
+- no lanzar validaciones de build salvo lectura/inspección mínima
 
 ---
 
 ## FASE 4 — Apertura del lock
+El lock debe registrar también la rama activa aprobada
+**Solo tras aprobación explícita.**
 
-Crear `.agent-session.lock` en la raíz del proyecto con este contenido:
+Crear `.agent-session.lock`:
 ```json
 {
   "task": "task-XXX",
   "sprint": "sprint-XX",
+  "branch": "feat/T-XXX-descripcion-corta",
   "opened": "[ISO 8601 timestamp]",
   "status": "open",
-  "authorized_files": ["src/hooks/useAssembly.ts", "src/types/assembly.ts"]
+  "approved_plan": true,
+  "authorized_files": [
+    "src/hooks/useAssembly.ts",
+    "src/types/assembly.ts"
+  ]
 }
 ```
 
-Mostrar al usuario: `"🔒 Sesión abierta. Lock creado. Empezamos con [T-XXX]."`
+El `branch` registrado en el lock debe coincidir con la rama de trabajo aprobada en la Fase 3.5. Si la rama activa no coincide, o si el agente sigue en `main`/`master`, la ejecución debe detenerse inmediatamente hasta corregirlo.
+Mostrar: `"🔒 Sesión abierta. Lock creado. Ejecución autorizada para [T-XXX]."`
 
 ---
 
-## FASE 5 — Cierre de sesión (/session-close)
+## FASE 5 — Ejecución controlada
 
-> Ejecutar al finalizar la sesión. Si el usuario se va sin ejecutarlo, la **Fase 0** lo hará automáticamente en la próxima sesión.
+1. Activar la skill relevante.
+2. Ejecutar únicamente el plan aprobado.
+3. Si surge necesidad de salir de la caja o cambiar el enfoque:
+   - detener ejecución,
+   - presentar mini-plan de cambio,
+   - esperar nueva aprobación.
+
+---
+
+## FASE 6 — Cierre de sesión (/session-close)
 
 ### C1. Verificación de la Caja
-Ejecutar `git diff --name-only` y comparar con `authorized_files` del lock.
-- Si hay archivos no autorizados → revertir con `git checkout -- [archivo]` y registrar en el task file bajo `## Desviaciones`.
+Ejecutar `git diff --name-only` y comparar con `authorized_files`.
 
 ### C2. Commit atómico
 ```bash
@@ -130,8 +163,8 @@ git commit -m "[tipo](T-XXX): [descripción breve de lo hecho]"
 ```
 
 ### C3. Actualización del sprint file
-- Si la tarea está completa → marcar `✅ Hecho` en `docs/sprints/sprint-XX.md`.
-- Si queda trabajo → marcar `⏸ Pausada` y añadir nota de dónde se quedó.
+- Si completa → `✅ Hecho`
+- Si no → `⏸ Pausada` con nota de continuidad
 
 ### C4. Archivado del task file
 Si estado = `DONE`:
@@ -140,10 +173,11 @@ mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
 ```
 
 ### C5. Limpieza del idea-inbox
-Mover las ideas del `docs/idea-inbox/` del día al sprint file activo bajo `## Ideas capturadas` para clasificar el lunes.
+Mover ideas al sprint file activo.
 
 ### C6. Borrar el lock
 ```bash
 rm .agent-session.lock
 ```
-Mostrar al usuario: `"✅ Sesión cerrada correctamente. Hasta la próxima."`
+
+Mostrar: `"✅ Sesión cerrada correctamente. Hasta la próxima."`
