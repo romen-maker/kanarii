@@ -9,3 +9,7 @@ coverage/
 scratch/
 .vite_cache/
 inbox/
+.agents/skills/_archived/
+.agents/tasks/_archived/
+!.agents/skills/_archived/README.md
+!.agents/tasks/_archived/README.md
