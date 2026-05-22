@@ -21,6 +21,7 @@
 | `firebase-ai-logic-basics` | Lógica de IA con Firebase | Features de IA |
 | `firebase-kanarii` | Firebase específico de Kanarii | Cualquier tarea con Firestore/Auth |
 | `firebase-security-rules-auditor` | Auditoría de reglas de seguridad | Al modificar reglas Firestore |
+| `git-gardener` | Higiene del repo: detecta y elimina ramas mergeadas, gone y stale bajo aprobación | Post-sprint, >15 ramas activas, limpieza manual |
 | `implementar-feature-dry` | Implementación DRY de features | Toda sesión de código |
 | `inbox-integrator` | Integra código externo desde `inbox/` | Al traer código de AI Studio u otras fuentes |
 | `roadmap-a-tarea` | Descompone roadmap en tareas atómicas | Planning + sprint |
@@ -28,7 +29,7 @@
 | `skill-manager` | Gestiona el ciclo de vida de skills | Activar/archivar skills |
 | `structure-guardian` | Auditoría manual de arquitectura completa | Revisiones periódicas |
 | `tech-scout` | Investigación de tecnologías externas | Antes de añadir dependencias |
-| `test-e2e-kanarii` | Tests end-to-end | QA de features críticas |
+| `test-e2e-kanarii` | Tests end-to end | QA de features críticas |
 
 ---
 
