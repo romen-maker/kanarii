@@ -38,10 +38,15 @@ bash scripts/agent/check-session.sh
 
 1. Comprobar si existe `.agents/tasks/task-XXX.md`.
 2. Si existe → leerlo.
-3. Si no existe → activar `doe-framework` para crearlo.
+3. Si no existe → activar `doe-framework` para crearlo siguiendo la plantilla en `.agents/tasks/_template.md`.
 4. Integrar investigación previa si el usuario la aportó.
 5. Si no hay investigación, preguntar si desea añadirla antes de planificar.
 6. No avanzar hasta que el task file esté completo.
+
+> ⚠️ **IMPORTANTE:** Un task file completo NO autoriza la ejecución.
+> El task file describe **QUÉ** hay que hacer y **qué archivos** están en la Caja.
+> La aprobación explícita del plan en Fase 3.5 autoriza **CUÁNDO y CÓMO** hacerlo.
+> Son pasos distintos e insustituibles. Continuar a Fase 3.
 
 ---
 
@@ -53,71 +58,76 @@ bash scripts/agent/check-session.sh
 
 ---
 
-## FASE 3.5 — Plan para aprobación (NUEVA, OBLIGATORIA)
+## FASE 3.5 — Plan para aprobación (OBLIGATORIA Y BLOQUEANTE)
 
-1. Generar un plan de sesión estructurado.
-2. Incluir:
-   - contexto detectado,
-   - contexto técnico consolidado,
-   - caja autorizada,
-   - pasos concretos,
-   - validaciones,
-   - riesgos,
-   - impacto del modo rescate si existe.
-3. Presentarlo en formato listo para copiar/pegar a Antigravity.
-4. Detenerse y esperar respuesta del usuario.
-5. Verificación requerida
-Elegir una y justificarla:
+El agente **DEBE** generar y mostrar el bloque completo siguiente antes de realizar
+**cualquier acción operativa**. No hay excepción posible.
 
-- **Sin revisión UI**
-  - Motivo: el cambio no altera pantallas, navegación ni estados visibles.
-  - Permite pedir commit tras validación técnica.
+Generar el bloque con este formato exacto:
 
-- **Revisión UI mínima**
-  - Pantallas a comprobar:
-    - [ruta/pantalla 1]
-    - [ruta/pantalla 2]
-  - Comportamientos a comprobar:
-    - [estado loading]
-    - [redirect / guard / login / logout]
-  - Antes de pedir commit, el agente debe preguntar:
-    - `"Haz esta comprobación UI mínima y confirma con: UI OK"`
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 PLAN PENDIENTE DE APROBACIÓN — T-XXX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- **Revisión UI obligatoria**
-  - Pantallas a comprobar:
-    - [...]
-  - Casos a comprobar:
-    - [...]
-  - Evidencia esperada:
-    - confirmación del usuario, o capturas, o preview revisado
-  - Antes de pedir commit, el agente debe preguntar:
-    - `"Revisa la UI indicada y confirma con: UI OK"`
+📋 TAREA: [nombre completo de la tarea]
+🌿 RAMA PROPUESTA: [feat|fix|refactor|docs|chore]/T-XXX-descripcion-corta
 
-### Rama de trabajo obligatoria
+📁 ARCHIVOS QUE SE VAN A MODIFICAR:
+  - src/ruta/archivo1.ts  → [qué cambia y por qué]
+  - src/ruta/archivo2.tsx → [qué cambia y por qué]
 
-Antes de crear `.agent-session.lock` o modificar cualquier archivo, el agente debe comprobar la rama actual y, si está en `main` o `master`, crear y cambiarse obligatoriamente a una rama de trabajo específica para la tarea. 
+📌 PASOS DEL PLAN (en orden de ejecución):
+  1. [acción concreta]
+  2. [acción concreta]
+  3. [acción concreta]
 
-Convención de nombres: `feat/T-XXX-descripcion-corta` para nuevas funcionalidades, `fix/T-XXX-descripcion-corta` para correcciones, `refactor/T-XXX-descripcion-corta` para refactors sin cambio funcional, `docs/T-XXX-descripcion-corta` para documentación y `chore/T-XXX-descripcion-corta` para mantenimiento. 
+⚠️ RIESGOS DETECTADOS:
+  - [riesgo con impacto estimado, o "Ninguno identificado"]
 
-El nombre de rama propuesto debe aparecer dentro del plan para aprobación, y tras recibir `APROBADO` el primer paso operativo será crear/cambiar a esa rama; si no puede hacerlo o detecta que sigue en `main`/`master`, debe detener la ejecución y avisar al usuario.
+🖥️ VERIFICACIÓN UI REQUERIDA: [Sin revisión / Mínima / Obligatoria]
+  Pantallas: [lista o "N/A"]
+  Comportamientos a comprobar: [lista o "N/A"]
+
+⏳ ESPERANDO TU RESPUESTA: APROBADO | APROBADO CON CAMBIOS: [...] | CANCELAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Regla dura (no negociable)
+
+Hasta recibir `APROBADO` o `APROBADO CON CAMBIOS` en este chat, está **estrictamente prohibido**:
+
+- Crear `.agent-session.lock`
+- Crear, cambiar o modificar cualquier rama git
+- Editar cualquier archivo del proyecto (código, docs, tasks, scripts)
+- Ejecutar `git add`, `git commit`, `git checkout -b` o cualquier comando que modifique estado
+- Ejecutar `npm run`, `npx`, ni validaciones de build
+
+**Está permitido** leer archivos, hacer búsquedas y consultas de solo lectura para construir el plan.
+
+Si el agente detecta que ha ejecutado alguna acción operativa sin `APROBADO` explícito,
+debe detenerse inmediatamente, informar al usuario de lo ocurrido con detalle,
+y presentar el plan de nuevo desde cero esperando nueva aprobación.
 
 ### Respuestas válidas
-- `APROBADO`
-- `APROBADO CON CAMBIOS: ...`
-- `CANCELAR`
 
-### Regla dura
-Hasta recibir `APROBADO`:
-- no crear `.agent-session.lock`
-- no editar archivos del proyecto
-- no ejecutar cambios sobre código
-- no lanzar validaciones de build salvo lectura/inspección mínima
+- `APROBADO` → continuar exactamente con el plan presentado
+- `APROBADO CON CAMBIOS: [descripción]` → ajustar el plan según los cambios indicados y confirmar antes de ejecutar
+- `CANCELAR` → cerrar sesión sin modificar nada
+
+### Convención de nombres de rama
+
+`feat/T-XXX-descripcion-corta` · nuevas funcionalidades
+`fix/T-XXX-descripcion-corta` · correcciones de bugs
+`refactor/T-XXX-descripcion-corta` · refactors sin cambio funcional
+`docs/T-XXX-descripcion-corta` · documentación
+`chore/T-XXX-descripcion-corta` · mantenimiento e infraestructura
 
 ---
 
 ## FASE 4 — Apertura del lock
-El lock debe registrar también la rama activa aprobada
-**Solo tras aprobación explícita.**
+
+**Solo tras aprobación explícita.** El primer paso operativo es crear la rama aprobada.
 
 Crear `.agent-session.lock`:
 ```json
@@ -135,7 +145,9 @@ Crear `.agent-session.lock`:
 }
 ```
 
-El `branch` registrado en el lock debe coincidir con la rama de trabajo aprobada en la Fase 3.5. Si la rama activa no coincide, o si el agente sigue en `main`/`master`, la ejecución debe detenerse inmediatamente hasta corregirlo.
+El `branch` registrado en el lock debe coincidir con la rama aprobada en Fase 3.5.
+Si la rama activa no coincide, o si el agente sigue en `main`/`master`, detener ejecución y avisar al usuario.
+
 Mostrar: `"🔒 Sesión abierta. Lock creado. Ejecución autorizada para [T-XXX]."`
 
 ---
@@ -146,8 +158,8 @@ Mostrar: `"🔒 Sesión abierta. Lock creado. Ejecución autorizada para [T-XXX]
 2. Ejecutar únicamente el plan aprobado.
 3. Si surge necesidad de salir de la caja o cambiar el enfoque:
    - detener ejecución,
-   - presentar mini-plan de cambio,
-   - esperar nueva aprobación.
+   - presentar mini-plan de cambio con el mismo formato de Fase 3.5,
+   - esperar nueva aprobación antes de continuar.
 
 ---
 
