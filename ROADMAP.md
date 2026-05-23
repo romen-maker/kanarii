@@ -54,11 +54,15 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
+- [ ] [ALTO] Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) (AUDIT-04/05).
 - [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (muestran email en lugar de nombre en fichas públicas). Script one-shot o Cloud Function triggered on read si `displayName` vacío.
 - [ ] [MEDIO] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks.
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
+- [ ] [BAJO] Consolidar scripts de auditoría duplicados en `scripts/` y extraer helpers a `firestore-helpers.ts` (AUDIT-06).
+- [ ] [BAJO] Normalizar convenio de naming de funciones de consulta (sufijo `Query`) (AUDIT-07).
+- [ ] [BAJO] Marcar "Discrepancias Detectadas" como RESUELTO EN T-002 en `docs/firebase/current-data-model-audit.md` (AUDIT-03).
 - [ ] [BAJO] Centralizar formateo de fechas en `dateUtils.ts` (7+ sitios duplicados).
 - [ ] [BAJO] Script de sanity check periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
 
