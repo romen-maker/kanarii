@@ -165,6 +165,33 @@ service cloud.firestore {
       );
     }
 
+    // ─── ACTAS ─────────────────────────────────────────────────────────────
+    match /actas/{actaId} {
+      allow read: if request.auth != null && hasMinRole(resource.data.communityId, 'visitante');
+      allow create: if request.auth != null && hasRole(request.resource.data.communityId, 'admin');
+      allow update, delete: if request.auth != null && hasRole(resource.data.communityId, 'admin');
+    }
+
+    // ─── FICHAS ────────────────────────────────────────────────────────────
+    match /fichas/{fichaId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == fichaId || 
+        hasMinRole(resource.data.communityId, 'visitante')
+      );
+      allow create: if request.auth != null && (
+        request.auth.uid == fichaId || 
+        hasRole(request.resource.data.communityId, 'admin')
+      );
+      allow update: if request.auth != null && (
+        request.auth.uid == fichaId || 
+        hasRole(resource.data.communityId, 'admin')
+      );
+      allow delete: if request.auth != null && (
+        request.auth.uid == fichaId || 
+        hasRole(resource.data.communityId, 'admin')
+      );
+    }
+
     // ─── SOLICITUDES GLOBALES ──────────────────────────────────────────────
     match /joinRequests/{requestId} {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
@@ -175,3 +202,4 @@ service cloud.firestore {
     }
   }
 }
+
