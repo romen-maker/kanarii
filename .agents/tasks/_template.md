@@ -32,3 +32,38 @@ Al terminar, actualiza el task file con estado `DONE` y archiva en `.agents/task
 - Sin Walkthrough Artifact al final — solo resumen de 3 líneas al done.
 - Espera aprobación entre fases si hay más de una.
 - Contexto suficiente en este archivo — no escanees el workspace completo.
+
+---
+
+## Plantilla de task file
+
+Usar la siguiente estructura al crear un nuevo `task-XXX.md`:
+
+```markdown
+# Task-XXX: [Título de la tarea]
+
+## Objetivo
+[Descripción breve del resultado esperado]
+
+## Contexto técnico
+[Información técnica relevante para el agente]
+
+## Caja de archivos
+Archivos autorizados para modificación:
+- `src/ruta/archivo1.ts`
+- `src/ruta/archivo2.tsx`
+
+## Criterios de done
+- [ ] Criterio 1
+- [ ] Criterio 2
+- [ ] Criterio 3
+
+## Estado de aprobación
+> Esta sección la completa el agente durante la Fase 3.5 del workflow.
+> Un task file completo NO autoriza ejecución. La aprobación explícita sí.
+
+- [ ] Plan presentado al usuario
+- [ ] APROBADO recibido — fecha/hora: ___
+- [ ] Rama creada: ___
+- [ ] Lock activo: ___
+```
