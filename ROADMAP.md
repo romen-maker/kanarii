@@ -49,43 +49,76 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ---
 
 ## ⚡ Performance Firestore
-- [ ] [ALTO] Añadir `.limit(50)` a todos los hooks de listas.
-- [ ] [MEDIO] Implementar paginación cursor-based (`startAfter`).
-- [ ] [BAJO] Crear índices compuestos en Firebase Console.
+- [ ] [ALTO] Añadir `.limit(50)` a todos los hooks de listas: `usePosts`, `useServicios`, `useAcuerdos`, `useEventos`, `usePropuestas`, `useActas`, `useFichas`, `useProyectos`, `useTareas`.
+- [ ] [MEDIO] Implementar paginación cursor-based (`startAfter`) para scroll infinito en listas largas.
+- [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
-- [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL`.
-- [ ] [MEDIO] Crear hook genérico `useFirestoreCollection`.
-- [ ] [MEDIO] Reducir usos de `any` en interfaces.
-- [ ] [MEDIO] Auditar listeners, queries y lógica duplicada.
+- [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (muestran email en lugar de nombre en fichas públicas). Script one-shot o Cloud Function triggered on read si `displayName` vacío.
+- [ ] [MEDIO] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks.
+- [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
+- [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
-- [ ] [BAJO] Crear `dateUtils.ts` para centralizar formateo de fechas.
-- [ ] [BAJO] Script de sanity check para contadores desnormalizados.
+- [ ] [BAJO] Centralizar formateo de fechas en `dateUtils.ts` (7+ sitios duplicados).
+- [ ] [BAJO] Script de sanity check periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
 
 ---
 
 ## 🎨 Coherencia visual transversal
-- [ ] [MEDIO] Crear componentes `<FieldError />`, `<PageHeader />`, `<PageContainer />`.
-- [ ] [MEDIO] Unificar patrón de apertura en tarjetas.
-- [ ] [MEDIO] Definir criterio Modal vs Drawer.
-- [ ] [BAJO] Crear `TourStepLayout.tsx`.
-- [ ] [MEDIO] Integrar 8 animaciones educativas.
+- [ ] [MEDIO] Estandarizar validación de formularios con `<FieldError />`.
+- [ ] [MEDIO] Estandarizar cabeceras con `<PageHeader />`.
+- [ ] [MEDIO] Crear `<PageContainer />` para unificar layout y fondo cálido (`#FDFBF7`).
+- [ ] [MEDIO] Unificar patrón de apertura en tarjetas (Gobernanza: clic en tarjeta; Tareas: requiere lápiz — elegir uno).
+- [ ] [MEDIO] Definir criterio coherente Modal vs Drawer y aplicarlo en toda la app.
+- [ ] [BAJO] Crear `TourStepLayout.tsx` como wrapper común para onboarding (escape hatch, progress tracker, UI global). Resolver al añadir nueva animación al tour.
+- [ ] [MEDIO] Integrar 8 animaciones educativas (ver `docs/animated-onboarding.md`). Prioridad: `WelcomeHeroSections` (A7) y `GovernanceFlowAnimation` (A1, prompt listo).
 
 ---
 
 ## 🌍 Siguiente expansión funcional
-- [ ] [MEDIO] Admin Dashboard global con filtros.
-- [ ] [MEDIO] Mejorar UI de aceptación/rechazo colaboradores.
-- [ ] [MEDIO] Gestión de visitas / recién llegados.
+- [ ] [MEDIO] Admin Dashboard global: refinar con filtros por miembro y estado (refinamiento de feature existente en Fase 1, no feature nueva).
+- [ ] [MEDIO] Mejorar UI de aceptación/rechazo de colaboradores desde el detalle del proyecto.
+- [ ] [MEDIO] Gestión de visitas / recién llegados con ficha simplificada.
 - [ ] [MEDIO] Registro de contribuciones y balance visible.
-- [ ] [MEDIO] Sistema leído/no leído en acuerdos: campo `vistoPorSolicitante`.
-- [ ] [MEDIO] Sistema de badges reactivos para Gobernanza.
-- [ ] [MEDIO] Hook genérico `usePendingActionsCount`.
+- [ ] [MEDIO] Badge nav para solicitante en acuerdos (en progreso — incluir acuerdos donde eres `solicitanteId` con status cambiado).
+- [ ] [MEDIO] Sistema leído/no leído en acuerdos: campo `vistoPorSolicitante: boolean`, batch update al entrar a "Mis Acuerdos", badge desaparece solo al ver el cambio.
+- [ ] [MEDIO] Sistema de badges reactivos para Gobernanza: propuestas pendientes de voto, tensiones asignadas sin resolver, actas pendientes de ratificación. Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
 
 ## 📱 Infraestructura offline
-- [ ] [ALTO] Activar persistencia offline de Firestore (IndexedDB).
+- [ ] [ALTO] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura.
 - [ ] [MEDIO] Indicador de cambios pendientes de subir.
-- [ ] [POST-MVP] Operaciones IA en diferido.
+- [ ] [MEDIO] PWA instalable con `manifest.json` y Service Workers.
+- [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
+
+---
+
+## 🗄️ Backlog post-MVP
+
+### Gobernanza y propuestas
+- [ ] [POST-MVP] Notificaciones push para propuestas nuevas.
+- [ ] [POST-MVP] Propuestas entre comunidades.
+- [ ] [POST-MVP] IA para sugerir si una objeción es válida S3.
+- [ ] [POST-MVP] Plantillas de propuestas predefinidas.
+
+### Marketplace y acuerdos
+- [ ] [POST-MVP] Flujo de negociación/contrapropuesta en acuerdos (diseñado: estados `contraoferta`, historial de términos, UI de aceptar/declinar/contraofertar).
+- [ ] [POST-MVP] Marketplace global inter-comunidad con selector de comunidad (diseñado: eliminar filtro `communityId` en vista global, mantenerlo en vista por comunidad).
+- [ ] [POST-MVP] Sistema de roles y estructura administrativa ampliada: `superadmin` (global) + admins por consentimiento de círculo, panel `/superadmin` con DAU/MAU y gestión de admins.
+
+### Arquitectura y soberanía
+- [ ] [POST-MVP] Abstraer llamadas a Gemini detrás de `ai-adapter.ts` con interfaz genérica (`generateText`, `generateEmbedding`, `streamText`). Documentar alternativas soberanas en `/docs/architecture.md` (Firestore→Supabase, Auth→Keycloak, Gemini→Ollama, Vector→pgvector).
+
+### UX y producto
+- [ ] [POST-MVP] Búsqueda global (Command+K) para proyectos, tareas y actas.
+- [ ] [POST-MVP] Exportación de actas a PDF.
+- [ ] [POST-MVP] Memoria colectiva con RAG y chat consultivo (stack fase 1: Genkit + Firestore Vector; fase 2: Ollama + pgvector).
+- [ ] [POST-MVP] Notificaciones push para nuevas tareas asignadas.
+- [ ] [POST-MVP] Editar y eliminar posts del Tablón desde la lista principal.
+- [ ] [POST-MVP] Eliminar acta desde Gobernanza.
+- [ ] [POST-MVP] Eliminar/desvincular miembro desde Administración.
+- [ ] [POST-MVP] Revisar validación de descripción en Propuestas (hacerla obligatoria u opcional, revisar bug "error al procesar solicitud").
+- [ ] [POST-MVP] Evaluar alternativa opcional a passwordless (email + contraseña) si Magic Link genera fricción.
+- [ ] [POST-MVP] Mapa interactivo editable de zonas, recursos y puntos de interés.
 
 ---
 
