@@ -1,8 +1,5 @@
 ---
-name: sprint-planning
 description: Ritual de inicio de semana. Lee el roadmap, vacía el idea-inbox, genera el sprint file semanal y produce el prompt listo para investigación en Perplexity.
-trigger: manual
-command: /sprint-planning
 ---
 
 # Workflow: /sprint-planning
@@ -113,14 +110,21 @@ Reglas de selección de tareas:
 - **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c).
 
 ### 5. Generación del prompt para Perplexity
+
+Antes de redactar el prompt, leer los archivos de código directamente relacionados con la tarea principal del sprint (máx. 3 archivos).
+Objetivo: identificar qué ya está implementado o parcialmente resuelto para no investigar desde cero. El resultado de esta lectura alimenta la sección `SITUACIÓN ACTUAL` del prompt.
+
 Producir un bloque de texto listo para pegar en Perplexity con este formato:
 
 ```
 CONTEXTO: Estoy desarrollando [descripción de Kanarii en 2 líneas].
 STACK: React 18 + TypeScript + Firebase (Firestore, Auth). Vite.
+SITUACIÓN ACTUAL: [qué ya existe en el código relacionado con la tarea:
+helpers implementados, patrones ya en uso, deuda técnica conocida].
 TAREA DE ESTA SEMANA: [descripción de la tarea principal del sprint]
 NECESITO INVESTIGAR: [pregunta específica de investigación]
-FORMATO DE RESPUESTA ESPERADO: [lo que necesitas: comparativa, ejemplo de código, decisión de arquitectura, etc.]
+FORMATO DE RESPUESTA ESPERADO: [lo que necesitas: comparativa, ejemplo
+de código, decisión de arquitectura, etc.]
 ```
 
 ### 6. Pausa y handoff a /session-start
