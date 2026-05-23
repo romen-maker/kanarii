@@ -4,6 +4,7 @@
 # Salida:
 #   exit 0 + "NO_ACTIVE_SESSION" → no hay sesión abierta, seguro proceder
 #   exit 1 + JSON del lock       → hay sesión sin cerrar, activar Modo Rescate
+#   exit 0 + "WARNING: ..."      → no hay lock pero hay cambios en src/ sin commitear
 
 LOCK_FILE=".agent-session.lock"
 
@@ -17,6 +18,20 @@ if [ -f "$LOCK_FILE" ]; then
   cat "$LOCK_FILE"
   exit 1
 else
+  # Sin lock activo: comprobar si hay cambios en src/ sin commitear
+  # Esto puede indicar que el agente actuó sin haber recibido APROBADO
+  if git rev-parse --git-dir > /dev/null 2>&1; then
+    UNSTAGED=$(git diff --name-only 2>/dev/null | grep '^src/' | head -5)
+    STAGED=$(git diff --cached --name-only 2>/dev/null | grep '^src/' | head -5)
+    if [ -n "$UNSTAGED" ] || [ -n "$STAGED" ]; then
+      echo "WARNING: Hay cambios en src/ sin lock activo — el agente puede haber actuado sin aprobación."
+      echo "Archivos afectados:"
+      [ -n "$UNSTAGED" ] && echo "  Sin stagear: $UNSTAGED"
+      [ -n "$STAGED" ]   && echo "  Stageados:   $STAGED"
+      echo "Revisa con 'git diff' antes de continuar."
+      echo "---"
+    fi
+  fi
   echo "NO_ACTIVE_SESSION"
   exit 0
 fi

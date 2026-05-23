@@ -49,6 +49,34 @@ Al cerrar el sprint anterior:
 
 **El agente presenta la propuesta de decisión al usuario y espera confirmación antes de escribir nada.**
 
+### 2c. Verificación de código para tareas pendientes
+
+> Este paso se ejecuta siempre que haya tareas con estado ⬜ Pendiente o ⏸ Pausada,
+> tanto del sprint anterior como del roadmap candidatas al nuevo sprint.
+> Su objetivo es evitar planificar trabajo que ya está hecho en el código.
+
+Para cada tarea candidata:
+
+1. Buscar en `src/` los símbolos, funciones, componentes o archivos relacionados
+   con la descripción de la tarea.
+2. Si existe task file en `.agents/tasks/` o `_archived/`, leer sus criterios de done
+   y verificar cuáles se cumplen en el código actual.
+3. Clasificar cada tarea:
+
+| Resultado de la verificación | Acción |
+|---|---|
+| ✅ Ya implementada en código | Marcar como `✅ Hecho` en el sprint anterior; no arrastrar al nuevo sprint |
+| ⚠️ Parcialmente implementada | Tratar como avance 30–70% del paso 2b — preguntar al usuario |
+| ⬜ Sin implementar | Proceder normalmente como tarea pendiente |
+
+4. Presentar al usuario una tabla con el resultado de cada verificación,
+   incluyendo la evidencia de código (archivo y fragmento) que justifica la clasificación.
+5. **Esperar confirmación del usuario antes de continuar al paso 3.**
+
+> ⚠️ Esta verificación es especialmente importante cuando hay commits recientes
+> sin task file asociado (trabajo ad-hoc, fixes rápidos o sesiones sin cerrar correctamente).
+> En ese caso, revisar también `git log --oneline -20` para detectar trabajo no documentado.
+
 ### 3. Vaciado del idea-inbox
 - Leer todos los archivos en `docs/idea-inbox/`.
 - Para cada idea capturada, clasificar en una de tres categorías:
@@ -82,6 +110,7 @@ Reglas de selección de tareas:
 - Equilibrio de tamaños: no más de 1 tarea L por sprint.
 - Prioridad: tareas arrastradas del sprint anterior primero, luego ítems bloqueantes, luego por orden del roadmap.
 - Tamaños: **S** = < 1h, **M** = 1-3h, **L** = 3h+.
+- **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c).
 
 ### 5. Generación del prompt para Perplexity
 Producir un bloque de texto listo para pegar en Perplexity con este formato:
@@ -116,6 +145,7 @@ Mostrar al usuario el siguiente mensaje y **no continuar hasta recibir respuesta
 Justo antes del mensaje de pausa del paso 6, mostrar al usuario:
 1. Resumen del estado del roadmap (3 líneas máximo).
 2. Decisiones tomadas sobre tareas incompletas del sprint anterior (si las hubo).
-3. Las tareas del sprint seleccionadas con su tamaño.
-4. El prompt para Perplexity listo para copiar.
-5. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.
+3. Resultado de la verificación de código del paso 2c (tabla con evidencias).
+4. Las tareas del sprint seleccionadas con su tamaño.
+5. El prompt para Perplexity listo para copiar.
+6. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.

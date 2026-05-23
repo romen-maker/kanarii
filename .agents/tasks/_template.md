@@ -32,3 +32,40 @@ Al terminar, actualiza el task file con estado `DONE` y archiva en `.agents/task
 - Sin Walkthrough Artifact al final — solo resumen de 3 líneas al done.
 - Espera aprobación entre fases si hay más de una.
 - Contexto suficiente en este archivo — no escanees el workspace completo.
+
+---
+
+## Plantilla de task file
+
+Usar esta estructura al crear `.agents/tasks/task-XXX.md`:
+
+```markdown
+# Task-XXX: [Título de la tarea]
+
+## Objetivo
+[Qué se quiere conseguir en una o dos frases.]
+
+## Contexto técnico
+[Información relevante del stack, dependencias o estado actual del código
+que el agente necesita para entender el problema. Sin párrafos largos.]
+
+## Caja de archivos
+Archivos autorizados para modificación:
+- `src/ruta/archivo1.ts`
+- `src/ruta/archivo2.tsx`
+
+## Criterios de done
+- [ ] Criterio concreto y verificable
+- [ ] Criterio concreto y verificable
+- [ ] Compilación sin errores TypeScript
+
+## Estado de aprobación
+> Este bloque lo rellena el agente durante /session-start.
+> No modificar manualmente.
+
+- [ ] Plan presentado al usuario (Fase 3.5)
+- [ ] APROBADO recibido — fecha/hora: ___
+- [ ] Rama creada: ___
+- [ ] Lock activo: ___
+- [ ] Sesión cerrada correctamente
+```
