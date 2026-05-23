@@ -1,7 +1,7 @@
 # Flujo de Trabajo Kanarii — Sistema Antisabotaje
 
 > Documento de referencia para cuando algo falla o necesitas entender cómo encajan las piezas.
-> Última actualización: 22 mayo 2026.
+> Última actualización: 23 mayo 2026.
 
 ---
 
@@ -24,14 +24,18 @@ ARTEFACTOS PERMANENTES (siempre activos via rules en caveman.md)
       Responde: "💡 Capturado en inbox. Seguimos."
 
 ARTEFACTOS DE ESTADO
-├── roadmap.md              — Fases y épicas del proyecto (fuente de verdad maestra)
-├── docs/sprints/sprint-XX  — 3-5 tareas de la semana (fuente de verdad semanal)
-├── .agent-session.lock     — Sesión activa (se crea al abrir, se destruye al cerrar)
-└── docs/idea-inbox/        — Ideas en vuelo estructuradas (se vacía cada lunes)
+├── roadmap.md                    — Fases y épicas del proyecto (fuente de verdad maestra)
+├── docs/sprints/sprint-XX.md     — 3-5 tareas de la semana (fuente de verdad semanal)
+├── docs/sprints/sprint-XX-research.md — Investigación de Perplexity del sprint activo
+│                                        Ciclo de vida: creado en sprint-planning (paso 6b)
+│                                        → leído automáticamente en session-start (Fase 2)
+│                                        → archivado en docs/sprints/_archived/ al cerrar sprint
+├── .agent-session.lock           — Sesión activa (se crea al abrir, se destruye al cerrar)
+└── docs/idea-inbox/              — Ideas en vuelo estructuradas (se vacía cada lunes)
 
 WORKFLOWS (rituales de transición)
-├── /sprint-planning        — Lunes: estado → sprint → prompt Perplexity → PAUSA
-└── /session-start          — Inicio de sesión: rescate → tarea → investigación → Caja → lock
+├── /sprint-planning   — Lunes: estado → sprint → prompt Perplexity → PAUSA → guardar research
+└── /session-start     — Inicio de sesión: rescate → tarea → research → Caja → lock
 
 SKILLS (capacidades especializadas, se activan por contexto)
 ├── roadmap-a-tarea         — Convierte épica en tarea atómica (Modo Sprint)
@@ -60,7 +64,9 @@ SKILLS (capacidades especializadas, se activan por contexto)
 
 **Después del paso 6 (tú):**
 1. Copia el prompt → pégalo en Perplexity → investiga.
-2. Vuelve con los hallazgos → ejecuta `/session-start` pegando la investigación.
+2. Vuelve con los hallazgos → pégalos en el chat → el agente los guarda en
+   `docs/sprints/sprint-XX-research.md` (paso 6b del workflow).
+3. Ejecuta `/session-start` — el agente detectará el research automáticamente.
 
 ---
 
@@ -75,26 +81,32 @@ FASE 0  Detección de sesión colgada
 
 FASE 1  Lectura de contexto
         Leer sprint actual → identificar primera tarea ⬜ Pendiente o ⏸ Pausada.
+        Si no hay tareas pendientes → mostrar sprint completado + sugerir /sprint-planning.
+        DETENER. No continuar con las fases siguientes.
 
 FASE 2  Task file + investigación previa
         ¿Existe task-XXX.md?
         NO → activar doe-framework para crearlo.
-        → Paso 3b: ¿Hay hallazgos de Perplexity pegados?
-            SÍ → integrar en ## Contexto técnico del task file como decisiones tomadas.
-            NO → preguntar "¿Tienes investigación previa? (S/N)"
-                  S → esperar y luego integrar.
+        → Buscar docs/sprints/sprint-XX-research.md:
+            EXISTE → integrarlo automáticamente en ## Contexto técnico. Informar al usuario.
+            NO EXISTE → preguntar "¿Tienes investigación previa? (S/N)"
+                  S → esperar, integrar en task file Y guardar en sprint-XX-research.md.
                   N → continuar sin contexto adicional.
 
 FASE 3  Declarar la Caja
         Mostrar lista de archivos autorizados del task file.
         Activar skill relevante (por defecto: implementar-feature-dry).
 
-FASE 4  Crear .agent-session.lock en la raíz.
+FASE 3.5 PLAN PENDIENTE DE APROBACIÓN (BLOQUEANTE)
+        El agente presenta el plan y espera APROBADO / APROBADO CON CAMBIOS / CANCELAR.
+        Ninguna acción operativa hasta recibir respuesta.
+
+FASE 4  Crear .agent-session.lock en la raíz. (Solo tras aprobación)
 ```
 
 ---
 
-### AL CERRAR SESIÓN — /session-close (Fase 5 de session-start)
+### AL CERRAR SESIÓN — /session-close (Fase 6 de session-start)
 
 > Si no lo ejecutas, la **Fase 0** de la próxima sesión lo hará automáticamente.
 
@@ -104,6 +116,10 @@ C2  Commit atómico        → git add -A && git commit -m "[tipo](T-XXX): descr
 C3  Actualizar sprint     → ✅ Hecho o ⏸ Pausada con nota de dónde se quedó.
 C4  Archivar task file    → mover a .agents/tasks/_archived/ si estado = DONE.
 C5  Limpiar idea-inbox    → mover ideas del día al sprint file (clasificar el lunes).
+C5b Archivar research     → Si sprint completo (todas ✅):
+                             mv docs/sprints/sprint-XX-research.md
+                                docs/sprints/_archived/sprint-XX-research.md
+                             Si sprint no completo → dejar en docs/sprints/ para la próxima sesión.
 C6  Borrar lock           → rm .agent-session.lock
 ```
 
@@ -215,6 +231,8 @@ Si necesitas forzar un reseteo manual: borra este archivo desde la raíz del pro
 | El sprint tiene tareas pero no se sabe cuál empezar | Sprint file desactualizado | Abrir sprint file activo en `docs/sprints/` y revisar columna Estado. |
 | Una idea en vuelo no aparece en el inbox | idea-capture (rule en caveman.md) no activa | Verificar que caveman.md esté cargado como rule en el agente. |
 | Llega una auditoría externa durante el sprint | Sin procedimiento claro | Ver sección **Auditorías externas** arriba. Nunca tocar el sprint directamente. |
+| Se lanza /session-start y no hay tareas pendientes | Sprint completado sin hacer planning | El agente mostrará el sprint completado y sugerirá /sprint-planning. Ejecutarlo para el siguiente sprint. |
+| El research de Perplexity no aparece en el task file | sprint-XX-research.md no existe aún | Volver a sprint-planning paso 6b, pegar los hallazgos para que el agente los guarde. |
 
 ---
 
@@ -229,7 +247,7 @@ Si necesitas forzar un reseteo manual: borra este archivo desde la raíz del pro
 │   │   └── caveman.md           ← Rules permanentes: box-enforcer + idea-capture
 │   ├── workflows/
 │   │   ├── sprint-planning.md
-│   │   └── session-start.md     ← Incluye /session-close como Fase 5
+│   │   └── session-start.md     ← Incluye /session-close como Fase 6
 │   ├── skills/
 │   │   ├── doe-framework/
 │   │   ├── implementar-feature-dry/
@@ -242,7 +260,10 @@ Si necesitas forzar un reseteo manual: borra este archivo desde la raíz del pro
 └── docs/
     ├── flujo-de-trabajo.md      ← Este documento
     ├── sprints/
-    │   └── sprint-XX.md         ← Fuente de verdad semanal
+    │   ├── sprint-XX.md         ← Fuente de verdad semanal
+    │   ├── sprint-XX-research.md ← Investigación Perplexity del sprint activo
+    │   │                           (se archiva al completar el sprint)
+    │   └── _archived/           ← Sprints y research históricos
     └── idea-inbox/
         └── YYYY-MM-DD.md        ← Ideas en vuelo + auditorías externas (AUDIT-)
 ```

@@ -136,14 +136,43 @@ Mostrar al usuario el siguiente mensaje y **no continuar hasta recibir respuesta
 
 👉 Próximos pasos:
    1. Copia el prompt del paso anterior y pégalo en Perplexity.
-   2. Cuando tengas los hallazgos, vuelve aquí o abre Cursor y ejecuta /session-start.
-   3. Pega los hallazgos de la investigación antes o junto al comando /session-start
-      para que queden integrados en el task file antes de empezar a codear.
+   2. Cuando tengas los hallazgos, vuelve con la investigación y ejecuta /session-start
+      pegando los hallazgos — el agente los guardará en docs/sprints/sprint-XX-research.md
+      y los integrará en el task file antes de empezar a codear.
 
 ⏸ Este workflow queda en pausa. Hasta luego.
 ```
 
-> **Nota para el agente:** No ejecutes `/session-start` automáticamente. El usuario necesita hacer la investigación en Perplexity antes de continuar. El handoff es intencional.
+> **Nota para el agente:** No ejecutes `/session-start` automáticamente. El usuario necesita
+> hacer la investigación en Perplexity antes de continuar. El handoff es intencional.
+
+### 6b. Recepción de hallazgos de Perplexity (cuando el usuario vuelve)
+
+> Este paso se ejecuta cuando el usuario regresa con los hallazgos de Perplexity,
+> antes de lanzar `/session-start`.
+
+1. Recibir el output de Perplexity del usuario.
+2. Crear `docs/sprints/sprint-XX-research.md` con este formato:
+
+```markdown
+# Research Sprint XX
+> Fuente: Perplexity — [fecha]
+> Tarea principal: [descripción de la tarea del sprint]
+
+## Hallazgos clave
+[Decisiones técnicas, patrones elegidos, referencias]
+
+## Decisiones tomadas
+- **Decisión:** [patrón o solución elegida]
+- **Por qué:** [razón en 1 línea]
+- **Constraint clave:** [limitación técnica relevante]
+- **Referencia:** [URL o doc si existe]
+
+## Descartado
+[Opciones exploradas y descartadas con motivo]
+```
+
+3. Confirmar al usuario: `"💾 Investigación guardada en docs/sprints/sprint-XX-research.md. Listo para /session-start."`
 
 ### 7. Entrega (resumen previo a la pausa)
 Justo antes del mensaje de pausa del paso 6, mostrar al usuario:

@@ -32,6 +32,22 @@ bash scripts/agent/check-session.sh
 2. Identificar la primera tarea con estado `⬜ Pendiente` o `⏸ Pausada`.
 3. Mostrar: `"Tarea activa detectada: [T-XXX] — [descripción]"`.
 
+**Si no hay tareas pendientes ni pausadas en el sprint activo:**
+
+Mostrar el siguiente mensaje y detenerse — no continuar con las fases siguientes:
+
+```
+✅ Sprint XX completado — no hay tareas pendientes.
+
+Estado del sprint:
+  - Tareas completadas: [lista con ✅]
+  - Tareas pausadas: ninguna
+
+👉 Próximo paso: ejecuta /sprint-planning para planificar el siguiente sprint.
+   Si crees que hay trabajo pendiente que no aparece aquí, revisa docs/sprints/sprint-XX.md
+   o el ROADMAP.md.
+```
+
 ---
 
 ## FASE 2 — Creación o carga del task file
@@ -39,9 +55,13 @@ bash scripts/agent/check-session.sh
 1. Comprobar si existe `.agents/tasks/task-XXX.md`.
 2. Si existe → leerlo.
 3. Si no existe → activar `doe-framework` para crearlo siguiendo la plantilla `.agents/tasks/_template.md`.
-4. Integrar investigación previa si el usuario la aportó.
-5. Si no hay investigación, preguntar si desea añadirla antes de planificar.
-6. No avanzar hasta que el task file esté completo.
+4. **Buscar investigación previa del sprint:**
+   - Comprobar si existe `docs/sprints/sprint-XX-research.md` (donde XX es el número del sprint activo).
+   - Si existe → leerlo e integrarlo automáticamente en `## Contexto técnico` del task file. Informar: `"📚 Investigación del sprint encontrada e integrada."`
+   - Si no existe → preguntar: `"¿Tienes investigación previa de Perplexity para esta tarea? (S/N)"`
+     - S → esperar que el usuario la pegue, integrarla en `## Contexto técnico` y guardarla en `docs/sprints/sprint-XX-research.md`.
+     - N → continuar sin contexto adicional.
+5. No avanzar hasta que el task file esté completo.
 
 > ⚠️ IMPORTANTE: Completar o leer el task file NO autoriza la ejecución.
 > El task file describe QUÉ hay que hacer y qué archivos están en la Caja.
@@ -189,6 +209,15 @@ mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
 
 ### C5. Limpieza del idea-inbox
 Mover ideas surgidas durante la sesión al sprint file activo.
+
+### C5b. Archivado del research (solo si el sprint queda completo)
+Si tras actualizar el sprint file en C3 **todas las tareas están en ✅ Hecho**:
+```bash
+mkdir -p docs/sprints/_archived
+mv docs/sprints/sprint-XX-research.md docs/sprints/_archived/sprint-XX-research.md
+```
+Si el sprint no está completo, el archivo `sprint-XX-research.md` permanece en `docs/sprints/`
+para que la próxima sesión lo encuentre automáticamente.
 
 ### C6. Borrar el lock
 ```bash
