@@ -37,16 +37,17 @@ Al terminar, actualiza el task file con estado `DONE` y archiva en `.agents/task
 
 ## Plantilla de task file
 
-Usar la siguiente estructura al crear un nuevo `task-XXX.md`:
+Usar esta estructura al crear `.agents/tasks/task-XXX.md`:
 
 ```markdown
 # Task-XXX: [Título de la tarea]
 
 ## Objetivo
-[Descripción breve del resultado esperado]
+[Qué se quiere conseguir en una o dos frases.]
 
 ## Contexto técnico
-[Información técnica relevante para el agente]
+[Información relevante del stack, dependencias o estado actual del código
+que el agente necesita para entender el problema. Sin párrafos largos.]
 
 ## Caja de archivos
 Archivos autorizados para modificación:
@@ -54,16 +55,17 @@ Archivos autorizados para modificación:
 - `src/ruta/archivo2.tsx`
 
 ## Criterios de done
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
+- [ ] Criterio concreto y verificable
+- [ ] Criterio concreto y verificable
+- [ ] Compilación sin errores TypeScript
 
 ## Estado de aprobación
-> Esta sección la completa el agente durante la Fase 3.5 del workflow.
-> Un task file completo NO autoriza ejecución. La aprobación explícita sí.
+> Este bloque lo rellena el agente durante /session-start.
+> No modificar manualmente.
 
-- [ ] Plan presentado al usuario
+- [ ] Plan presentado al usuario (Fase 3.5)
 - [ ] APROBADO recibido — fecha/hora: ___
 - [ ] Rama creada: ___
 - [ ] Lock activo: ___
+- [ ] Sesión cerrada correctamente
 ```
