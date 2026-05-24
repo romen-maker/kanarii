@@ -2312,7 +2312,7 @@ export async function validateInvitacion(codigo: string): Promise<Invitacion | n
   }
 }
 
-export async function useInvitacion(codigo: string, uid: string): Promise<void> {
+export async function useInvitacion(codigo: string, uid: string): Promise<string> {
   try {
     const inv = await validateInvitacion(codigo);
     if (!inv) throw new Error('Invitación no válida o agotada');
@@ -2324,9 +2324,16 @@ export async function useInvitacion(codigo: string, uid: string): Promise<void> 
       const userData = userDoc.data();
       const communityIds = userData.communityIds || [];
       if (communityIds.includes(inv.communityId)) {
-        throw new Error('YA_ES_MIEMBRO');
+        const error = new Error('YA_ES_MIEMBRO');
+        (error as any).communityId = inv.communityId;
+        throw error;
       }
     }
+
+    const profileRef = doc(db, 'profiles', uid);
+    const profileSnap = await getDoc(profileRef);
+    const memberRef = doc(db, 'community_members', `${inv.communityId}_${uid}`);
+    const userData = userDoc.exists() ? userDoc.data() : {};
 
     const batch = writeBatch(db);
     
@@ -2342,19 +2349,75 @@ export async function useInvitacion(codigo: string, uid: string): Promise<void> 
     
     // 2. Añadir comunidad al usuario
     const userRef = doc(db, 'users', uid);
-    batch.update(userRef, {
+    const userUpdates: any = {
       communityIds: arrayUnion(inv.communityId),
       updatedAt: serverTimestamp()
-    });
+    };
+    if (userDoc.exists() && !userDoc.data().communityId) {
+      userUpdates.communityId = inv.communityId;
+    }
+    batch.update(userRef, userUpdates);
+
+    // 3. Crear o actualizar miembro en community_members
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+
+      batch.set(memberRef, {
+        userId: uid,
+        communityId: inv.communityId,
+        nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+        tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
+        elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
+        autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
+        antiguedad_anos: base.antiguedad_anos || 0,
+        rol_comunidad: base.rol_comunidad || '',
+        rolComunitario: base.rol_comunidad || base.rol || 'miembro',
+        rol: base.rol || 'miembro',
+        estado: 'activo',
+        photoURL: userData.photoURL || '',
+        displayName: userData.displayName || '',
+        email: userData.email || '',
+        creadoEn: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      if (!profileData.communityId) {
+        batch.update(profileRef, {
+          communityId: inv.communityId,
+          'datosOnboarding.communityId': inv.communityId,
+          'datosPersona.communityId': inv.communityId
+        });
+      }
+    } else {
+      batch.set(memberRef, {
+        userId: uid,
+        communityId: inv.communityId,
+        nombre: userData.displayName || userData.email || 'Sin Nombre',
+        tipo_hd: '',
+        elemento_dominante: '',
+        autoridad_hd: '',
+        antiguedad_anos: 0,
+        rol_comunidad: 'miembro',
+        estado: 'activo',
+        photoURL: userData.photoURL || '',
+        displayName: userData.displayName || '',
+        email: userData.email || '',
+        creadoEn: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
     
     await batch.commit();
 
-    // Opción B: propagar communityId a fichas/profiles/community_members si ya existen
+    // Opción B: propagar communityId a fichas si ya existe
     const fichaRef = doc(db, 'fichas', uid);
     const fichaSnap = await getDoc(fichaRef);
     if (fichaSnap.exists()) {
       await _writeFichaRaw(uid, { communityId: inv.communityId }, true);
     }
+
+    return inv.communityId;
   } catch (error: any) {
     if (error.message !== 'YA_ES_MIEMBRO') {
       handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');

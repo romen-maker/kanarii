@@ -118,11 +118,22 @@ export function ComunidadesView() {
     await redeemInvitacion(code, appUser!.uid, {
       successMessage: '¡Bienvenido a la comunidad! ✨',
       errorMessage: null, // Silenciamos el toast genérico para tomar el control total en la vista
-      onSuccess: () => navigate('/'),
+      onSuccess: (communityId: string) => {
+        if (communityId) {
+          navigate(`/c/${communityId}`);
+        } else {
+          navigate('/');
+        }
+      },
       onError: (err: any) => {
         if (err?.message === 'YA_ES_MIEMBRO') {
           toastSuccess('Ya eres miembro de esta comunidad. ¡Te redirigimos! 🚀');
-          navigate('/');
+          const communityId = err.communityId;
+          if (communityId) {
+            navigate(`/c/${communityId}`);
+          } else {
+            navigate('/');
+          }
         } else {
           toastError('Código inválido, caducado o agotado.');
         }
