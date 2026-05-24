@@ -15,8 +15,9 @@ Cada vez que el agente complete una tarea o fase numerada, DEBE:
 - Haber preguntado al usuario.
 - Creer que el usuario aprobaría el siguiente paso.
 - "Esto es lógicamente el siguiente paso".
+- Una instrucción operativa ("sí, commitea") seguida de una petición nueva en el mismo mensaje — la petición nueva requiere sesión y aprobación separadas.
 
-**Única confirmación válida:** El usuario escribe explícitamente "sí, continúa" o "sí, commitea fase X" u otra aprobación directa.
+**Única confirmación válida:** El usuario escribe explícitamente "sí, continúa" o "sí, commitea fase X" u otra aprobación directa **para la acción específica que el agente va a ejecutar**.
 
 **Si el agente se salta este protocolo:** Está violando la regla más importante del proyecto. El usuario tiene derecho a revertir todos los cambios no aprobados.
 
