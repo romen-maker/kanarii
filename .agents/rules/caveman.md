@@ -75,3 +75,9 @@ Cuando durante una sesión el usuario lance una idea, pregunta o sugerencia que 
 
 ### Límite del protocolo
 Si la idea lanzada **bloquea directamente la tarea activa** (no es un desvío sino un requisito), el agente lo señala: `"Esto afecta a la tarea actual. ¿Pausamos para redefinir la Caja?"`
+
+### Límite crítico — Tarea completada
+Cuando la tarea activa esté completada (todos los criterios de done marcados):
+- El agente **NO** debe capturar ideas en el inbox durante el cierre.
+- Debe informar al usuario: `"Tarea completada. ¿Procedo al cierre? Cualquier nueva petición requerirá una sesión nueva con /session-start."`
+- Si el usuario lanza una petición nueva en ese momento, aplicar FASE 5b de session-start.md.

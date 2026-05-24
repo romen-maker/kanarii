@@ -48,6 +48,13 @@ Estado del sprint:
    o el ROADMAP.md.
 ```
 
+**Excepción — Petición nueva sin task file:**
+Si el usuario menciona una petición nueva que no corresponde a ninguna tarea del sprint activo:
+1. Informar: `"No hay tarea activa para esta petición. Requiere planificación."`
+2. **No leer archivos fuera de la Caja** (no existe Caja aún).
+3. **No preparar planes de implementación.**
+4. Sugerir: `"Ejecuta /sprint-planning si es una feature nueva, o actualiza el sprint file si es continuación de trabajo previo."`
+
 ---
 
 ## FASE 2 — Creación o carga del task file
@@ -125,9 +132,11 @@ prohibido de forma absoluta:
 - ❌ Ejecutar `git add`, `git commit`, `git push`
 - ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
 - ❌ Ejecutar comandos que escriban en disco
+- ❌ **Leer archivos fuera de la Caja declarada** para preparar implementación
+- ❌ **Preparar planes de implementación para peticiones no autorizadas**
 
 ✅ Está permitido leer archivos, hacer búsquedas y listar directorios para
-construir o refinar el plan.
+construir o refinar el plan **de la tarea activa única**.
 
 Si el agente detecta que ha ejecutado cualquier acción operativa sin haber
 recibido `APROBADO`, debe:
@@ -135,6 +144,18 @@ recibido `APROBADO`, debe:
 2. Informar al usuario de qué ejecutó.
 3. Proponer el rollback correspondiente.
 4. Presentar el plan de nuevo y esperar aprobación.
+
+### Mensajes mixtos del usuario — regla de interpretación
+
+Cuando un mensaje del usuario combine:
+- Una instrucción operativa sobre trabajo ya aprobado (ej: "sí, commitea")
+- Una petición nueva o síntoma no planificado (ej: "también vi este bug en la UI")
+
+El agente DEBE interpretar:
+1. La instrucción operativa → ejecutar si corresponde a la fase actual
+2. La petición nueva → **NO es autorización implícita**, capturar como idea y requerir sesión nueva
+
+Nunca asumir que una petición nueva en un mensaje mixto está aprobada para implementación.
 
 ### Respuestas válidas del usuario
 - `APROBADO` → ejecutar el plan tal cual
@@ -184,11 +205,42 @@ Mostrar: `"🔒 Sesión abierta. Lock creado. Ejecución autorizada para [T-XXX]
 
 ---
 
+## FASE 5b — Bloqueo por tarea completada (CRÍTICO)
+
+Cuando el agente haya completado todos los criterios de done del task file:
+
+1. **Detener ejecución inmediatamente.** No continuar leyendo archivos, no analizar nuevos problemas, no preparar planes.
+2. Mostrar: `\"✅ Tarea completada. Lista para cierre. ¿Confirmas commit y cierre de sesión?\"`
+3. **Esperar respuesta explícita del usuario.** Las únicas respuestas válidas son:
+   - `sí, commitea` → proceder a FASE 6 (cierre)
+   - `no, primero...` → escuchar la instrucción, pero NO actuar hasta nueva aprobación
+   - `cierra` → proceder a FASE 6 (cierre)
+4. **Si el usuario incluye una petición nueva en el mismo mensaje:**
+   - Capturar la petición como idea en `docs/idea-inbox/YYYY-MM-DD.md` (Protocolo idea-capture).
+   - Responder: `\"💡 Petición capturada en inbox. Primero cierro la sesión activa. ¿Confirmas?\"`
+   - **Bajo ninguna circunstancia** leer archivos fuera de la Caja autorizada ni preparar implementación para la petición nueva.
+5. Solo tras cerrar la sesión actual (FASE 6 completada) se puede iniciar una nueva sesión con `/session-start` para la petición nueva.
+
+> ⚠️ **VIOLACIÓN CRÍTICA**: Si el agente ejecuta código, lee archivos fuera de la Caja o prepara un plan para una petición nueva antes de cerrar la sesión activa, está violando el protocolo de autorización. Debe detenerse, informar al usuario y proponer rollback.
+
+---
+
 ## FASE 6 — Cierre de sesión (/session-close)
 
 ### C1. Verificación de la Caja
 Ejecutar `git diff --name-only` y comparar con `authorized_files`.
 Si hay archivos fuera de la caja: informar al usuario y esperar instrucción.
+
+### C1b. Bloqueo de nuevas peticiones durante el cierre
+Durante FASE 6, el agente tiene **prohibido**:
+- Leer archivos fuera de la Caja autorizada en la sesión que está cerrando
+- Preparar planes de implementación para peticiones nuevas
+- Analizar código relacionado con trabajo futuro
+
+Si el usuario ha lanzado una petición nueva:
+1. Confirmar que fue capturada en `docs/idea-inbox/` (FASE 5b, paso 4).
+2. Proceder al cierre sin mencionar la petición nueva nuevamente.
+3. Al finalizar, mostrar: `\"✅ Sesión cerrada. Para trabajar en la petición capturada, ejecuta /session-start.\"`
 
 ### C2. Commit atómico
 ```bash
@@ -208,7 +260,11 @@ mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
 ```
 
 ### C5. Limpieza del idea-inbox
-Mover ideas surgidas durante la sesión al sprint file activo.
+Mover ideas surgidas durante la sesión al sprint file activo **solo si pertenecen a la tarea que se está cerrando**.
+
+**Si la tarea ya está completada (FASE 5b activada):**
+- No mover ideas al sprint file durante el cierre.
+- Las ideas capturadas en FASE 5b permanecen en `docs/idea-inbox/` hasta el próximo `/sprint-planning`.
 
 ### C5b. Archivado del research (solo si el sprint queda completo)
 Si tras actualizar el sprint file en C3 **todas las tareas están en ✅ Hecho**:
