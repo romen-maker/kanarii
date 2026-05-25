@@ -225,6 +225,102 @@ async function runTests() {
   }));
   console.log("✅ Usuario ajeno a la comunidad tiene denegada la escritura de fichas.");
 
+  console.log("\n--- Escenario 7: Perfiles de Usuario (/profiles) ---");
+  // Alice puede leer el perfil de Bob y el suyo propio
+  await assertSucceeds(getDoc(doc(aliceContext.firestore(), "profiles/alice")));
+  await assertSucceeds(getDoc(doc(aliceContext.firestore(), "profiles/bob")));
+  console.log("✅ Usuario autenticado puede leer perfiles propios y ajenos.");
+
+  // Alice puede escribir en su propio perfil
+  await assertSucceeds(setDoc(doc(aliceContext.firestore(), "profiles/alice"), {
+    displayName: "Alice In Wonderland"
+  }));
+  console.log("✅ Usuario puede modificar su propio perfil.");
+
+  // Bob no puede escribir en el perfil de Alice
+  await assertFails(setDoc(doc(bobContext.firestore(), "profiles/alice"), {
+    displayName: "Alice Modificada por Bob"
+  }));
+  console.log("✅ Usuario no puede modificar perfiles ajenos.");
+
+  // Un usuario anónimo no puede leer ni escribir perfiles
+  await assertFails(getDoc(doc(anonUser.firestore(), "profiles/alice")));
+  await assertFails(setDoc(doc(anonUser.firestore(), "profiles/anon_profile"), {
+    displayName: "Anon"
+  }));
+  console.log("✅ Usuario anónimo tiene denegado el acceso (lectura/escritura) a perfiles.");
+
+  console.log("\n--- Escenario 8: Registros de Salida (/community_exits) ---");
+  // Sembrar salida de Bob
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "community_exits/exit_bob"), {
+      userId: "bob",
+      communityId: "arteara",
+      motivo: "voluntaria",
+      fecha: new Date().toISOString()
+    });
+  });
+
+  // Bob puede leer su propio registro de salida
+  await assertSucceeds(getDoc(doc(bobContext.firestore(), "community_exits/exit_bob")));
+  console.log("✅ Usuario puede leer su propio registro de salida.");
+
+  // Alice (admin de la comunidad) puede leer la salida de Bob
+  await assertSucceeds(getDoc(doc(aliceContext.firestore(), "community_exits/exit_bob")));
+  console.log("✅ Admin de la comunidad puede leer registros de salida correspondientes.");
+
+  // Charles (ajeno) no puede leer la salida de Bob
+  await assertFails(getDoc(doc(charlesContext.firestore(), "community_exits/exit_bob")));
+  console.log("✅ Usuario ajeno tiene denegada la lectura de registros de salida.");
+
+  // Bob puede crear su propio registro de salida
+  await assertSucceeds(setDoc(doc(bobContext.firestore(), "community_exits/exit_bob_new"), {
+    userId: "bob",
+    communityId: "arteara",
+    motivo: "baja",
+    fecha: new Date().toISOString()
+  }));
+  console.log("✅ Usuario puede crear su propio registro de salida.");
+
+  // Charles no puede crear un registro de salida para Bob
+  await assertFails(setDoc(doc(charlesContext.firestore(), "community_exits/exit_bob_malicioso"), {
+    userId: "bob",
+    communityId: "arteara",
+    motivo: "expulsion"
+  }));
+  console.log("✅ Usuario no puede crear registros de salida en nombre de otros.");
+
+  // Bob no puede actualizar ni borrar su registro de salida
+  await assertFails(setDoc(doc(bobContext.firestore(), "community_exits/exit_bob"), {
+    userId: "bob",
+    communityId: "arteara",
+    motivo: "modificado"
+  }));
+  await assertFails(deleteDoc(doc(bobContext.firestore(), "community_exits/exit_bob")));
+  console.log("✅ Usuario tiene denegada la actualización y borrado de sus registros de salida.");
+
+  console.log("\n--- Escenario 9: Fichas sin Comunidad (Onboarding) ---");
+  // Sembrar ficha sin comunidad para Charles
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "fichas/charles"), {
+      nombre: "Charles",
+      userId: "charles"
+      // communityId es undefined/null
+    });
+  });
+
+  // Charles puede leer y actualizar su propia ficha
+  await assertSucceeds(getDoc(doc(charlesContext.firestore(), "fichas/charles")));
+  await assertSucceeds(setDoc(doc(charlesContext.firestore(), "fichas/charles"), {
+    nombre: "Charles Onboarded",
+    userId: "charles"
+  }));
+  console.log("✅ Usuario en onboarding puede leer y modificar su propia ficha sin comunidad.");
+
+  // Bob no puede leer la ficha de Charles (no comparten comunidad ya que Charles no tiene)
+  await assertFails(getDoc(doc(bobContext.firestore(), "fichas/charles")));
+  console.log("✅ Ficha sin comunidad asociada es privada (otros usuarios no pueden leerla).");
+
   await testEnv.cleanup();
   console.log("\n🎉 ¡TODAS LAS PRUEBAS DE SEGURIDAD PASARON EXITOSAMENTE! 🎉");
 }
