@@ -321,6 +321,75 @@ async function runTests() {
   await assertFails(getDoc(doc(bobContext.firestore(), "fichas/charles")));
   console.log("✅ Ficha sin comunidad asociada es privada (otros usuarios no pueden leerla).");
 
+  console.log("\n--- Escenario 10: Subcolecciones de Propuestas (hilos y respuestas) ---");
+  // Sembrar propuesta en comunidad 'arteara'
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "propuestas/propuesta_arteara"), {
+      title: "Propuesta de Arteara",
+      communityId: "arteara",
+      authorId: "alice"
+    });
+  });
+
+  // Alice (miembro/admin de arteara) puede leer y escribir en hilos y respuestas
+  await assertSucceeds(getDoc(doc(aliceContext.firestore(), "propuestas/propuesta_arteara/hilos/hilo_1")));
+  await assertSucceeds(setDoc(doc(aliceContext.firestore(), "propuestas/propuesta_arteara/hilos/hilo_1"), {
+    content: "Comentario de Alice",
+    authorId: "alice"
+  }));
+  await assertSucceeds(setDoc(doc(aliceContext.firestore(), "propuestas/propuesta_arteara/respuestas/alice"), {
+    memberId: "alice",
+    type: "consentimiento"
+  }));
+  console.log("✅ Miembro de la comunidad puede leer y escribir en subcolecciones de propuestas.");
+
+  // Charles (ajeno, no tiene membresía en arteara) no puede leer ni escribir en hilos o respuestas
+  await assertFails(getDoc(doc(charlesContext.firestore(), "propuestas/propuesta_arteara/hilos/hilo_1")));
+  await assertFails(setDoc(doc(charlesContext.firestore(), "propuestas/propuesta_arteara/hilos/hilo_2"), {
+    content: "Intento de Charles",
+    authorId: "charles"
+  }));
+  await assertFails(setDoc(doc(charlesContext.firestore(), "propuestas/propuesta_arteara/respuestas/charles"), {
+    memberId: "charles",
+    type: "objecion"
+  }));
+  console.log("✅ Usuario ajeno tiene denegada la lectura/escritura en subcolecciones de propuestas.");
+
+  // Usuario anónimo tiene denegado el acceso
+  await assertFails(getDoc(doc(anonUser.firestore(), "propuestas/propuesta_arteara/hilos/hilo_1")));
+  console.log("✅ Usuario anónimo tiene denegado el acceso a subcolecciones de propuestas.");
+
+
+  console.log("\n--- Escenario 11: Subcolecciones de Posts (respuestas) ---");
+  // Sembrar post en comunidad 'arteara'
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "posts/post_arteara"), {
+      title: "Post de Arteara",
+      communityId: "arteara",
+      autorId: "alice"
+    });
+  });
+
+  // Alice (miembro/admin de arteara) puede leer y escribir en respuestas de posts
+  await assertSucceeds(getDoc(doc(aliceContext.firestore(), "posts/post_arteara/respuestas/resp_1")));
+  await assertSucceeds(setDoc(doc(aliceContext.firestore(), "posts/post_arteara/respuestas/resp_1"), {
+    content: "Respuesta de Alice",
+    autorId: "alice"
+  }));
+  console.log("✅ Miembro de la comunidad puede leer y escribir en respuestas de posts.");
+
+  // Charles (ajeno) no puede leer ni escribir en respuestas de posts
+  await assertFails(getDoc(doc(charlesContext.firestore(), "posts/post_arteara/respuestas/resp_1")));
+  await assertFails(setDoc(doc(charlesContext.firestore(), "posts/post_arteara/respuestas/resp_2"), {
+    content: "Intento de Charles",
+    autorId: "charles"
+  }));
+  console.log("✅ Usuario ajeno tiene denegada la lectura/escritura en respuestas de posts.");
+
+  // Usuario anónimo tiene denegado el acceso
+  await assertFails(getDoc(doc(anonUser.firestore(), "posts/post_arteara/respuestas/resp_1")));
+  console.log("✅ Usuario anónimo tiene denegado el acceso a respuestas de posts.");
+
   await testEnv.cleanup();
   console.log("\n🎉 ¡TODAS LAS PRUEBAS DE SEGURIDAD PASARON EXITOSAMENTE! 🎉");
 }

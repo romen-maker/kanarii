@@ -113,10 +113,12 @@ service cloud.firestore {
 
       // Hilos y respuestas de propuestas
       match /hilos/{hiloId} {
-        allow read, write: if request.auth != null;
+        allow read: if request.auth != null && hasMinRole(get(/databases/$(database)/documents/propuestas/$(propuestaId)).data.communityId, 'visitante');
+        allow write: if request.auth != null && hasMinRole(get(/databases/$(database)/documents/propuestas/$(propuestaId)).data.communityId, 'miembro');
       }
       match /respuestas/{respuestaId} {
-        allow read, write: if request.auth != null;
+        allow read: if request.auth != null && hasMinRole(get(/databases/$(database)/documents/propuestas/$(propuestaId)).data.communityId, 'visitante');
+        allow write: if request.auth != null && hasMinRole(get(/databases/$(database)/documents/propuestas/$(propuestaId)).data.communityId, 'miembro');
       }
     }
 
@@ -157,7 +159,8 @@ service cloud.firestore {
       );
 
       match /respuestas/{respuestaId} {
-        allow read, write: if request.auth != null;
+        allow read: if request.auth != null && hasMinRole(get(/databases/$(database)/documents/posts/$(postId)).data.communityId, 'visitante');
+        allow write: if request.auth != null && hasMinRole(get(/databases/$(database)/documents/posts/$(postId)).data.communityId, 'miembro');
       }
     }
 
