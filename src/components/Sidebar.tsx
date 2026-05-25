@@ -216,14 +216,22 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* Footer / User Info */}
       <div className="p-4 border-t border-stone-200/60 bg-stone-50/50">
         <div className="flex items-center gap-3 px-2 py-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-[#EAE2D6] border-2 border-white shadow-sm flex items-center justify-center text-[#6B705C]">
-            <User className="w-5 h-5" />
-          </div>
+          {appUser?.photoURL || user?.photoURL ? (
+            <img 
+              src={appUser?.photoURL || user?.photoURL || ''} 
+              alt={appUser?.displayName || user?.displayName || 'Avatar'} 
+              className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[#EAE2D6] border-2 border-white shadow-sm flex items-center justify-center text-[#6B705C]">
+              <User className="w-5 h-5" />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-[#4A4E4D] truncate">{user?.displayName || 'Miembro'}</p>
+            <p className="text-xs font-bold text-[#4A4E4D] truncate">{appUser?.displayName || user?.displayName || 'Miembro'}</p>
             {userComunidades.length > 1 ? (
               <div className="relative group/sel">
                 <select

@@ -59,15 +59,20 @@ export function Welcome() {
           {appUser ? (
             <div className="flex flex-col items-center gap-4 border border-[#EAE2D6] bg-white p-6 rounded-3xl shadow-sm">
                <div className="flex items-center gap-3 mb-2">
-                 {user?.photoURL ? (
-                   <img src={user.photoURL} alt={user.displayName || 'Avatar'} className="w-12 h-12 rounded-full" />
+                 {appUser?.photoURL || user?.photoURL ? (
+                   <img 
+                     src={appUser?.photoURL || user?.photoURL || ''} 
+                     alt={appUser?.displayName || user?.displayName || 'Avatar'} 
+                     className="w-12 h-12 rounded-full object-cover"
+                     referrerPolicy="no-referrer"
+                   />
                  ) : (
                    <div className="w-12 h-12 rounded-full bg-[#EAE2D6] flex items-center justify-center text-[#6B705C]">
                      <User className="w-6 h-6" />
                    </div>
                  )}
                  <div className="text-left">
-                   <p className="font-medium text-stone-800">{user?.displayName || appUser.email}</p>
+                   <p className="font-medium text-stone-800">{appUser?.displayName || user?.displayName || appUser.email}</p>
                    <p className="text-sm text-stone-500">Sesión iniciada</p>
                  </div>
                </div>

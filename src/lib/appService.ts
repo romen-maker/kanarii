@@ -91,6 +91,7 @@ export interface AppUser {
   uid: string;
   email: string;
   displayName?: string;
+  photoURL?: string;
   role: 'admin' | 'member' | 'user';
   hasConsented?: boolean;
   hasFicha?: boolean;
@@ -98,6 +99,7 @@ export interface AppUser {
   communityId?: string | null; // Compatibilidad: computed del primero
   hasSeenOnboarding?: boolean;
 }
+
 
 export interface Invitacion {
   id?: string;
@@ -140,20 +142,29 @@ export async function syncAppUserDoc(uid: string, data: any) {
 /**
  * Obtiene el perfil completo del usuario, creándolo si no existe.
  * Realiza las comprobaciones de rol y existencia de ficha.
+ * Acepta opcionalmente displayName y photoURL de Google Auth para sincronizarlos.
  */
-export async function getAppUser(uid: string, email: string): Promise<AppUser> {
+export async function getAppUser(
+  uid: string, 
+  email: string, 
+  googleDisplayName?: string, 
+  googlePhotoURL?: string
+): Promise<AppUser> {
   try {
     const userDocRef = doc(db, 'users', uid);
     const userDoc = await getDoc(userDocRef);
     let userData: any;
+    let needsUpdate = false;
 
     if (userDoc.exists()) {
       userData = userDoc.data();
       // Migración al vuelo si no tiene el array de IDs
       if (!userData.communityIds && userData.communityId) {
         userData.communityIds = [userData.communityId];
+        needsUpdate = true;
       } else if (!userData.communityIds) {
         userData.communityIds = [];
+        needsUpdate = true;
       }
     } else {
       // Crear nuevo usuario
@@ -165,15 +176,51 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
         updatedAt: serverTimestamp(),
         communityIds: []
       };
+      if (googleDisplayName) {
+        userData.displayName = googleDisplayName;
+      }
+      if (googlePhotoURL) {
+        userData.photoURL = googlePhotoURL;
+      }
       await setDoc(userDocRef, userData);
     }
 
-    // Verificar si tiene ficha (en ambas colecciones por migración)
-    const [fichasSnapshot, profilesSnap] = await Promise.all([
-      getDocs(query(collection(db, 'fichas'), where('userId', '==', uid))),
-      getDoc(doc(db, 'profiles', uid))
-    ]);
-    const hasFicha = !fichasSnapshot.empty || profilesSnap.exists();
+    // Sincronizar campos de Google si no existen en Firestore
+    if (googleDisplayName && !userData.displayName) {
+      userData.displayName = googleDisplayName;
+      needsUpdate = true;
+    }
+    if (googlePhotoURL && !userData.photoURL) {
+      userData.photoURL = googlePhotoURL;
+      needsUpdate = true;
+    }
+
+    // Determinar hasFicha de forma eficiente
+    let hasFicha = userData.hasFicha;
+    if (hasFicha === undefined) {
+      // Fallback de una sola vez para usuarios existentes sin el flag
+      const [fichasSnapshot, profilesSnap] = await Promise.all([
+        getDocs(query(collection(db, 'fichas'), where('userId', '==', uid))),
+        getDoc(doc(db, 'profiles', uid))
+      ]);
+      hasFicha = !fichasSnapshot.empty || profilesSnap.exists();
+      userData.hasFicha = hasFicha;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      try {
+        await setDoc(userDocRef, {
+          communityIds: userData.communityIds,
+          displayName: userData.displayName || '',
+          photoURL: userData.photoURL || '',
+          hasFicha: userData.hasFicha,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.error("Error al actualizar campos de usuario en getAppUser:", err);
+      }
+    }
 
     const communityIds = userData.communityIds || [];
 
@@ -181,6 +228,7 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
       uid,
       email: userData.email,
       displayName: userData.displayName || '',
+      photoURL: userData.photoURL || '',
       role: userData.role ?? 'member',
       hasConsented: userData.hasConsented ?? false,
       communityIds: communityIds,
@@ -196,10 +244,11 @@ export async function getAppUser(uid: string, email: string): Promise<AppUser> {
 
 /**
  * Se suscribe en tiempo real a los cambios del documento del usuario en Firestore.
+ * Lee hasFicha del documento para evitar consultas asíncronas redundantes.
  */
 export function listenAppUser(uid: string, callback: (user: AppUser | null) => void): () => void {
   const userDocRef = doc(db, 'users', uid);
-  return onSnapshot(userDocRef, async (snap) => {
+  return onSnapshot(userDocRef, (snap) => {
     try {
       if (snap.exists()) {
         const userData = snap.data();
@@ -212,17 +261,14 @@ export function listenAppUser(uid: string, callback: (user: AppUser | null) => v
           communityIds = [];
         }
 
-        // Consultar existencia de ficha en paralelo
-        const [fichasSnapshot, profilesSnap] = await Promise.all([
-          getDocs(query(collection(db, 'fichas'), where('userId', '==', uid))),
-          getDoc(doc(db, 'profiles', uid))
-        ]);
-        const hasFicha = !fichasSnapshot.empty || profilesSnap.exists();
+        // Obtener flag hasFicha de forma síncrona
+        const hasFicha = userData.hasFicha ?? false;
 
         callback({
           uid,
           email: userData.email || '',
           displayName: userData.displayName || '',
+          photoURL: userData.photoURL || '',
           role: userData.role ?? 'member',
           hasConsented: userData.hasConsented ?? false,
           communityIds,
@@ -239,6 +285,7 @@ export function listenAppUser(uid: string, callback: (user: AppUser | null) => v
     }
   });
 }
+
 
 
 /**
@@ -1225,46 +1272,77 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     throw err;
   }
 
-  // 2) Guardar en /community_members/{communityId}_{userId} (Clave compuesta multi-comunidad)
-  if (commId) {
-    try {
-      const memberRef = doc(db, 'community_members', `${commId}_${userId}`);
-      const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
-      // Intentar obtener photoURL/displayName/email del documento de usuario
-      let memberPhotoURL = '';
-      let memberDisplayName = '';
-      let memberEmail = '';
-      try {
-        const userDocRef = doc(db, 'users', userId);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const ud = userDocSnap.data();
-          memberPhotoURL = ud.photoURL || '';
-          memberDisplayName = ud.displayName || '';
-          memberEmail = ud.email || '';
-        }
-      } catch (_) { /* silencioso: datos opcionales */ }
+  // 2) Sincronizar en /users/{userId} y propagar en batch a /community_members/{communityId}_{userId}
+  const resolvedDisplayName = fichaFull.datosPersona?.nombre || fichaFull.nombre || fichaFull.datosOnboarding?.nombre || '';
 
-      await setDoc(memberRef, {
-        userId,
-        communityId: commId,
-        nombre: base.nombre || fichaFull.nombre || 'Sin Nombre',
-        tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
-        elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
-        autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
-        antiguedad_anos: base.antiguedad_anos || 0,
-        rol_comunidad: base.rol_comunidad || '',
-        rolComunitario: base.rol_comunidad || base.rol || 'miembro',
-        rol: base.rol || 'miembro',
-        estado: fichaFull.estado || 'activo',
-        photoURL: memberPhotoURL,
-        displayName: memberDisplayName,
-        email: memberEmail,
-        creadoEn: fichaFull.createdAt || serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+  let userEmail = '';
+  let userPhotoURL = '';
+  let communityIds: string[] = [];
+
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
+      const ud = userDocSnap.data();
+      userPhotoURL = ud.photoURL || '';
+      userEmail = ud.email || '';
+      communityIds = ud.communityIds || [];
+      if (!communityIds.length && ud.communityId) {
+        communityIds = [ud.communityId];
+      }
+    }
+  } catch (err) {
+    console.error("Error al recuperar info del usuario en _writeFichaRaw:", err);
+  }
+
+  // Actualizar el documento del usuario con displayName y el flag hasFicha
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    await setDoc(userDocRef, {
+      displayName: resolvedDisplayName,
+      hasFicha: true,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (err) {
+    console.error("Error al actualizar /users/{userId}:", err);
+  }
+
+  // Si el commId actual no está en la lista de communityIds, añadirlo
+  if (commId && !communityIds.includes(commId)) {
+    communityIds.push(commId);
+  }
+
+  // Propagar en batch a todos los documentos de membresía del usuario
+  if (communityIds.length > 0) {
+    try {
+      const batch = writeBatch(db);
+      const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
+
+      for (const cId of communityIds) {
+        const memberRef = doc(db, 'community_members', `${cId}_${userId}`);
+        batch.set(memberRef, {
+          userId,
+          communityId: cId,
+          nombre: resolvedDisplayName || 'Sin Nombre',
+          tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
+          elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
+          autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
+          antiguedad_anos: base.antiguedad_anos || 0,
+          rol_comunidad: base.rol_comunidad || '',
+          rolComunitario: base.rol_comunidad || base.rol || 'miembro',
+          rol: base.rol || 'miembro',
+          estado: fichaFull.estado || 'activo',
+          photoURL: userPhotoURL,
+          displayName: resolvedDisplayName,
+          email: userEmail,
+          creadoEn: fichaFull.createdAt || serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+
+      await batch.commit();
     } catch (err) {
-      handleFirestoreError(err, isUpdate ? OperationType.UPDATE : OperationType.CREATE, 'community_members');
+      handleFirestoreError(err, OperationType.UPDATE, 'community_members_batch');
     }
   }
 

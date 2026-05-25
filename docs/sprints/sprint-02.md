@@ -1,7 +1,7 @@
 # Sprint 02 — 2026-05-25 → 2026-05-29
 
 ## Estado
-🟡 En curso
+🟢 Cerrado
 
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
