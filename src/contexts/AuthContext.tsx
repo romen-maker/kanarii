@@ -66,7 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const profile = await getAppUser(firebaseUser.uid, firebaseUser.email!);
+        const profile = await getAppUser(
+          firebaseUser.uid,
+          firebaseUser.email!,
+          firebaseUser.displayName || undefined,
+          firebaseUser.photoURL || undefined
+        );
         
         setUser(firebaseUser);
         setAppUser(profile);

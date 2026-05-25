@@ -10,20 +10,21 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Firestore Rules multi-comunidad con roles (Sprint 01 — T-001)
 - [x] Eliminar email admin hardcoded, usar campo `role` en Firestore (Sprint 01 — T-002)
 - [x] Reactividad de sesión Google → React Router (Sprint 01 — T-003)
+- [x] Completar permisos lectura/escritura en `actas` y `fichas` en rules (Sprint 02 — T-005)
+- [x] Rellenar `displayName`/`email`/`photoURL` al unirse por invitación (Sprint 02 — T-006)
+- [x] Redirección directa tras unirse por invitación (Sprint 02 — T-006)
+- [x] Reglas Firestore para colecciones `community_exits`, `profiles` y `fichas` (Sprint 02 — T-007)
+- [x] Restringir subcolecciones `hilos` y `respuestas` de propuestas/posts (Sprint 02 — T-008)
 
 ---
 
 ## 🚨 Seguridad y confianza
-- [ ] [CRÍTICO] Completar permisos lectura/escritura en `actas` y `fichas` (deuda T-005).
-- [ ] [CRÍTICO] Rellenar `displayName`/`email`/`photoURL` en `community_member` al unirse vía invitación (deuda T-005).
-- [ ] [CRÍTICO] Validar que onboarding, invitaciones y solicitudes no permitan bypass de membresía.
-- [ ] [CRÍTICO] Añadir reglas Firestore para colecciones `community_exits`, `profiles`, `fichas` (detectado en auditoría QwenCoder 23/05/2026).
-- [ ] [ALTO] Corregir permisos de subcolecciones `hilos` y `respuestas` en `/propuestas` y `/posts` — actualmente cualquier usuario autenticado puede escribir en subcolecciones de comunidades ajenas.
+- [ ] [CRÍTICO] Validar que onboarding, invitaciones y solicitudes no permitan bypass de membresía en `firestore.rules` (Sprint 03 — T-010).
 
 ## 🐛 Bugs de acceso y flujo
-- [ ] [ALTO] Redirigir directamente a la comunidad tras usar un código de invitación (detectado 23/05/2026 — actualmente no redirige).
-- [ ] [ALTO] Lista de miembros muestra email en lugar de nombre (detectado 23/05/2026 — `displayName` vacío en `community_member` creado vía invitación).
+- [ ] [ALTO] Corregir sincronización y visualización del perfil de usuario (`displayName`/`email`/`photoURL`) en el Sidebar y miembros de la comunidad (Sprint 03 — T-009).
 - [ ] [ALTO] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido".
+- [ ] [MEDIO] Mejorar UX de navegación de comunidades: Mover selector de comunidad a la parte superior del sidebar (Sprint 03 — T-011).
 
 ---
 
@@ -54,6 +55,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
+- [ ] [ALTO] Configurar Firebase Emulator con JDK 21+ y habilitar tests locales automatizados de Firestore rules (Sprint 03 — T-012).
 - [ ] [ALTO] Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) (AUDIT-04/05).
 - [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (muestran email en lugar de nombre en fichas públicas). Script one-shot o Cloud Function triggered on read si `displayName` vacío.
 - [ ] [MEDIO] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks.
