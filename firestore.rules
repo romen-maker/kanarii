@@ -42,6 +42,12 @@ service cloud.firestore {
       allow write: if request.auth.uid == uid || isGlobalAdmin();
     }
 
+    // ─── PERFILES DE USUARIO ───────────────────────────────────────────────
+    match /profiles/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth.uid == uid || isGlobalAdmin();
+    }
+
     // ─── COMUNIDADES ───────────────────────────────────────────────────────
     match /comunidades/{communityId} {
       // Lectura autenticada por defecto
@@ -80,6 +86,20 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid ||
         hasRole(resource.data.communityId, 'admin')
       );
+    }
+
+    // ─── REGISTROS DE SALIDA (Colección Plana) ──────────────────────────────
+    match /community_exits/{exitId} {
+      // Leer: Propio usuario o admin de la comunidad correspondiente o admin global
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin()
+      );
+      // Crear: El propio usuario al salir
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Actualizar/Borrar: Solo admin global
+      allow update, delete: if isGlobalAdmin();
     }
 
     // ─── PROPUESTAS (Gobernanza) ──────────────────────────────────────────
@@ -176,19 +196,19 @@ service cloud.firestore {
     match /fichas/{fichaId} {
       allow read: if request.auth != null && (
         request.auth.uid == fichaId || 
-        hasMinRole(resource.data.communityId, 'visitante')
+        (resource.data.communityId != null && hasMinRole(resource.data.communityId, 'visitante'))
       );
       allow create: if request.auth != null && (
         request.auth.uid == fichaId || 
-        hasRole(request.resource.data.communityId, 'admin')
+        (request.resource.data.communityId != null && hasRole(request.resource.data.communityId, 'admin'))
       );
       allow update: if request.auth != null && (
         request.auth.uid == fichaId || 
-        hasRole(resource.data.communityId, 'admin')
+        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin'))
       );
       allow delete: if request.auth != null && (
         request.auth.uid == fichaId || 
-        hasRole(resource.data.communityId, 'admin')
+        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin'))
       );
     }
 
