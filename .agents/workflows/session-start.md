@@ -268,11 +268,15 @@ git commit -m "[tipo](T-XXX): [descripción breve de lo hecho]"
 - Si no → `⏸ Pausada` con nota de continuidad
 
 ### C4. Actualización del task file
-Marcar en `## Estado de aprobación` los checkboxes de cierre.
-Si estado = `DONE`:
+1. Marcar `- [x] Sesión cerrada correctamente` en `## Estado de aprobación`.
+2. Guardar el task file con ese cambio.
+3. Solo entonces, si estado = `DONE`, archivar:
 ```bash
-mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
+git mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
 ```
+
+> ⚠️ El orden importa: primero editar y guardar, luego mover. Un task file
+> archivado con la casilla sin marcar es un registro de cierre incompleto.
 
 ### C5. Limpieza del idea-inbox
 Mover ideas surgidas durante la sesión al sprint file activo **solo si pertenecen a la tarea que se está cerrando**.
