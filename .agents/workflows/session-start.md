@@ -62,50 +62,66 @@ bash scripts/agent/check-session.sh
 
 ## FASE 3.5 — Plan para aprobación (OBLIGATORIA Y BLOQUEANTE)
 
-Mostrar este bloque exacto antes de cualquier acción operativa:
+El agente DEBE generar y mostrar el siguiente bloque completo **antes de realizar
+cualquier acción operativa**. Este bloque es obligatorio. No hay excepción posible.
+
+El bloque debe aparecer exactamente con esta estructura y el token `⏳ ESPERANDO`
+al final — es la señal que indica que el agente está en pausa activa:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔐 PLAN PENDIENTE DE APROBACIÓN — T-XXX
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 TAREA: [nombre]
-🌿 RAMA: feat/T-XXX-descripcion-corta
 
-📁 ARCHIVOS A MODIFICAR:
-  - ruta/archivo.ts → [qué cambia y por qué]
+📋 TAREA: [nombre de la tarea]
+🌿 RAMA PROPUESTA: feat/T-XXX-descripcion-corta
 
-📌 PASOS (en orden):
+📁 ARCHIVOS QUE SE VAN A MODIFICAR:
+  - src/ruta/archivo1.ts  → [qué se cambia y por qué]
+  - src/ruta/archivo2.tsx → [qué se cambia y por qué]
+
+📌 PASOS DEL PLAN (en orden):
   1. [paso concreto]
   2. [paso concreto]
+  3. [paso concreto]
 
-⚠️ RIESGOS: [o "Ninguno detectado"]
+⚠️  RIESGOS DETECTADOS:
+  - [riesgo con impacto estimado, o "Ninguno detectado"]
 
-🖥️ UI REQUERIDA: [Sin revisión / Mínima / Obligatoria]
-  Pantallas y comportamientos: [...]
+🖥️  VERIFICACIÓN UI REQUERIDA: [Sin revisión / Mínima / Obligatoria]
+  Pantallas: [...]
+  Comportamientos a comprobar: [...]
 
-⏳ ESPERANDO: APROBADO | APROBADO CON CAMBIOS: [...] | CANCELAR
+⏳ ESPERANDO: responde APROBADO, APROBADO CON CAMBIOS: [...] o CANCELAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ### Regla dura (no negociable)
 
-Hasta recibir `APROBADO` o `APROBADO CON CAMBIOS`, está **absolutamente prohibido**:
+Hasta recibir `APROBADO` o `APROBADO CON CAMBIOS` en este chat, el agente tiene
+prohibido de forma absoluta:
 
-- ❌ Crear `.agent-session.lock` o cambiar de rama
-- ❌ Editar, crear o borrar archivos del proyecto
-- ❌ Ejecutar `git add/commit/push`, `npm`, `yarn`, `pnpm`
-- ❌ Leer código fuente (`src/`, `lib/`, etc.) fuera de la Caja declarada
-- ❌ Preparar planes para peticiones no autorizadas
+- ❌ Crear `.agent-session.lock`
+- ❌ Crear o cambiar de rama (`git checkout`, `git branch`)
+- ❌ Editar, crear o borrar cualquier archivo del proyecto
+- ❌ Ejecutar `git add`, `git commit`, `git push`
+- ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
+- ❌ Ejecutar comandos que escriban en disco
 
-✅ Permitido: leer sprint files, research files, task files y archivos dentro de la Caja declarada.
+✅ Está permitido leer archivos, hacer búsquedas y listar directorios para
+construir o refinar el plan.
 
-Si el agente ejecuta algo sin `APROBADO`: detenerse, informar, proponer rollback, presentar plan de nuevo.
+Si el agente detecta que ha ejecutado cualquier acción operativa sin haber
+recibido `APROBADO`, debe:
+1. Detenerse inmediatamente.
+2. Informar al usuario de qué ejecutó.
+3. Proponer el rollback correspondiente.
+4. Presentar el plan de nuevo y esperar aprobación.
 
-### Mensajes mixtos
-
-Si el usuario combina instrucción operativa + petición nueva:
-1. Instrucción operativa → ejecutar si corresponde a la fase actual.
-2. Petición nueva → capturar en idea-inbox. **No implementar.** Requerir nueva sesión.
+### Respuestas válidas del usuario
+- `APROBADO` → ejecutar el plan tal cual
+- `APROBADO CON CAMBIOS: [descripción]` → ajustar el plan y confirmar los cambios antes de ejecutar
+- `CANCELAR` → cerrar la sesión sin ninguna acción
 
 ---
 
