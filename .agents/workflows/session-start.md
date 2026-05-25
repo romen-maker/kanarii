@@ -60,8 +60,21 @@ Si el usuario menciona una petición nueva que no corresponde a ninguna tarea de
 ## FASE 2 — Creación o carga del task file
 
 1. Comprobar si existe `.agents/tasks/task-XXX.md`.
-2. Si existe → leerlo.
-3. Si no existe → activar `doe-framework` para crearlo siguiendo la plantilla `.agents/tasks/_template.md`.
+2. **Si no existe, comprobar en `.agents/tasks/_archived/task-XXX.md`:**
+   - Si existe en `_archived/` → informar: `"⚠️ [T-XXX] fue completada y archivada anteriormente. ¿Es una regresión, re-apertura o error de identificación?"`
+   - Esperar respuesta del usuario antes de continuar.
+   - Si es regresión → restaurar desde `_archived/`, marcar como `⏸ Pausada` en el sprint file y añadir nota de continuidad.
+   - Si es re-apertura intencional → restaurar desde `_archived/`, limpiar estado previo y tratar como nueva.
+   - Si es error → volver a FASE 1 para identificar la tarea correcta.
+3. Si no existe en ningún lado → activar `doe-framework` para crearlo siguiendo la plantilla `.agents/tasks/_template.md`.
+
+> 🔒 LÍMITE DE INVESTIGACIÓN EN FASE 2: El agente **solo puede leer documentos de planificación**
+> (sprint files, research files, task files existentes). **No puede leer código fuente**
+> (`src/`, `lib/`, componentes, hooks, servicios, etc.) hasta después de la aprobación
+> en FASE 3.5. Excepción: si el usuario menciona archivos concretos en su petición
+> inicial, solo esos archivos pueden leerse para entender el contexto mínimo necesario
+> para escribir la Caja.
+
 4. **Buscar investigación previa del sprint:**
    - Comprobar si existe `docs/sprints/sprint-XX-research.md` (donde XX es el número del sprint activo).
    - Si existe → leerlo e integrarlo automáticamente en `## Contexto técnico` del task file. Informar: `"📚 Investigación del sprint encontrada e integrada."`
@@ -133,10 +146,12 @@ prohibido de forma absoluta:
 - ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
 - ❌ Ejecutar comandos que escriban en disco
 - ❌ **Leer archivos fuera de la Caja declarada** para preparar implementación
+- ❌ **Leer archivos de código fuente (`src/`, `lib/`, etc.) antes de la aprobación** — excepción: solo los archivos listados en la Caja declarada en el task file pueden leerse para construir el plan
 - ❌ **Preparar planes de implementación para peticiones no autorizadas**
 
-✅ Está permitido leer archivos, hacer búsquedas y listar directorios para
-construir o refinar el plan **de la tarea activa única**.
+✅ Está permitido leer **documentos de planificación** (sprint files, research files, task files)
+y **únicamente los archivos dentro de la Caja declarada** para construir o refinar el plan
+**de la tarea activa única**.
 
 Si el agente detecta que ha ejecutado cualquier acción operativa sin haber
 recibido `APROBADO`, debe:
