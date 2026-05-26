@@ -74,15 +74,47 @@ Para cada tarea candidata:
 > sin task file asociado (trabajo ad-hoc, fixes rápidos o sesiones sin cerrar correctamente).
 > En ese caso, revisar también `git log --oneline -20` para detectar trabajo no documentado.
 
-### 3. Vaciado del idea-inbox
-- Leer todos los archivos en `docs/idea-inbox/`.
-- Para cada idea capturada, clasificar en una de tres categorías:
-  - **roadmap** → añadir al ítem correspondiente en `roadmap.md` o crear ítem nuevo.
-  - **backlog** → anotar en sección `## Backlog` del roadmap.
-  - **descartar** → registrar como descartada con motivo en una línea.
-- Si hay entradas con prefijo `AUDIT-` → activar **inbox-integrator Modo B** para procesarlas.
-- Presentar al usuario la clasificación propuesta antes de escribir. Esperar confirmación.
-- Una vez confirmado, aplicar cambios en `roadmap.md` y borrar los archivos procesados de `docs/idea-inbox/`.
+### 3. Vaciado de inboxes priorizando MVP
+Todo lo que se gestione en los inboxes ha de ser primero clasificado como MVP o post-MVP antes de introducirlo en el ROADMAP.md.
+
+Ejecutar:
+```bash
+bash scripts/agent/check-inbox.sh
+```
+
+El script reporta rutas exactas de manifiestos en `external-inbox/` y archivos en `docs/idea-inbox/`.
+
+#### 3a. external-inbox (si hay entradas)
+Para cada manifiesto listado, leer los campos Origen, ¿Qué hace?, Archivos que toca, Prioridad y Precauciones. Luego:
+1. Buscar en `src/` los archivos del campo "Archivos que toca" — ¿ya implementado?
+2. Cruzar contra `roadmap.md` — ¿existe tarea que lo cubra? ¿invalida alguna?
+3. Clasificar:
+
+| Resultado | Acción en roadmap |
+|---|---|
+| Ya implementado | Marcar `✅ Hecho`, no planificar |
+| Cubre tarea existente | Enriquecer descripción con contexto del manifiesto |
+| Nuevo, prioridad Alta | Añadir como tarea bloqueante |
+| Nuevo, prioridad Media/Baja | Añadir al backlog |
+| Invalida tarea planificada | Marcar `⚠️ Revisar`, preguntar al usuario |
+
+> Los archivos de `external-inbox/` no se mueven ni borran hasta que el usuario lo apruebe.
+
+#### 3b. idea-inbox (si hay entradas)
+Para cada archivo listado, clasificar cada idea en:
+- **roadmap** → añadir al ítem correspondiente en `roadmap.md` o crear ítem nuevo.
+- **backlog** → anotar en sección `## Backlog` del roadmap.
+- **descartar** → registrar como descartada con motivo en una línea.
+
+#### Confirmación y escritura (una sola ronda)
+Presentar al usuario una tabla consolidada con todas las entradas de ambos inboxes y las acciones propuestas. 
+
+**Esperar confirmación antes de escribir o archivar nada.** 
+
+Una vez confirmado:
+- Aplicar todos los cambios en `roadmap.md`.
+- Archivar archivos procesados de `docs/idea-inbox/` en `docs/idea-inbox/_archived/`.
+- Archivar archivos procesados de `external-inbox/` en `external-inbox/_archived/`.
 
 ### 4. Generación del sprint file
 Crear `docs/sprints/sprint-XX.md` (incrementar número respecto al último existente) con esta estructura:
