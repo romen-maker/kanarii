@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | T-013 | Abstraer imports directos de `firebase/firestore` en hooks (`usePropuestaDetail`, `useProyectos`, `useFichas`, `useTareas`) hacia `appService.ts` y validar `communityId` en `usePropuestaDetail` | M | 🟢 Completado | [.agents/tasks/_archived/task-013.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-013.md) |
 | T-014 | Añadir `.limit(50)` a todos los hooks de listas | S | 🟢 Completado | [.agents/tasks/_archived/task-014.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-014.md) |
-| T-015 | Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" | S | ⬜ Pendiente | — |
+| T-015 | Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" | S | 🟢 Completado | [.agents/tasks/_archived/task-015.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-015.md) |
 | T-016 | Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) | L | ⬜ Pendiente | — |
 | T-017 | Fix: displayName vacío al re-entrar por invitación tras expulsión — `community_members` no copia perfil desde `/users/{uid}` al canjear código | S | ⬜ Pendiente | — |
 
