@@ -205,11 +205,18 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       }, { merge: true });
     }
 
-    // Propagar communityId a fichas si existe
-    const fichaRef = doc(db, 'fichas', uid);
-    const fichaSnap = await getDoc(fichaRef);
-    if (fichaSnap.exists()) {
-      await _writeFichaRaw(uid, { communityId: communityId }, true);
+    // Propagar communityId a /fichas si existe (sin tocar displayName ni otros campos)
+    try {
+      const fichaRef = doc(db, 'fichas', uid);
+      const fichaSnap = await getDoc(fichaRef);
+      if (fichaSnap.exists()) {
+        await updateDoc(fichaRef, { 
+          communityId: communityId,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (e) {
+      console.warn('No se pudo propagar communityId a fichas:', e);
     }
 
     await batch.commit();

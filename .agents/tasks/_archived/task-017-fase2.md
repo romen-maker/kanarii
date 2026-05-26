@@ -68,3 +68,9 @@ Se creó y ejecutó un script de prueba de integración para verificar el flujo 
 - Se verificó en Firestore que en `/community_members/arteara_rXDlDiXHMKQBdOArSqXCOOkfrm42` se guardaron correctamente tanto `nombre: "Abián"` como `displayName: "Abián"` en una única operación atómica sin recurrir a updates posteriores.
 - **Resultado del Test:** EXITOSO.
 
+### 5. Fix Definitivo de Propagación de Ficha (Evitar sobreescritura parcial)
+Se detectó que el flujo de re-ingreso, al llamar a `_writeFichaRaw(uid, { communityId }, true)`, seguía borrando campos complejos del perfil/ficha (Manual de Usuario Humano, Generador, etc.) debido a que pasaba un objeto de datos parcial que no contenía toda la estructura de la ficha.
+- **Cambio:** Se reemplazó la llamada a `_writeFichaRaw` en `useInvitacion()` (`src/lib/services/invitaciones.ts`) y `unirseComunidadDirecto()` (`src/lib/services/members.ts`) por llamadas directas a `updateDoc` del documento de la ficha en `/fichas/{uid}`, propagando únicamente los campos de control necesarios (`communityId`, `updatedAt`) y evitando así la invocación destructiva de `_writeFichaRaw` con datos incompletos.
+- **Documentación:** Se formalizó esta decisión en el [ADR 008](docs/adrs/ADR-008-reglas-propagacion-displayname-perfil.md).
+
+

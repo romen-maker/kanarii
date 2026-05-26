@@ -245,11 +245,18 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
     
     await batch.commit();
 
-    // Opción B: propagar communityId a fichas si ya existe
-    const fichaRef = doc(db, 'fichas', uid);
-    const fichaSnap = await getDoc(fichaRef);
-    if (fichaSnap.exists()) {
-      await _writeFichaRaw(uid, { communityId: inv.communityId }, true);
+    // Propagar communityId a /fichas si existe (sin tocar displayName ni otros campos)
+    try {
+      const fichaRef = doc(db, 'fichas', uid);
+      const fichaSnap = await getDoc(fichaRef);
+      if (fichaSnap.exists()) {
+        await updateDoc(fichaRef, { 
+          communityId: inv.communityId,
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (e) {
+      console.warn('No se pudo propagar communityId a fichas:', e);
     }
 
     return inv.communityId;

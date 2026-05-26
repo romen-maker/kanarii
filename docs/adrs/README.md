@@ -13,3 +13,4 @@ Este directorio contiene el registro de las decisiones de diseño arquitectónic
 | [ADR-005](ADR-005-visibilidad-comunidades-lectura-autenticada.md) | Política de Visibilidad de Comunidades por Lectura Autenticada | Accepted | 2026-05-22 |
 | [ADR-006](ADR-006-seeding-temporal-uid-arteara.md) | Uso Temporal del UID Fijo de Arteara como Workaround de Seeding | Proposed | 2026-05-22 |
 | [ADR-007](ADR-007-modularizacion-appservice-por-dominio.md) | Modularización de appService por dominio | Accepted | 2026-05-26 |
+| [ADR-008](ADR-008-reglas-propagacion-displayname-perfil.md) | Reglas de propagación de displayName y datos de perfil | Accepted | 2026-05-26 |
