@@ -47,7 +47,7 @@ Se ejecutó un diagnóstico estadístico sobre Firestore para identificar el alc
 
 ### 2. Implementación de Fixes de Código (Caja de Archivos)
 Para prevenir futuras inconsistencias, se modificaron los siguientes flujos de escritura y lectura:
-- **`invitaciones.ts` & `members.ts` (`unirseComunidadDirecto`):** Se introdujo la variable de soporte `effectiveDisplayName` para evaluar primero `userData.displayName` y hacer fallback hacia `auth.currentUser?.displayName` antes de escribir en `community_members`.
+- **`invitaciones.ts` & `members.ts` (`unirseComunidadDirecto`):** Se introdujo la recarga de Firebase Auth mediante `auth.currentUser?.reload()` para forzar la actualización de la sesión. El `displayName` y `nombre` se resuelven a nivel de perfil o auth y se inyectan directamente en el `batch.set({ merge: true })` inicial. Se eliminaron por completo las escrituras asíncronas posteriores (`updateDoc`), eliminando las condiciones de carrera y escrituras parciales.
 - **`solicitudes.ts`:** Se modificó `resolverSolicitud` para propagar el `displayName` correcto desde el perfil del solicitante, evitando el uso erróneo de `auth.currentUser` (que pertenece al administrador que aprueba la solicitud).
 - **`fichas.ts`:** Se implementó una query proactiva a `community_members` (`where('userId', '==', userId)`) en `_writeFichaRaw` para garantizar que el nombre de la ficha se propague a todas las comunidades donde el usuario es miembro real, mitigando membresías desactualizadas en `users`.
 - **`users.ts`:** En `getAppUser()`, se forzó la sincronización del `googleDisplayName` si el campo `displayName` de Firestore está vacío (`""`).
@@ -60,3 +60,11 @@ Se desarrolló una herramienta dirigida para realizar la corrección en Firestor
   - `arteara_CAF2NiDiLpWDwN4AbOwI2OpvoAf2` ➔ `displayName: "Monzón"`
   - `arteara_rXDlDiXHMKQBdOArSqXCOOkfrm42` ➔ `displayName: "Sin Nombre"`
   - `la-alpispa_rXDlDiXHMKQBdOArSqXCOOkfrm42` ➔ `displayName: "Sin Nombre"`
+
+### 4. Simulación y Validación del Flujo de Re-ingreso (`scripts/test-reingreso-abian-flow.ts`)
+Se creó y ejecutó un script de prueba de integración para verificar el flujo de re-ingreso tras la expulsión de Abián:
+- Se expulsó simuladamente al usuario removiendo el registro de `community_members` y limpiando su lista de comunidades y displayName en `/users`.
+- Se ejecutó el flujo simulado de `useInvitacion` empleando la resolución de nombres priorizada por perfiles y la inyección en el `batch.set` inicial.
+- Se verificó en Firestore que en `/community_members/arteara_rXDlDiXHMKQBdOArSqXCOOkfrm42` se guardaron correctamente tanto `nombre: "Abián"` como `displayName: "Abián"` en una única operación atómica sin recurrir a updates posteriores.
+- **Resultado del Test:** EXITOSO.
+
