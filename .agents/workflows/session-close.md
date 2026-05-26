@@ -59,7 +59,10 @@ Si existen otros artefactos temporales o de validación, deben quedar:
 
 ### 4. Archivar la tarea activa
 - Localiza la tarea activa en `.agents/tasks/`.
-- Si todavía está activa, muévela a `.agents/tasks/_archived/`.
+- Sigue estrictamente este orden para el archivado:
+  1. Marca la tarea `- [ ] Sesión cerrada correctamente` como completada (`- [x]`) en el archivo de tarea activo.
+  2. Ejecuta `git add` del archivo de tarea actualizado.
+  3. DESPUÉS, mueve el archivo de tarea a `.agents/tasks/_archived/`.
 - Solo debe quedar una tarea activa por sesión.
 - Si ya fue archivada, verifica que no quede una copia activa pendiente.
 
