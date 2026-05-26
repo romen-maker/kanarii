@@ -1,6 +1,8 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query, writeBatch, increment, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, orderBy, addDoc, arrayRemove, arrayUnion, onSnapshot, Query, writeBatch, increment, Timestamp, limit } from 'firebase/firestore';
 import { db } from './firebase';
 import { handleFirestoreError, OperationType } from './error-handler';
+
+export const DEFAULT_LIST_LIMIT = 50;
 
 // --- REFERENCIAS DE COLECCIONES ---
 export const colFichas = collection(db, 'fichas');
@@ -16,33 +18,37 @@ export const colProfiles = collection(db, 'profiles');
 export const colCommunityMembers = collection(db, 'community_members');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
-export const getFichasQuery = () => query(colFichas);
-export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'));
+export const getFichasQuery = () => query(colFichas, limit(DEFAULT_LIST_LIMIT));
+export const getTareasQuery = () => query(colTareas, orderBy('createdAt', 'desc'), limit(DEFAULT_LIST_LIMIT));
 export const getActasQuery = (communityId: string) => query(
   colActas, 
   where('communityId', '==', communityId),
-  orderBy('fecha', 'desc')
+  orderBy('fecha', 'desc'),
+  limit(DEFAULT_LIST_LIMIT)
 );
 export const getProyectosQuery = (communityId: string) => query(
   colProyectos, 
   where('communityId', '==', communityId),
-  orderBy('updatedAt', 'desc')
+  orderBy('updatedAt', 'desc'),
+  limit(DEFAULT_LIST_LIMIT)
 );
-export const getEventosQuery = (communityId: string) => query(colEventos, where('communityId', '==', communityId), orderBy('inicio', 'asc'));
-export const getPostsQuery = (communityId: string) => query(colPosts, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
-export const getServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId), where('isActive', '==', true));
-export const getAllServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId));
-export const getAcuerdosQuery = (communityId: string) => query(colAcuerdos, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'));
-export const getPropuestasQuery = (communityId: string) => query(colPropuestas, where('communityId', '==', communityId), orderBy('createdAt', 'desc'));
+export const getEventosQuery = (communityId: string) => query(colEventos, where('communityId', '==', communityId), orderBy('inicio', 'asc'), limit(DEFAULT_LIST_LIMIT));
+export const getPostsQuery = (communityId: string) => query(colPosts, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'), limit(DEFAULT_LIST_LIMIT));
+export const getServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId), where('isActive', '==', true), limit(DEFAULT_LIST_LIMIT));
+export const getAllServiciosQuery = (communityId: string) => query(colServicios, where('communityId', '==', communityId), limit(DEFAULT_LIST_LIMIT));
+export const getAcuerdosQuery = (communityId: string) => query(colAcuerdos, where('communityId', '==', communityId), orderBy('creadoEn', 'desc'), limit(DEFAULT_LIST_LIMIT));
+export const getPropuestasQuery = (communityId: string) => query(colPropuestas, where('communityId', '==', communityId), orderBy('createdAt', 'desc'), limit(DEFAULT_LIST_LIMIT));
 
 export const getProfilesQuery = (communityId: string) => query(
   colProfiles, 
-  where('communityId', '==', communityId)
+  where('communityId', '==', communityId),
+  limit(DEFAULT_LIST_LIMIT)
 );
 
 export const getCommunityMembersQuery = (communityId: string) => query(
   colCommunityMembers, 
-  where('communityId', '==', communityId)
+  where('communityId', '==', communityId),
+  limit(DEFAULT_LIST_LIMIT)
 );
 
 /**
@@ -108,7 +114,8 @@ export function listenProyectos(
   const q = query(
     colProyectos,
     where('communityId', '==', communityId),
-    orderBy('creadoEn', 'desc')
+    orderBy('creadoEn', 'desc'),
+    limit(DEFAULT_LIST_LIMIT)
   );
   return subscribeToCollection(q, callback, 'proyectos', onError);
 }
@@ -121,9 +128,9 @@ export function listenFichas(
   callback: (fichas: Ficha[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  let q = query(colProfiles);
+  let q = query(colProfiles, limit(DEFAULT_LIST_LIMIT));
   if (communityId) {
-    q = query(colProfiles, where('communityId', '==', communityId));
+    q = query(colProfiles, where('communityId', '==', communityId), limit(DEFAULT_LIST_LIMIT));
   }
   return subscribeToCollection(q, callback, 'profiles', onError);
 }
@@ -139,7 +146,8 @@ export function listenTareas(
   const q = query(
     colTareas,
     where('communityId', '==', communityId),
-    orderBy('createdAt', 'desc')
+    orderBy('createdAt', 'desc'),
+    limit(DEFAULT_LIST_LIMIT)
   );
   return subscribeToCollection(q, callback, 'tareas', onError);
 }
@@ -811,7 +819,7 @@ export async function updateAcuerdoStatus(
 export async function getAcuerdosByUser(uid: string, role: 'provider' | 'solicitante'): Promise<Acuerdo[]> {
   try {
     const field = role === 'provider' ? 'providerId' : 'solicitanteId';
-    const q = query(colAcuerdos, where(field, '==', uid), orderBy('creadoEn', 'desc'));
+    const q = query(colAcuerdos, where(field, '==', uid), orderBy('creadoEn', 'desc'), limit(DEFAULT_LIST_LIMIT));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));
   } catch (err) {
@@ -2055,7 +2063,8 @@ export const colComunidades = collection(db, 'comunidades');
 
 export async function getComunidades(): Promise<Comunidad[]> {
   try {
-    const snap = await getDocs(colComunidades);
+    const q = query(colComunidades, limit(DEFAULT_LIST_LIMIT));
+    const snap = await getDocs(q);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comunidad));
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, 'Listar comunidades');
@@ -2106,7 +2115,7 @@ export async function seedArteara() {
 
 export async function getComunidadesPublicas(): Promise<Comunidad[]> {
   try {
-    const q = query(colComunidades, where('esPublica', '==', true));
+    const q = query(colComunidades, where('esPublica', '==', true), limit(DEFAULT_LIST_LIMIT));
     const snap = await getDocs(q);
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comunidad));
   } catch (error) {
@@ -2383,7 +2392,8 @@ export async function deleteComunidad(slug: string): Promise<void> {
 }
 
 export function listenComunidades(callback: (list: Comunidad[]) => void): () => void {
-  return onSnapshot(colComunidades, (snap) => {
+  const q = query(colComunidades, limit(DEFAULT_LIST_LIMIT));
+  return onSnapshot(q, (snap) => {
     const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Comunidad));
     callback(list);
   }, (err) => {
@@ -2444,7 +2454,8 @@ export function listenInvitaciones(
   const q = query(
     collection(db, 'invitaciones'),
     where('communityId', '==', communityId),
-    orderBy('creadoEn', 'desc')
+    orderBy('creadoEn', 'desc'),
+    limit(DEFAULT_LIST_LIMIT)
   );
   return onSnapshot(q, (snap) => {
     const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invitacion));
@@ -2900,7 +2911,8 @@ export function listenSolicitudes(
 ) {
   const q = query(
     collection(db, 'comunidades', communityId, 'solicitudes'),
-    orderBy('creadoEn', 'desc')
+    orderBy('creadoEn', 'desc'),
+    limit(DEFAULT_LIST_LIMIT)
   );
   return onSnapshot(q, (snap) => {
     const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SolicitudAcceso));
