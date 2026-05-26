@@ -1,17 +1,19 @@
 #!/bin/bash
-# check-inbox.sh — Detecta entradas pendientes en external-inbox/ e idea-inbox/
+# check-inbox.sh — Detecta manifiestos pendientes en external-inbox/ e idea-inbox/
 # Uso: bash scripts/agent/check-inbox.sh
 # Salida: siempre exit 0 (no es bloqueante)
 
 EXTERNAL_DIR="external-inbox"
 IDEA_DIR="docs/idea-inbox"
-TEMPLATE="TEMPLATE.manifest.md"
 
 echo "=== INBOX STATUS ==="
 
 # --- external-inbox ---
-ext_manifests=$(find "$EXTERNAL_DIR" -type f -name "*.manifest.md" 2>/dev/null \
-  | grep -v "$TEMPLATE" | sort)
+# Solo archivos MANIFEST*.md, excluyendo _archived/ y TEMPLATE
+ext_manifests=$(find "$EXTERNAL_DIR" -type f -name "MANIFEST*.md" 2>/dev/null \
+  | grep -v "/_archived/" \
+  | grep -v "TEMPLATE" \
+  | sort)
 ext_count=$(echo "$ext_manifests" | grep -c . 2>/dev/null || echo 0)
 [ -z "$ext_manifests" ] && ext_count=0
 
@@ -21,7 +23,11 @@ else
   echo "EXTERNAL_INBOX: $ext_count manifiesto(s)"
   echo "$ext_manifests" | while read -r f; do
     priority=$(grep -i "^## Prioridad" -A1 "$f" 2>/dev/null | tail -1 | xargs)
-    echo "  → $f [Prioridad: ${priority:-desconocida}]"
+    if [ -n "$priority" ]; then
+      echo "  → $f [Prioridad: $priority]"
+    else
+      echo "  → $f"
+    fi
   done
 fi
 

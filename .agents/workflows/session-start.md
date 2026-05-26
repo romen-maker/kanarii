@@ -36,7 +36,7 @@ bash scripts/agent/check-session.sh
 
 **Sin tareas pendientes:** mostrar y detenerse:
 ```
-✅ Sprint XX completado. Ejecuta /sprint-planning para continuar.
+✅ Sprint XX completado. Ejecuta /sprint-planning para continuar. Cambia el selector de modelos a uno superior (Opus, Sonnet, Gemini Pro) y luego vuelve al Flash.
 ```
 
 **Petición nueva sin task file:** informar `"Requiere planificación."` Sugerir `/sprint-planning`. No leer archivos ni preparar planes.
