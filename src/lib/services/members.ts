@@ -113,23 +113,35 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       throw new Error('YA_ES_MIEMBRO');
     }
 
-    const effectiveDisplayName = (userData.displayName?.trim())
-      ? userData.displayName
-      : (auth.currentUser?.displayName || '');
+    // FORZAR REFRESH DEL USER DE AUTH para obtener datos actualizados
+    await new Promise<void>((resolve) => {
+      if (auth.currentUser) {
+        auth.currentUser.reload()
+          .then(() => resolve())
+          .catch(() => resolve());
+      } else {
+        resolve();
+      }
+    });
+    const currentUser = auth.currentUser;
 
     const profileRef = doc(db, 'profiles', uid);
     const profileSnap = await getDoc(profileRef);
     const memberRef = doc(db, 'community_members', `${communityId}_${uid}`);
 
-    let resolvedName = '';
+    let resolvedDisplayName = '';
     if (profileSnap.exists()) {
       const profileData = profileSnap.data();
       const base = profileData.datosPersona || profileData.datosOnboarding || {};
-      resolvedName = base.nombre || profileData.nombre || '';
+      resolvedDisplayName = base.nombre || profileData.nombre || '';
     }
 
-    if (!resolvedName && effectiveDisplayName) {
-      resolvedName = effectiveDisplayName;
+    if (!resolvedDisplayName && currentUser?.displayName) {
+      resolvedDisplayName = currentUser.displayName;
+    }
+
+    if (!resolvedDisplayName && currentUser?.email) {
+      resolvedDisplayName = currentUser.email;
     }
 
     const batch = writeBatch(db);
@@ -139,8 +151,8 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       ...(!userData.communityId ? { communityId: communityId } : {}),
       updatedAt: serverTimestamp()
     };
-    if ((!userData.displayName || userData.displayName === '') && resolvedName) {
-      userUpdates.displayName = resolvedName;
+    if ((!userData.displayName || userData.displayName === '') && resolvedDisplayName) {
+      userUpdates.displayName = resolvedDisplayName;
     }
     batch.update(userRef, userUpdates);
 
@@ -151,7 +163,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       batch.set(memberRef, {
         userId: uid,
         communityId: communityId,
-        nombre: base.nombre || profileData.nombre || effectiveDisplayName || userData.email || 'Sin Nombre',
+        nombre: resolvedDisplayName || 'Sin Nombre',
         tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
@@ -161,7 +173,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: effectiveDisplayName || resolvedName || '',
+        displayName: resolvedDisplayName,
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -178,7 +190,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       batch.set(memberRef, {
         userId: uid,
         communityId: communityId,
-        nombre: effectiveDisplayName || userData.email || 'Sin Nombre',
+        nombre: resolvedDisplayName || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
         autoridad_hd: '',
@@ -186,7 +198,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol_comunidad: 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: effectiveDisplayName || '',
+        displayName: resolvedDisplayName,
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
