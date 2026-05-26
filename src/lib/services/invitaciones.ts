@@ -16,6 +16,7 @@ import {
 import { db, handleFirestoreError, OperationType, DEFAULT_LIST_LIMIT } from './_core';
 import { Invitacion, InvitacionError } from './_types';
 import { _writeFichaRaw } from './fichas';
+import { auth } from '../firebase';
 
 function generateInviteCode(): string {
   const adjetivos = [
@@ -137,11 +138,19 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
     const memberRef = doc(db, 'community_members', `${inv.communityId}_${uid}`);
     const userData = userDoc.exists() ? userDoc.data() : {};
 
+    const effectiveDisplayName = (userData.displayName?.trim())
+      ? userData.displayName
+      : (auth.currentUser?.displayName || '');
+
     let resolvedName = '';
     if (profileSnap.exists()) {
       const profileData = profileSnap.data();
       const base = profileData.datosPersona || profileData.datosOnboarding || {};
       resolvedName = base.nombre || profileData.nombre || '';
+    }
+
+    if (!resolvedName && effectiveDisplayName) {
+      resolvedName = effectiveDisplayName;
     }
 
     const batch = writeBatch(db);
@@ -165,7 +174,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
     if (userDoc.exists() && !userDoc.data().communityId) {
       userUpdates.communityId = inv.communityId;
     }
-    if (userDoc.exists() && !userDoc.data().displayName && resolvedName) {
+    if (userDoc.exists() && (!userDoc.data().displayName || userDoc.data().displayName === '') && resolvedName) {
       userUpdates.displayName = resolvedName;
     }
     batch.update(userRef, userUpdates);
@@ -179,7 +188,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         userId: uid,
         communityId: inv.communityId,
         codigoInvitacion: codigo,
-        nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+        nombre: base.nombre || profileData.nombre || effectiveDisplayName || userData.email || 'Sin Nombre',
         tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
@@ -189,7 +198,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || resolvedName || '',
+        displayName: effectiveDisplayName || resolvedName || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -207,7 +216,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         userId: uid,
         communityId: inv.communityId,
         codigoInvitacion: codigo,
-        nombre: userData.displayName || userData.email || 'Sin Nombre',
+        nombre: effectiveDisplayName || userData.email || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
         autoridad_hd: '',
@@ -215,7 +224,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol_comunidad: 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: effectiveDisplayName || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()

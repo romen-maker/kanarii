@@ -119,12 +119,22 @@ export async function resolverSolicitud(
         resolvedName = base.nombre || profileData.nombre || '';
       }
 
+      const originalDisplayName = userData.displayName || '';
+
+      if (!resolvedName && originalDisplayName) {
+        resolvedName = originalDisplayName;
+      }
+
+      if ((!userData.displayName || userData.displayName === '') && resolvedName) {
+        userData.displayName = resolvedName;
+      }
+
       const userUpdates: any = {
         communityIds: arrayUnion(communityId),
         ...(!userData.communityId ? { communityId: communityId } : {}),
         updatedAt: serverTimestamp()
       };
-      if (userSnap.exists() && !userData.displayName && resolvedName) {
+      if (userSnap.exists() && (!originalDisplayName || originalDisplayName === '') && resolvedName) {
         userUpdates.displayName = resolvedName;
       }
       batch.update(userRef, userUpdates);

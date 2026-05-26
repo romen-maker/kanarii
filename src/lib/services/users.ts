@@ -72,12 +72,12 @@ export async function getAppUser(
       await setDoc(userDocRef, userData);
     }
 
-    // Sincronizar campos de Google si no existen en Firestore
-    if (googleDisplayName && !userData.displayName) {
+    // Sincronizar campos de Google si no existen o están vacíos en Firestore
+    if (googleDisplayName && (!userData.displayName || userData.displayName === '')) {
       userData.displayName = googleDisplayName;
       needsUpdate = true;
     }
-    if (googlePhotoURL && !userData.photoURL) {
+    if (googlePhotoURL && (!userData.photoURL || userData.photoURL === '')) {
       userData.photoURL = googlePhotoURL;
       needsUpdate = true;
     }

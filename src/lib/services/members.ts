@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { CommunityMember, FeedbackSalida } from './_types';
 import { _writeFichaRaw } from './fichas';
+import { auth } from '../firebase';
 
 export async function getMemberInfo(uid: string, communityId?: string): Promise<any | null> {
   try {
@@ -112,6 +113,10 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       throw new Error('YA_ES_MIEMBRO');
     }
 
+    const effectiveDisplayName = (userData.displayName?.trim())
+      ? userData.displayName
+      : (auth.currentUser?.displayName || '');
+
     const profileRef = doc(db, 'profiles', uid);
     const profileSnap = await getDoc(profileRef);
     const memberRef = doc(db, 'community_members', `${communityId}_${uid}`);
@@ -123,6 +128,10 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       resolvedName = base.nombre || profileData.nombre || '';
     }
 
+    if (!resolvedName && effectiveDisplayName) {
+      resolvedName = effectiveDisplayName;
+    }
+
     const batch = writeBatch(db);
 
     const userUpdates: any = {
@@ -130,7 +139,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       ...(!userData.communityId ? { communityId: communityId } : {}),
       updatedAt: serverTimestamp()
     };
-    if (!userData.displayName && resolvedName) {
+    if ((!userData.displayName || userData.displayName === '') && resolvedName) {
       userUpdates.displayName = resolvedName;
     }
     batch.update(userRef, userUpdates);
@@ -142,7 +151,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       batch.set(memberRef, {
         userId: uid,
         communityId: communityId,
-        nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+        nombre: base.nombre || profileData.nombre || effectiveDisplayName || userData.email || 'Sin Nombre',
         tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
@@ -152,7 +161,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || resolvedName || '',
+        displayName: effectiveDisplayName || resolvedName || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -169,7 +178,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       batch.set(memberRef, {
         userId: uid,
         communityId: communityId,
-        nombre: userData.displayName || userData.email || 'Sin Nombre',
+        nombre: effectiveDisplayName || userData.email || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
         autoridad_hd: '',
@@ -177,7 +186,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol_comunidad: 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: effectiveDisplayName || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()

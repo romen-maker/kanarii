@@ -396,6 +396,21 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     console.error("Error al recuperar info del usuario en _writeFichaRaw:", err);
   }
 
+  // Buscar todos los community_members de este usuario para asegurar propagación a todas las membresías reales
+  try {
+    const q = query(collection(db, 'community_members'), where('userId', '==', userId));
+    const querySnap = await getDocs(q);
+    const queriedCommunityIds = querySnap.docs.map(docSnap => docSnap.data().communityId).filter(Boolean);
+    
+    for (const cId of queriedCommunityIds) {
+      if (!communityIds.includes(cId)) {
+        communityIds.push(cId);
+      }
+    }
+  } catch (err) {
+    console.error("Error al buscar community_members en _writeFichaRaw:", err);
+  }
+
   // Actualizar el documento del usuario con displayName y el flag hasFicha
   try {
     const userDocRef = doc(db, 'users', userId);

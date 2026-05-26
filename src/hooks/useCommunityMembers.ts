@@ -50,7 +50,7 @@ export function useCommunityMembers(communityId?: string) {
     if (!uid) return 'Comunidad';
     const mem = members.find(m => m.userId === uid);
     if (mem) return mem.nombre || mem.displayName || mem.email || 'Miembro';
-    return loading ? 'Cargando...' : uid.split('@')[0] || 'Miembro';
+    return loading ? 'Cargando...' : 'Miembro';
   }, [members, loading]);
 
   return { 
