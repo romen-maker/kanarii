@@ -99,8 +99,8 @@ export async function getAppUser(
       try {
         await setDoc(userDocRef, {
           communityIds: userData.communityIds,
-          displayName: userData.displayName || '',
-          photoURL: userData.photoURL || '',
+          ...(userData.displayName ? { displayName: userData.displayName } : {}),
+          ...(userData.photoURL ? { photoURL: userData.photoURL } : {}),
           hasFicha: userData.hasFicha,
           updatedAt: serverTimestamp()
         }, { merge: true });
