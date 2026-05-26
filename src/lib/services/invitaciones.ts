@@ -198,7 +198,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: effectiveDisplayName || resolvedName || '',
+        displayName: resolvedName || effectiveDisplayName || userData.email || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -216,7 +216,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         userId: uid,
         communityId: inv.communityId,
         codigoInvitacion: codigo,
-        nombre: effectiveDisplayName || userData.email || 'Sin Nombre',
+        nombre: resolvedName || effectiveDisplayName || userData.email || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
         autoridad_hd: '',
@@ -224,7 +224,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol_comunidad: 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: effectiveDisplayName || '',
+        displayName: effectiveDisplayName || userData.email || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
