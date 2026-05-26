@@ -205,6 +205,15 @@ export interface Invitacion {
   creadoEn: any;
 }
 
+export const InvitacionError = {
+  INEXISTENTE: 'INVITACION_INEXISTENTE',
+  INACTIVA: 'INVITACION_INACTIVA',
+  CADUCADA: 'INVITACION_CADUCADA',
+  AGOTADA: 'INVITACION_AGOTADA',
+} as const;
+
+export type InvitacionErrorType = typeof InvitacionError[keyof typeof InvitacionError];
+
 export interface SolicitudAcceso {
   id?: string;
   communityId: string;
@@ -2463,32 +2472,42 @@ export function listenInvitaciones(
   });
 }
 
-export async function validateInvitacion(codigo: string): Promise<Invitacion | null> {
+export async function validateInvitacion(codigo: string): Promise<Invitacion> {
   try {
     const docRef = doc(db, 'invitaciones', codigo);
     const snap = await getDoc(docRef);
-    if (!snap.exists()) return null;
+    if (!snap.exists()) {
+      throw new Error(InvitacionError.INEXISTENTE);
+    }
     
     const data = snap.data() as Invitacion;
-    if (!data.activo) return null;
+    if (!data.activo) {
+      throw new Error(InvitacionError.INACTIVA);
+    }
     
     // Validar expiración
-    if (data.expiraEn && data.expiraEn.toDate() < new Date()) return null;
+    if (data.expiraEn && data.expiraEn.toDate() < new Date()) {
+      throw new Error(InvitacionError.CADUCADA);
+    }
     
     // Validar usos
-    if (data.usosMaximos !== undefined && data.usosMaximos !== null && data.usosActuales >= data.usosMaximos) return null;
+    if (data.usosMaximos !== undefined && data.usosMaximos !== null && data.usosActuales >= data.usosMaximos) {
+      throw new Error(InvitacionError.AGOTADA);
+    }
     
     return { id: snap.id, ...data };
-  } catch (error) {
+  } catch (error: any) {
+    if (Object.values(InvitacionError).includes(error.message)) {
+      throw error;
+    }
     handleFirestoreError(error, OperationType.GET, 'Validar invitación');
-    return null;
+    throw error;
   }
 }
 
 export async function useInvitacion(codigo: string, uid: string): Promise<string> {
   try {
     const inv = await validateInvitacion(codigo);
-    if (!inv) throw new Error('Invitación no válida o agotada');
 
     // Comprobar si el usuario ya es miembro de esta comunidad
     const userDocRef = doc(db, 'users', uid);
@@ -2594,7 +2613,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
 
     return inv.communityId;
   } catch (error: any) {
-    if (error.message !== 'YA_ES_MIEMBRO') {
+    if (error.message !== 'YA_ES_MIEMBRO' && !Object.values(InvitacionError).includes(error.message)) {
       handleFirestoreError(error, OperationType.UPDATE, 'Usar invitación');
     }
     throw error;

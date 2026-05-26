@@ -9,7 +9,8 @@ import {
   getComunidadesPublicas, 
   getSolicitudPendiente,
   getUltimaSolicitud,
-  SolicitudAcceso
+  SolicitudAcceso,
+  InvitacionError
 } from '../lib/appService';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -138,8 +139,16 @@ export function ComunidadesView() {
           } else {
             navigate('/');
           }
+        } else if (err?.message === InvitacionError.INEXISTENTE) {
+          toastError('El código de invitación no existe.');
+        } else if (err?.message === InvitacionError.INACTIVA) {
+          toastError('Esta invitación ya no está activa.');
+        } else if (err?.message === InvitacionError.CADUCADA) {
+          toastError('El código de invitación ha caducado.');
+        } else if (err?.message === InvitacionError.AGOTADA) {
+          toastError('La invitación ha agotado su número máximo de usos.');
         } else {
-          toastError('Código inválido, caducado o agotado.');
+          toastError('Código inválido o error al canjear la invitación.');
         }
       }
     });
