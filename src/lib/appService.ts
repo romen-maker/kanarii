@@ -2444,6 +2444,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
       batch.set(memberRef, {
         userId: uid,
         communityId: inv.communityId,
+        codigoInvitacion: codigo,
         nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
         tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
@@ -2471,6 +2472,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
       batch.set(memberRef, {
         userId: uid,
         communityId: inv.communityId,
+        codigoInvitacion: codigo,
         nombre: userData.displayName || userData.email || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
