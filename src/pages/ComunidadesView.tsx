@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Compass, ShieldCheck, Ticket, Key, Info, MessageSquare, ArrowRight, Loader2, X, CheckCircle2, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { 
   Comunidad, 
   getComunidadesPublicas, 
@@ -75,6 +76,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 
 export function ComunidadesView() {
   const { appUser } = useAuth();
+  const { setCommunityId } = useComunidad();
   const { redeemInvitacion, solicitarAcceso, isExecuting } = useComunidadActions();
   const { success: toastSuccess, error: toastError } = useToast();
   const navigate = useNavigate();
@@ -120,6 +122,7 @@ export function ComunidadesView() {
       errorMessage: null, // Silenciamos el toast genérico para tomar el control total en la vista
       onSuccess: (communityId: string) => {
         if (communityId) {
+          setCommunityId(communityId);
           navigate(`/c/${communityId}`);
         } else {
           navigate('/');
@@ -130,6 +133,7 @@ export function ComunidadesView() {
           toastSuccess('Ya eres miembro de esta comunidad. ¡Te redirigimos! 🚀');
           const communityId = err.communityId;
           if (communityId) {
+            setCommunityId(communityId);
             navigate(`/c/${communityId}`);
           } else {
             navigate('/');

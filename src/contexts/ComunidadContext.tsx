@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Comunidad, getComunidad, listenComunidades, seedArteara } from '../lib/appService';
 import { useAuth } from './AuthContext';
 
@@ -42,6 +42,9 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Referencias para evitar race conditions al unirse a nuevas comunidades
+  const prevCommunityIdsRef = useRef<string[]>([]);
+
   // Guardar ID en storage y actualizar estado
   const setCommunityId = (id: string) => {
     setCurrentCommunityId(id);
@@ -72,15 +75,38 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Si el usuario no tiene ninguna comunidad → limpiar estado
     if (ids.length === 0) {
       setCommunityId('');
+      prevCommunityIdsRef.current = [];
       return;
     }
 
-    // Si la comunidad activa ya no está entre las del usuario, cambiar a la primera
-    if (!ids.includes(currentCommunityId)) {
-      const isDirectAdmin = comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser.uid);
-      if (!isDirectAdmin && !loading) {
-        setCommunityId(ids[0]);
+    const prevIds = prevCommunityIdsRef.current;
+
+    // Reactividad: Si el usuario se une a una nueva comunidad (su lista crece),
+    // cambiar automáticamente el selector a esa nueva comunidad.
+    if (prevIds.length > 0) {
+      const newlyAddedId = ids.find(id => !prevIds.includes(id));
+      if (newlyAddedId) {
+        setCommunityId(newlyAddedId);
       }
+    }
+
+    // Validar reactividad y redirección sin race condition
+    if (!loading) {
+      const isDirectAdmin = comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser.uid);
+
+      if (!isDirectAdmin && !ids.includes(currentCommunityId)) {
+        // Redirigir solo si es la carga inicial o si el usuario pertenecía a la comunidad activa pero fue eliminado
+        const isInitialLoad = prevIds.length === 0;
+        const wasMemberButRemoved = prevIds.includes(currentCommunityId);
+
+        if (isInitialLoad || wasMemberButRemoved) {
+          setCommunityId(ids[0]);
+        }
+      }
+    }
+
+    if (ids.length > 0) {
+      prevCommunityIdsRef.current = ids;
     }
   }, [appUser, currentCommunityId, comunidad, loading]);
 

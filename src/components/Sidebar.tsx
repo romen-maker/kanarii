@@ -117,13 +117,41 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex flex-col w-[240px] h-screen sticky top-0 bg-[#FDFBF7] border-r border-[#EAE2D6] overflow-y-auto">
-      {/* Header / Logo */}
-      <div className="p-8 pb-10">
-        <div className="flex items-center gap-3">
-          <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
-          <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
-        </div>
+    {/* Header / Logo y Selector de Comunidad */}
+    <div className="p-6 pb-4">
+      <div className="flex items-center gap-3 mb-6">
+        <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+        <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
       </div>
+
+      {/* Selector de Comunidad Premium */}
+      {hasCommunities && (
+        <div className="bg-[#F9F7F1] border border-[#EAE2D6] rounded-2xl p-3 shadow-sm mb-2">
+          <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+            <MapPin size={10} className="text-[#CB997E]" />
+            Espacio Activo
+          </p>
+          {userComunidades.length > 1 ? (
+            <div className="relative flex items-center group/sel">
+              <select
+                value={comunidad?.id || ''}
+                onChange={(e) => setCommunityId(e.target.value)}
+                className="appearance-none bg-transparent border-none p-0 pr-6 text-xs text-[#4A4E4D] font-bold focus:ring-0 cursor-pointer w-full truncate"
+              >
+                {userComunidades.map(c => (
+                  <option key={c.id} value={c.id}>{c.nombre}</option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#A5A58D] pointer-events-none group-hover/sel:text-[#6B705C] transition-colors" />
+            </div>
+          ) : (
+            <div className="text-xs font-bold text-[#4A4E4D] truncate flex items-center">
+              {comunidad?.nombre || 'General'}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
 
       {/* Navigation Links */}
       <nav className="flex-1 px-4 space-y-1">
@@ -217,7 +245,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-stone-200/60 bg-stone-50/50">
-        <div className="flex items-center gap-3 px-2 py-3 mb-2">
+        <div className="flex items-center gap-3 px-2 py-3">
           {appUser?.photoURL || user?.photoURL ? (
             <img 
               src={appUser?.photoURL || user?.photoURL || ''} 
@@ -232,30 +260,12 @@ export function Sidebar() {
           )}
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-[#4A4E4D] truncate">{appUser?.displayName || user?.displayName || 'Miembro'}</p>
-            {userComunidades.length > 1 ? (
-              <div className="relative group/sel">
-                <select
-                  value={comunidad?.id || ''}
-                  onChange={(e) => setCommunityId(e.target.value)}
-                  className="appearance-none bg-transparent border-none p-0 pr-4 text-[10px] text-[#A5A58D] font-bold focus:ring-0 cursor-pointer w-full truncate"
-                >
-                  {userComunidades.map(c => (
-                    <option key={c.id} value={c.id}>{c.nombre}</option>
-                  ))}
-                </select>
-                <ChevronDown size={10} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#A5A58D] pointer-events-none" />
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-[10px] text-[#A5A58D] font-bold">
-                <MapPin size={10} />
-                <span className="truncate">{comunidad?.nombre || 'General'}</span>
-              </div>
-            )}
+            <p className="text-[10px] text-stone-400 font-medium truncate">Sesión activa</p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium"
+          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium mt-2"
         >
           <LogOut className="w-4 h-4" />
           Cerrar Sesión

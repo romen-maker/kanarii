@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale } from 'lucide-react';
+import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale, ChevronDown, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
@@ -10,7 +10,7 @@ export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { appUser, logout } = useAuth();
-  const { comunidad } = useComunidad();
+  const { comunidad, comunidades, setCommunityId } = useComunidad();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
   const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
@@ -78,7 +78,13 @@ export function BottomNav() {
   }).length;
 
   // Filtramos por pertenencia a comunidades
-  const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin;
+  const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin || !!comunidad?.id;
+
+  // Filtrar comunidades para el selector
+  const userComunidades = comunidades.filter(c => {
+    if (isAdmin) return true;
+    return (appUser?.communityIds || []).includes(c.id) || (comunidad?.id === c.id);
+  });
 
   const availableNavItems = navigationConfig.filter(item => {
     if (item.adminOnly) return isAdmin;
@@ -187,6 +193,38 @@ export function BottomNav() {
           />
           <div className="relative bg-[#FDFBF7] rounded-t-3xl pt-2 pb-6 px-4 shadow-xl z-10" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
             <div className="w-8 h-1 bg-stone-300 rounded-full mx-auto mb-6" />
+            
+            {/* Selector de Comunidad en Móvil */}
+            {hasCommunities && (
+              <div className="bg-[#F9F7F1] border border-[#EAE2D6] rounded-2xl p-3 shadow-sm mb-4">
+                <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                  <MapPin size={10} className="text-[#CB997E]" />
+                  Espacio Activo
+                </p>
+                {userComunidades.length > 1 ? (
+                  <div className="relative flex items-center group/sel">
+                    <select
+                      value={comunidad?.id || ''}
+                      onChange={(e) => {
+                        setCommunityId(e.target.value);
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="appearance-none bg-transparent border-none p-0 pr-6 text-xs text-[#4A4E4D] font-bold focus:ring-0 cursor-pointer w-full truncate"
+                    >
+                      {userComunidades.map(c => (
+                        <option key={c.id} value={c.id}>{c.nombre}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={12} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#A5A58D] pointer-events-none group-hover/sel:text-[#6B705C] transition-colors" />
+                  </div>
+                ) : (
+                  <div className="text-xs font-bold text-[#4A4E4D] truncate flex items-center">
+                    {comunidad?.nombre || 'General'}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex flex-col space-y-2">
               {moreNavItems.map((item, idx) => (
                 <button
