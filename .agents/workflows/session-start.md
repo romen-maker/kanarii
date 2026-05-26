@@ -22,7 +22,17 @@ bash scripts/agent/check-session.sh
 ## FASE 1 — Lectura de contexto
 
 1. Leer sprint file más reciente en `docs/sprints/`.
-2. Identificar primera tarea `⬜ Pendiente` o `⏸ Pausada`. Mostrar: `"Tarea activa: [T-XXX] — [descripción]"`.
+2. **Comprobar tareas `🟡 En curso`:** si existe alguna, mostrar alerta y esperar confirmación:
+   ```
+   ⚠️ La tarea [T-XXX] quedó en estado 🟡 En curso en la sesión anterior.
+   Opciones:
+     A) Retomarla (marcarla como tarea activa)
+     B) Marcarla como ✅ Hecho si ya está completada
+     C) Marcarla como ⏸ Pausada y continuar con la siguiente pendiente
+   ¿Qué hacemos?
+   ```
+   No continuar hasta recibir respuesta explícita.
+3. Identificar primera tarea `⬜ Pendiente` o `⏸ Pausada`. Mostrar: `"Tarea activa: [T-XXX] — [descripción]"`.
 
 **Sin tareas pendientes:** mostrar y detenerse:
 ```
