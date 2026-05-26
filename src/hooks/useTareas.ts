@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Tarea } from '../lib/appService';
-import { handleFirestoreError, OperationType } from '../lib/error-handler';
+import { Tarea, listenTareas } from '../lib/appService';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -37,25 +34,18 @@ export function useTareas(communityId?: string) {
       return;
     }
 
-    const q = query(
-      collection(db, 'tareas'), 
-      where('communityId', '==', activeCommunityId),
-      orderBy('createdAt', 'desc')
+    const unsubscribe = listenTareas(
+      activeCommunityId,
+      (data) => {
+        setTareas(data);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        setError(err);
+        setLoading(false);
+      }
     );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Tarea[];
-      setTareas(data);
-      setLoading(false);
-      setError(null);
-    }, (err) => {
-      handleFirestoreError(err, OperationType.GET, 'tareas');
-      setError(err instanceof Error ? err : new Error('Error al cargar tareas'));
-      setLoading(false);
-    });
 
     return () => unsubscribe();
   }, [appUser, communityId, version]);

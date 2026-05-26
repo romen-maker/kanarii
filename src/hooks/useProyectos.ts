@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Proyecto } from '../lib/appService';
+import { Proyecto, listenProyectos } from '../lib/appService';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -35,24 +33,16 @@ export function useProyectos(communityId?: string) {
     }
 
     setLoading(true);
-    const q = query(
-      collection(db, 'proyectos'), 
-      where('communityId', '==', activeCommunityId),
-      orderBy('creadoEn', 'desc')
-    );
 
-    const unsubscribe = onSnapshot(q, 
-      (snapshot) => {
-        const items = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Proyecto));
+    const unsubscribe = listenProyectos(
+      activeCommunityId,
+      (items) => {
         setProyectos(items);
         setLoading(false);
       },
       (err) => {
         console.error("Error fetching projects:", err);
-        setError(err as Error);
+        setError(err);
         setLoading(false);
       }
     );

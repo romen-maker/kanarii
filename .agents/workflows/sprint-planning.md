@@ -168,7 +168,7 @@ Mostrar al usuario el siguiente mensaje y **no continuar hasta recibir respuesta
 
 👉 Próximos pasos:
    1. Copia el prompt del paso anterior y pégalo en Perplexity.
-   2. Cuando tengas los hallazgos, vuelve con la investigación y ejecuta /session-start
+   2. Cuando tengas los hallazgos, vuelve con la investigación, cambia el selector de modelo a Gemini Flash y ejecuta /session-start
       pegando los hallazgos — el agente los guardará en docs/sprints/sprint-XX-research.md
       y los integrará en el task file antes de empezar a codear.
 

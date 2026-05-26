@@ -49,7 +49,12 @@ export const getCommunityMembersQuery = (communityId: string) => query(
  * Helper genérico para suscripciones en tiempo real.
  * Centraliza el mapeo de IDs y el manejo de errores de Firestore.
  */
-export function subscribeToCollection(q: Query, onData: (data: any[]) => void, errorLabel: string) {
+export function subscribeToCollection(
+  q: Query, 
+  onData: (data: any[]) => void, 
+  errorLabel: string,
+  onError?: (err: Error) => void
+) {
   return onSnapshot(q, (snapshot) => {
     const data = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -58,8 +63,87 @@ export function subscribeToCollection(q: Query, onData: (data: any[]) => void, e
     onData(data);
   }, (error) => {
     handleFirestoreError(error, OperationType.GET, errorLabel);
+    if (onError) onError(error);
   });
 }
+
+/**
+ * Helper genérico para suscripción a un documento en tiempo real.
+ */
+export function subscribeToDocument<T>(
+  collectionName: string,
+  docId: string,
+  onData: (data: T | null) => void,
+  errorLabel: string,
+  onError?: (err: Error) => void
+): () => void {
+  const ref = doc(db, collectionName, docId);
+  return onSnapshot(ref, (snap) => {
+    onData(snap.exists() ? ({ id: snap.id, ...snap.data() } as T) : null);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, errorLabel);
+    if (onError) onError(error);
+  });
+}
+
+/**
+ * Escucha en tiempo real los cambios de una propuesta específica.
+ */
+export function listenPropuesta(
+  propuestaId: string,
+  callback: (propuesta: Propuesta | null) => void,
+  onError?: (err: Error) => void
+): () => void {
+  return subscribeToDocument<Propuesta>('propuestas', propuestaId, callback, `propuesta/${propuestaId}`, onError);
+}
+
+/**
+ * Escucha en tiempo real los proyectos de una comunidad.
+ */
+export function listenProyectos(
+  communityId: string,
+  callback: (proyectos: Proyecto[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const q = query(
+    colProyectos,
+    where('communityId', '==', communityId),
+    orderBy('creadoEn', 'desc')
+  );
+  return subscribeToCollection(q, callback, 'proyectos', onError);
+}
+
+/**
+ * Escucha en tiempo real las fichas de los miembros (profiles).
+ */
+export function listenFichas(
+  communityId: string | undefined,
+  callback: (fichas: Ficha[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  let q = query(colProfiles);
+  if (communityId) {
+    q = query(colProfiles, where('communityId', '==', communityId));
+  }
+  return subscribeToCollection(q, callback, 'profiles', onError);
+}
+
+/**
+ * Escucha en tiempo real las tareas de una comunidad.
+ */
+export function listenTareas(
+  communityId: string,
+  callback: (tareas: Tarea[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const q = query(
+    colTareas,
+    where('communityId', '==', communityId),
+    orderBy('createdAt', 'desc')
+  );
+  return subscribeToCollection(q, callback, 'tareas', onError);
+}
+
 
 // --- GESTIÓN DE USUARIOS (Para AuthContext) ---
 export interface Comunidad {
@@ -3077,18 +3161,22 @@ export async function createHiloMessage(propuestaId: string, mensaje: PropuestaH
   }
 }
 
-export function listenPropuestaResponses(propuestaId: string, callback: (respuestas: PropuestaRespuesta[]) => void) {
+export function listenPropuestaResponses(
+  propuestaId: string, 
+  callback: (respuestas: PropuestaRespuesta[]) => void,
+  onError?: (err: Error) => void
+) {
   const q = query(collection(db, 'propuestas', propuestaId, 'respuestas'), orderBy('createdAt', 'asc'));
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropuestaRespuesta)));
-  });
+  return subscribeToCollection(q, callback as (data: any[]) => void, `propuestas/${propuestaId}/respuestas`, onError);
 }
 
-export function listenPropuestaHilos(propuestaId: string, callback: (mensajes: PropuestaHilo[]) => void) {
+export function listenPropuestaHilos(
+  propuestaId: string, 
+  callback: (mensajes: PropuestaHilo[]) => void,
+  onError?: (err: Error) => void
+) {
   const q = query(collection(db, 'propuestas', propuestaId, 'hilos'), orderBy('createdAt', 'asc'));
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropuestaHilo)));
-  });
+  return subscribeToCollection(q, callback as (data: any[]) => void, `propuestas/${propuestaId}/hilos`, onError);
 }
 
 // --- BAJAS Y FEEDBACK DE SALIDA ---
