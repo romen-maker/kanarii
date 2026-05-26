@@ -29,4 +29,4 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-05-26 10:05
 - [x] Rama creada: feat/T-011-community-selector-sidebar
 - [x] Lock activo: yes
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
