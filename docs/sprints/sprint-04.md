@@ -10,7 +10,7 @@
 | T-014 | Añadir `.limit(50)` a todos los hooks de listas | S | 🟢 Completado | [.agents/tasks/_archived/task-014.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-014.md) |
 | T-015 | Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" | S | 🟢 Completado | [.agents/tasks/_archived/task-015.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-015.md) |
 | T-016 | Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) | L | 🟢 Completado | [.agents/tasks/_archived/task-016.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-016.md) |
-| T-017 | Fix: displayName vacío al re-entrar por invitación tras expulsión — `community_members` no copia perfil desde `/users/{uid}` al canjear código | S | ⬜ Pendiente | — |
+| T-017 | Fix: displayName vacío al re-entrar por invitación tras expulsión — `community_members` no copia perfil desde `/users/{uid}` al canjear código | S | 🟢 Completado | [.agents/tasks/_archived/task-017.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-017.md) |
 
 ## Notas de planning
 * **Sprint 03 cerrado limpio** (4/4 ✅). No hay tareas arrastradas.

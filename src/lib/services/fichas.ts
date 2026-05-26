@@ -374,6 +374,11 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
   }
 
   // 2) Sincronizar en /users/{userId} y propagar en batch a /community_members/{communityId}_{userId}
+  const hasProfileData = !!(
+    fichaFull.datosPersona?.nombre ||
+    fichaFull.datosOnboarding?.nombre ||
+    fichaFull.nombre
+  );
   const resolvedDisplayName = fichaFull.datosPersona?.nombre || fichaFull.nombre || fichaFull.datosOnboarding?.nombre || '';
 
   let userEmail = '';
@@ -396,11 +401,26 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     console.error("Error al recuperar info del usuario en _writeFichaRaw:", err);
   }
 
+  // Buscar todos los community_members de este usuario para asegurar propagación a todas las membresías reales
+  try {
+    const q = query(collection(db, 'community_members'), where('userId', '==', userId));
+    const querySnap = await getDocs(q);
+    const queriedCommunityIds = querySnap.docs.map(docSnap => docSnap.data().communityId).filter(Boolean);
+    
+    for (const cId of queriedCommunityIds) {
+      if (!communityIds.includes(cId)) {
+        communityIds.push(cId);
+      }
+    }
+  } catch (err) {
+    console.error("Error al buscar community_members en _writeFichaRaw:", err);
+  }
+
   // Actualizar el documento del usuario con displayName y el flag hasFicha
   try {
     const userDocRef = doc(db, 'users', userId);
     await setDoc(userDocRef, {
-      displayName: resolvedDisplayName,
+      ...(hasProfileData && resolvedDisplayName ? { displayName: resolvedDisplayName } : {}),
       hasFicha: true,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -424,7 +444,9 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
         batch.set(memberRef, {
           userId,
           communityId: cId,
-          nombre: resolvedDisplayName || 'Sin Nombre',
+          ...(hasProfileData && resolvedDisplayName
+            ? { nombre: resolvedDisplayName, displayName: resolvedDisplayName }
+            : {}),
           tipo_hd: fichaFull.datosBrutos?.diseno_humano?.tipo || '',
           elemento_dominante: fichaFull.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
           autoridad_hd: fichaFull.datosBrutos?.diseno_humano?.autoridad || '',
@@ -434,7 +456,6 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
           rol: base.rol || 'miembro',
           estado: fichaFull.estado || 'activo',
           photoURL: userPhotoURL,
-          displayName: resolvedDisplayName,
           email: userEmail,
           creadoEn: fichaFull.createdAt || serverTimestamp(),
           updatedAt: serverTimestamp()

@@ -16,6 +16,7 @@ import {
 import { db, handleFirestoreError, OperationType, DEFAULT_LIST_LIMIT } from './_core';
 import { Invitacion, InvitacionError } from './_types';
 import { _writeFichaRaw } from './fichas';
+import { auth } from '../firebase';
 
 function generateInviteCode(): string {
   const adjetivos = [
@@ -132,10 +133,37 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
       }
     }
 
+    // FORZAR REFRESH DEL USER DE AUTH para obtener datos actualizados
+    await new Promise<void>((resolve) => {
+      if (auth.currentUser) {
+        auth.currentUser.reload()
+          .then(() => resolve())
+          .catch(() => resolve());
+      } else {
+        resolve();
+      }
+    });
+    const currentUser = auth.currentUser;
+
     const profileRef = doc(db, 'profiles', uid);
     const profileSnap = await getDoc(profileRef);
     const memberRef = doc(db, 'community_members', `${inv.communityId}_${uid}`);
     const userData = userDoc.exists() ? userDoc.data() : {};
+
+    let resolvedDisplayName = '';
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+      resolvedDisplayName = base.nombre || profileData.nombre || '';
+    }
+
+    if (!resolvedDisplayName && currentUser?.displayName) {
+      resolvedDisplayName = currentUser.displayName;
+    }
+
+    if (!resolvedDisplayName && currentUser?.email) {
+      resolvedDisplayName = currentUser.email;
+    }
 
     const batch = writeBatch(db);
     
@@ -158,6 +186,9 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
     if (userDoc.exists() && !userDoc.data().communityId) {
       userUpdates.communityId = inv.communityId;
     }
+    if (userDoc.exists() && (!userDoc.data().displayName || userDoc.data().displayName === '') && resolvedDisplayName) {
+      userUpdates.displayName = resolvedDisplayName;
+    }
     batch.update(userRef, userUpdates);
 
     // 3. Crear o actualizar miembro en community_members
@@ -169,7 +200,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         userId: uid,
         communityId: inv.communityId,
         codigoInvitacion: codigo,
-        nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+        nombre: resolvedDisplayName || 'Sin Nombre',
         tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
@@ -179,7 +210,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: resolvedDisplayName,
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -197,7 +228,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         userId: uid,
         communityId: inv.communityId,
         codigoInvitacion: codigo,
-        nombre: userData.displayName || userData.email || 'Sin Nombre',
+        nombre: resolvedDisplayName || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
         autoridad_hd: '',
@@ -205,7 +236,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol_comunidad: 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: resolvedDisplayName,
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()

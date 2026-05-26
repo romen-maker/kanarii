@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { CommunityMember, FeedbackSalida } from './_types';
 import { _writeFichaRaw } from './fichas';
+import { auth } from '../firebase';
 
 export async function getMemberInfo(uid: string, communityId?: string): Promise<any | null> {
   try {
@@ -112,17 +113,48 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       throw new Error('YA_ES_MIEMBRO');
     }
 
-    const batch = writeBatch(db);
-
-    batch.update(userRef, {
-      communityIds: arrayUnion(communityId),
-      ...(!userData.communityId ? { communityId: communityId } : {}),
-      updatedAt: serverTimestamp()
+    // FORZAR REFRESH DEL USER DE AUTH para obtener datos actualizados
+    await new Promise<void>((resolve) => {
+      if (auth.currentUser) {
+        auth.currentUser.reload()
+          .then(() => resolve())
+          .catch(() => resolve());
+      } else {
+        resolve();
+      }
     });
+    const currentUser = auth.currentUser;
 
     const profileRef = doc(db, 'profiles', uid);
     const profileSnap = await getDoc(profileRef);
     const memberRef = doc(db, 'community_members', `${communityId}_${uid}`);
+
+    let resolvedDisplayName = '';
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+      resolvedDisplayName = base.nombre || profileData.nombre || '';
+    }
+
+    if (!resolvedDisplayName && currentUser?.displayName) {
+      resolvedDisplayName = currentUser.displayName;
+    }
+
+    if (!resolvedDisplayName && currentUser?.email) {
+      resolvedDisplayName = currentUser.email;
+    }
+
+    const batch = writeBatch(db);
+
+    const userUpdates: any = {
+      communityIds: arrayUnion(communityId),
+      ...(!userData.communityId ? { communityId: communityId } : {}),
+      updatedAt: serverTimestamp()
+    };
+    if ((!userData.displayName || userData.displayName === '') && resolvedDisplayName) {
+      userUpdates.displayName = resolvedDisplayName;
+    }
+    batch.update(userRef, userUpdates);
 
     if (profileSnap.exists()) {
       const profileData = profileSnap.data();
@@ -131,7 +163,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       batch.set(memberRef, {
         userId: uid,
         communityId: communityId,
-        nombre: base.nombre || profileData.nombre || userData.displayName || userData.email || 'Sin Nombre',
+        nombre: resolvedDisplayName || 'Sin Nombre',
         tipo_hd: profileData.datosBrutos?.diseno_humano?.tipo || '',
         elemento_dominante: profileData.datosBrutos?.carta_astral_completa?.elemento_dominante || '',
         autoridad_hd: profileData.datosBrutos?.diseno_humano?.autoridad || '',
@@ -141,7 +173,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: resolvedDisplayName,
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -158,7 +190,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       batch.set(memberRef, {
         userId: uid,
         communityId: communityId,
-        nombre: userData.displayName || userData.email || 'Sin Nombre',
+        nombre: resolvedDisplayName || 'Sin Nombre',
         tipo_hd: '',
         elemento_dominante: '',
         autoridad_hd: '',
@@ -166,7 +198,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol_comunidad: 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: resolvedDisplayName,
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
