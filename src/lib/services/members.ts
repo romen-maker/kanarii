@@ -112,17 +112,28 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
       throw new Error('YA_ES_MIEMBRO');
     }
 
-    const batch = writeBatch(db);
-
-    batch.update(userRef, {
-      communityIds: arrayUnion(communityId),
-      ...(!userData.communityId ? { communityId: communityId } : {}),
-      updatedAt: serverTimestamp()
-    });
-
     const profileRef = doc(db, 'profiles', uid);
     const profileSnap = await getDoc(profileRef);
     const memberRef = doc(db, 'community_members', `${communityId}_${uid}`);
+
+    let resolvedName = '';
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+      resolvedName = base.nombre || profileData.nombre || '';
+    }
+
+    const batch = writeBatch(db);
+
+    const userUpdates: any = {
+      communityIds: arrayUnion(communityId),
+      ...(!userData.communityId ? { communityId: communityId } : {}),
+      updatedAt: serverTimestamp()
+    };
+    if (!userData.displayName && resolvedName) {
+      userUpdates.displayName = resolvedName;
+    }
+    batch.update(userRef, userUpdates);
 
     if (profileSnap.exists()) {
       const profileData = profileSnap.data();
@@ -141,7 +152,7 @@ export async function unirseComunidadDirecto(communityId: string, uid: string): 
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: userData.displayName || resolvedName || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()

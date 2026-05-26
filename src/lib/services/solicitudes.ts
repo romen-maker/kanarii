@@ -108,16 +108,26 @@ export async function resolverSolicitud(
       const userSnap = await getDoc(userRef);
       const userData = userSnap.exists() ? userSnap.data() : {};
       
-      batch.update(userRef, {
-        communityIds: arrayUnion(communityId),
-        ...(!userData.communityId ? { communityId: communityId } : {}),
-        updatedAt: serverTimestamp()
-      });
-      
-      // Intentar obtener el perfil para extraer campos de ficha
       const profileRef = doc(db, 'profiles', solicitud.solicitante_uid);
       const profileSnap = await getDoc(profileRef);
       const memberRef = doc(db, 'community_members', `${communityId}_${solicitud.solicitante_uid}`);
+
+      let resolvedName = '';
+      if (profileSnap.exists()) {
+        const profileData = profileSnap.data();
+        const base = profileData.datosPersona || profileData.datosOnboarding || {};
+        resolvedName = base.nombre || profileData.nombre || '';
+      }
+
+      const userUpdates: any = {
+        communityIds: arrayUnion(communityId),
+        ...(!userData.communityId ? { communityId: communityId } : {}),
+        updatedAt: serverTimestamp()
+      };
+      if (userSnap.exists() && !userData.displayName && resolvedName) {
+        userUpdates.displayName = resolvedName;
+      }
+      batch.update(userRef, userUpdates);
       
       if (profileSnap.exists()) {
         const profileData = profileSnap.data();
@@ -136,7 +146,7 @@ export async function resolverSolicitud(
           rol: base.rol || 'miembro',
           estado: 'activo',
           photoURL: userData.photoURL || '',
-          displayName: userData.displayName || '',
+          displayName: userData.displayName || resolvedName || '',
           email: userData.email || '',
           creadoEn: serverTimestamp(),
           updatedAt: serverTimestamp()

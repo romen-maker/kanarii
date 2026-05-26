@@ -137,6 +137,13 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
     const memberRef = doc(db, 'community_members', `${inv.communityId}_${uid}`);
     const userData = userDoc.exists() ? userDoc.data() : {};
 
+    let resolvedName = '';
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      const base = profileData.datosPersona || profileData.datosOnboarding || {};
+      resolvedName = base.nombre || profileData.nombre || '';
+    }
+
     const batch = writeBatch(db);
     
     // 1. Actualizar invitación
@@ -157,6 +164,9 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
     };
     if (userDoc.exists() && !userDoc.data().communityId) {
       userUpdates.communityId = inv.communityId;
+    }
+    if (userDoc.exists() && !userDoc.data().displayName && resolvedName) {
+      userUpdates.displayName = resolvedName;
     }
     batch.update(userRef, userUpdates);
 
@@ -179,7 +189,7 @@ export async function useInvitacion(codigo: string, uid: string): Promise<string
         rol: base.rol || 'miembro',
         estado: 'activo',
         photoURL: userData.photoURL || '',
-        displayName: userData.displayName || '',
+        displayName: userData.displayName || resolvedName || '',
         email: userData.email || '',
         creadoEn: serverTimestamp(),
         updatedAt: serverTimestamp()
