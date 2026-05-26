@@ -36,10 +36,38 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == resource.data.authorId;
     }
 
+    // Devuelve true si la invitación existe, está activa, no ha expirado y no ha superado sus usos máximos
+    function isValidInvitation(invitationCode, communityId) {
+      let path = /databases/$(database)/documents/invitaciones/$(invitationCode);
+      let existsInv = exists(path);
+      let inv = existsInv ? get(path) : null;
+      return existsInv 
+        && inv.data.activo == true 
+        && inv.data.communityId == communityId 
+        && (inv.data.expiraEn == null || inv.data.expiraEn > request.time)
+        && (inv.data.usosMaximos == null || inv.data.usosActuales < inv.data.usosMaximos);
+    }
+
+    // Devuelve true si el usuario es administrador de la comunidad en los datos almacenados
+    // o en los datos del lote que se están guardando en este momento (getAfter)
+    function isCommunityAdmin(communityId, userId) {
+      let path = /databases/$(database)/documents/comunidades/$(communityId);
+      return (exists(path) && get(path).data.adminUids.hasAny([userId])) ||
+             (existsAfter(path) && getAfter(path).data.adminUids.hasAny([userId]));
+    }
+
     // ─── USUARIOS GLOBALES ─────────────────────────────────────────────────
     match /users/{uid} {
       allow read:  if request.auth != null;
-      allow write: if request.auth.uid == uid || isGlobalAdmin();
+      allow create: if request.auth.uid == uid && (
+        !('role' in request.resource.data) || 
+        request.resource.data.role == 'user' || 
+        request.resource.data.role == 'member'
+      ) || isGlobalAdmin();
+      allow update: if (request.auth.uid == uid && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+      )) || isGlobalAdmin();
+      allow delete: if request.auth.uid == uid || isGlobalAdmin();
     }
 
     // ─── PERFILES DE USUARIO ───────────────────────────────────────────────
@@ -59,9 +87,9 @@ service cloud.firestore {
 
       // Solicitudes de membresía anidadas en comunidades
       match /solicitudes/{solicitudId} {
-        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow create: if request.auth != null && request.resource.data.solicitante_uid == request.auth.uid;
         allow read, update, delete: if request.auth != null && (
-          resource.data.userId == request.auth.uid ||
+          resource.data.solicitante_uid == request.auth.uid ||
           hasRole(communityId, 'admin')
         );
       }
@@ -74,10 +102,24 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid ||
         hasMinRole(resource.data.communityId, 'miembro')
       );
-      // Crear: Si eres el propio usuario (visitante al unirse) o admin de la comunidad
+      // Crear: Si eres administrador local/creador, o te unes con invitación/sin aprobación
       allow create: if request.auth != null && (
-        request.resource.data.userId == request.auth.uid ||
-        hasRole(request.resource.data.communityId, 'admin')
+        hasRole(request.resource.data.communityId, 'admin') ||
+        isCommunityAdmin(request.resource.data.communityId, request.auth.uid) ||
+        (
+          request.resource.data.userId == request.auth.uid &&
+          !(request.resource.data.rol in ['admin', 'propietario']) &&
+          (
+            (
+              exists(/databases/$(database)/documents/comunidades/$(request.resource.data.communityId)) &&
+              get(/databases/$(database)/documents/comunidades/$(request.resource.data.communityId)).data.requiereAprobacion == false
+            ) ||
+            (
+              request.resource.data.codigoInvitacion != null &&
+              isValidInvitation(request.resource.data.codigoInvitacion, request.resource.data.communityId)
+            )
+          )
+        )
       );
       // Actualizar: solo admin de la comunidad
       allow update: if request.auth != null && hasRole(resource.data.communityId, 'admin');
@@ -86,6 +128,32 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid ||
         hasRole(resource.data.communityId, 'admin')
       );
+    }
+
+    // ─── INVITACIONES (Colección Plana) ────────────────────────────────────
+    match /invitaciones/{codigo} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && hasRole(request.resource.data.communityId, 'admin');
+      allow update: if request.auth != null && (
+        hasRole(resource.data.communityId, 'admin') ||
+        (
+          // Incremento controlado de usos al unirse
+          request.resource.data.usosActuales == resource.data.usosActuales + 1 &&
+          request.resource.data.communityId == resource.data.communityId &&
+          request.resource.data.creadoPor == resource.data.creadoPor &&
+          request.resource.data.tipo == resource.data.tipo &&
+          request.resource.data.expiraEn == resource.data.expiraEn &&
+          request.resource.data.usosMaximos == resource.data.usosMaximos &&
+          (
+            request.resource.data.activo == resource.data.activo ||
+            (request.resource.data.activo == false && (
+              resource.data.tipo == 'unico_uso' ||
+              (resource.data.usosMaximos != null && request.resource.data.usosActuales >= resource.data.usosMaximos)
+            ))
+          )
+        )
+      );
+      allow delete: if request.auth != null && hasRole(resource.data.communityId, 'admin');
     }
 
     // ─── REGISTROS DE SALIDA (Colección Plana) ──────────────────────────────
