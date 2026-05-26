@@ -15,16 +15,19 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Redirección directa tras unirse por invitación (Sprint 02 — T-006)
 - [x] Reglas Firestore para colecciones `community_exits`, `profiles` y `fichas` (Sprint 02 — T-007)
 - [x] Restringir subcolecciones `hilos` y `respuestas` de propuestas/posts (Sprint 02 — T-008)
+- [x] Corregir sincronización y visualización del perfil de usuario (`displayName`/`email`/`photoURL`) en Sidebar y miembros (Sprint 03 — T-009)
+- [x] Validar que onboarding, invitaciones y solicitudes no permitan bypass de membresía en `firestore.rules` (Sprint 03 — T-010)
+- [x] Mejorar UX de navegación: mover selector de comunidad a parte superior del sidebar (Sprint 03 — T-011)
+- [x] Configurar Firebase Emulator con JDK 21+ y tests locales automatizados de Firestore rules (Sprint 03 — T-012)
 
 ---
 
 ## 🚨 Seguridad y confianza
-- [ ] [CRÍTICO] Validar que onboarding, invitaciones y solicitudes no permitan bypass de membresía en `firestore.rules` (Sprint 03 — T-010).
+- [ ] [ALTO] Validar `communityId` en `usePropuestaDetail` para evitar fuga de datos entre comunidades (Sprint 04 — T-013).
 
 ## 🐛 Bugs de acceso y flujo
-- [ ] [ALTO] Corregir sincronización y visualización del perfil de usuario (`displayName`/`email`/`photoURL`) en el Sidebar y miembros de la comunidad (Sprint 03 — T-009).
-- [ ] [ALTO] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido".
-- [ ] [MEDIO] Mejorar UX de navegación de comunidades: Mover selector de comunidad a la parte superior del sidebar (Sprint 03 — T-011).
+- [ ] [ALTO] displayName vacío al re-entrar por invitación tras expulsión: `community_members` no copia `displayName`/`email`/`photoURL` desde `/users/{uid}` al canjear código (Sprint 04 — T-017).
+- [ ] [ALTO] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" (Sprint 04 — T-015).
 
 ---
 
@@ -50,13 +53,13 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ---
 
 ## ⚡ Performance Firestore
-- [ ] [ALTO] Añadir `.limit(50)` a todos los hooks de listas: `usePosts`, `useServicios`, `useAcuerdos`, `useEventos`, `usePropuestas`, `useActas`, `useFichas`, `useProyectos`, `useTareas`.
+- [ ] [ALTO] Añadir `.limit(50)` a todos los hooks de listas: `usePosts`, `useServicios`, `useAcuerdos`, `useEventos`, `usePropuestas`, `useActas`, `useFichas`, `useProyectos`, `useTareas` (Sprint 04 — T-014).
 - [ ] [MEDIO] Implementar paginación cursor-based (`startAfter`) para scroll infinito en listas largas.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
-- [ ] [ALTO] Configurar Firebase Emulator con JDK 21+ y habilitar tests locales automatizados de Firestore rules (Sprint 03 — T-012).
-- [ ] [ALTO] Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) (AUDIT-04/05).
+- [ ] [ALTO] Abstraer imports directos de `firebase/firestore` en hooks (`usePropuestaDetail`, `useProyectos`, `useFichas`, `useTareas`) hacia `appService.ts` (Sprint 04 — T-013).
+- [ ] [ALTO] Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) (Sprint 04 — T-016) (AUDIT-04/05).
 - [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (muestran email en lugar de nombre en fichas públicas). Script one-shot o Cloud Function triggered on read si `displayName` vacío.
 - [ ] [MEDIO] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks.
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
@@ -66,6 +69,8 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Normalizar convenio de naming de funciones de consulta (sufijo `Query`) (AUDIT-07).
 - [ ] [BAJO] Marcar "Discrepancias Detectadas" como RESUELTO EN T-002 en `docs/firebase/current-data-model-audit.md` (AUDIT-03).
 - [ ] [BAJO] Centralizar formateo de fechas en `dateUtils.ts` (7+ sitios duplicados).
+- [ ] [BAJO] Memoizar transformación de fechas en `useEventos` (audit FIX-003).
+- [ ] [BAJO] Optimizar `getMemberName` con Map en `useCommunityMembers` (audit FIX-004).
 - [ ] [BAJO] Script de sanity check periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
 
 ---
@@ -113,6 +118,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ### Arquitectura y soberanía
 - [ ] [POST-MVP] Abstraer llamadas a Gemini detrás de `ai-adapter.ts` con interfaz genérica (`generateText`, `generateEmbedding`, `streamText`). Documentar alternativas soberanas en `/docs/architecture.md` (Firestore→Supabase, Auth→Keycloak, Gemini→Ollama, Vector→pgvector).
+- [ ] [POST-MVP] Callbacks memoizados en subscribers de hooks Firebase (audit FIX-005).
 
 ### UX y producto
 - [ ] [POST-MVP] Búsqueda global (Command+K) para proyectos, tareas y actas.
@@ -124,8 +130,9 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [POST-MVP] Eliminar/desvincular miembro desde Administración.
 - [ ] [POST-MVP] Revisar validación de descripción en Propuestas (hacerla obligatoria u opcional, revisar bug "error al procesar solicitud").
 - [ ] [POST-MVP] Evaluar alternativa opcional a passwordless (email + contraseña) si Magic Link genera fricción.
+- [ ] [POST-MVP] Verificar UX completo de onboarding con nuevas reglas de seguridad de Firestore.
 - [ ] [POST-MVP] Mapa interactivo editable de zonas, recursos y puntos de interés.
 
 ---
 
-*Última actualización verificada contra código: 23 de mayo de 2026*
+*Última actualización verificada contra código: 26 de mayo de 2026*
