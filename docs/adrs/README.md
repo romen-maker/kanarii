@@ -14,3 +14,6 @@ Este directorio contiene el registro de las decisiones de diseño arquitectónic
 | [ADR-006](ADR-006-seeding-temporal-uid-arteara.md) | Uso Temporal del UID Fijo de Arteara como Workaround de Seeding | Proposed | 2026-05-22 |
 | [ADR-007](ADR-007-modularizacion-appservice-por-dominio.md) | Modularización de appService por dominio | Accepted | 2026-05-26 |
 | [ADR-008](ADR-008-reglas-propagacion-displayname-perfil.md) | Reglas de propagación de displayName y datos de perfil | Accepted | 2026-05-26 |
+| [ADR-009](ADR-009-client-side-s3-transitions.md) | Client-side vs Cloud Functions para transiciones S3 | Accepted | 2026-05-27 |
+| [ADR-010](ADR-010-resolucion-objeciones-retira.md) | Modelo de resolución de objeciones — "Objetor retira" | Accepted | 2026-05-27 |
+| [ADR-011](ADR-011-pasaporte-comunitario-equivalencia.md) | Pasaporte Comunitario — Principio de Equivalencia en UI | Accepted | 2026-05-27 |
