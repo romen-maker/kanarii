@@ -9,7 +9,8 @@
 | T-018 | Migrar `community_member` docs antiguos: backfill `displayName`/`email`/`photoURL` desde `/users/{uid}` (script one-shot) | S | 🟢 Completada | [task-018.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-018.md) |
 | T-019 | Completar flujo S3 en PropuestaDetail: integrar `ResponseModal` con las 4 opciones de respuesta y conectar botón en la UI | M | 🟢 Completada | [task-019.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-019.md) |
 | T-020 | Gestión de objeciones con hilos de aclaración (Solo Dudas) | M | 🟢 Completada | [task-020.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-020.md) |
-| T-021 | Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks de entidad | M | ⬜ Pendiente | — |
+| T-021 | Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks de entidad | M | 🟢 Completada | [task-021.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-021.md) |
+
 
 ## Notas de planning
 * **Sprint 04 cerrado limpio** (5/5 ✅). No hay tareas arrastradas.
