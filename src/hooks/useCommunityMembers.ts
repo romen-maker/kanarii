@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useFirestoreCollection } from './useFirestoreCollection';
 import { 
   subscribeToCollection, 
   getCommunityMembersQuery,
@@ -10,38 +11,21 @@ import {
  * [MANDATO DRY] Centraliza la resolución de nombres y cumple el contrato estándar.
  */
 export function useCommunityMembers(communityId?: string) {
-  const [members, setMembers] = useState<CommunityMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [version, setVersion] = useState(0);
-
-  const reload = useCallback(() => {
-    setVersion(v => v + 1);
-  }, []);
-
-  useEffect(() => {
-    if (!communityId) {
-      setMembers([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const q = getCommunityMembersQuery(communityId);
-    
-    // Suscripción real-time centralizada
-    const unsubscribe = subscribeToCollection(
-      q,
-      (data) => {
-        setMembers(data as CommunityMember[]);
-        setLoading(false);
-        setError(null);
-      },
-      `community_members/${communityId}`
-    );
-
-    return () => unsubscribe();
-  }, [communityId, version]);
+  const { items: members, loading, error, reload } = useFirestoreCollection<CommunityMember>(
+    (onData, onError) => {
+      if (!communityId) {
+        onData([]);
+        return () => {};
+      }
+      const q = getCommunityMembersQuery(communityId);
+      return subscribeToCollection(
+        q,
+        (data) => onData(data as CommunityMember[]),
+        `community_members/${communityId}`
+      );
+    },
+    [communityId]
+  );
 
   /**
    * Helper síncrono para obtener un nombre desde el estado cargado.
@@ -62,3 +46,4 @@ export function useCommunityMembers(communityId?: string) {
     reload 
   };
 }
+

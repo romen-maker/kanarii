@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useFirestoreCollection } from './useFirestoreCollection';
 import { 
   subscribeToCollection, 
   getProfilesQuery,
@@ -11,39 +11,28 @@ import {
  * Para listados normales, usar useCommunityMembers.
  */
 export function useProfiles(communityId: string) {
-  const [profiles, setProfiles] = useState<Ficha[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!communityId) {
-      console.warn("useProfiles: communityId es obligatorio para evitar fugas de datos.");
-      setProfiles([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const q = getProfilesQuery(communityId);
-    
-    // Suscripción real-time centralizada a perfiles completos
-    const unsubscribe = subscribeToCollection(
-      q,
-      (data) => {
-        setProfiles(data as Ficha[]);
-        setLoading(false);
-        setError(null);
-      },
-      `profiles/${communityId}`
-    );
-
-    return () => unsubscribe();
-  }, [communityId]);
+  const { items: profiles, loading, error, reload } = useFirestoreCollection<Ficha>(
+    (onData, onError) => {
+      if (!communityId) {
+        console.warn("useProfiles: communityId es obligatorio para evitar fugas de datos.");
+        onData([]);
+        return () => {};
+      }
+      const q = getProfilesQuery(communityId);
+      return subscribeToCollection(
+        q,
+        (data) => onData(data as Ficha[]),
+        `profiles/${communityId}`
+      );
+    },
+    [communityId]
+  );
 
   return { 
     profiles, 
     loading, 
-    error,
-    reload: () => setLoading(true)
+    error: error ? error.message : null,
+    reload 
   };
 }
+
