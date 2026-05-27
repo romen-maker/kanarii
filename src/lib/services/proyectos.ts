@@ -149,3 +149,32 @@ export async function deleteProyecto(id: string): Promise<void> {
     throw err;
   }
 }
+
+/**
+ * Escucha en tiempo real el número de solicitudes de colaboración pendientes
+ * para los proyectos liderados por el usuario actual en una comunidad.
+ */
+export function listenSolicitudesProyectosPendientesCount(
+  communityId: string,
+  userId: string,
+  callback: (count: number) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const q = query(
+    colProyectos,
+    where('communityId', '==', communityId),
+    where('lider_uid', '==', userId)
+  );
+  return subscribeToCollection(
+    q,
+    (proyectos: Proyecto[]) => {
+      const totalPending = proyectos.reduce((sum, p) => {
+        return sum + (p.solicitudes_uid ? p.solicitudes_uid.length : 0);
+      }, 0);
+      callback(totalPending);
+    },
+    'solicitudes_proyectos_pendientes_count',
+    onError
+  );
+}
+

@@ -1,0 +1,12 @@
+{
+  "task": "T-024",
+  "sprint": "sprint-06",
+  "branch": "feat/T-024-badge-solicitudes-proyectos",
+  "opened": "2026-05-27T21:02:40Z",
+  "status": "open",
+  "approved_plan": true,
+  "authorized_files": [
+    "src/lib/services/proyectos.ts",
+    "src/components/Sidebar.tsx"
+  ]
+}

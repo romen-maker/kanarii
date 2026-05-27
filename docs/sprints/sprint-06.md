@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-025 | Permisos de edición de eventos en Calendario: restringir edición a autor o admin | S | ✅ Completada | [.agents/tasks/_archived/task-025.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-025.md) |
-| T-024 | Contador de solicitudes de proyectos pendientes en sidebar (badge DRY con patrón existente de Marketplace) | S | ⬜ Pendiente | — |
+| T-024 | Contador de solicitudes de proyectos pendientes en sidebar (badge DRY con patrón existente de Marketplace) | S | ✅ Completada | [.agents/tasks/_archived/task-024.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-024.md) |
 | T-027 | Directorio de decisiones con filtros por estado y badge "requiere tu atención" en PropuestasView | M | ✅ Completada | — |
 | T-026 | Vista de detalle de Acuerdo en Marketplace: panel/modal con info, historial y CTA de enmienda | M | ⬜ Pendiente | — |
 
