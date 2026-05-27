@@ -32,6 +32,28 @@ trigger: always_on
 
 ---
 
+## Contrato de Contexto (sprint-planning)
+
+> Regla de navegación determinista. Elimina la fase de descubrimiento en /sprint-planning.
+
+Al ejecutar `/sprint-planning`, las rutas de los archivos clave son fijas por convención del proyecto. **No uses `find`, `ls` ni lecturas manuales para localizarlos:**
+
+| Archivo | Ruta exacta |
+|---|---|
+| Roadmap | `ROADMAP.md` (raíz, mayúsculas) |
+| Sprint files | `docs/sprints/sprint-NN.md` |
+| Idea inbox | `docs/idea-inbox/*.md` |
+| External inbox | `external-inbox/` |
+
+**Flujo obligatorio:**
+1. Ejecutar `bash scripts/agent/check-sprint.sh` → usar su output como única fuente de verdad para el estado del proyecto.
+2. Leer `ROADMAP.md` completo (la ruta exacta la confirma el script).
+3. Leer solo los archivos específicos que el script señale como pendientes (inbox, spillover).
+
+Si el script falla o reporta `❌ CRÍTICO`: detenerse e informar al usuario. **No intentar buscar alternativas ni improvisar rutas.**
+
+---
+
 ## Protocolo de Integridad de Caja (box-enforcer)
 
 > Previene la "inercia de refactorización": el agente modificando archivos fuera del scope declarado.

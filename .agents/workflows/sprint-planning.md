@@ -7,7 +7,7 @@ description: Ritual de inicio de semana. Lee el roadmap, vacía el idea-inbox, g
 > Duración estimada: 15 min. Ejecutar los lunes antes de abrir cualquier sesión de desarrollo.
 
 ## Prerrequisitos
-- `roadmap.md` actualizado en la raíz del proyecto.
+- `ROADMAP.md` en la raíz del proyecto (mayúsculas exactas).
 - Antigravity en modelo **Flash** (es lectura y planificación, no código).
 
 ---
@@ -22,10 +22,20 @@ bash scripts/agent/check-session.sh
 - Si devuelve `NO_ACTIVE_SESSION` → continuar.
 - Si devuelve un JSON → hay una sesión anterior sin cerrar. Ejecutar el **Modo Rescate** de `/session-start` antes de continuar con este workflow.
 
-### 2. Lectura de estado
-- Leer `roadmap.md` completo.
-- Leer el sprint file más reciente en `docs/sprints/` (si existe) para entender qué quedó pendiente.
-- Identificar ítems con estado `⏳ En progreso` o sin ✅.
+### 2. Lectura de estado (con script — no navegación manual)
+
+Ejecutar:
+```bash
+bash scripts/agent/check-sprint.sh
+```
+
+**Usar exclusivamente el output de este script como fuente de verdad.** No ejecutar `find`, `ls` ni leer sprint files manualmente para localizar el roadmap o el estado del sprint. El script ya resuelve rutas, conteo de tareas y advertencias.
+
+- Si el script devuelve `❌ CRÍTICO` en ROADMAP → detenerse. Informar al usuario y no continuar.
+- Si hay entradas en `SPILLOVER` → ir al paso 2b.
+- Si el sistema está limpio → ir directamente al paso 3.
+
+Leer `ROADMAP.md` completo tras ejecutar el script (la ruta exacta la da el script).
 
 ### 2b. Decisión sobre tareas incompletas
 
@@ -37,7 +47,7 @@ Para cada tarea sin ✅ del sprint anterior, estimar el porcentaje completado y 
 | Avance estimado | Destino | Acción |
 |---|---|---|
 | **> 70%** | Arrastra al sprint nuevo | Añadir como primera tarea, tamaño S, con nota `↩ continuación sprint anterior` |
-| **< 30%** | Vuelve al roadmap | Marcar como ⬜ Pendiente en `roadmap.md`; no entra al sprint nuevo |
+| **< 30%** | Vuelve al roadmap | Marcar como ⬜ Pendiente en `ROADMAP.md`; no entra al sprint nuevo |
 | **30–70%** | Decisión del usuario | Preguntar: ¿arrastra o vuelve al roadmap? Esperar respuesta antes de continuar |
 
 Al cerrar el sprint anterior:
@@ -73,6 +83,7 @@ Para cada tarea candidata:
 > ⚠️ Esta verificación es especialmente importante cuando hay commits recientes
 > sin task file asociado (trabajo ad-hoc, fixes rápidos o sesiones sin cerrar correctamente).
 > En ese caso, revisar también `git log --oneline -20` para detectar trabajo no documentado.
+> El script `check-sprint.sh` ya incluye los últimos 10 commits — úsalos como punto de partida.
 
 ### 3. Vaciado de inboxes priorizando MVP
 Todo lo que se gestione en los inboxes ha de ser primero clasificado como MVP o post-MVP antes de introducirlo en el ROADMAP.md.
@@ -87,7 +98,7 @@ El script reporta rutas exactas de manifiestos en `external-inbox/` y archivos e
 #### 3a. external-inbox (si hay entradas)
 Para cada manifiesto listado, leer los campos Origen, ¿Qué hace?, Archivos que toca, Prioridad y Precauciones. Luego:
 1. Buscar en `src/` los archivos del campo "Archivos que toca" — ¿ya implementado?
-2. Cruzar contra `roadmap.md` — ¿existe tarea que lo cubra? ¿invalida alguna?
+2. Cruzar contra `ROADMAP.md` — ¿existe tarea que lo cubra? ¿invalida alguna?
 3. Clasificar:
 
 | Resultado | Acción en roadmap |
@@ -102,7 +113,7 @@ Para cada manifiesto listado, leer los campos Origen, ¿Qué hace?, Archivos que
 
 #### 3b. idea-inbox (si hay entradas)
 Para cada archivo listado, clasificar cada idea en:
-- **roadmap** → añadir al ítem correspondiente en `roadmap.md` o crear ítem nuevo.
+- **roadmap** → añadir al ítem correspondiente en `ROADMAP.md` o crear ítem nuevo.
 - **backlog** → anotar en sección `## Backlog` del roadmap.
 - **descartar** → registrar como descartada con motivo en una línea.
 
@@ -112,12 +123,12 @@ Presentar al usuario una tabla consolidada con todas las entradas de ambos inbox
 **Esperar confirmación antes de escribir o archivar nada.** 
 
 Una vez confirmado:
-- Aplicar todos los cambios en `roadmap.md`.
+- Aplicar todos los cambios en `ROADMAP.md`.
 - Archivar archivos procesados de `docs/idea-inbox/` en `docs/idea-inbox/_archived/`.
 - Archivar archivos procesados de `external-inbox/` en `external-inbox/_archived/`.
 
 ### 4. Generación del sprint file
-Crear `docs/sprints/sprint-XX.md` (incrementar número respecto al último existente) con esta estructura:
+Crear `docs/sprints/sprint-XX.md` (incrementar número respecto al último existente — usar el valor `SPRINT_SIGUIENTE` del script) con esta estructura:
 
 ```markdown
 # Sprint XX — [fecha lunes] → [fecha viernes]
