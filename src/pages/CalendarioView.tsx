@@ -15,6 +15,7 @@ import { useEventoActions } from '../hooks/useEventoActions';
 import { Evento } from '../lib/appService';
 import { CreateEventoModal } from '../components/CreateEventoModal';
 import { Plus, Calendar as CalendarIcon, List } from 'lucide-react';
+import { useUndoableDelete } from '../hooks/useUndoableDelete';
 
 const locales = {
   'es': es,
@@ -36,18 +37,36 @@ const EVENT_COLORS: Record<string, string> = {
   otro: '#6B705C',         // Dark Olive
 };
 
+const sanitize = <T extends Record<string, any>>(obj: T): T =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as unknown as T;
+
 export default function CalendarioView() {
   const { appUser } = useAuth();
-  const { currentCommunityId } = useComunidad();
+  const { currentCommunityId, comunidad } = useComunidad();
   const { eventos, loading } = useEventos(currentCommunityId || appUser?.communityId || 'arteara');
   const { members } = useCommunityMembers(currentCommunityId || 'arteara');
-  const { addEvento, editEvento, isExecuting: isSubmitting } = useEventoActions();
+  const { startDelete, pendingId } = useUndoableDelete();
+  const { addEvento, editEvento, removeEvento, isExecuting: isSubmitting } = useEventoActions();
   
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [initialDates, setInitialDates] = useState<{ start: Date; end: Date } | undefined>();
+
+  const isAdmin = comunidad?.adminUids?.includes(appUser?.uid || '') || false;
+  const isCreator = selectedEvento ? appUser?.uid === selectedEvento.creadoPor : true;
+  const canEdit = !selectedEvento || isCreator || isAdmin;
+
+  const filteredEventos = eventos.filter(e => e.id !== pendingId);
+
+  const getEventoToEdit = () => {
+    if (!selectedEvento) return null;
+    const { creadoPor, ...resto } = selectedEvento;
+    return resto;
+  };
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
     setInitialDates({ start, end });
@@ -61,23 +80,40 @@ export default function CalendarioView() {
   };
 
   const handleSaveEvento = async (data: any) => {
-    const payload = {
-      ...data,
-      communityId: currentCommunityId || appUser?.communityId || 'arteara',
-      creadoPor: appUser?.uid
-    };
-
     if (selectedEvento?.id) {
+      // Hacemos spread del evento original omitiendo id y creadoEn para no enviarlos,
+      // preservando el creadoPor y el communityId original si existían.
+      const { id, creadoEn, ...eventoOriginal } = selectedEvento;
+      const payload = sanitize({
+        ...eventoOriginal,
+        ...data,
+        communityId: selectedEvento.communityId || currentCommunityId || appUser?.communityId || 'arteara',
+      });
+
       await editEvento(selectedEvento.id, payload, {
         successMessage: "Evento actualizado correctamente",
         onSuccess: () => setIsModalOpen(false)
       });
     } else {
+      const payload = sanitize({
+        ...data,
+        communityId: currentCommunityId || appUser?.communityId || 'arteara',
+        creadoPor: appUser?.uid
+      });
+
       await addEvento(payload, {
         successMessage: "Evento creado en el calendario ✨",
         onSuccess: () => setIsModalOpen(false)
       });
     }
+  };
+
+  const handleDeleteEvento = (id: string) => {
+    startDelete(id, {
+      onDelete: (eid) => removeEvento(eid),
+      successMessage: "Evento eliminado correctamente"
+    });
+    setIsModalOpen(false);
   };
 
   const eventPropGetter = (event: any) => {
@@ -138,7 +174,7 @@ export default function CalendarioView() {
           ) : (
             <Calendar
               localizer={localizer}
-              events={eventos}
+              events={filteredEventos}
               startAccessor="inicio"
               endAccessor="fin"
               titleAccessor="titulo"
@@ -174,13 +210,14 @@ export default function CalendarioView() {
 
       {isModalOpen && (
         <CreateEventoModal
-          isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSaveEvento}
-          eventoToEdit={selectedEvento}
+          eventoToEdit={getEventoToEdit()}
           members={members}
           isSubmitting={isSubmitting}
           initialDates={initialDates}
+          canEdit={canEdit}
+          onDelete={handleDeleteEvento}
         />
       )}
 

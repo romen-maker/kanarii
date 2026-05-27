@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Evento } from '../lib/appService';
 
 interface CreateEventoModalProps {
-  eventoToEdit?: Evento | null;
+  eventoToEdit?: Omit<Evento, 'creadoPor'> | null;
   members: any[];
   isSubmitting: boolean;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
+  onDelete?: (id: string) => void;
+  canEdit: boolean;
   initialDates?: { start: Date; end: Date };
 }
 
@@ -16,6 +18,8 @@ export function CreateEventoModal({
   isSubmitting, 
   onClose, 
   onSubmit,
+  onDelete,
+  canEdit,
   initialDates
 }: CreateEventoModalProps) {
   const [formData, setFormData] = useState({
@@ -60,7 +64,7 @@ export function CreateEventoModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.titulo.trim() || !formData.inicio || !formData.fin) return;
+    if (!canEdit || !formData.titulo.trim() || !formData.inicio || !formData.fin) return;
     
     const data = {
       ...formData,
@@ -72,7 +76,14 @@ export function CreateEventoModal({
     onSubmit(data);
   };
 
+  const handleDelete = () => {
+    if (eventoToEdit?.id && onDelete) {
+      onDelete(eventoToEdit.id);
+    }
+  };
+
   const toggleParticipant = (uid: string) => {
+    if (!canEdit) return;
     setFormData(prev => ({
       ...prev,
       participantes: prev.participantes.includes(uid)
@@ -85,7 +96,9 @@ export function CreateEventoModal({
     <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="p-6 border-b border-[#EAE2D6] flex justify-between items-center bg-[#FDFBF7]">
-          <h2 className="text-xl font-serif text-[#4A4E4D]">{eventoToEdit ? 'Editar Evento' : 'Nuevo Evento'}</h2>
+          <h2 className="text-xl font-serif text-[#4A4E4D]">
+            {eventoToEdit ? (canEdit ? 'Editar Evento' : 'Detalles del Evento') : 'Nuevo Evento'}
+          </h2>
           <button 
             onClick={onClose}
             className="text-stone-400 hover:text-stone-600 transition-colors"
@@ -104,7 +117,7 @@ export function CreateEventoModal({
               onChange={e => setFormData({ ...formData, titulo: e.target.value })}
               className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors"
               placeholder="Ej. Cosecha colectiva"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canEdit}
             />
           </div>
 
@@ -114,7 +127,7 @@ export function CreateEventoModal({
               value={formData.tipo}
               onChange={e => setFormData({ ...formData, tipo: e.target.value as Evento['tipo'] })}
               className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors bg-white"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canEdit}
             >
               <option value="reunion">Reunión / Círculo</option>
               <option value="tarea_comunal">Tarea Comunal</option>
@@ -133,7 +146,7 @@ export function CreateEventoModal({
                 value={formData.inicio}
                 onChange={e => setFormData({ ...formData, inicio: e.target.value })}
                 className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !canEdit}
               />
             </div>
             <div>
@@ -144,7 +157,7 @@ export function CreateEventoModal({
                 value={formData.fin}
                 onChange={e => setFormData({ ...formData, fin: e.target.value })}
                 className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !canEdit}
               />
             </div>
           </div>
@@ -156,7 +169,7 @@ export function CreateEventoModal({
               checked={formData.todoElDia}
               onChange={e => setFormData({ ...formData, todoElDia: e.target.checked })}
               className="rounded text-[#CB997E] focus:ring-[#CB997E]"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canEdit}
             />
             <label htmlFor="todoElDia" className="text-sm text-stone-700">Todo el día</label>
           </div>
@@ -167,7 +180,7 @@ export function CreateEventoModal({
               value={formData.responsable_uid}
               onChange={e => setFormData({ ...formData, responsable_uid: e.target.value })}
               className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors bg-white"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canEdit}
             >
               <option value="">-- Seleccionar --</option>
               {members.map(m => (
@@ -184,7 +197,7 @@ export function CreateEventoModal({
                   key={m.userId}
                   type="button"
                   onClick={() => toggleParticipant(m.userId)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !canEdit}
                   className={`px-3 py-1 rounded-full text-xs transition-colors ${
                     formData.participantes.includes(m.userId)
                       ? 'bg-[#A5A58D] text-white'
@@ -205,26 +218,40 @@ export function CreateEventoModal({
               onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
               className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors resize-none"
               placeholder="Detalles sobre el evento..."
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canEdit}
             />
           </div>
 
-          <div className="pt-4 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-stone-500 hover:bg-[#FDFBF7] rounded-xl font-medium transition-colors"
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !formData.titulo.trim()}
-              className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-6 py-2 rounded-xl font-medium transition-colors disabled:opacity-50"
-            >
-              {isSubmitting ? 'Guardando...' : (eventoToEdit ? 'Guardar Cambios' : 'Crear Evento')}
-            </button>
+          <div className="pt-4 flex justify-between items-center gap-3">
+            {eventoToEdit && canEdit && onDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isSubmitting}
+                className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50"
+              >
+                Eliminar
+              </button>
+            )}
+            <div className="flex justify-end gap-3 ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-stone-500 hover:bg-[#FDFBF7] rounded-xl font-medium transition-colors"
+                disabled={isSubmitting}
+              >
+                {canEdit ? 'Cancelar' : 'Cerrar'}
+              </button>
+              {canEdit && (
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !formData.titulo.trim()}
+                  className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-6 py-2 rounded-xl font-medium transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Guardando...' : (eventoToEdit ? 'Guardar Cambios' : 'Crear Evento')}
+                </button>
+              )}
+            </div>
           </div>
         </form>
       </div>
