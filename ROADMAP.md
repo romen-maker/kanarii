@@ -25,12 +25,15 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" (Sprint 04 — T-015)
 - [x] Modularizar `appService.ts` por dominio en `src/lib/services/` (Sprint 04 — T-016)
 - [x] Fix displayName vacío al re-entrar por invitación tras expulsión (Sprint 04 — T-017, ADR-008)
+- [x] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (Sprint 05 — T-018)
+- [x] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks (Sprint 05 — T-021)
 
 ---
 
 ## 🚨 Seguridad y confianza
 - [ ] [MEDIO] Limpiar contexto de comunidad activa al logout (evitar acceso residual multi-comunidad).
 - [ ] [MEDIO] Generalizar validación de `communityId` a todos los hooks de entidad (más allá de `usePropuestaDetail`).
+- [ ] [MEDIO] Permisos de edición de eventos en Calendario: solo el autor del evento o un admin pueden editarlo (T-025).
 
 ---
 
@@ -60,8 +63,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
-- [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (muestran email en lugar de nombre en fichas públicas). Script one-shot o Cloud Function triggered on read si `displayName` vacío.
-- [ ] [MEDIO] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks.
+- [ ] [MEDIO] Migración limpia modelo de datos Triada Comunitaria: refactorizar `ofrendas[]`, `saberes[]`, `necesidades[]` como arrays separados en `DatosPersona`, script de migración, actualizar onboarding y ficha (T-023).
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
@@ -94,6 +96,9 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Badge nav para solicitante en acuerdos (en progreso — incluir acuerdos donde eres `solicitanteId` con status cambiado).
 - [ ] [MEDIO] Sistema leído/no leído en acuerdos: campo `vistoPorSolicitante: boolean`, batch update al entrar a "Mis Acuerdos", badge desaparece solo al ver el cambio.
 - [ ] [MEDIO] Sistema de badges reactivos para Gobernanza: propuestas pendientes de voto, tensiones asignadas sin resolver, actas pendientes de ratificación. Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
+- [ ] [ALTO] Pasaporte Comunitario: vista pública del perfil como pasaporte, con Triada Comunitaria (ofrendas/saberes/necesidades), sin jerarquías visibles ni contadores numéricos (T-022).
+- [ ] [ALTO] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (T-026).
+- [ ] [MEDIO] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (T-024).
 
 ## 📱 Infraestructura offline
 - [ ] [ALTO] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura.
@@ -137,4 +142,4 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ---
 
-*Última actualización verificada contra código: 26 de mayo de 2026 (sprint-planning S05)*
+*Última actualización verificada contra código: 27 de mayo de 2026 (sprint-planning S06)*
