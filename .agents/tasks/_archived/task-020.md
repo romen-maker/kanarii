@@ -29,4 +29,4 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-05-27 09:15
 - [x] Rama creada: feat/T-020-hilos-aclaracion-dudas
 - [x] Lock activo: .agent-session.lock
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
