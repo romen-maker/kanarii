@@ -33,6 +33,6 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-05-27 09:02:00
 - [x] Rama creada: feat/T-019-S3-fixes
 - [ ] Lock activo: ___
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
 
 
