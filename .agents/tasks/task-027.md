@@ -32,4 +32,4 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-05-27T18:41:08+01:00
 - [x] Rama creada: feat/T-027-directorio-decisiones
 - [x] Lock activo: .agent-session.lock
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
