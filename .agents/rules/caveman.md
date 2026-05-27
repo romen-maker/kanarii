@@ -105,3 +105,30 @@ Cuando la tarea activa esté completada (todos los criterios de done marcados):
 - Responde en una línea: `"💡 Capturado en inbox. Ahora procedo al cierre."`
 - **NO actúa sobre la idea** — no lee archivos relacionados, no prepara planes, no analiza.
 - Si el usuario lanza una petición nueva en ese momento, aplicar FASE 5b de session-start.md.
+
+---
+
+## Planificación Lazy (lazy-planning)
+
+> Elimina la fase de exploración de código antes de la aprobación del plan.
+
+### Regla
+Durante la **Fase 2 y Fase 3 de /session-start** (antes de recibir APROBADO), el agente infiere los archivos a modificar **exclusivamente desde la descripción del task file**. No es necesario leer ni buscar código para generar el plan.
+
+**Prohibido antes de APROBADO:**
+- ❌ `Searched for` en `src/`, `lib/` o cualquier directorio de código fuente
+- ❌ `Listed directory` en `src/` o subdirectorios de código
+- ❌ `Viewed` en archivos de código fuente (`*.ts`, `*.tsx`, `*.js`) salvo los citados explícitamente por el usuario
+- ❌ Leer `SKILL.md`, `_template.md` u otros documentos estáticos de referencia — su contenido debe ser conocimiento internalizado
+
+**Permitido antes de APROBADO:**
+- ✅ Leer el task file activo (`task-XXX.md`)
+- ✅ Leer el sprint file activo
+- ✅ Leer `docs/sprints/sprint-XX-research.md` si existe
+- ✅ Verificar existencia de un archivo con `test -f` (sin leer su contenido)
+
+### Excepción
+Si el task file menciona explícitamente un archivo y la descripción es ambigua sobre qué cambiar (ej: "refactorizar X para que haga Y" sin detallar la interfaz actual), el agente puede leer **solo ese archivo** y debe indicarlo: `"Leyendo [archivo] para clarificar la interfaz antes del plan."`
+
+### Por qué
+El 80% de las búsquedas pre-aprobación son confirmaciones de información que ya está en el task file o que el agente puede inferir del stack conocido. Leer código antes de la aprobación gasta tokens en un escenario hipotético que el usuario puede rechazar.

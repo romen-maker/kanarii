@@ -53,7 +53,7 @@ bash scripts/agent/check-session.sh
      - Error → volver a Fase 1.
    - No encontrado → crear con `doe-framework` desde `_template.md`.
 
-> 🔒 **LÍMITE FASE 2**: Solo leer documentos de planificación (sprint files, research, task files). **Prohibido leer `src/`, `lib/` u otro código fuente** hasta aprobación en Fase 3.5. Excepción: archivos mencionados explícitamente por el usuario en su petición.
+> 🔒 **LÍMITE FASE 2**: Solo leer documentos de planificación (sprint files, research, task files). **Prohibido leer, buscar o listar `src/`, `lib/` u otro directorio de código fuente** hasta aprobación en Fase 3.5. Esto incluye `Searched for`, `Listed directory` y `Viewed` sobre archivos `.ts`/`.tsx`/`.js`. Excepción: archivos citados explícitamente por el usuario en su petición, o verificación de existencia con `test -f` sin leer contenido.
 
 3. **Investigación previa:** buscar `docs/sprints/sprint-XX-research.md`.
    - Existe → integrar en `## Contexto técnico` del task file. Informar: `"📚 Research integrado."`
@@ -96,7 +96,7 @@ al final — es la señal que indica que el agente está en pausa activa:
   3. [paso concreto]
 
 ⚠️  RIESGOS DETECTADOS:
-  - [riesgo con impacto estimado, o "Ninguno detectado"]
+  - [riesgo real con impacto estimado — omitir si no hay ninguno genuino]
 
 🖥️  VERIFICACIÓN UI REQUERIDA: [Sin revisión / Mínima / Obligatoria]
   Pantallas: [...]
@@ -117,9 +117,9 @@ prohibido de forma absoluta:
 - ❌ Ejecutar `git add`, `git commit`, `git push`
 - ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
 - ❌ Ejecutar comandos que escriban en disco
+- ❌ `Searched for`, `Listed directory` o `Viewed` en código fuente (`src/`, `lib/`) — ver regla lazy-planning en `caveman.md`
 
-✅ Está permitido leer archivos, hacer búsquedas y listar directorios para
-construir o refinar el plan.
+✅ Está permitido leer el task file, el sprint file y el research file. Para construir el plan, inferir desde la descripción del task file sin explorar código.
 
 Si el agente detecta que ha ejecutado cualquier acción operativa sin haber
 recibido `APROBADO`, debe:
@@ -177,22 +177,22 @@ Al completar todos los criterios de done:
 Durante el cierre: prohibido leer fuera de la Caja, preparar planes nuevos o analizar trabajo futuro. Si el usuario lanza una petición nueva, confirmar que está capturada en idea-inbox y proceder al cierre sin desviarse.
 
 ### C2. Commit atómico
+Usar siempre el script de cierre:
 ```bash
-git add -A
-git commit -m "[tipo](T-XXX): [descripción breve]"
+bash scripts/agent/close-task.sh T-XXX "tipo(scope): descripción del cambio"
 ```
+El script hace `git add -A`, archiva el task file, realiza el commit atómico y elimina el lock. **No ejecutes `git add`, `git mv` ni `git commit` por separado.**
+
+Prerequisito: edita `docs/sprints/sprint-XX.md` y `task-XXX.md` marcando la tarea como completada **antes** de llamar al script.
 
 ### C3. Actualización del sprint file
 - Completa → `✅ Hecho` | Incompleta → `⏸ Pausada` con nota.
+- Editar **antes** de ejecutar `close-task.sh`.
 
 ### C4. Actualización del task file
 1. Marcar `- [x] Sesión cerrada correctamente` en `## Estado de aprobación`.
 2. Guardar.
-3. Si estado = `DONE`, archivar:
-```bash
-git mv .agents/tasks/task-XXX.md .agents/tasks/_archived/task-XXX.md
-```
-> ⚠️ Orden obligatorio: editar y guardar **antes** de mover. Task file archivado sin casilla marcada = cierre incompleto.
+3. `close-task.sh` se encarga del `git mv` a `_archived/`. No lo hagas manualmente.
 
 ### C5. Limpieza del idea-inbox
 Mover ideas al sprint file solo si pertenecen a la tarea cerrada. Si la tarea se completó en Fase 5b, las ideas permanecen en `idea-inbox/` hasta el próximo `/sprint-planning`.
@@ -206,6 +206,7 @@ mv docs/sprints/sprint-XX-research.md docs/sprints/_archived/sprint-XX-research.
 Si no, el research permanece en `docs/sprints/` para la próxima sesión.
 
 ### C6. Borrar el lock
+El script `close-task.sh` lo elimina automáticamente. Si por algún motivo persiste:
 ```bash
 rm .agent-session.lock
 ```
