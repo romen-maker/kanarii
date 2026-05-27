@@ -3,7 +3,7 @@ import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck, Scale } from '
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { listenSolicitudes, listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, Acuerdo } from '../lib/appService';
+import { listenSolicitudes, listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, listenPropuestasPendientesCount, Acuerdo } from '../lib/appService';
 import { useState, useEffect } from 'react';
 
 export function Sidebar() {
@@ -14,6 +14,7 @@ export function Sidebar() {
   const [pendingCount, setPendingCount] = useState(0);
   const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
   const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
+  const [propuestasPendingCount, setPropuestasPendingCount] = useState(0);
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
@@ -76,6 +77,27 @@ export function Sidebar() {
     } catch (error) {
       console.error("Error suscribiéndose a acuerdos activos del solicitante:", error);
       setAcuerdosSolicitante([]);
+    }
+  }, [comunidad?.id, appUser?.uid]);
+
+  useEffect(() => {
+    if (!comunidad?.id || !appUser?.uid) {
+      setPropuestasPendingCount(0);
+      return;
+    }
+
+    try {
+      const unsubscribe = listenPropuestasPendientesCount(
+        comunidad.id,
+        appUser.uid,
+        (count) => {
+          setPropuestasPendingCount(count);
+        }
+      );
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error suscribiéndose a propuestas pendientes:", error);
+      setPropuestasPendingCount(0);
     }
   }, [comunidad?.id, appUser?.uid]);
 
@@ -184,6 +206,11 @@ export function Sidebar() {
               {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && !isActive && (
                 <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
                   {acuerdosPendingCount + acuerdosSolicitanteCount}
+                </span>
+              )}
+              {item.label === 'Gobernanza' && propuestasPendingCount > 0 && !isActive && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                  {propuestasPendingCount}
                 </span>
               )}
               {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6B705C]" />}

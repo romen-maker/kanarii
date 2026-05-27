@@ -262,3 +262,39 @@ export function listenPropuestaHilos(
   const q = query(collection(db, 'propuestas', propuestaId, 'hilos'), orderBy('createdAt', 'asc'));
   return subscribeToCollection(q, callback as (data: any[]) => void, `propuestas/${propuestaId}/hilos`, onError);
 }
+
+/**
+ * Escucha en tiempo real el conteo de propuestas que requieren la atención del usuario.
+ * Descarga las propuestas abiertas y las filtra en cliente según la posición del usuario.
+ */
+export function listenPropuestasPendientesCount(
+  communityId: string,
+  userId: string,
+  callback: (count: number) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const q = query(
+    colPropuestas,
+    where('communityId', '==', communityId),
+    where('status', 'in', ['abierta', 'en_objeciones', 'integrando'])
+  );
+  return subscribeToCollection(
+    q,
+    (propuestas: Propuesta[]) => {
+      const pendingCount = propuestas.filter((p) => {
+        if (p.status === 'abierta') {
+          const hasResponded = !!(p.userPositions && p.userPositions[userId]);
+          return !hasResponded && p.authorId !== userId;
+        }
+        if (p.status === 'en_objeciones' || p.status === 'integrando') {
+          return p.authorId === userId;
+        }
+        return false;
+      }).length;
+      callback(pendingCount);
+    },
+    'propuestas_pendientes_count',
+    onError
+  );
+}
+

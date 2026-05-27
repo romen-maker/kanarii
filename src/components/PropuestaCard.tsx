@@ -27,7 +27,16 @@ export const PropuestaCard: React.FC<PropuestaCardProps> = ({
   const isAuthor = propuesta.authorId === currentUserId;
   const userPosition = propuesta.userPositions?.[currentUserId];
   const hasResponded = !!userPosition;
-  const requiresAttention = propuesta.status === 'abierta' && !hasResponded;
+
+  const requiresAttention = (() => {
+    if (propuesta.status === 'abierta') {
+      return !hasResponded && !isAuthor;
+    }
+    if (propuesta.status === 'en_objeciones' || propuesta.status === 'integrando') {
+      return isAuthor;
+    }
+    return false;
+  })();
 
   // Mapeo de tipos de respuesta a etiquetas legibles
   const positionLabels: Record<string, string> = {
@@ -63,8 +72,6 @@ export const PropuestaCard: React.FC<PropuestaCardProps> = ({
         return { label: 'Integrando', variant: 'info', icon: Pencil };
       case 'acordada':
         return { label: 'Acordada', variant: 'success', icon: CheckCircle2 };
-      case 'caducada':
-        return { label: 'Caducada (Sin quórum)', variant: 'neutral', icon: XCircle };
       case 'descartada':
         return { label: 'Descartada', variant: 'neutral', icon: XCircle };
       default:
