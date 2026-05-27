@@ -301,6 +301,8 @@ export interface PropuestaHilo {
   authorId: string;
   content: string;
   createdAt: any;
+  relatedMemberId?: string; // userId del emisor de la duda
+  hiloType?: 'duda' | 'objecion';
 }
 
 export interface FeedbackSalida {
