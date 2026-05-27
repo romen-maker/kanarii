@@ -6,6 +6,7 @@ import { usePropuestaActions } from '../hooks/usePropuestaActions';
 import { ResponseModal } from './ResponseModal';
 import { S3Timeline } from './S3Timeline';
 import { ConsentGrid } from './ConsentGrid';
+import { ClarificationThread } from './propuestas/ClarificationThread';
 import { X, Gavel, User, Clock, AlertCircle, MessageSquare, Send, CheckCircle2, RefreshCw, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -154,6 +155,16 @@ export function PropuestaDetail({
                           </div>
                           <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{r.content}</p>
                         </div>
+                        {r.type === 'duda' && (
+                          <ClarificationThread
+                            propuestaId={propuestaId}
+                            relatedResponseId={r.memberId}
+                            propuestaAuthorId={propuesta.authorId}
+                            hilos={hilos.filter(h => h.relatedMemberId === r.memberId)}
+                            currentUserId={currentUserId}
+                            members={members}
+                          />
+                        )}
                         {r.type === 'duda' && r.memberId === currentUserId && (
                           <div className="mt-2 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex justify-between items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                             <p className="text-xs text-sky-700">
