@@ -46,39 +46,41 @@ Si existen otros artefactos temporales o de validación, deben quedar:
 - Confirma que no quedan cambios funcionales pendientes.
 - Si hay dudas abiertas, no cierres todavía.
 
-### 2. Revisar el estado del repositorio
-- Ejecuta `git status`.
-- Revisa los archivos modificados con `git diff --name-only`.
-- Confirma que los cambios relevantes están commitados y separados por alcance.
+### 2. Preparar documentación (antes del script)
+Antes de llamar al script de cierre, edita manualmente:
+1. **`docs/sprints/sprint-XX.md`** — marca la tarea como `✅ Completada`.
+2. **`.agents/tasks/task-XXX.md`** — marca el criterio `- [ ] Sesión cerrada correctamente` como `- [x]`.
 
-### 3. Detectar qué documentación debe cerrarse
+No ejecutes `git add` ni `git status` manualmente. El script lo gestiona.
+
+### 3. Cierre atómico con script
+Ejecuta **un único comando**:
+
+```bash
+bash scripts/agent/close-task.sh T-XXX "tipo(scope): descripción del cambio"
+```
+
+El script:
+- Hace `git add -A` de todos los cambios pendientes (código + docs).
+- Archiva el task file en `.agents/tasks/_archived/` con `git mv`.
+- Realiza un único commit atómico.
+- Elimina `.agent-session.lock` si existe.
+
+**No ejecutes `git status`, `git add` ni `git commit` por separado.** Todo va en el mismo commit atómico.
+
+Si el script falla:
+- `❌ No encontrado: task-XXX.md` → el task file ya fue archivado o el ID es incorrecto.
+- `❌ Nada en stage` → todos los cambios ya estaban commitados; revisa con `git log --oneline -3`.
+
+### 4. Detectar qué documentación adicional debe cerrarse
 - Si la sesión generó ADRs, revísalos en `docs/adrs/`.
-- Si generó auditorías o referencias de Firebase, revísalas en `docs/firebase/`.
+- Si generó auditorías o referencias de Firebase, revísalos en `docs/firebase/`.
 - Si generó scripts reutilizables, revísalos en `scripts/`.
 - Si generó archivos temporales o scratch, decide si se eliminan o se convierten en archivos oficiales.
+- Si hay documentación adicional que commitear, hacer un commit separado con `git add <archivo> && git commit -m "docs: ..."`.
 
-### 4. Archivar la tarea activa
-- Localiza la tarea activa en `.agents/tasks/`.
-- Sigue estrictamente este orden para el archivado:
-  1. Marca la tarea `- [ ] Sesión cerrada correctamente` como completada (`- [x]`) en el archivo de tarea activo.
-  2. Ejecuta `git add` del archivo de tarea actualizado.
-  3. DESPUÉS, mueve el archivo de tarea a `.agents/tasks/_archived/`.
-- Solo debe quedar una tarea activa por sesión.
-- Si ya fue archivada, verifica que no quede una copia activa pendiente.
-
-### 5. Actualizar el sprint activo
-- Localiza el sprint activo en `docs/sprints/`.
-- Marca la tarea como completada o mueve su estado al equivalente de cierre.
-- Mantén el historial consistente con el resultado final de la sesión.
-
-### 6. Limpiar la sesión
-- Elimina `.agent-session.lock` si existe.
-- Limpia temporales de sesión que no deban persistir.
-- No dejes residuo en `.tmp/`, `scratch/`, `backup/` ni `.firebase/` si eran artefactos de trabajo y no parte estable del proyecto.
-
-### 7. Verificación final
-- Ejecuta `git status` otra vez.
-- Confirma que el árbol de trabajo está limpio o, si no lo está, que solo quedan cambios intencionales para revisión.
+### 5. Verificación final
+- Ejecuta `git status` una sola vez para confirmar que el árbol está limpio.
 - Resume el cierre en una nota breve.
 
 ## Integración con `main`
@@ -99,7 +101,7 @@ Al terminar, debe quedar claro:
 - qué se cerró,
 - qué se archivó,
 - qué se documentó,
-- qué se limpió,
+- qué se limpió.
 
 ## Integración y siguiente paso
 
@@ -118,3 +120,4 @@ El cierre de sesión no debe asumir una política de integración que no exista.
 - No mezclar documentación permanente con residuos temporales.
 - No fijar nombres concretos de archivos de tarea o sprint.
 - No forzar merge a `main` si la política no está definida.
+- **No ejecutar `git add` ni `git commit` manualmente durante el cierre — usar siempre `close-task.sh`.**
