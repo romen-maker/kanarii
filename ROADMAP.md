@@ -19,15 +19,18 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Validar que onboarding, invitaciones y solicitudes no permitan bypass de membresía en `firestore.rules` (Sprint 03 — T-010)
 - [x] Mejorar UX de navegación: mover selector de comunidad a parte superior del sidebar (Sprint 03 — T-011)
 - [x] Configurar Firebase Emulator con JDK 21+ y tests locales automatizados de Firestore rules (Sprint 03 — T-012)
+- [x] Validar `communityId` en `usePropuestaDetail` para evitar fuga de datos entre comunidades (Sprint 04 — T-013)
+- [x] Abstraer imports directos de `firebase/firestore` en hooks hacia `appService.ts` (Sprint 04 — T-013)
+- [x] Añadir `.limit(50)` a todos los hooks de listas (Sprint 04 — T-014)
+- [x] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" (Sprint 04 — T-015)
+- [x] Modularizar `appService.ts` por dominio en `src/lib/services/` (Sprint 04 — T-016)
+- [x] Fix displayName vacío al re-entrar por invitación tras expulsión (Sprint 04 — T-017, ADR-008)
 
 ---
 
 ## 🚨 Seguridad y confianza
-- [ ] [ALTO] Validar `communityId` en `usePropuestaDetail` para evitar fuga de datos entre comunidades (Sprint 04 — T-013).
-
-## 🐛 Bugs de acceso y flujo
-- [ ] [ALTO] displayName vacío al re-entrar por invitación tras expulsión: `community_members` no copia `displayName`/`email`/`photoURL` desde `/users/{uid}` al canjear código (Sprint 04 — T-017).
-- [ ] [ALTO] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" (Sprint 04 — T-015).
+- [ ] [MEDIO] Limpiar contexto de comunidad activa al logout (evitar acceso residual multi-comunidad).
+- [ ] [MEDIO] Generalizar validación de `communityId` a todos los hooks de entidad (más allá de `usePropuestaDetail`).
 
 ---
 
@@ -53,13 +56,10 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ---
 
 ## ⚡ Performance Firestore
-- [ ] [ALTO] Añadir `.limit(50)` a todos los hooks de listas: `usePosts`, `useServicios`, `useAcuerdos`, `useEventos`, `usePropuestas`, `useActas`, `useFichas`, `useProyectos`, `useTareas` (Sprint 04 — T-014).
 - [ ] [MEDIO] Implementar paginación cursor-based (`startAfter`) para scroll infinito en listas largas.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
-- [ ] [ALTO] Abstraer imports directos de `firebase/firestore` en hooks (`usePropuestaDetail`, `useProyectos`, `useFichas`, `useTareas`) hacia `appService.ts` (Sprint 04 — T-013).
-- [ ] [ALTO] Modularizar `appService.ts` por dominio en `src/lib/services/` (auth, comunidades, propuestas, posts, eventos) (Sprint 04 — T-016) (AUDIT-04/05).
 - [ ] [ALTO] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (muestran email en lugar de nombre en fichas públicas). Script one-shot o Cloud Function triggered on read si `displayName` vacío.
 - [ ] [MEDIO] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks.
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
@@ -97,6 +97,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ## 📱 Infraestructura offline
 - [ ] [ALTO] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura.
+- [ ] [MEDIO] Indicador visual de estado de conexión online/offline.
 - [ ] [MEDIO] Indicador de cambios pendientes de subir.
 - [ ] [MEDIO] PWA instalable con `manifest.json` y Service Workers.
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
@@ -119,6 +120,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ### Arquitectura y soberanía
 - [ ] [POST-MVP] Abstraer llamadas a Gemini detrás de `ai-adapter.ts` con interfaz genérica (`generateText`, `generateEmbedding`, `streamText`). Documentar alternativas soberanas en `/docs/architecture.md` (Firestore→Supabase, Auth→Keycloak, Gemini→Ollama, Vector→pgvector).
 - [ ] [POST-MVP] Callbacks memoizados en subscribers de hooks Firebase (audit FIX-005).
+- [ ] [POST-MVP] Mecanismo de recuperación de errores de escritura (retry/queue para operaciones Firestore críticas).
 
 ### UX y producto
 - [ ] [POST-MVP] Búsqueda global (Command+K) para proyectos, tareas y actas.
@@ -135,4 +137,4 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ---
 
-*Última actualización verificada contra código: 26 de mayo de 2026*
+*Última actualización verificada contra código: 26 de mayo de 2026 (sprint-planning S05)*
