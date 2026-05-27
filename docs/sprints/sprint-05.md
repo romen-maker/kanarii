@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-018 | Migrar `community_member` docs antiguos: backfill `displayName`/`email`/`photoURL` desde `/users/{uid}` (script one-shot) | S | 🟢 Completada | [task-018.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-018.md) |
-| T-019 | Completar flujo S3 en PropuestaDetail: integrar `ResponseModal` con las 4 opciones de respuesta y conectar botón en la UI | M | ⬜ Pendiente | — |
+| T-019 | Completar flujo S3 en PropuestaDetail: integrar `ResponseModal` con las 4 opciones de respuesta y conectar botón en la UI | M | 🟢 Completada | [task-019.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-019.md) |
 | T-020 | Gestión de objeciones con hilos de aclaración: implementar UI de `ObjectionThread` y transición automática de estados (`abierta → en_objeciones → integrando`) | M | ⬜ Pendiente | — |
 | T-021 | Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks de entidad | M | ⬜ Pendiente | — |
 
