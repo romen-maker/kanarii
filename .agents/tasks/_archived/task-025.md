@@ -29,5 +29,5 @@ Archivos autorizados para modificación:
 - [x] Plan presentado al usuario (Fase 3.5)
 - [x] APROBADO recibido — fecha/hora: 2026-05-27 19:58 (Aprobado con cambios)
 - [x] Rama creada: feat/T-025-permisos-eventos
-- [ ] Lock activo: ___
-- [ ] Sesión cerrada correctamente
+- [x] Lock activo: feat/T-025-permisos-eventos
+- [x] Sesión cerrada correctamente
