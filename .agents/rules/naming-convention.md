@@ -1,6 +1,6 @@
 # Nomenclatura y Convenciones de Datos
 
-> Estándar obligatorio para nombres de campos, variables e interfaces en Kanarii para garantizar la consistencia y la interoperabilidad Open Source.
+> Estándar obligatorio para nombres de campos, variables, componentes e interfaces en Kanarii para garantizar la consistencia y la interoperabilidad Open Source.
 
 ## 1. Modelo de Datos (Firestore)
 
@@ -24,7 +24,7 @@ Todos los nombres de campos en documentos de Firestore deben seguir estas reglas
 }
 ```
 
-## 2. Interfaces TypeScript (`appService.ts`)
+## 2. Interfaces TypeScript (`_types.ts`)
 
 Las interfaces deben ser un reflejo exacto del modelo de Firestore:
 
@@ -34,17 +34,40 @@ Las interfaces deben ser un reflejo exacto del modelo de Firestore:
 
 ## 3. Código Frontend (Componentes y Hooks)
 
-- **Variables locales**: Se permite el uso de términos descriptivos en inglés (preferido) o español si ayuda a la legibilidad del flujo de negocio, pero los datos que provienen del modelo deben mantener su nombre original.
-- **Mapeos**: Evitar mapear campos de Firestore a otros nombres en el frontend a menos que sea estrictamente necesario para compatibilidad con librerías externas. Es mejor adaptar el modelo que crear capas de traducción constantes.
+- **Nombres de componentes React**: Siempre en **inglés** y `PascalCase`.
+  - ✅ Correcto: `ClarificationThread`, `ResponseModal`, `ConsentGrid`, `CommunityPassport`
+  - ❌ Incorrecto: `ObjecionHilosPanel`, `FichaVista`, `PasaporteComunitario`
+- **Nombres de hooks**: Siempre en **inglés** y `camelCase` con prefijo `use`.
+  - ✅ Correcto: `usePropuestaDetail`, `useCommunityMembers`, `useInvitacion`
+  - ❌ Incorrecto: `useMiembros`, `useDetallesPropuesta`
+- **Variables locales**: Inglés preferido. Se permite español si mejora la legibilidad del flujo de negocio, pero los campos que provienen del modelo deben mantener su nombre original (sin remapear).
+- **Prohibido**: Crear capas de traducción de campos Firestore a nombres distintos en el frontend salvo compatibilidad con librerías externas.
 
-## 4. Proceso de Verificación
+## 4. Textos de Interfaz de Usuario (UI)
 
-Antes de añadir un campo nuevo:
-1. Abrir `src/lib/appService.ts`.
-2. Buscar campos equivalentes en otras entidades.
-3. Si el concepto existe, copiar el nombre.
-4. Si es nuevo, usar inglés + camelCase.
+- **Idioma**: Siempre **español** en textos visibles al usuario (labels, botones, mensajes, placeholders, títulos de sección).
+- **Preparación i18n**: Evitar hardcodear cadenas largas directamente en JSX cuando sea posible agruparlas. La arquitectura debe permitir migrar a un sistema i18n sin tocar lógica de componentes.
+- **Prohibido**: Mezclar inglés y español en la misma vista (ej: botón "Submit" junto a "Cancelar").
+
+## 5. Resumen rápido
+
+| Elemento | Idioma | Formato |
+|---|---|---|
+| Campos Firestore | Inglés | `camelCase` |
+| Interfaces TypeScript | Inglés | `PascalCase` |
+| Componentes React | Inglés | `PascalCase` |
+| Hooks | Inglés | `camelCase` (prefijo `use`) |
+| Variables locales | Inglés (preferido) | `camelCase` |
+| Textos de UI | Español | — |
+
+## 6. Proceso de Verificación
+
+Antes de añadir un campo, componente o hook nuevo:
+1. Buscar equivalentes en `src/components/`, `src/hooks/` o `src/lib/services/_types.ts`.
+2. Si el concepto existe, copiar el nombre.
+3. Si es nuevo, aplicar la tabla del punto 5.
+4. Para componentes: verificar que el nombre en inglés no colisione con componentes de librerías externas (React, Lucide, etc.).
 
 ---
 
-*Última actualización: 16 May 2026*
+*Última actualización: 27 May 2026*

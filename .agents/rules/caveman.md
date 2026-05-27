@@ -28,6 +28,7 @@ trigger: always_on
 - Tareas que modifiquen `appService.ts`, hooks compartidos (`useXxx` que usen más de un componente), o el schema de Firestore — independientemente del número de archivos afectados.
 - Tareas complejas que involucren **más de 3 archivos**, donde sí se debe presentar un plan estructurado (`implementation_plan.md` o resumen equivalente) antes de proceder.
 - Emojis estructurales definidos en protocolos obligatorios (ej: flujos de reconducción de foco, alertas críticas ⚠️, checkmarks de tareas ✅).
+- **Al proponer nombres de componentes, hooks o campos nuevos**: verificar `.agents/rules/naming-convention.md` antes de proponer. Cualquier nombre que no siga la tabla de convenciones es una violación arquitectónica — no un detalle de estilo.
 
 ---
 
