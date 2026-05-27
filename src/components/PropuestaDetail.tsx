@@ -44,7 +44,6 @@ export function PropuestaDetail({
 
   const handleIntegrate = async (newDescription: string, note: string) => {
     await integrateObjeciones(propuestaId, newDescription, note, {
-      loadingMessage: 'Publicando versión integrada...',
       successMessage: 'Propuesta evolucionada con éxito'
     });
     setShowIntegrationModal(false);
@@ -139,22 +138,36 @@ export function PropuestaDetail({
                     const dateLabel = r.updatedAt ? format(r.updatedAt.toDate ? r.updatedAt.toDate() : new Date(r.updatedAt), "d 'de' MMM, HH:mm", { locale: es }) : '';
                     
                     return (
-                      <div 
-                        key={idx} 
-                        className={`${style.bg} ${style.border} border rounded-2xl p-5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500`}
-                        style={{ animationDelay: `${idx * 100}ms` }}
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <Icon className={`w-4 h-4 ${style.iconColor}`} />
-                            <span className={`text-[10px] font-black ${style.text} uppercase tracking-widest`}>
-                              {style.label} · {member?.nombre || 'Miembro'}
-                            </span>
+                      <React.Fragment key={idx}>
+                        <div 
+                          className={`${style.bg} ${style.border} border rounded-2xl p-5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500`}
+                          style={{ animationDelay: `${idx * 100}ms` }}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <Icon className={`w-4 h-4 ${style.iconColor}`} />
+                              <span className={`text-[10px] font-black ${style.text} uppercase tracking-widest`}>
+                                {style.label} · {member?.nombre || 'Miembro'}
+                              </span>
+                            </div>
+                            <span className="text-[9px] font-medium text-stone-400 uppercase">{dateLabel}</span>
                           </div>
-                          <span className="text-[9px] font-medium text-stone-400 uppercase">{dateLabel}</span>
+                          <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{r.content}</p>
                         </div>
-                        <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{r.content}</p>
-                      </div>
+                        {r.type === 'duda' && r.memberId === currentUserId && (
+                          <div className="mt-2 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex justify-between items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <p className="text-xs text-sky-700">
+                              ¿Se aclaró tu duda? Recuerda actualizar tu posición para que la propuesta pueda avanzar.
+                            </p>
+                            <button
+                              onClick={() => setShowResponseModal(true)}
+                              className="text-xs font-black text-sky-600 hover:text-sky-700 uppercase tracking-widest hover:underline shrink-0"
+                            >
+                              Actualizar postura
+                            </button>
+                          </div>
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </div>
