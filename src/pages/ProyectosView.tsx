@@ -58,6 +58,13 @@ export function ProyectosView() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  useEffect(() => {
+    if (selectedProject) {
+      const updated = proyectos.find(p => p.id === selectedProject.id);
+      if (updated) setSelectedProject(updated);
+    }
+  }, [proyectos, selectedProject]);
+
   const handleCreate = async (data: any) => {
     if (!appUser) return;
     const finalData = {
@@ -196,8 +203,10 @@ export function ProyectosView() {
           onRechazar={handleRechazar}
           onSolicitar={handleSolicitar}
           onDelete={(id) => startDelete(id, {
-            onDelete: (pid) => removeProyecto(pid),
-            onSuccess: () => setSelectedProject(null),
+            onDelete: async (pid) => {
+              await removeProyecto(pid);
+              setSelectedProject(null);
+            },
             successMessage: 'Proyecto eliminado'
           })}
         />

@@ -1,34 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Servicio, getServiciosQuery, subscribeToCollection } from '../lib/appService';
+import { useFirestoreCollection } from './useFirestoreCollection';
 
 export function useServicios(communityId: string) {
-  const [servicios, setServicios] = useState<Servicio[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [version, setVersion] = useState(0);
+  const { items, loading, error, reload } = useFirestoreCollection<Servicio>(
+    (onData, onError) => {
+      if (!communityId) {
+        onData([]);
+        return () => {};
+      }
+      const q = getServiciosQuery(communityId);
+      return subscribeToCollection(q, onData, 'servicios', onError);
+    },
+    [communityId]
+  );
 
-  const reload = useCallback(() => {
-    setVersion(v => v + 1);
-  }, []);
-
-  useEffect(() => {
-    if (!communityId) return;
-    setLoading(true);
-    
-    const q = getServiciosQuery(communityId);
-    
-    const unsubscribe = subscribeToCollection(
-      q,
-      (data) => {
-        setServicios(data as Servicio[]);
-        setLoading(false);
-        setError(null);
-      },
-      'servicios'
-    );
-
-    return () => unsubscribe();
-  }, [communityId, version]);
-
-  return { servicios, loading, error, reload };
+  return { items, servicios: items, loading, error, reload };
 }

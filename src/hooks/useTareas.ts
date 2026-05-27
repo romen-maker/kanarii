@@ -1,60 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Tarea, listenTareas } from '../lib/appService';
 import { useAuth } from '../contexts/AuthContext';
+import { useFirestoreCollection } from './useFirestoreCollection';
 
 /**
  * Hook para gestionar tareas en tiempo real filtradas por comunidad.
  */
 export function useTareas(communityId?: string) {
-  const [tareas, setTareas] = useState<Tarea[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const { appUser } = useAuth();
-  const [version, setVersion] = useState(0);
+  
+  // Si no se pasa communityId, intentamos usar el del usuario
+  const activeCommunityId = communityId || appUser?.communityId;
 
-  const reload = useCallback(() => {
-    setVersion(prev => prev + 1);
-  }, []);
-
-  useEffect(() => {
-    if (!appUser && !communityId) {
-      setTareas([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    
-    // Si no se pasa communityId, intentamos usar el del usuario o fallamos a un valor seguro
-    const activeCommunityId = communityId || appUser?.communityId;
-    
-    if (!activeCommunityId) {
-      setTareas([]);
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = listenTareas(
-      activeCommunityId,
-      (data) => {
-        setTareas(data);
-        setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        setError(err);
-        setLoading(false);
+  const { items, loading, error, reload } = useFirestoreCollection<Tarea>(
+    (onData, onError) => {
+      if (!activeCommunityId) {
+        onData([]);
+        return () => {};
       }
-    );
 
-    return () => unsubscribe();
-  }, [appUser, communityId, version]);
+      return listenTareas(
+        activeCommunityId,
+        onData,
+        onError
+      );
+    },
+    [activeCommunityId]
+  );
 
   return { 
-    items: tareas, 
-    tareas,
+    items, 
+    tareas: items, // Alias por compatibilidad
     loading, 
     error,
     reload 
   };
 }
+

@@ -1,34 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useFirestoreCollection } from './useFirestoreCollection';
 import { Acuerdo, getAcuerdosQuery, subscribeToCollection } from '../lib/appService';
 
 export function useAcuerdos(communityId: string) {
-  const [acuerdos, setAcuerdos] = useState<Acuerdo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [version, setVersion] = useState(0);
+  const { items, loading, error, reload } = useFirestoreCollection<Acuerdo>(
+    (onData, onError) => {
+      if (!communityId) {
+        onData([]);
+        return () => {};
+      }
+      const q = getAcuerdosQuery(communityId);
+      return subscribeToCollection(
+        q,
+        (data) => onData(data as Acuerdo[]),
+        'acuerdos'
+      );
+    },
+    [communityId]
+  );
 
-  const reload = useCallback(() => {
-    setVersion(v => v + 1);
-  }, []);
-
-  useEffect(() => {
-    if (!communityId) return;
-    setLoading(true);
-    
-    const q = getAcuerdosQuery(communityId);
-    
-    const unsubscribe = subscribeToCollection(
-      q,
-      (data) => {
-        setAcuerdos(data as Acuerdo[]);
-        setLoading(false);
-        setError(null);
-      },
-      'acuerdos'
-    );
-
-    return () => unsubscribe();
-  }, [communityId, version]);
-
-  return { acuerdos, loading, error, reload };
+  return { items, acuerdos: items, loading, error, reload };
 }
+
