@@ -43,7 +43,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [ALTO] Modelo de datos S3: colección `/propuestas` con subcolecciones `/respuestas` e `/hilos`.
 - [ ] [ALTO] Campos críticos: `activeObjectionsCount` y `responsibleIds[]`.
 - [ ] [ALTO] Wizard de creación sociocrática: tensión/driver → propuesta → ejecución y revisión.
-- [ ] [ALTO] Directorio de decisiones con filtros por estado y badge "requiere tu atención".
+- [x] [ALTO] Directorio de decisiones con filtros por estado y badge "requiere tu atención" (Sprint 06 — T-027).
 - [ ] [ALTO] Sala de deliberación con timeline S3 y visualización de participantes.
 - [ ] [ALTO] Modal inline con 4 opciones de respuesta S3 (Consentimiento ✅, Preocupación 💭, Duda ❓, Objeción ⛔).
 - [ ] [ALTO] Gestión de dudas y objeciones con hilos de aclaración.
