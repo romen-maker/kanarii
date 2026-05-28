@@ -14,13 +14,17 @@ description: Ritual de inicio de semana. Lee el roadmap, vacía el idea-inbox, g
 
 ## Pasos
 
-### 1. Detección de sesión colgada
-Antes de cualquier otra acción, ejecutar:
+### 1. Detección de sesión colgada y archivado de sprints completados
+
+Antes de cualquier otra acción, ejecutar en secuencia:
+
 ```bash
 bash scripts/agent/check-session.sh
+bash scripts/agent/close-sprint.sh --auto
 ```
-- Si devuelve `NO_ACTIVE_SESSION` → continuar.
-- Si devuelve un JSON → hay una sesión anterior sin cerrar. Ejecutar el **Modo Rescate** de `/session-start` antes de continuar con este workflow.
+
+- Si `check-session.sh` devuelve un JSON → hay una sesión anterior sin cerrar. Ejecutar el **Modo Rescate** de `/session-start` antes de continuar.
+- `close-sprint.sh --auto` detecta y archiva en `docs/sprints/_archived/` cualquier sprint cuyo estado sea `✅ Completado`. Si no hay ninguno, continúa sin error.
 
 ### 2. Lectura de estado (con script — no navegación manual)
 
@@ -32,6 +36,7 @@ bash scripts/agent/check-sprint.sh
 **Usar exclusivamente el output de este script como fuente de verdad.** No ejecutar `find`, `ls` ni leer sprint files manualmente para localizar el roadmap o el estado del sprint. El script ya resuelve rutas, conteo de tareas y advertencias.
 
 - Si el script devuelve `❌ CRÍTICO` en ROADMAP → detenerse. Informar al usuario y no continuar.
+- **Si hay alerta "SPRINT COMPLETADO SIN MARCAR"** → actualizar el estado del sprint anterior a `✅ Completado` antes de continuar. Esto es obligatorio.
 - Si hay entradas en `SPILLOVER` → ir al paso 2b.
 - Si el sistema está limpio → ir directamente al paso 3.
 
@@ -56,34 +61,42 @@ Al cerrar el sprint anterior:
 
 **El agente presenta la propuesta de decisión al usuario y espera confirmación antes de escribir nada.**
 
-### 2c. Verificación de código para tareas pendientes
+### 2c. Verificación de código — firewall anti-duplicación
 
 > Este paso se ejecuta siempre que haya tareas con estado ⬜ Pendiente o ⏸ Pausada,
 > tanto del sprint anterior como del roadmap candidatas al nuevo sprint.
-> Su objetivo es evitar planificar trabajo que ya está hecho en el código.
+> **Su objetivo: evitar que llegue al sprint trabajo que ya está hecho.**
+> Es el firewall principal antes de que una tarea entre al sprint.
 
 Para cada tarea candidata:
 
-1. Buscar en `src/` los símbolos, funciones, componentes o archivos relacionados
-   con la descripción de la tarea.
-2. Si existe task file en `.agents/tasks/` o `_archived/`, leer sus criterios de done
-   y verificar cuáles se cumplen en el código actual.
-3. Clasificar cada tarea:
+1. **Ejecutar inventory check:**
+   ```bash
+   bash scripts/agent/inventory-check.sh "keywords de la tarea"
+   ```
+   Extraer 2-4 keywords de la descripción (ej: `"timeline propuesta respuesta modal"`).
 
-| Resultado de la verificación | Acción |
+2. **Leer los archivos marcados con ⚠️** que devuelva el script (máx. 3-5).
+   - Si existe task file en `.agents/tasks/` o `_archived/`, leer sus criterios de done.
+   - Comparar qué funcionalidad ya está cubierta vs. qué describe la tarea.
+
+3. **Clasificar:**
+
+| Resultado | Acción |
 |---|---|
-| ✅ Ya implementada en código | Marcar como `✅ Hecho` en el sprint anterior; no arrastrar al nuevo sprint |
-| ⚠️ Parcialmente implementada | Tratar como avance 30–70% del paso 2b — preguntar al usuario |
-| ⬜ Sin implementar | Proceder normalmente como tarea pendiente |
+| ✅ >70% ya implementado | Marcar `✅ Hecho` en el sprint anterior; no arrastrar. Informar al usuario con evidencia de archivo. |
+| ⚠️ 30–70% implementado | Preguntar al usuario si refinar la tarea para lo que falta |
+| ⬜ <30% o sin implementar | Proceder normalmente |
 
-4. Presentar al usuario una tabla con el resultado de cada verificación,
-   incluyendo la evidencia de código (archivo y fragmento) que justifica la clasificación.
+4. **Presentar tabla al usuario** con: tarea, keywords buscadas, archivos encontrados, % estimado, acción propuesta.
+
 5. **Esperar confirmación del usuario antes de continuar al paso 3.**
 
-> ⚠️ Esta verificación es especialmente importante cuando hay commits recientes
-> sin task file asociado (trabajo ad-hoc, fixes rápidos o sesiones sin cerrar correctamente).
-> En ese caso, revisar también `git log --oneline -20` para detectar trabajo no documentado.
-> El script `check-sprint.sh` ya incluye los últimos 10 commits — úsalos como punto de partida.
+> ⚠️ Especialmente importante cuando hay commits recientes sin task file asociado.
+> El script `check-sprint.sh` incluye los últimos 10 commits — úsalos como punto de partida.
+
+> 💡 **Optimización de tokens:** El agente solo lee los archivos que devuelve el inventory check,
+> no navega `src/` manualmente. El script ya filtra por relevancia.
 
 ### 3. Vaciado de inboxes priorizando MVP
 Todo lo que se gestione en los inboxes ha de ser primero clasificado como MVP o post-MVP antes de introducirlo en el ROADMAP.md.
@@ -112,15 +125,26 @@ Para cada manifiesto listado, leer los campos Origen, ¿Qué hace?, Archivos que
 > Los archivos de `external-inbox/` no se mueven ni borran hasta que el usuario lo apruebe.
 
 #### 3b. idea-inbox (si hay entradas)
-Para cada archivo listado, clasificar cada idea en:
-- **roadmap** → añadir al ítem correspondiente en `ROADMAP.md` o crear ítem nuevo.
-- **backlog** → anotar en sección `## Backlog` del roadmap.
-- **descartar** → registrar como descartada con motivo en una línea.
+
+Para cada archivo listado:
+
+1. **Ejecutar inventory check ANTES de clasificar:**
+   ```bash
+   bash scripts/agent/inventory-check.sh "keywords de la idea"
+   ```
+   Si el script devuelve archivos con ⚠️ (>3 KB existentes):
+   - La idea **no puede clasificarse como "nueva tarea de implementación"**.
+   - Clasificar como `⚠️ Parcialmente implementada` y preguntar al usuario qué falta realmente.
+
+2. Clasificar cada idea en:
+   - **roadmap** → añadir al ítem correspondiente en `ROADMAP.md` o crear ítem nuevo.
+   - **backlog** → anotar en sección `## Backlog` del roadmap.
+   - **descartar** → registrar como descartada con motivo en una línea.
 
 #### Confirmación y escritura (una sola ronda)
-Presentar al usuario una tabla consolidada con todas las entradas de ambos inboxes y las acciones propuestas. 
+Presentar al usuario una tabla consolidada con todas las entradas de ambos inboxes y las acciones propuestas.
 
-**Esperar confirmación antes de escribir o archivar nada.** 
+**Esperar confirmación antes de escribir o archivar nada.**
 
 Una vez confirmado:
 - Aplicar todos los cambios en `ROADMAP.md`.

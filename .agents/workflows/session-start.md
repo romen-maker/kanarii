@@ -95,14 +95,19 @@ al final — es la señal que indica que el agente está en pausa activa:
 📋 TAREA: [nombre de la tarea]
 🌿 RAMA PROPUESTA: feat/T-XXX-descripcion-corta
 
-📂 ARCHIVOS LEÍDOS ANTES DE ESTA APROBACIÓN:
-  [COPIAR EXACTAMENTE desde CHECKPOINT LAZY-PLANNING en Fase 2.5]
-  ⚠️ Si este campo difiere del checkpoint de Fase 2.5, es una violación doble.
-     Detente, corrige el campo y espera nueva aprobación.
-
 📁 ARCHIVOS QUE SE VAN A MODIFICAR:
   - src/ruta/archivo1.ts  → [qué se cambia y por qué]
   - src/ruta/archivo2.tsx → [qué se cambia y por qué]
+
+🆕 ARCHIVOS NUEVOS A CREAR (firewall anti-sobreescritura):
+  Para cada archivo listado como nuevo, verificar existencia antes de continuar:
+  ```
+  test -f src/ruta/archivo.tsx && echo "⚠️ YA EXISTE" || echo "✅ NUEVO"
+  wc -c src/ruta/archivo.tsx 2>/dev/null || echo "0 bytes"
+  ```
+  ⛔ Si devuelve "⚠️ YA EXISTE" con > 500 bytes:
+     El plan DEBE cambiar "crear" por "extender/revisar".
+     Presentar nuevo plan corregido. No ejecutar el plan original.
 
 📌 PASOS DEL PLAN (en orden):
   1. [paso concreto]
@@ -131,7 +136,7 @@ prohibido de forma absoluta:
 - ❌ Ejecutar `git add`, `git commit`, `git push`
 - ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
 - ❌ Ejecutar comandos que escriban en disco
-- ❌ `Searched for`, `Listed directory` o `Viewed` en código fuente (`src/`, `lib/`) — ver regla lazy-planning en `caveman.md`
+- ❌ `Searched for`, `Listed directory` o `Viewed` en código fuente (`src/`, `lib/`)
 - ❌ `Listed directory` en `.agents/tasks/` o `.agents/tasks/_archived/`
 - ❌ Leer `task-YYY.md` donde `YYY ≠ XXX` (tarea activa)
 - ❌ Leer `SKILL.md`, `_template.md` u otros documentos de referencia estáticos
@@ -217,10 +222,9 @@ Mover ideas al sprint file solo si pertenecen a la tarea cerrada. Si la tarea se
 ### C5b. Archivado del research
 Solo si **todas** las tareas del sprint quedan `✅ Hecho`:
 ```bash
-mkdir -p docs/sprints/_archived
-mv docs/sprints/sprint-XX-research.md docs/sprints/_archived/sprint-XX-research.md
+bash scripts/agent/close-sprint.sh sprint-XX
 ```
-Si no, el research permanece en `docs/sprints/` para la próxima sesión.
+El script archiva el sprint file y su research asociado en `docs/sprints/_archived/`.
 
 ### C6. Borrar el lock
 El script `close-task.sh` lo elimina automáticamente. Si por algún motivo persiste:
