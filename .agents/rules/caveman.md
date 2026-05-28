@@ -115,30 +115,39 @@ Cuando la tarea activa esté completada (todos los criterios de done marcados):
 ### Regla
 Durante la **Fase 2 y Fase 3 de /session-start** (antes de recibir APROBADO), el agente infiere los archivos a modificar **exclusivamente desde la descripción del task file**. No es necesario leer ni buscar código para generar el plan.
 
-**Prohibido antes de APROBADO:**
-- ❌ `Searched for` en `src/`, `lib/` o cualquier directorio de código fuente
-- ❌ `Listed directory` en `src/` o subdirectorios de código
-- ❌ `Viewed` en archivos de código fuente (`*.ts`, `*.tsx`, `*.js`) salvo los citados explícitamente por el usuario
-- ❌ Leer `SKILL.md`, `_template.md`, `naming-convention.md` u otros documentos estáticos de referencia — su contenido debe ser conocimiento internalizado
-- ❌ Leer cualquier `.md` fuera de task file, sprint file o research file
+### Reglas operativas
 
-**Permitido antes de APROBADO:**
-- ✅ Leer el task file activo (`task-XXX.md`)
-- ✅ Leer el sprint file activo
-- ✅ Leer `docs/sprints/sprint-XX-research.md` si existe
-- ✅ Verificar existencia de un archivo con `test -f` (sin leer su contenido)
+**Durante las Fases 0–2 (antes del plan aprobado):**
+
+| | Acción | Detalle |
+|---|---|---|
+| ✅ | Leer SOLO el task file activo | `task-XXX.md` identificado en Fase 1 — ningún otro |
+| ✅ | Leer el sprint file correspondiente | ej: `sprint-07.md` |
+| ✅ | Leer research files citados | `sprint-XX-research.md` citado en el task file o sprint file |
+| ✅ | Verificar existencia con `test -f` | Sin leer contenido |
+| ❌ | Leer OTROS task files | `task-YYY.md` donde `YYY ≠ XXX` (la tarea activa) — aunque estén en `.agents/tasks/` |
+| ❌ | `Listed directory` en `.agents/tasks/` | Incluye `_archived/` y cualquier subdirectorio |
+| ❌ | `Listed directory` en `src/` o `lib/` | O cualquier directorio de código fuente |
+| ❌ | `Searched for` en `src/` o `lib/` | Búsqueda en código fuente |
+| ❌ | `Viewed` en archivos `.ts`/`.tsx`/`.js` | Salvo citados explícitamente por el usuario |
+| ❌ | Leer `SKILL.md`, `_template.md`, `naming-convention.md` | Su contenido es conocimiento internalizado |
+| ❌ | Leer cualquier `.md` fuera de task activo/sprint/research | Incluye otros task files del mismo sprint |
+| ❌ | `git show`, `git log`, `git diff` para leer contenido | Comandos que revelan código de commits |
+| ❌ | `firestore.rules`, `ROADMAP.md`, `package.json` no citados | Archivos de configuración fuera del scope |
+
+> ⚠️ **Advertencia explícita**: Leer `task-028.md`, `task-030.md` u otros task files del sprint antes de la aprobación del plan es una **violación lazy-planning**, aunque el motivo sea "entender contexto". El contexto de otras tareas no justifica la lectura anticipada.
 
 ### Excepción
 Si el task file menciona explícitamente un archivo y la descripción es ambigua sobre qué cambiar (ej: "refactorizar X para que haga Y" sin detallar la interfaz actual), el agente puede leer **solo ese archivo** y debe indicarlo: `"Leyendo [archivo] para clarificar la interfaz antes del plan."`
 
 ### Por qué
-El 80% de las búsquedas pre-aprobación son confirmaciones de información que ya está en el task file o que el agente puede inferir del stack conocido. Leer código antes de la aprobación gasta tokens en un escenario hipotético que el usuario puede rechazar.
+El 80% de las búsquedas pre-aprobación son confirmaciones de información que ya está en el task file o que el agente puede inferir del stack conocido. Leer código o task files ajenos antes de la aprobación gasta tokens en un escenario hipotético que el usuario puede rechazar.
 
 ### Mecanismo de control
 
 La regla lazy-planning se hace cumplir mediante dos checkpoints obligatorios en `/session-start`:
 
-1. **FASE 2.5 — Checkpoint lazy-planning**: Declaración explícita de qué archivos leyó el agente durante las Fases 0–2, incluyendo tanto código fuente (`.ts`/`.tsx`/`.js`) como documentos de referencia estáticos (`SKILL.md`, `_template.md`, cualquier `.md` fuera de task/sprint/research). Este checkpoint es **previo** al plan — el agente no puede generar el plan sin completarlo.
+1. **FASE 2.5 — Checkpoint lazy-planning**: Declaración explícita de qué archivos leyó el agente durante las Fases 0–2, incluyendo código fuente, documentos de referencia estáticos, y otros task files distintos al activo. Este checkpoint es **previo** al plan — el agente no puede generar el plan sin completarlo.
 2. **FASE 3.5 — Campo de auditoría**: El campo `📂 ARCHIVOS LEÍDOS` del plan debe ser una copia exacta de lo declarado en el checkpoint. Cualquier discrepancia entre ambos campos es una **violación doble**.
 
 **Consecuencias por tipo de violación:**
@@ -148,7 +157,7 @@ La regla lazy-planning se hace cumplir mediante dos checkpoints obligatorios en 
 | Checkpoint ausente | El agente saltó la Fase 2.5 | `"Checkpoint ausente. Repite Fase 2.5 con formato exacto."` | Retroceder a Fase 2.5, generar el bloque completo |
 | Formato incorrecto | El bloque existe pero difiere del template | `"Checkpoint inválido. Usa formato exacto."` | Regenerar el bloque con el formato correcto |
 | Violación doble | Campo de auditoría ≠ texto del checkpoint | `"Violación doble. Corrige para que sea idéntico."` | Corregir ambos campos antes de continuar |
-| Mentira declarativa | Marcó Opción A pero el log muestra `Viewed` en archivos prohibidos | `"Violación grave de protocolo. Aborta y reinicia /session-start."` | Detenerse, listar archivos realmente leídos, esperar instrucción |
+| Mentira declarativa | Marcó Opción A pero el log muestra `Viewed`/`Listed` en archivos prohibidos | `"Violación grave de protocolo. Aborta y reinicia /session-start."` | Detenerse, listar archivos realmente leídos, esperar instrucción |
 
 **Protocolo de respuesta ante violación:**
 1. **Usuario detecta violación** → usar la frase exacta de la tabla.

@@ -34,6 +34,8 @@ bash scripts/agent/check-session.sh
    No continuar hasta recibir respuesta explícita.
 3. Identificar primera tarea `⬜ Pendiente` o `⏸ Pausada`. Mostrar: `"Tarea activa: [T-XXX] — [descripción]"`.
 
+> ⚠️ **Una sola tarea activa por sesión.** El task file identificado aquí (ej: `task-029.md`) es el **ÚNICO** que puede leerse durante las Fases 0–2. Cualquier otro task file del sprint (`task-028.md`, `task-030.md`, etc.) está **prohibido** hasta después de la aprobación del plan. Leerlos antes constituye una **violación lazy-planning** aunque el motivo sea entender contexto.
+
 **Sin tareas pendientes:** mostrar y detenerse:
 ```
 ✅ Sprint XX completado. Ejecuta /sprint-planning para continuar. Cambia el selector de modelos a uno superior (Opus, Sonnet, Gemini Pro) y luego vuelve al Flash.
@@ -53,7 +55,14 @@ bash scripts/agent/check-session.sh
      - Error → volver a Fase 1.
    - No encontrado → crear con `doe-framework` desde `_template.md`.
 
-> 🔒 **LÍMITE FASE 2**: Solo leer documentos de planificación (sprint files, research, task files). **Prohibido leer, buscar o listar `src/`, `lib/` u otro directorio de código fuente** hasta aprobación en Fase 3.5. Esto incluye `Searched for`, `Listed directory` y `Viewed` sobre archivos `.ts`/`.tsx`/`.js`. También prohibido leer documentos de referencia estáticos: `SKILL.md`, `_template.md`, `naming-convention.md` u otros `.md` fuera de `docs/sprints/` y `.agents/tasks/`. Excepción: archivos citados explícitamente por el usuario en su petición, o verificación de existencia con `test -f` sin leer contenido.
+> 🔒 **LÍMITE FASE 2**: Solo leer documentos de planificación del task activo (sprint file, research, task file activo). **Prohibido:**
+> - Leer, buscar o listar `src/`, `lib/` u otro directorio de código fuente
+> - `Searched for`, `Listed directory` y `Viewed` sobre archivos `.ts`/`.tsx`/`.js`
+> - Leer documentos de referencia estáticos: `SKILL.md`, `_template.md`, `naming-convention.md` u otros `.md` fuera de `docs/sprints/` y `.agents/tasks/task-XXX.md`
+> - `Listed directory` en `.agents/tasks/` o `.agents/tasks/_archived/` — para verificar existencia usar `test -f` únicamente
+> - Leer cualquier `task-YYY.md` donde `YYY ≠ XXX` (tarea activa)
+>
+> Excepción: archivos citados explícitamente por el usuario en su petición, o verificación de existencia con `test -f` sin leer contenido.
 
 3. **Investigación previa:** buscar `docs/sprints/sprint-XX-research.md`.
    - Existe → integrar en `## Contexto técnico` del task file. Informar: `"📚 Research integrado."`
@@ -76,11 +85,13 @@ Mostrar exactamente este bloque y marcar UNA de las tres opciones:
 
 Durante las Fases 0–2, he leído los siguientes archivos prohibidos:
 
-[ ] OPCIÓN A — No leí NINGUNO de estos archivos:
+[ ] OPCIÓN A — No leí NINGUNO de estos archivos prohibidos:
     • Código fuente: .ts / .tsx / .js en src/ o lib/
     • Docs de referencia: SKILL.md, _template.md, naming-convention.md
-    • Otros .md fuera de task file, sprint file o research file
-    → Plan inferido exclusivamente desde task file + sprint file + research.
+    • Otros task files: task-YYY.md donde YYY ≠ XXX (tarea activa)
+    • Otros .md fuera de task file activo, sprint file o research file
+    • Comandos: Listed directory en .agents/tasks/, git show, git log
+    → Plan inferido exclusivamente desde task file activo + sprint file + research.
 
 [ ] OPCIÓN B — Leí estos archivos (excepción: usuario los citó explícitamente
     o están referenciados en el task file):
@@ -105,7 +116,7 @@ Durante las Fases 0–2, he leído los siguientes archivos prohibidos:
 
 > 🔒 **Regla dura**: Omitir este checkpoint o declarar Opción A/B cuando la realidad es C constituye una **violación doble**. El campo de auditoría en Fase 3.5 debe coincidir exactamente con lo declarado aquí — cualquier discrepancia es detectable.
 
-> 💡 **Nota para el usuario**: Si el checkpoint no aparece, el formato difiere significativamente del especificado arriba, o el agente leyó `SKILL.md` / `_template.md` sin declararlos, señala: `"Checkpoint inválido. Repite Fase 2.5 con formato exacto."`
+> 💡 **Nota para el usuario**: Si el checkpoint no aparece, el formato difiere significativamente del especificado arriba, o el agente leyó `task-YYY.md` / `SKILL.md` / `_template.md` sin declararlos, señala: `"Checkpoint inválido. Repite Fase 2.5 con formato exacto."`
 
 ---
 
@@ -169,9 +180,11 @@ prohibido de forma absoluta:
 - ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
 - ❌ Ejecutar comandos que escriban en disco
 - ❌ `Searched for`, `Listed directory` o `Viewed` en código fuente (`src/`, `lib/`) — ver regla lazy-planning en `caveman.md`
+- ❌ `Listed directory` en `.agents/tasks/` o `.agents/tasks/_archived/`
+- ❌ Leer `task-YYY.md` donde `YYY ≠ XXX` (tarea activa)
 - ❌ Leer `SKILL.md`, `_template.md` u otros documentos de referencia estáticos
 
-✅ Está permitido leer el task file, el sprint file y el research file. Para construir el plan, inferir desde la descripción del task file sin explorar código.
+✅ Está permitido leer **exclusivamente** el task file activo (`task-XXX.md`), el sprint file y el research file. Para construir el plan, inferir desde la descripción del task file sin explorar código ni otros task files.
 
 Si el agente detecta que ha ejecutado cualquier acción operativa sin haber
 recibido `APROBADO`, debe:
