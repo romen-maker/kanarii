@@ -4,6 +4,9 @@ import { Propuesta } from '../lib/appService';
 
 interface S3TimelineProps {
   propuesta: Propuesta;
+  consentimientos?: number;
+  objeciones?: number;
+  dudas?: number;
 }
 
 type S3Step = {
@@ -16,12 +19,18 @@ type S3Step = {
 const S3_STEPS: S3Step[] = [
   { id: 'abierta', label: 'Deliberación', description: 'Ronda de preguntas y consentimiento', icon: Gavel },
   { id: 'en_objeciones', label: 'Objeciones', description: 'Evaluación de argumentos de daño', icon: AlertCircle },
-  { id: 'integrando', label: 'Integración', description: 'Búsqueda de solución creativa', icon: RefreshCw },
+  { id: 'integrando', label: 'Integración', description: 'Búsqueda de solution creativa', icon: RefreshCw },
   { id: 'acordada', label: 'Acuerdo', description: 'Celebración y compromiso', icon: CheckCircle2 }
 ];
 
-export const S3Timeline: React.FC<S3TimelineProps> = ({ propuesta }) => {
+export const S3Timeline: React.FC<S3TimelineProps> = ({ 
+  propuesta,
+  consentimientos,
+  objeciones,
+  dudas
+}) => {
   const currentStepIndex = S3_STEPS.findIndex(s => s.id === propuesta.status);
+
   const isDiscarded = propuesta.status === 'descartada';
 
   return (
@@ -60,6 +69,25 @@ export const S3Timeline: React.FC<S3TimelineProps> = ({ propuesta }) => {
                 </div>
 
                 <div className="pt-1.5 pb-2">
+                  {isCurrent && (consentimientos !== undefined || objeciones !== undefined || dudas !== undefined) && (
+                    <div className="flex flex-wrap gap-2 mb-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                      {consentimientos !== undefined && consentimientos > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700">
+                          {consentimientos} {consentimientos === 1 ? 'consentimiento' : 'consentimientos'}
+                        </span>
+                      )}
+                      {objeciones !== undefined && objeciones > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-rose-700">
+                          {objeciones} {objeciones === 1 ? 'objeción' : 'objeciones'}
+                        </span>
+                      )}
+                      {dudas !== undefined && dudas > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 border border-sky-100 text-sky-700">
+                          {dudas} {dudas === 1 ? 'duda' : 'dudas'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <p className={`text-sm font-black uppercase tracking-widest ${isCurrent ? 'text-stone-800' : 'text-stone-400'}`}>
                     {step.label}
                   </p>
