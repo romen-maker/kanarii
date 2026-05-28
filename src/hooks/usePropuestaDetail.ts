@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Propuesta, 
   PropuestaRespuesta, 
@@ -8,6 +8,7 @@ import {
   listenPropuestaHilos
 } from '../lib/appService';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 
 /**
  * Hook para gestionar el detalle de una propuesta específica y sus subcolecciones.
@@ -17,9 +18,14 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
   const [respuestas, setRespuestas] = useState<PropuestaRespuesta[]>([]);
   const [hilos, setHilos] = useState<PropuestaHilo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRespuestas, setLoadingRespuestas] = useState(true);
+  const [loadingHilos, setLoadingHilos] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [version, setVersion] = useState(0);
   const { appUser } = useAuth();
+  const { currentCommunityId } = useComunidad();
+
+  const activeCommunityId = communityId || currentCommunityId;
 
   const reload = useCallback(() => {
     setVersion(v => v + 1);
@@ -28,23 +34,17 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
   useEffect(() => {
     if (!propuestaId) return;
     setLoading(true);
-
-    const activeCommunityId = communityId || appUser?.communityId;
+    setLoadingRespuestas(true);
+    setLoadingHilos(true);
+    setError(null);
 
     // 1. Suscripción a la propuesta (doc principal)
     const unsubProp = listenPropuesta(
       propuestaId, 
       (propuestaData) => {
         if (propuestaData) {
-          if (activeCommunityId && propuestaData.communityId !== activeCommunityId) {
-            setError(new Error('La propuesta no pertenece a tu comunidad activa'));
-            setPropuesta(null);
-          } else {
-            setPropuesta(propuestaData);
-            setError(null);
-          }
+          setPropuesta(propuestaData);
         } else {
-          setError(new Error('La propuesta no existe'));
           setPropuesta(null);
         }
         setLoading(false);
@@ -60,9 +60,11 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
       propuestaId, 
       (data) => {
         setRespuestas(data);
+        setLoadingRespuestas(false);
       },
       (err) => {
         setError(err);
+        setLoadingRespuestas(false);
       }
     );
 
@@ -71,9 +73,11 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
       propuestaId, 
       (data) => {
         setHilos(data);
+        setLoadingHilos(false);
       },
       (err) => {
         setError(err);
+        setLoadingHilos(false);
       }
     );
 
@@ -82,14 +86,33 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
       unsubRes();
       unsubHilos();
     };
-  }, [propuestaId, communityId, appUser?.communityId, version]);
+  }, [propuestaId, version]);
+
+  // Validación dinámica de la comunidad mediante useMemo para evitar falsos positivos
+  // Solo validamos cuando appUser está completamente cargado y posee comunidad
+  const isWrongCommunity = useMemo(() => {
+    if (!propuesta || !appUser || !activeCommunityId) return false;
+    return propuesta.communityId !== activeCommunityId;
+  }, [propuesta, appUser, activeCommunityId]);
+  
+  let hookError = error;
+  if (!loading && !error) {
+    if (!propuesta) {
+      hookError = new Error('La propuesta no existe');
+    } else if (isWrongCommunity) {
+      hookError = new Error('La propuesta no pertenece a tu comunidad activa');
+    }
+  }
 
   return {
-    propuesta,
+    propuesta: isWrongCommunity ? null : propuesta,
     respuestas,
     hilos,
     loading,
-    error,
+    loadingRespuestas,
+    loadingHilos,
+    error: hookError,
     reload
   };
 }
+

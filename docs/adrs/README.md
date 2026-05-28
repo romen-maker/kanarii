@@ -17,3 +17,5 @@ Este directorio contiene el registro de las decisiones de diseño arquitectónic
 | [ADR-009](ADR-009-client-side-s3-transitions.md) | Client-side vs Cloud Functions para transiciones S3 | Accepted | 2026-05-27 |
 | [ADR-010](ADR-010-resolucion-objeciones-retira.md) | Modelo de resolución de objeciones — "Objetor retira" | Accepted | 2026-05-27 |
 | [ADR-011](ADR-011-pasaporte-comunitario-equivalencia.md) | Pasaporte Comunitario — Principio de Equivalencia en UI | Accepted | 2026-05-27 |
+| [ADR-012](ADR-012-fuente-de-verdad-comunidad-activa.md) | Fuente de Verdad para la Comunidad Activa del Usuario | Accepted | 2026-05-28 |
+

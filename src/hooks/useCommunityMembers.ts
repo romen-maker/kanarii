@@ -6,11 +6,13 @@ import {
   CommunityMember 
 } from '../lib/appService';
 
+export type { CommunityMember };
+
 /**
  * Hook para gestionar la lista de miembros de la comunidad en tiempo real.
  * [MANDATO DRY] Centraliza la resolución de nombres y cumple el contrato estándar.
  */
-export function useCommunityMembers(communityId?: string) {
+export function useCommunityMembers(communityId?: string | null) {
   const { items: members, loading, error, reload } = useFirestoreCollection<CommunityMember>(
     (onData, onError) => {
       if (!communityId) {
