@@ -26,4 +26,4 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-05-28T16:31:11+01:00
 - [x] Rama creada: feat/T-031-maquina-estados-s3
 - [x] Lock activo: true
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
