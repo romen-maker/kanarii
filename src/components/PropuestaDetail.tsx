@@ -3,6 +3,7 @@ import { Propuesta, PropuestaRespuesta, PropuestaHilo } from '../lib/appService'
 import { usePropuestaDetail } from '../hooks/usePropuestaDetail';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { usePropuestaActions } from '../hooks/usePropuestaActions';
+import { usePresenciaEnSala } from '../hooks/usePresenciaEnSala';
 import { ResponseModal } from './ResponseModal';
 import { S3Timeline } from './S3Timeline';
 import { ConsentGrid } from './ConsentGrid';
@@ -25,6 +26,7 @@ export function PropuestaDetail({
   onResponseClick
 }: PropuestaDetailProps) {
   const { propuesta, respuestas, hilos, loading, error, isAuthor } = usePropuestaDetail(propuestaId);
+  const { participantes } = usePresenciaEnSala(propuestaId);
   const { members } = useCommunityMembers(propuesta?.communityId ?? null);
   const { integrateObjeciones } = usePropuestaActions();
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -193,6 +195,17 @@ export function PropuestaDetail({
                             members={members}
                           />
                         )}
+                        {r.type === 'objecion' && (
+                          <ClarificationThread
+                            propuestaId={propuestaId}
+                            relatedResponseId={r.memberId}
+                            propuestaAuthorId={propuesta.authorId}
+                            hilos={hilos.filter(h => h.relatedMemberId === r.memberId)}
+                            currentUserId={currentUserId}
+                            members={members}
+                            responseType="objecion"
+                          />
+                        )}
                         {r.type === 'duda' && r.memberId === currentUserId && (
                           <div className="mt-2 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex justify-between items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                             <p className="text-xs text-sky-700">
@@ -213,7 +226,35 @@ export function PropuestaDetail({
               </div>
             )}
 
-            <S3Timeline propuesta={propuesta} />
+            {participantes.length > 0 && (
+              <div className="flex items-center gap-3 bg-white/50 border border-[#EAE2D6] p-3 rounded-2xl animate-in fade-in duration-300">
+                <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">En sala ahora:</span>
+                <div className="flex -space-x-2 overflow-hidden">
+                  {participantes.map((p) => (
+                    <div key={p.uid} className="relative inline-block" title={p.nombre}>
+                      {p.photoURL ? (
+                        <img
+                          className="h-7 w-7 rounded-full ring-2 ring-white object-cover"
+                          src={p.photoURL}
+                          alt={p.nombre}
+                        />
+                      ) : (
+                        <div className="h-7 w-7 rounded-full ring-2 ring-white bg-stone-300 flex items-center justify-center text-[9px] font-bold text-stone-600 uppercase">
+                          {p.nombre.slice(0, 2)}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <S3Timeline 
+              propuesta={propuesta}
+              consentimientos={respuestas.filter(r => r.type === 'consentimiento').length}
+              objeciones={respuestas.filter(r => r.type === 'objecion').length}
+              dudas={respuestas.filter(r => r.type === 'duda').length}
+            />
           </section>
         </div>
 

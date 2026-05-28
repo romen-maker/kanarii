@@ -351,5 +351,12 @@ export interface FeedbackSalida {
   communityId: string;
   motivo: string;
   comentario?: string;
-  fecha: any;
 }
+
+export interface PresenciaParticipante {
+  uid: string;
+  nombre: string;
+  photoURL?: string;
+  entradaEn: any;
+}
+

@@ -6,11 +6,12 @@ import { es } from 'date-fns/locale';
 
 interface ClarificationThreadProps {
   propuestaId: string;
-  relatedResponseId: string; // memberId de la duda
+  relatedResponseId: string; // memberId de la duda u objeción
   propuestaAuthorId: string;
   hilos: PropuestaHilo[];
   currentUserId: string;
   members: CommunityMember[];
+  responseType?: 'duda' | 'objecion';
 }
 
 export function ClarificationThread({
@@ -19,7 +20,8 @@ export function ClarificationThread({
   propuestaAuthorId,
   hilos,
   currentUserId,
-  members
+  members,
+  responseType = 'duda'
 }: ClarificationThreadProps) {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -37,7 +39,7 @@ export function ClarificationThread({
         authorId: currentUserId,
         content: newMessage.trim(),
         relatedMemberId: relatedResponseId,
-        hiloType: 'duda',
+        hiloType: responseType,
         createdAt: null
       });
       setNewMessage('');
@@ -62,10 +64,14 @@ export function ClarificationThread({
     <div className="mt-3 bg-stone-100/50 border border-stone-200/60 rounded-2xl p-4 ml-6 space-y-4 animate-in fade-in duration-300">
       <div className="flex items-center justify-between border-b border-stone-200/50 pb-2">
         <h5 className="text-[10px] font-black text-stone-500 uppercase tracking-widest">
-          Hilo de Aclaración
+          {responseType === 'objecion' ? 'Resolución de Objeción' : 'Hilo de Aclaración'}
         </h5>
-        <span className="text-[9px] bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-          Duda
+        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+          responseType === 'objecion' 
+            ? 'bg-rose-100 text-rose-700' 
+            : 'bg-sky-100 text-sky-700'
+        }`}>
+          {responseType === 'objecion' ? 'Objeción' : 'Duda'}
         </span>
       </div>
 
@@ -135,7 +141,11 @@ export function ClarificationThread({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             disabled={sending}
-            placeholder="Aclara o pregunta sobre esta duda..."
+            placeholder={
+              responseType === 'objecion'
+                ? 'Propón mejoras o debate sobre esta objeción...'
+                : 'Aclara o pregunta sobre esta duda...'
+            }
             className="flex-1 px-4 py-2 text-xs bg-white border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-[#4A4E4D]/10 focus:border-[#4A4E4D] transition-all"
           />
           <button
@@ -149,7 +159,7 @@ export function ClarificationThread({
       ) : (
         <div className="pt-2 border-t border-stone-200/40 text-center">
           <p className="text-[9px] text-stone-400 italic">
-            Solo el autor de la propuesta y quien planteó la duda pueden responder en este hilo.
+            Solo el autor de la propuesta y quien planteó la {responseType === 'objecion' ? 'objeción' : 'duda'} pueden responder en este hilo.
           </p>
         </div>
       )}
