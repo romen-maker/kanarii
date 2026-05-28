@@ -86,6 +86,11 @@ al final — es la señal que indica que el agente está en pausa activa:
 📋 TAREA: [nombre de la tarea]
 🌿 RAMA PROPUESTA: feat/T-XXX-descripcion-corta
 
+📂 ARCHIVOS LEÍDOS ANTES DE ESTA APROBACIÓN:
+  - [lista de archivos .ts/.tsx/.js leídos, o "Ninguno — plan inferido desde task file"]
+  ⚠️ Si este campo lista algún archivo fuera de task file, sprint file o research file,
+     es una violación lazy-planning. Señálalo explícitamente al usuario.
+
 📁 ARCHIVOS QUE SE VAN A MODIFICAR:
   - src/ruta/archivo1.ts  → [qué se cambia y por qué]
   - src/ruta/archivo2.tsx → [qué se cambia y por qué]
