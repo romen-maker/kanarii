@@ -6,7 +6,7 @@
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-028 | Limpiar contexto de comunidad activa al logout (evitar acceso residual multi-comunidad) | S | ⬜ Pendiente | — |
+| T-028 | Limpiar contexto de comunidad activa al logout (evitar acceso residual multi-comunidad) | S | ✅ Completada | [.agents/tasks/task-028.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-028.md) |
 | T-029 | Generalizar validación de `communityId` a todos los hooks de entidad | M | ⬜ Pendiente | — |
 | T-030 | Fix bug carga infinita "Cargando deliberación" para el perfil de Abián en Gobernanza | S | ✅ Completada | [.agents/tasks/task-030.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-030.md) |
 | T-031 | Máquina de estados S3: transición a integrando solo manual por autor; pase automático a en_objeciones | M | ⬜ Pendiente | — |

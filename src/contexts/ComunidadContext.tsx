@@ -68,7 +68,18 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Sincronizar con el perfil del usuario (multi-membership)
   useEffect(() => {
-    if (!appUser) return;
+    if (!appUser) {
+      setCurrentCommunityId('');
+      setComunidad(null);
+      try {
+        sessionStorage.removeItem('kanarii_current_community_id');
+      } catch (e) {}
+      try {
+        localStorage.removeItem('kanarii_current_community_id');
+      } catch (e) {}
+      prevCommunityIdsRef.current = [];
+      return;
+    }
 
     const ids = appUser.communityIds || [];
 
