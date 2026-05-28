@@ -28,13 +28,15 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (Sprint 05 — T-018)
 - [x] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks (Sprint 05 — T-021)
 - [x] Permisos de edición de eventos en Calendario: solo el autor del evento o un admin pueden editarlo (Sprint 06 — T-025)
+- [x] Limpiar contexto de comunidad activa al logout (Sprint 07 — T-028)
+- [x] Generalizar validación de `communityId` a todos los hooks de entidad (Sprint 07 — T-029)
+- [x] Fix bug carga infinita "Cargando deliberación" para el perfil de Abián en Gobernanza (Sprint 07 — T-030)
+- [x] Máquina de estados S3: transición a integrando solo manual por autor; pase automático a en_objeciones (Sprint 07 — T-031)
 
 ---
 
 ## 🚨 Seguridad y confianza
-- [ ] [MEDIO] Limpiar contexto de comunidad activa al logout (evitar acceso residual multi-comunidad) (T-028).
-- [ ] [MEDIO] Generalizar validación de `communityId` a todos los hooks de entidad (más allá de `usePropuestaDetail`) (T-029).
-- [ ] [ALTO] Fix bug carga infinita "Cargando deliberación" para el perfil de Abián en Gobernanza (T-030).
+- [ ] [ALTO] Fix bug fallback de currentCommunityId a 'arteara' en cookies bloqueadas / Safari (T-032).
 
 ---
 
@@ -48,7 +50,6 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [ALTO] Sala de deliberación con timeline S3 y visualización de participantes.
 - [ ] [ALTO] Modal inline con 4 opciones de respuesta S3 (Consentimiento ✅, Preocupación 💭, Duda ❓, Objeción ⛔).
 - [ ] [ALTO] Gestión de dudas y objeciones con hilos de aclaración.
-- [ ] [ALTO] Máquina de estados S3: transición a integrando solo manual por autor; pase automático a en_objeciones (T-031).
 - [ ] [MEDIO] Estado visual de "acuerdo cálido" con `reviewDate`.
 - [ ] [BAJO] Estandarizar campo `reason` a `purpose` en colección `/propuestas`.
 
@@ -96,7 +97,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Registro de contribuciones y balance visible.
 - [ ] [MEDIO] Badge nav para solicitante en acuerdos (en progreso — incluir acuerdos donde eres `solicitanteId` con status cambiado).
 - [ ] [MEDIO] Sistema leído/no leído en acuerdos: campo `vistoPorSolicitante: boolean`, batch update al entrar a "Mis Acuerdos", badge desaparece solo al ver el cambio.
-- [ ] [MEDIO] Sistema de badges reactivos (patrón DRY) para Gobernanza, Tareas (asignadas sin completar) y Calendario (eventos próximos sin confirmar). Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
+- [ ] [MEDIO] Sistema de badges reactivos (patrón DRY) para Gobernanza (notificar miembros sin posición registrada en propuestas activas), Tareas (asignadas sin completar) y Calendario (eventos próximos sin confirmar). Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
 - [ ] [ALTO] Pasaporte Comunitario: vista pública del perfil como pasaporte, con Triada Comunitaria (ofrendas/saberes/necesidades), sin jerarquías visibles ni contadores numéricos (T-022).
 - [ ] [ALTO] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (T-026).
 - [ ] [MEDIO] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (T-024).
