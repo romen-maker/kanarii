@@ -174,10 +174,11 @@ export async function registerPropuestaResponse(
       updateData.caducadaReason = 'falta_quorum';
     }
     // D) Transiciones normales de estado
-    else if (respuesta.type === 'objecion' && propData.status === 'abierta') {
+    else if (respuesta.type === 'objecion' && (propData.status === 'abierta' || propData.status === 'integrando')) {
       updateData.status = 'en_objeciones';
+      updateData.previousStatus = propData.status;
     } else if (oldType === 'objecion' && respuesta.type !== 'objecion' && nextCount === 0 && propData.status === 'en_objeciones') {
-      updateData.status = 'abierta';
+      updateData.status = (propData as any).previousStatus === 'integrando' ? 'integrando' : 'abierta';
     }
 
     batch.update(propRef, updateData);
