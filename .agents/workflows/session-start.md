@@ -63,6 +63,48 @@ bash scripts/agent/check-session.sh
 
 ---
 
+## FASE 2.5 — Checkpoint lazy-planning (OBLIGATORIO Y BLOQUEANTE)
+
+Antes de generar el plan, el agente DEBE detenerse y declarar explícitamente qué leyó durante las Fases 0–2. Este bloque es **previo** al plan — no se puede generar el plan sin completarlo primero.
+
+Mostrar exactamente este bloque y marcar UNA de las tres opciones:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CHECKPOINT LAZY-PLANNING — T-XXX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Durante las Fases 0–2, he leído los siguientes archivos de código fuente
+(.ts / .tsx / .js en src/ o lib/):
+
+[ ] OPCIÓN A — No leí ningún archivo de código fuente.
+    Plan inferido desde task file y documentos de planificación.
+
+[ ] OPCIÓN B — Leí estos archivos (excepción permitida por el usuario
+    o citados explícitamente en el task file):
+    - [archivo 1]
+    - [archivo 2]
+
+[ ] OPCIÓN C — Leí estos archivos SIN que estuviera permitido (VIOLACIÓN):
+    - [archivo 1]
+    - [archivo 2]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Consecuencias por opción
+
+- **Opción A o B** → continuar a Fase 3.
+- **Opción C — VIOLACIÓN DETECTADA:**
+  1. ⚠️ Reportar: `"VIOLACIÓN LAZY-PLANNING: leí [archivos] sin autorización durante la fase de planificación."`
+  2. **DETENTE.** No generar el plan.
+  3. Esperar instrucción del usuario: continuar con advertencia registrada, o abortar la sesión.
+  4. Si el usuario autoriza continuar → registrar la violación en el task file bajo `## Notas de sesión` antes de proceder.
+
+> 🔒 **Regla dura**: Omitir este checkpoint o declarar Opción A/B cuando la realidad es C constituye una **violación doble**. El campo de auditoría en Fase 3.5 debe coincidir exactamente con lo declarado aquí — cualquier discrepancia es detectable.
+
+---
+
 ## FASE 3 — Declaración de la Caja
 
 1. Leer `## Caja de archivos` del task file y mostrar archivos autorizados.
@@ -87,9 +129,9 @@ al final — es la señal que indica que el agente está en pausa activa:
 🌿 RAMA PROPUESTA: feat/T-XXX-descripcion-corta
 
 📂 ARCHIVOS LEÍDOS ANTES DE ESTA APROBACIÓN:
-  - [lista de archivos .ts/.tsx/.js leídos, o "Ninguno — plan inferido desde task file"]
-  ⚠️ Si este campo lista algún archivo fuera de task file, sprint file o research file,
-     es una violación lazy-planning. Señálalo explícitamente al usuario.
+  [COPIAR EXACTAMENTE desde CHECKPOINT LAZY-PLANNING en Fase 2.5]
+  ⚠️ Si este campo difiere del checkpoint de Fase 2.5, es una violación doble.
+     Detente, corrige el campo y espera nueva aprobación.
 
 📁 ARCHIVOS QUE SE VAN A MODIFICAR:
   - src/ruta/archivo1.ts  → [qué se cambia y por qué]

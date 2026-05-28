@@ -132,3 +132,28 @@ Si el task file menciona explícitamente un archivo y la descripción es ambigua
 
 ### Por qué
 El 80% de las búsquedas pre-aprobación son confirmaciones de información que ya está en el task file o que el agente puede inferir del stack conocido. Leer código antes de la aprobación gasta tokens en un escenario hipotético que el usuario puede rechazar.
+
+### Mecanismo de control
+
+La regla lazy-planning se hace cumplir mediante dos checkpoints obligatorios en `/session-start`:
+
+1. **FASE 2.5 — Checkpoint lazy-planning**: Declaración explícita de qué archivos de código fuente se leyeron durante las Fases 0–2, usando el formato de tres opciones (A / B / C). Este checkpoint es **previo** al plan — el agente no puede generar el plan sin completarlo.
+2. **FASE 3.5 — Campo de auditoría**: El campo `📂 ARCHIVOS LEÍDOS` del plan debe ser una copia exacta de lo declarado en el checkpoint. Cualquier discrepancia entre ambos campos es una **violación doble**.
+
+**Consecuencias por tipo de violación:**
+
+| Tipo | Qué ocurrió | Protocolo |
+|---|---|---|
+| Violación simple | El agente leyó código fuente sin autorización (Opción C) | Detener, reportar, esperar instrucción del usuario |
+| Violación doble | El campo de auditoría no coincide con el checkpoint | Detener, corregir ambos campos, esperar nueva aprobación |
+| Omisión de checkpoint | El agente saltó la Fase 2.5 | Reportar como violación doble, retroceder a Fase 2.5 |
+
+**Si el usuario detecta una violación:**
+1. Señalarla explícitamente al agente.
+2. El agente debe detenerse, listar los archivos realmente leídos y corregir ambos campos.
+3. El usuario decide: continuar con la violación registrada en el task file, o abortar la sesión.
+
+> 🔍 Para verificar manualmente si hubo violación, ejecuta:
+> ```bash
+> bash scripts/agent/check-lazy-planning.sh
+> ```

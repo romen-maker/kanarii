@@ -51,6 +51,17 @@ Antes de llamar al script de cierre, edita manualmente:
 1. **`docs/sprints/sprint-XX.md`** — marca la tarea como `✅ Completada`.
 2. **`.agents/tasks/task-XXX.md`** — marca el criterio `- [ ] Sesión cerrada correctamente` como `- [x]`.
 
+**Verificación lazy-planning:** Antes de ejecutar el script, confirma que el campo
+`📂 ARCHIVOS LEÍDOS` del plan aprobado (Fase 3.5) coincide con el checkpoint
+lazy-planning declarado en Fase 2.5. Si hubo una violación no resuelta, añádela
+como nota en el task file bajo `## Notas de sesión` antes de archivar:
+
+```markdown
+## Notas de sesión
+- ⚠️ VIOLACIÓN LAZY-PLANNING: se leyeron [archivos] sin autorización previa.
+  Continuó con autorización del usuario en [fecha].
+```
+
 No ejecutes `git add` ni `git status` manualmente. El script lo gestiona.
 
 ### 3. Cierre atómico con script
