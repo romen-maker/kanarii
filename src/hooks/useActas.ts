@@ -10,23 +10,33 @@ export function useActas(communityId?: string) {
 
   // Si no hay appUser o communityId activo, devolvemos vacío
   const activeCommunityId = communityId || appUser?.communityId;
+  const hasAccess = Boolean(appUser && activeCommunityId);
 
   const { items, loading, error, reload } = useFirestoreCollection<Acta>(
     (onData, onError) => {
-      if (!appUser || !activeCommunityId) {
+      if (!hasAccess) {
         onData([]);
         return () => {};
       }
 
       return subscribeToCollection(
-        getActasQuery(activeCommunityId),
+        getActasQuery(activeCommunityId!),
         onData,
         'actas',
         onError
       );
     },
-    [appUser, activeCommunityId]
+    [appUser, activeCommunityId, hasAccess]
   );
+
+  if (!hasAccess) {
+    return {
+      items: [],
+      loading: false,
+      error: null,
+      reload: () => {}
+    };
+  }
 
   return { 
     items,
