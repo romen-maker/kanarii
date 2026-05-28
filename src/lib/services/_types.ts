@@ -129,10 +129,17 @@ export interface DatosOnboarding {
   plataformaOrigen?: string;
 }
 
+export interface TriadaComunitaria {
+  ofrendas: string[];    // Lo que doy a la comunidad
+  saberes: string[];     // Conocimientos y habilidades (migrado desde saberes: string)
+  necesidades: string[]; // Lo que necesito de la comunidad
+}
+
 export interface Ficha {
   id?: string;
   userId: string;
   datosOnboarding: DatosOnboarding;
+  triada?: TriadaComunitaria;
   manualGenerado?: string;
   manualMarkdown?: string;
   fechaGeneracion?: any;
@@ -144,6 +151,36 @@ export interface Ficha {
   datosBrutos?: any;
   datosPersona?: any;
   perfilVisual?: any;
+}
+
+export function getTriadaFromFicha(ficha: Ficha | null | undefined): TriadaComunitaria {
+  if (!ficha) {
+    return {
+      ofrendas: [],
+      saberes: [],
+      necesidades: []
+    };
+  }
+  if (ficha.triada) {
+    return {
+      ofrendas: ficha.triada.ofrendas || [],
+      saberes: ficha.triada.saberes || [],
+      necesidades: ficha.triada.necesidades || []
+    };
+  }
+
+  // Fallback / Migración on-read para datos legacy
+  const saberesLegacy = ficha.datosOnboarding?.saberes || '';
+  const saberesArray = saberesLegacy
+    .split(/[,\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  return {
+    ofrendas: [],
+    saberes: saberesArray,
+    necesidades: []
+  };
 }
 
 export interface CommunityMember {

@@ -20,7 +20,7 @@ import {
   collection
 } from './_core';
 
-import { Ficha, DatosOnboarding } from './_types';
+import { Ficha, DatosOnboarding, TriadaComunitaria } from './_types';
 import { handleFirestoreError, OperationType } from '../error-handler';
 
 /**
@@ -155,7 +155,7 @@ export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record
   return { escucha, accion, estructura, cuidado };
 }
 
-export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string, skipGemini: boolean = false) {
+export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string, skipGemini: boolean = false, triada?: TriadaComunitaria) {
   const isUpdate = !!existingId;
   const docRefId = existingId || userId; // enforcing userId as the document id
   try {
@@ -285,6 +285,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         hora: horaVal,
         hora_aproximada: isHoraAproximada
       },
+      triada: triada || null,
       estado,
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp(),

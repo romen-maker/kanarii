@@ -6,11 +6,13 @@ import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, Histor
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha, saveManual, DatosOnboarding, getComunidades, Comunidad } from '../lib/appService';
+import { saveFicha, saveManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha } from '../lib/appService';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
 import { useComunidadActions } from '../hooks/useComunidadActions';
+import { useTagArray } from '../hooks/useTagArray';
+import { TagArrayEditor } from '../components/ui/TagArrayEditor';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -67,6 +69,20 @@ export function FichaView() {
 
   const displayFicha = localFicha || ficha;
   const datos = getDatosPersona(displayFicha);
+  const triada = getTriadaFromFicha(displayFicha);
+
+  const ofrendasState = useTagArray([]);
+  const saberesState = useTagArray([]);
+  const necesidadesState = useTagArray([]);
+
+  useEffect(() => {
+    if (displayFicha) {
+      const triadaObj = getTriadaFromFicha(displayFicha);
+      ofrendasState.setTags(triadaObj.ofrendas || []);
+      saberesState.setTags(triadaObj.saberes || []);
+      necesidadesState.setTags(triadaObj.necesidades || []);
+    }
+  }, [displayFicha]);
 
   const handleVerificarUbicacion = async () => {
     const lugarStr = getValues("lugar");
@@ -145,8 +161,20 @@ export function FichaView() {
 
   const onSubmit = async (data: FichaFormData) => {
     if (!appUser || !displayFicha?.id) return;
-    await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id, true);
-    setLocalFicha({ ...displayFicha, datosPersona: data, datosOnboarding: undefined });
+    
+    const triadaObj = {
+      ofrendas: ofrendasState.tags,
+      saberes: saberesState.tags,
+      necesidades: necesidadesState.tags
+    };
+
+    await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id, true, triadaObj);
+    setLocalFicha({ 
+      ...displayFicha, 
+      datosPersona: data, 
+      datosOnboarding: undefined,
+      triada: triadaObj
+    });
     setEditing(false);
     if (displayFicha?.manualGenerado) {
       setFichaEditadaDesdeGeneracion(true);
@@ -253,15 +281,66 @@ export function FichaView() {
                   </div>
                 </div>
 
-                {/* 2. Ikigai comunitario */}
-                <div className="space-y-4">
+                {/* 2. Tríada Comunitaria */}
+                <div className="space-y-6 md:col-span-2">
                   <div className="flex items-center gap-2 text-[#8A817C] border-b border-[#EAE2D6] pb-2">
                     <Sparkles className="w-5 h-5" />
-                    <h3 className="text-lg font-serif">Ikigai comunitario</h3>
+                    <h3 className="text-lg font-serif">Tríada Comunitaria</h3>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Saberes y Recorrido Vital</h4>
-                    <p className="text-stone-700">{datos?.saberes}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Ofrendas */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                        Ofrendas (Lo que aporto)
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {triada.ofrendas.length > 0 ? (
+                          triada.ofrendas.map((tag, idx) => (
+                            <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-stone-900 border border-emerald-200 dark:bg-emerald-950/20 dark:text-stone-100 dark:border-emerald-900/40">
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs italic text-stone-400">Sin definir todavía.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Saberes */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider">
+                        Saberes y Habilidades
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {triada.saberes.length > 0 ? (
+                          triada.saberes.map((tag, idx) => (
+                            <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-stone-900 border border-sky-200 dark:bg-sky-950/20 dark:text-stone-100 dark:border-sky-900/40">
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs italic text-stone-400">Sin definir todavía.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Necesidades */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                        Necesidades (Lo que requiero)
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {triada.necesidades.length > 0 ? (
+                          triada.necesidades.map((tag, idx) => (
+                            <span key={idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-stone-900 border border-amber-200 dark:bg-amber-950/20 dark:text-stone-100 dark:border-amber-900/40">
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs italic text-stone-400">Sin definir todavía.</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -374,6 +453,40 @@ export function FichaView() {
                   <label className="text-sm font-medium text-stone-600">Saberes y recorrido vital</label>
                   <textarea {...register("saberes")} rows={4} placeholder="Tu formación, experiencias, oficios, proyectos... todo cuenta" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
                   {errors.saberes && <p className="text-red-500 text-xs">{errors.saberes.message}</p>}
+                </div>
+
+                <div className="space-y-4 md:col-span-2 border-t border-[#EAE2D6] pt-4 mt-2">
+                  <h3 className="text-lg font-serif text-[#4A4E4D]">Tríada Comunitaria (Estructurada)</h3>
+                  <p className="text-xs text-stone-500">
+                    Define tags específicos para facilitar la ayuda y colaboración en la comunidad. Presiona enter o introduce una coma para añadir cada elemento.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <TagArrayEditor
+                      value={ofrendasState.tags}
+                      onChange={ofrendasState.setTags}
+                      label="Ofrendas (Lo que aportas)"
+                      placeholder="Ej: diseño web, carpintería, cuidado..."
+                      colorScheme="green"
+                    />
+                    
+                    <TagArrayEditor
+                      value={saberesState.tags}
+                      onChange={saberesState.setTags}
+                      label="Saberes y Habilidades"
+                      placeholder="Ej: agroecología, facilitación..."
+                      colorScheme="blue"
+                      helperText="Habilidades o saberes específicos."
+                    />
+                    
+                    <TagArrayEditor
+                      value={necesidadesState.tags}
+                      onChange={necesidadesState.setTags}
+                      label="Necesidades (Lo que requieres)"
+                      placeholder="Ej: transporte, programar, herramientas..."
+                      colorScheme="orange"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
