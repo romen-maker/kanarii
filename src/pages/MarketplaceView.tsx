@@ -12,6 +12,8 @@ import { CreateServicioModal } from '../components/CreateServicioModal';
 import { CreateAcuerdoModal } from '../components/CreateAcuerdoModal';
 import { ContraofertaModal } from '../components/ContraofertaModal';
 import { ServicioDetailModal } from '../components/ServicioDetailModal';
+import { AcuerdoDetailModal } from '../components/acuerdos/AcuerdoDetailModal';
+import { CreateProposalWizard } from '../components/CreateProposalWizard';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { Heart, Package, Plus, Filter, Search, Handshake } from 'lucide-react';
 
@@ -45,8 +47,14 @@ export default function MarketplaceView() {
   const [servicioToRequest, setServicioToRequest] = useState<Servicio | null>(null);
   const [selectedServicioId, setSelectedServicioId] = useState<string | null>(null);
   const [acuerdoToCounter, setAcuerdoToCounter] = useState<Acuerdo | null>(null);
+  const [selectedAcuerdoId, setSelectedAcuerdoId] = useState<string | null>(null);
+  const [enmiendaTitle, setEnmiendaTitle] = useState<string | null>(null);
 
   const selectedServicioForDetail = servicios.find(s => s.id === selectedServicioId) || null;
+  const selectedAcuerdoForDetail = acuerdos.find(a => a.id === selectedAcuerdoId) || null;
+  const selectedAcuerdoServicio = selectedAcuerdoForDetail
+    ? servicios.find(s => s.id === selectedAcuerdoForDetail.servicioId) || null
+    : null;
 
   const filteredServicios = servicios.filter(s => {
     if (s.id === pendingId) return false;
@@ -355,7 +363,11 @@ export default function MarketplaceView() {
                   : acuerdo.status.replace('_', ' ');
 
                 return (
-                  <div key={acuerdo.id} className={`p-5 rounded-3xl border border-[#EAE2D6] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${bgClass}`}>
+                  <div 
+                    key={acuerdo.id} 
+                    onClick={() => setSelectedAcuerdoId(acuerdo.id!)}
+                    className={`p-5 rounded-3xl border border-[#EAE2D6] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all cursor-pointer hover:bg-stone-50/80 hover:shadow-md ${bgClass}`}
+                  >
                     <div className="flex items-start gap-4 flex-1">
                       <div className={`p-3 rounded-2xl ${iconBgClass}`}>
                         <Handshake className="w-6 h-6" />
@@ -398,31 +410,40 @@ export default function MarketplaceView() {
                         {puedoActuar ? (
                           <>
                             <button 
-                              onClick={() => editAcuerdoStatus(acuerdo.id!, { 
-                                status: 'en_curso',
-                                historial: arrayUnion({
-                                  fecha: new Date(),
-                                  autorId: appUser?.uid || '',
-                                  tipo: 'aceptacion',
-                                  terminos: {
-                                    exchangeType: acuerdo.exchangeType || '',
-                                    terms: acuerdo.terms,
-                                    fechaPropuesta: acuerdo.fechaPropuesta || null
-                                  }
-                                })
-                              }, { successMessage: "¡Acuerdo aceptado! 🤝" })}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                editAcuerdoStatus(acuerdo.id!, { 
+                                  status: 'en_curso',
+                                  historial: arrayUnion({
+                                    fecha: new Date(),
+                                    autorId: appUser?.uid || '',
+                                    tipo: 'aceptacion',
+                                    terminos: {
+                                      exchangeType: acuerdo.exchangeType || '',
+                                      terms: acuerdo.terms,
+                                      fechaPropuesta: acuerdo.fechaPropuesta || null
+                                    }
+                                  })
+                                }, { successMessage: "¡Acuerdo aceptado! 🤝" });
+                              }}
                               className="px-4 py-2 bg-[#6B705C] text-white rounded-xl text-xs font-bold hover:bg-[#4A4E4D] transition-all"
                             >
                               Aceptar
                             </button>
                             <button 
-                              onClick={() => setAcuerdoToCounter(acuerdo)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAcuerdoToCounter(acuerdo);
+                              }}
                               className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition-all"
                             >
                               Contraofertar
                             </button>
                             <button 
-                              onClick={() => handleDeclineAcuerdo(acuerdo)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeclineAcuerdo(acuerdo);
+                              }}
                               className="px-4 py-2 bg-stone-100 text-stone-500 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all"
                             >
                               Declinar
@@ -439,13 +460,19 @@ export default function MarketplaceView() {
                     {acuerdo.status === 'en_curso' && (
                       <div className="flex gap-2 self-end md:self-center">
                         <button 
-                          onClick={() => editAcuerdo(acuerdo.id!, { status: 'completada' }, { successMessage: "¡Intercambio finalizado! ✨" })}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            editAcuerdo(acuerdo.id!, { status: 'completada' }, { successMessage: "¡Intercambio finalizado! ✨" });
+                          }}
                           className="px-4 py-2 border-2 border-[#C1E1C1] text-[#2C4C3B] rounded-xl text-xs font-bold hover:bg-[#C1E1C1] transition-all"
                         >
                           Marcar Completado
                         </button>
                         <button 
-                          onClick={() => handleDeclineAcuerdo(acuerdo)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeclineAcuerdo(acuerdo);
+                          }}
                           className="px-4 py-2 bg-stone-100 text-stone-500 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all"
                         >
                           Cancelar
@@ -520,6 +547,34 @@ export default function MarketplaceView() {
           }
         }}
       />
+
+      {enmiendaTitle && (
+        <CreateProposalWizard
+          communityId={currentCommunityId || ''}
+          authorId={appUser?.uid || ''}
+          initialTitle={enmiendaTitle}
+          onClose={() => setEnmiendaTitle(null)}
+          onSuccess={() => {
+            setEnmiendaTitle(null);
+            setSelectedAcuerdoId(null);
+          }}
+        />
+      )}
+
+      {selectedAcuerdoForDetail && (
+        <AcuerdoDetailModal
+          isOpen={!!selectedAcuerdoForDetail}
+          onClose={() => setSelectedAcuerdoId(null)}
+          acuerdo={selectedAcuerdoForDetail}
+          servicio={selectedAcuerdoServicio}
+          getMemberName={getMemberName}
+          onProposeEnmienda={() => {
+            const agreementName = selectedAcuerdoServicio?.title ?? 'Acuerdo';
+            setEnmiendaTitle(`Enmienda: ${agreementName}`);
+            setSelectedAcuerdoId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

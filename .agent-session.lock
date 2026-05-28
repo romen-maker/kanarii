@@ -1,0 +1,14 @@
+{
+  "task": "T-026",
+  "sprint": "sprint-06",
+  "branch": "feat/T-026-marketplace-acuerdo-detail",
+  "opened": "2026-05-28T10:25:02+01:00",
+  "status": "open",
+  "approved_plan": true,
+  "authorized_files": [
+    "src/pages/MarketplaceView.tsx",
+    "src/components/acuerdos/AcuerdoDetailModal.tsx",
+    "src/lib/services/_types.ts",
+    "src/components/CreateProposalWizard.tsx"
+  ]
+}

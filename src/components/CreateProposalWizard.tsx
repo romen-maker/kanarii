@@ -10,13 +10,15 @@ interface CreateProposalWizardProps {
   authorId: string;
   onClose: () => void;
   onSuccess: () => void;
+  initialTitle?: string;
 }
 
 export function CreateProposalWizard({
   communityId,
   authorId,
   onClose,
-  onSuccess
+  onSuccess,
+  initialTitle
 }: CreateProposalWizardProps) {
   const { addPropuesta, editPropuesta } = usePropuestaActions();
   const { members } = useCommunityMembers(communityId);
@@ -27,7 +29,7 @@ export function CreateProposalWizard({
 
   // Form State
   const [reason, setReason] = useState('');
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(initialTitle || '');
   const [description, setDescription] = useState('');
   const [responsibleIds, setResponsibleIds] = useState<string[]>([authorId]);
   const [deadline, setDeadline] = useState('');
