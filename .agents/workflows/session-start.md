@@ -72,54 +72,6 @@ bash scripts/agent/check-session.sh
 
 ---
 
-## FASE 2.5 — Checkpoint lazy-planning (OBLIGATORIO Y BLOQUEANTE)
-
-Antes de generar el plan, el agente DEBE detenerse y declarar explícitamente qué leyó durante las Fases 0–2. Este bloque es **previo** al plan — no se puede generar el plan sin completarlo primero.
-
-Mostrar exactamente este bloque y marcar UNA de las tres opciones:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 CHECKPOINT LAZY-PLANNING — T-XXX
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Durante las Fases 0–2, he leído los siguientes archivos prohibidos:
-
-[ ] OPCIÓN A — No leí NINGUNO de estos archivos prohibidos:
-    • Código fuente: .ts / .tsx / .js en src/ o lib/
-    • Docs de referencia: SKILL.md, _template.md, naming-convention.md
-    • Otros task files: task-YYY.md donde YYY ≠ XXX (tarea activa)
-    • Otros .md fuera de task file activo, sprint file o research file
-    • Comandos: Listed directory en .agents/tasks/, git show, git log
-    → Plan inferido exclusivamente desde task file activo + sprint file + research.
-
-[ ] OPCIÓN B — Leí estos archivos (excepción: usuario los citó explícitamente
-    o están referenciados en el task file):
-    - [archivo 1] → [razón]
-    - [archivo 2] → [razón]
-
-[ ] OPCIÓN C — Leí estos archivos SIN autorización previa (VIOLACIÓN):
-    - [archivo 1] → [por qué lo leí]
-    - [archivo 2] → [por qué lo leí]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-### Consecuencias por opción
-
-- **Opción A o B** → continuar a Fase 3.
-- **Opción C — VIOLACIÓN DETECTADA:**
-  1. ⚠️ Reportar: `"VIOLACIÓN LAZY-PLANNING: leí [archivos] sin autorización durante la fase de planificación."`
-  2. **DETENTE.** No generar el plan.
-  3. Esperar instrucción del usuario: continuar con advertencia registrada, o abortar la sesión.
-  4. Si el usuario autoriza continuar → registrar la violación en el task file bajo `## Notas de sesión` antes de proceder.
-
-> 🔒 **Regla dura**: Omitir este checkpoint o declarar Opción A/B cuando la realidad es C constituye una **violación doble**. El campo de auditoría en Fase 3.5 debe coincidir exactamente con lo declarado aquí — cualquier discrepancia es detectable.
-
-> 💡 **Nota para el usuario**: Si el checkpoint no aparece, el formato difiere significativamente del especificado arriba, o el agente leyó `task-YYY.md` / `SKILL.md` / `_template.md` sin declararlos, señala: `"Checkpoint inválido. Repite Fase 2.5 con formato exacto."`
-
----
-
 ## FASE 3 — Declaración de la Caja
 
 1. Leer `## Caja de archivos` del task file y mostrar archivos autorizados.
