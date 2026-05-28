@@ -6,17 +6,29 @@ import { useFirestoreCollection } from './useFirestoreCollection';
  * Firma estándar: { items, loading, reload }
  */
 export function usePropuestas(communityId: string) {
+  const hasCommunity = Boolean(communityId);
+
   const { items, loading, error, reload } = useFirestoreCollection<Propuesta>(
     (onData, onError) => {
-      if (!communityId) {
+      if (!hasCommunity) {
         onData([]);
         return () => {};
       }
       const q = getPropuestasQuery(communityId);
       return subscribeToCollection(q, onData, 'Listar propuestas', onError);
     },
-    [communityId]
+    [communityId, hasCommunity]
   );
+
+  if (!hasCommunity) {
+    return {
+      items: [],
+      propuestas: [],
+      loading: false,
+      error: null,
+      reload: () => {}
+    };
+  }
 
   return { 
     items, 

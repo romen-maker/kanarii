@@ -11,22 +11,33 @@ export function useTareas(communityId?: string) {
   
   // Si no se pasa communityId, intentamos usar el del usuario
   const activeCommunityId = communityId || appUser?.communityId;
+  const hasAccess = Boolean(activeCommunityId);
 
   const { items, loading, error, reload } = useFirestoreCollection<Tarea>(
     (onData, onError) => {
-      if (!activeCommunityId) {
+      if (!hasAccess) {
         onData([]);
         return () => {};
       }
 
       return listenTareas(
-        activeCommunityId,
+        activeCommunityId!,
         onData,
         onError
       );
     },
-    [activeCommunityId]
+    [activeCommunityId, hasAccess]
   );
+
+  if (!hasAccess) {
+    return { 
+      items: [], 
+      tareas: [], 
+      loading: false, 
+      error: null, 
+      reload: () => {} 
+    };
+  }
 
   return { 
     items, 

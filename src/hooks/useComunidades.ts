@@ -8,6 +8,8 @@ import { Comunidad } from '../lib/appService';
  * Usa SOLO funciones de appService.ts, nunca importa de firebase/firestore directamente.
  */
 export function useComunidades() {
+  // NOTA: Este hook es global (obtiene todas las comunidades registradas en el sistema)
+  // y no está restringido a una sola comunidad activa, por lo que no requiere validación de communityId.
   const [items, setItems] = useState<Comunidad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

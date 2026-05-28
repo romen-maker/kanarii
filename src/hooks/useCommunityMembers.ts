@@ -13,20 +13,22 @@ export type { CommunityMember };
  * [MANDATO DRY] Centraliza la resolución de nombres y cumple el contrato estándar.
  */
 export function useCommunityMembers(communityId?: string | null) {
+  const hasCommunity = Boolean(communityId);
+
   const { items: members, loading, error, reload } = useFirestoreCollection<CommunityMember>(
     (onData, onError) => {
-      if (!communityId) {
+      if (!hasCommunity) {
         onData([]);
         return () => {};
       }
-      const q = getCommunityMembersQuery(communityId);
+      const q = getCommunityMembersQuery(communityId!);
       return subscribeToCollection(
         q,
         (data) => onData(data as CommunityMember[]),
         `community_members/${communityId}`
       );
     },
-    [communityId]
+    [communityId, hasCommunity]
   );
 
   /**
@@ -38,6 +40,17 @@ export function useCommunityMembers(communityId?: string | null) {
     if (mem) return mem.nombre || mem.displayName || mem.email || 'Miembro';
     return loading ? 'Cargando...' : 'Miembro';
   }, [members, loading]);
+
+  if (!hasCommunity) {
+    return { 
+      members: [], 
+      loading: false,
+      loadingMembers: false, // Aliasing para compatibilidad con componentes actuales
+      error: null,
+      getMemberName, 
+      reload: () => {} 
+    };
+  }
 
   return { 
     members, 
