@@ -9,7 +9,7 @@
 | T-032 | Fix fallback hardcodeado de `currentCommunityId` a 'arteara' en `ComunidadContext.tsx` | S | ✅ Completada | `.agents/tasks/_archived/task-032.md` |
 | T-023 | Migración limpia modelo de datos Tríada Comunitaria (ofrendas, saberes, necesidades) | M | ✅ Completada | `.agents/tasks/_archived/task-023.md` |
 | T-033 | Sala de deliberación con timeline S3 y visualización de participantes | M | ✅ Completada | `.agents/tasks/_archived/task-033.md` |
-| T-034 | Modal inline con 4 opciones de respuesta S3 y flujos de aclaración/objeción | M | ⬜ Pendiente | — |
+| T-034 | Modal inline con 4 opciones de respuesta S3 y flujos de aclaración/objeción | M | ✅ Completada | `.agents/tasks/_archived/task-034.md` |
 
 ## Notas de planning
 Sprint enfocado en:

@@ -195,6 +195,17 @@ export function PropuestaDetail({
                             members={members}
                           />
                         )}
+                        {r.type === 'objecion' && (
+                          <ClarificationThread
+                            propuestaId={propuestaId}
+                            relatedResponseId={r.memberId}
+                            propuestaAuthorId={propuesta.authorId}
+                            hilos={hilos.filter(h => h.relatedMemberId === r.memberId)}
+                            currentUserId={currentUserId}
+                            members={members}
+                            responseType="objecion"
+                          />
+                        )}
                         {r.type === 'duda' && r.memberId === currentUserId && (
                           <div className="mt-2 p-4 bg-sky-50 border border-sky-100 rounded-2xl flex justify-between items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                             <p className="text-xs text-sky-700">
