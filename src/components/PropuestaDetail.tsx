@@ -24,7 +24,7 @@ export function PropuestaDetail({
   onClose,
   onResponseClick
 }: PropuestaDetailProps) {
-  const { propuesta, respuestas, hilos, loading, error } = usePropuestaDetail(propuestaId);
+  const { propuesta, respuestas, hilos, loading, error, isAuthor } = usePropuestaDetail(propuestaId);
   const { members } = useCommunityMembers(propuesta?.communityId ?? null);
   const { integrateObjeciones } = usePropuestaActions();
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -68,10 +68,10 @@ export function PropuestaDetail({
     );
   }
 
-  const isAuthor = propuesta.authorId === currentUserId;
   const userResponse = respuestas.find(r => r.memberId === currentUserId);
 
   const handleIntegrate = async (newDescription: string, note: string) => {
+    if (!isAuthor) return;
     await integrateObjeciones(propuestaId, newDescription, note, {
       successMessage: 'Propuesta evolucionada con éxito'
     });

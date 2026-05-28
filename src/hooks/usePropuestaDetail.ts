@@ -104,6 +104,11 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
     }
   }
 
+  const isAuthor = useMemo(() => {
+    if (!propuesta || !appUser) return false;
+    return propuesta.authorId === appUser.uid;
+  }, [propuesta, appUser]);
+
   return {
     propuesta: isWrongCommunity ? null : propuesta,
     respuestas,
@@ -112,7 +117,8 @@ export function usePropuestaDetail(propuestaId: string, communityId?: string) {
     loadingRespuestas,
     loadingHilos,
     error: hookError,
-    reload
+    reload,
+    isAuthor
   };
 }
 
