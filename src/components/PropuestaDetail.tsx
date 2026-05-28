@@ -24,17 +24,45 @@ export function PropuestaDetail({
   onClose,
   onResponseClick
 }: PropuestaDetailProps) {
-  const { propuesta, respuestas, hilos, loading } = usePropuestaDetail(propuestaId);
-  const { members } = useCommunityMembers(propuesta?.communityId);
+  const { propuesta, respuestas, hilos, loading, error } = usePropuestaDetail(propuestaId);
+  const { members } = useCommunityMembers(propuesta?.communityId ?? null);
   const { integrateObjeciones } = usePropuestaActions();
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
-  if (loading || !propuesta) {
+  if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
         <div className="bg-white p-8 rounded-3xl animate-pulse text-stone-500 font-medium">
           Cargando deliberación...
+        </div>
+      </div>
+    );
+  }
+
+  if (!propuesta) {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" 
+        onClick={onClose}
+      >
+        <div 
+          className="bg-[#F9F7F1] w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 flex flex-col items-center gap-6 animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-3 text-rose-600">
+            <AlertCircle className="w-8 h-8" />
+            <h3 className="font-serif text-2xl text-stone-800">Error de acceso</h3>
+          </div>
+          <p className="text-stone-600 text-sm text-center leading-relaxed">
+            {error?.message || 'La propuesta no existe o no pertenece a tu comunidad activa.'}
+          </p>
+          <button 
+            onClick={onClose} 
+            className="w-full py-4 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-sm active:scale-95"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     );
