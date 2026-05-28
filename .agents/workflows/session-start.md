@@ -53,7 +53,7 @@ bash scripts/agent/check-session.sh
      - Error → volver a Fase 1.
    - No encontrado → crear con `doe-framework` desde `_template.md`.
 
-> 🔒 **LÍMITE FASE 2**: Solo leer documentos de planificación (sprint files, research, task files). **Prohibido leer, buscar o listar `src/`, `lib/` u otro directorio de código fuente** hasta aprobación en Fase 3.5. Esto incluye `Searched for`, `Listed directory` y `Viewed` sobre archivos `.ts`/`.tsx`/`.js`. Excepción: archivos citados explícitamente por el usuario en su petición, o verificación de existencia con `test -f` sin leer contenido.
+> 🔒 **LÍMITE FASE 2**: Solo leer documentos de planificación (sprint files, research, task files). **Prohibido leer, buscar o listar `src/`, `lib/` u otro directorio de código fuente** hasta aprobación en Fase 3.5. Esto incluye `Searched for`, `Listed directory` y `Viewed` sobre archivos `.ts`/`.tsx`/`.js`. También prohibido leer documentos de referencia estáticos: `SKILL.md`, `_template.md`, `naming-convention.md` u otros `.md` fuera de `docs/sprints/` y `.agents/tasks/`. Excepción: archivos citados explícitamente por el usuario en su petición, o verificación de existencia con `test -f` sin leer contenido.
 
 3. **Investigación previa:** buscar `docs/sprints/sprint-XX-research.md`.
    - Existe → integrar en `## Contexto técnico` del task file. Informar: `"📚 Research integrado."`
@@ -74,20 +74,22 @@ Mostrar exactamente este bloque y marcar UNA de las tres opciones:
 📋 CHECKPOINT LAZY-PLANNING — T-XXX
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Durante las Fases 0–2, he leído los siguientes archivos de código fuente
-(.ts / .tsx / .js en src/ o lib/):
+Durante las Fases 0–2, he leído los siguientes archivos prohibidos:
 
-[ ] OPCIÓN A — No leí ningún archivo de código fuente.
-    Plan inferido desde task file y documentos de planificación.
+[ ] OPCIÓN A — No leí NINGUNO de estos archivos:
+    • Código fuente: .ts / .tsx / .js en src/ o lib/
+    • Docs de referencia: SKILL.md, _template.md, naming-convention.md
+    • Otros .md fuera de task file, sprint file o research file
+    → Plan inferido exclusivamente desde task file + sprint file + research.
 
-[ ] OPCIÓN B — Leí estos archivos (excepción permitida por el usuario
-    o citados explícitamente en el task file):
-    - [archivo 1]
-    - [archivo 2]
+[ ] OPCIÓN B — Leí estos archivos (excepción: usuario los citó explícitamente
+    o están referenciados en el task file):
+    - [archivo 1] → [razón]
+    - [archivo 2] → [razón]
 
-[ ] OPCIÓN C — Leí estos archivos SIN que estuviera permitido (VIOLACIÓN):
-    - [archivo 1]
-    - [archivo 2]
+[ ] OPCIÓN C — Leí estos archivos SIN autorización previa (VIOLACIÓN):
+    - [archivo 1] → [por qué lo leí]
+    - [archivo 2] → [por qué lo leí]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -102,6 +104,8 @@ Durante las Fases 0–2, he leído los siguientes archivos de código fuente
   4. Si el usuario autoriza continuar → registrar la violación en el task file bajo `## Notas de sesión` antes de proceder.
 
 > 🔒 **Regla dura**: Omitir este checkpoint o declarar Opción A/B cuando la realidad es C constituye una **violación doble**. El campo de auditoría en Fase 3.5 debe coincidir exactamente con lo declarado aquí — cualquier discrepancia es detectable.
+
+> 💡 **Nota para el usuario**: Si el checkpoint no aparece, el formato difiere significativamente del especificado arriba, o el agente leyó `SKILL.md` / `_template.md` sin declararlos, señala: `"Checkpoint inválido. Repite Fase 2.5 con formato exacto."`
 
 ---
 
@@ -165,6 +169,7 @@ prohibido de forma absoluta:
 - ❌ Ejecutar `npm`, `yarn`, `pnpm` o cualquier comando que modifique estado
 - ❌ Ejecutar comandos que escriban en disco
 - ❌ `Searched for`, `Listed directory` o `Viewed` en código fuente (`src/`, `lib/`) — ver regla lazy-planning en `caveman.md`
+- ❌ Leer `SKILL.md`, `_template.md` u otros documentos de referencia estáticos
 
 ✅ Está permitido leer el task file, el sprint file y el research file. Para construir el plan, inferir desde la descripción del task file sin explorar código.
 

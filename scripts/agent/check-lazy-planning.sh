@@ -1,81 +1,101 @@
 #!/bin/bash
 # check-lazy-planning.sh — Verifica violaciones de lazy-planning en la sesión activa
-# Uso: bash scripts/agent/check-lazy-planning.sh
+# Uso: bash scripts/agent/check-lazy-planning.sh [T-XXX]
 #
-# Este script ayuda al usuario a detectar si el agente leyó archivos de código
-# fuente antes de recibir aprobación en /session-start.
+# Sin argumento: muestra contexto automático de la sesión actual.
+# Con argumento T-XXX: busca además el task file y muestra su campo de auditoría.
 #
-# Lo que verifica:
-#   1. Si el plan aprobado declara "Ninguno" en el campo de auditoría
-#   2. Si el git log de la sesión muestra lecturas de src/ o lib/ antes del lock
-#
-# Interpretación:
-#   - VIOLACIÓN SIMPLE:  el agente leyó archivos sin declararlo en el checkpoint
-#   - VIOLACIÓN DOBLE:   el campo en Fase 3.5 difiere del checkpoint de Fase 2.5
+# Violaciones detectables:
+#   SIMPLE:        el agente leyó archivos prohibidos sin declararlos en el checkpoint
+#   DOBLE:         el campo de auditoría en Fase 3.5 difiere del checkpoint de Fase 2.5
+#   MENTIRA:       marcó Opción A pero el log muestra Viewed en archivos prohibidos
+#   AUSENTE:       el agente saltó la Fase 2.5 (checkpoint no aparece en el log)
 
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 LOCK="$ROOT/.agent-session.lock"
-IMPLEMENTATION_PLAN="$ROOT/implementation_plan.md"
+TASK_ID="${1:-}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔍 CHECK LAZY-PLANNING — Kanarii"
+[ -n "$TASK_ID" ] && echo "    Tarea: $TASK_ID"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# 1. Verificar si hay sesión activa
+# ── 1. Estado de sesión ──────────────────────────────────────────────────────
 if [ ! -f "$LOCK" ]; then
   echo "ℹ️  No hay sesión activa (.agent-session.lock no encontrado)."
-  echo "   Este script es útil durante o justo después de /session-start."
-  echo ""
+  echo "   Este script es más útil durante o justo después de /session-start."
 else
-  echo "🔒 Sesión activa detectada:"
+  echo "🔒 Sesión activa:"
   cat "$LOCK"
-  echo ""
 fi
+echo ""
 
-# 2. Buscar campo de auditoría en implementation_plan.md
-if [ -f "$IMPLEMENTATION_PLAN" ]; then
-  echo "📋 Campo de auditoría encontrado en implementation_plan.md:"
-  echo "---"
-  grep -A 5 "ARCHIVOS LEÍDOS" "$IMPLEMENTATION_PLAN" 2>/dev/null || echo "   (campo no encontrado)"
-  echo "---"
-  echo ""
-else
-  echo "⚠️  implementation_plan.md no encontrado."
-  echo "   El agente puede no haber generado el plan todavía."
-  echo ""
-fi
-
-# 3. Revisar rama activa y commits recientes
+# ── 2. Rama activa y commits recientes ───────────────────────────────────────
 BRANCH=$(git -C "$ROOT" branch --show-current)
 echo "🌿 Rama activa: $BRANCH"
 echo ""
-echo "📜 Últimos 5 commits en esta rama:"
+echo "📜 Últimos 5 commits:"
 git -C "$ROOT" log -5 --oneline
 echo ""
 
-# 4. Instrucciones manuales para el usuario
+# ── 3. Campo de auditoría en implementation_plan.md ──────────────────────────
+IMPLEMENTATION_PLAN="$ROOT/implementation_plan.md"
+if [ -f "$IMPLEMENTATION_PLAN" ]; then
+  echo "📋 Campo de auditoría (implementation_plan.md):"
+  echo "---"
+  grep -A 6 "ARCHIVOS LEÍDOS" "$IMPLEMENTATION_PLAN" 2>/dev/null || echo "   (campo no encontrado)"
+  echo "---"
+else
+  echo "⚠️  implementation_plan.md no encontrado — el agente puede no haber generado el plan todavía."
+fi
+echo ""
+
+# ── 4. Task file (si se pasó T-XXX) ──────────────────────────────────────────
+if [ -n "$TASK_ID" ]; then
+  TASK_FILE="$ROOT/.agents/tasks/$TASK_ID.md"
+  ARCHIVED_FILE="$ROOT/.agents/tasks/_archived/$TASK_ID.md"
+  if [ -f "$TASK_FILE" ]; then
+    echo "📄 Task file: $TASK_FILE"
+  elif [ -f "$ARCHIVED_FILE" ]; then
+    echo "📄 Task file (archivado): $ARCHIVED_FILE"
+    TASK_FILE="$ARCHIVED_FILE"
+  else
+    echo "⚠️  Task file no encontrado para $TASK_ID — verifica el ID."
+    TASK_FILE=""
+  fi
+  echo ""
+fi
+
+# ── 5. Guía de verificación manual ───────────────────────────────────────────
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🧭 CÓMO VERIFICAR MANUALMENTE:"
+echo "🧭 VERIFICACIÓN MANUAL — qué buscar en el log del agente:"
 echo ""
-echo "1. Lee el campo 📂 ARCHIVOS LEÍDOS en el plan que presentó el agente."
+echo "  Archivos PROHIBIDOS antes de APROBADO:"
+echo "    ❌ 'Viewed src/...' o 'Viewed lib/...'     → código fuente"
+echo "    ❌ 'Viewed SKILL.md' o 'Viewed _template.md' → docs de referencia"
+echo "    ❌ 'Viewed [cualquier .md fuera de task/sprint/research]'"
+echo "    ❌ 'Searched for ...' en src/ o lib/       → búsqueda en código"
+echo "    ❌ 'Listed directory src/' o subdirectorios"
+echo "    ✅ 'test -f ...' sin Viewed                → solo existencia (permitido)"
 echo ""
-echo "2. Revisa el log de la conversación con el agente y busca estas acciones"
-echo "   que indican lecturas prohibidas antes de APROBADO:"
-echo "     - 'Viewed src/...'       → lectura de código fuente"
-echo "     - 'Searched for ...'    → búsqueda en src/"
-echo "     - 'Listed directory src/' → exploración de directorio"
-echo "     - 'Ran command: git show' → inspección de commit específico"
+echo "  Checkpoint en el log:"
+echo "    Busca el bloque: 📋 CHECKPOINT LAZY-PLANNING — T-XXX"
+echo "    Si NO aparece → checkpoint ausente (violación)"
+echo "    Si aparece con Opción A pero hay Viewed prohibidos → mentira declarativa"
 echo ""
-echo "3. Compara lo que ves en el log con lo que declaró en el campo de auditoría."
+echo "  Campo de auditoría en el plan:"
+echo "    Busca: 📂 ARCHIVOS LEÍDOS ANTES DE ESTA APROBACIÓN"
+echo "    Debe ser copia textual exacta del checkpoint"
+echo "    Si difiere en cualquier palabra → violación doble"
 echo ""
-echo "   ✅ Sin violación:     log sin lecturas de src/ Y campo dice 'Ninguno'"
-echo "   ❌ Violación simple:  log muestra lecturas de src/ Y campo dice 'Ninguno'"
-echo "   ❌ Violación doble:   campo de auditoría ≠ checkpoint de Fase 2.5"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "⚡ FRASES EXACTAS PARA SEÑALAR AL AGENTE:"
 echo ""
-echo "4. Si detectas una violación, comunícasela al agente:"
-echo "   'VIOLACIÓN LAZY-PLANNING: leíste [archivos] sin autorización.'"
-echo "   'Detente, corrige el campo de auditoría y espera nueva aprobación.'"
+echo "  Checkpoint ausente:    'Checkpoint ausente. Repite Fase 2.5 con formato exacto.'"
+echo "  Formato incorrecto:    'Checkpoint inválido. Usa formato exacto.'"
+echo "  Inconsistencia:        'Violación doble. Corrige para que sea idéntico.'"
+echo "  Mentira declarativa:   'Violación grave de protocolo. Aborta y reinicia /session-start.'"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
