@@ -1,7 +1,7 @@
 # Sprint 07 — 2026-05-28 → 2026-06-03
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |

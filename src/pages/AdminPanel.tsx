@@ -38,8 +38,6 @@ export function AdminPanel() {
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
 
-  console.log('[DEBUG AdminPanel] appUser:', { uid: appUser?.uid, role: appUser?.role }, 'comunidad:', { slug: comunidad?.slug, adminUids: comunidad?.adminUids }, 'isCommunityAdmin:', isCommunityAdmin);
-
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'comunidad', label: 'Comunidad', icon: Users },

@@ -3,44 +3,56 @@ import { Comunidad, getComunidad, listenComunidades, seedArteara } from '../lib/
 import { useAuth } from './AuthContext';
 
 interface ComunidadContextType {
-  currentCommunityId: string;
+  currentCommunityId: string | undefined;
   comunidad: Comunidad | null;
   comunidades: Comunidad[];
   setCommunityId: (id: string) => void;
   loading: boolean;
+  loadingCommunity: boolean;
 }
 
 const ComunidadContext = createContext<ComunidadContextType>({} as ComunidadContextType);
 
-// Fallback en memoria si sessionStorage está bloqueado (sandbox/iframe)
+// Fallback en memoria si el almacenamiento está bloqueado (sandbox/iframe/Safari incognito)
 let memoryStorage: Record<string, string> = {};
 
-function safeSessionStorageGet(key: string): string | null {
+function safeStorageGet(type: 'session' | 'local', key: string): string | null {
   try {
-    return sessionStorage.getItem(key);
+    const storage = type === 'session' ? sessionStorage : localStorage;
+    return storage.getItem(key);
   } catch (e) {
-    return memoryStorage[key] || null;
+    return memoryStorage[`${type}_${key}`] || null;
   }
 }
 
-function safeSessionStorageSet(key: string, value: string): void {
+function safeStorageSet(type: 'session' | 'local', key: string, value: string): void {
   try {
-    sessionStorage.setItem(key, value);
+    const storage = type === 'session' ? sessionStorage : localStorage;
+    storage.setItem(key, value);
   } catch (e) {
-    memoryStorage[key] = value;
+    memoryStorage[`${type}_${key}`] = value;
+  }
+}
+
+function safeStorageRemove(type: 'session' | 'local', key: string): void {
+  try {
+    const storage = type === 'session' ? sessionStorage : localStorage;
+    storage.removeItem(key);
+  } catch (e) {
+    delete memoryStorage[`${type}_${key}`];
   }
 }
 
 export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { appUser } = useAuth();
+  const { appUser, status } = useAuth();
   
-  const [currentCommunityId, setCurrentCommunityId] = useState<string>(() => {
-    return safeSessionStorageGet('kanarii_current_community_id') || 'arteara';
-  });
-  
+  const [currentCommunityId, setCurrentCommunityId] = useState<string | undefined>(undefined);
   const [comunidad, setComunidad] = useState<Comunidad | null>(null);
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // loadingCommunity es true si la sesión está cargando o si el perfil está cargando estando autenticado
+  const loadingCommunity = status === 'checking' || (status === 'authenticated' && !appUser);
 
   // Referencias para evitar race conditions al unirse a nuevas comunidades
   const prevCommunityIdsRef = useRef<string[]>([]);
@@ -48,13 +60,17 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Guardar ID en storage y actualizar estado
   const setCommunityId = (id: string) => {
     setCurrentCommunityId(id);
-    safeSessionStorageSet('kanarii_current_community_id', id);
+    safeStorageSet('session', 'kanarii_current_community_id', id);
   };
 
   // Cargar lista de comunidades en tiempo real e inicializar seed
   useEffect(() => {
     const init = async () => {
-      await seedArteara(); // Asegurar que existe al menos Arteara
+      try {
+        await seedArteara(); // Asegurar que existe al menos Arteara
+      } catch (e) {
+        console.error("Error seeding default community:", e);
+      }
     };
     init();
 
@@ -68,15 +84,13 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Sincronizar con el perfil del usuario (multi-membership)
   useEffect(() => {
+    if (loadingCommunity) return;
+
     if (!appUser) {
-      setCurrentCommunityId('');
+      setCurrentCommunityId(undefined);
       setComunidad(null);
-      try {
-        sessionStorage.removeItem('kanarii_current_community_id');
-      } catch (e) {}
-      try {
-        localStorage.removeItem('kanarii_current_community_id');
-      } catch (e) {}
+      safeStorageRemove('session', 'kanarii_current_community_id');
+      safeStorageRemove('local', 'kanarii_current_community_id');
       prevCommunityIdsRef.current = [];
       return;
     }
@@ -85,7 +99,9 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Si el usuario no tiene ninguna comunidad → limpiar estado
     if (ids.length === 0) {
-      setCommunityId('');
+      setCurrentCommunityId(undefined);
+      safeStorageRemove('session', 'kanarii_current_community_id');
+      safeStorageRemove('local', 'kanarii_current_community_id');
       prevCommunityIdsRef.current = [];
       return;
     }
@@ -98,28 +114,36 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const newlyAddedId = ids.find(id => !prevIds.includes(id));
       if (newlyAddedId) {
         setCommunityId(newlyAddedId);
+        prevCommunityIdsRef.current = ids;
+        return;
       }
     }
 
-    // Validar reactividad y redirección sin race condition
-    if (!loading) {
+    // Determinar la comunidad a establecer
+    let targetId = currentCommunityId;
+
+    if (!targetId) {
+      // Intentar leer de storage
+      const storedId = safeStorageGet('session', 'kanarii_current_community_id') || safeStorageGet('local', 'kanarii_current_community_id');
+      if (storedId && ids.includes(storedId)) {
+        targetId = storedId;
+      } else {
+        targetId = ids[0];
+      }
+    } else if (!ids.includes(targetId)) {
+      // Validar si el actual es admin de la comunidad activa aunque no esté en sus ids
       const isDirectAdmin = comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser.uid);
-
-      if (!isDirectAdmin && !ids.includes(currentCommunityId)) {
-        // Redirigir solo si es la carga inicial o si el usuario pertenecía a la comunidad activa pero fue eliminado
-        const isInitialLoad = prevIds.length === 0;
-        const wasMemberButRemoved = prevIds.includes(currentCommunityId);
-
-        if (isInitialLoad || wasMemberButRemoved) {
-          setCommunityId(ids[0]);
-        }
+      if (!isDirectAdmin) {
+        targetId = ids[0];
       }
     }
 
-    if (ids.length > 0) {
-      prevCommunityIdsRef.current = ids;
+    if (targetId !== currentCommunityId) {
+      setCommunityId(targetId!);
     }
-  }, [appUser, currentCommunityId, comunidad, loading]);
+
+    prevCommunityIdsRef.current = ids;
+  }, [appUser, status, loadingCommunity, currentCommunityId, comunidad]);
 
   // Cargar datos de la comunidad actual
   useEffect(() => {
@@ -132,9 +156,15 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const loadComunidad = async () => {
       setLoading(true);
-      const data = await getComunidad(currentCommunityId);
-      setComunidad(data);
-      setLoading(false);
+      try {
+        const data = await getComunidad(currentCommunityId);
+        setComunidad(data);
+      } catch (e) {
+        console.error("Error loading community details:", e);
+        setComunidad(null);
+      } finally {
+        setLoading(false);
+      }
     };
     loadComunidad();
   }, [currentCommunityId]);
@@ -145,7 +175,8 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       comunidad, 
       comunidades, 
       setCommunityId,
-      loading 
+      loading,
+      loadingCommunity
     }}>
       {children}
     </ComunidadContext.Provider>
