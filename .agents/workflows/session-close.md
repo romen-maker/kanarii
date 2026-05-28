@@ -57,18 +57,15 @@ No ejecutes `git add` ni `git status` manualmente. El script lo gestiona.
 Ejecuta **un único comando**:
 
 ```bash
-bash scripts/agent/close-task.sh T-XXX "tipo(scope): descripción del cambio"
+bash scripts/agent/close-task.sh
 ```
 
-El script:
-- Hace `git add -A` de todos los cambios pendientes (código + docs).
-- Archiva el task file en `.agents/tasks/_archived/` con `git mv`.
-- Realiza un único commit atómico.
-- Elimina `.agent-session.lock` si existe.
+El script lee la rama activa, deriva automáticamente el TASK_ID y el mensaje de commit desde el nombre de la rama (formato esperado: `feat/T-026-descripcion`), archiva el task file en `.agents/tasks/_archived/` con `git mv`, realiza un único commit atómico y elimina `.agent-session.lock` si existe.
 
 **No ejecutes `git status`, `git add` ni `git commit` por separado.** Todo va en el mismo commit atómico.
 
 Si el script falla:
+- `❌ No se puede derivar el TASK_ID` → la rama no sigue el formato `feat/T-XXX-descripcion`.
 - `❌ No encontrado: task-XXX.md` → el task file ya fue archivado o el ID es incorrecto.
 - `❌ Nada en stage` → todos los cambios ya estaban commitados; revisa con `git log --oneline -3`.
 
