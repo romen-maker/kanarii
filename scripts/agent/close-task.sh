@@ -1,21 +1,33 @@
 #!/bin/bash
 # close-task.sh — Commit atómico de cierre de tarea
-# Uso: bash scripts/agent/close-task.sh T-025 "feat(calendario): permisos eventos"
+# Uso: bash scripts/agent/close-task.sh
+# El script deriva TASK_ID y mensaje del nombre de la rama activa.
+# Formato de rama esperado: feat/T-026-descripcion-de-la-tarea
 # PREREQUISITO: El agente ya editó sprint-XX.md y task-XXX.md antes de llamar a este script.
 
 set -euo pipefail
 
-TASK_ID="${1:?Uso: close-task.sh <TASK_ID> '<mensaje de commit>'}"
-MESSAGE="${2:?Falta el mensaje de commit}"
 ROOT="$(git rev-parse --show-toplevel)"
+BRANCH=$(git -C "$ROOT" branch --show-current)
 
-# Acepta tanto 'T-025' como '025'
-TASK_NUM="${TASK_ID#T-}"
+# Derivar TASK_NUM desde la rama (feat/T-026-... → 026)
+TASK_NUM=$(echo "$BRANCH" | grep -oP '(?<=T-)\d+')
+if [ -z "$TASK_NUM" ]; then
+  echo "❌ No se puede derivar el TASK_ID desde la rama: $BRANCH"
+  echo "   Formato esperado: feat/T-026-descripcion"
+  exit 1
+fi
+TASK_ID="T-${TASK_NUM}"
+
+# Derivar mensaje desde la rama (feat/T-026-marketplace-acuerdo-detail → feat: marketplace acuerdo detail (T-026))
+SCOPE=$(echo "$BRANCH" | sed "s|feat/T-${TASK_NUM}-||" | tr '-' ' ')
+MESSAGE="feat: ${SCOPE}(${TASK_ID})"
+
 TASK_FILE="$ROOT/.agents/tasks/task-${TASK_NUM}.md"
 ARCHIVE_DIR="$ROOT/.agents/tasks/_archived"
 LOCK="$ROOT/.agent-session.lock"
 
-echo "🔄 Cerrando $TASK_ID..."
+echo "🔄 Cerrando $TASK_ID desde rama $BRANCH..."
 
 # 1. Verificar que el task file existe
 if [ ! -f "$TASK_FILE" ]; then
@@ -50,5 +62,5 @@ fi
 
 echo ""
 echo "✅ $TASK_ID cerrada correctamente."
-echo "   Rama: $(git -C "$ROOT" branch --show-current)"
+echo "   Rama: $BRANCH"
 echo "   Siguiente paso: merge a main o iniciar nueva tarea con /session-start"
