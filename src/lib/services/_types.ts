@@ -235,6 +235,17 @@ export interface Servicio {
   actualizadoEn: any;
 }
 
+export interface AcuerdoHistorialEntry {
+  fecha: any;
+  autorId: string;
+  tipo: 'propuesta' | 'contraoferta' | 'aceptacion' | 'cancelacion';
+  terminos: {
+    exchangeType?: string;
+    terms: string;
+    fechaPropuesta?: Date | null;
+  };
+}
+
 export interface Acuerdo {
   id?: string;
   servicioId: string;
@@ -251,16 +262,7 @@ export interface Acuerdo {
     oportunidadMejora: string;
     creadoEn: any;
   };
-  historial?: Array<{
-    fecha: any;
-    autorId: string;
-    tipo: 'propuesta' | 'contraoferta' | 'aceptacion' | 'cancelacion';
-    terminos: {
-      exchangeType?: string;
-      terms: string;
-      fechaPropuesta?: Date | null;
-    };
-  }>;
+  historial?: AcuerdoHistorialEntry[];
   creadoEn: any;
   actualizadoEn: any;
 }

@@ -37,7 +37,7 @@ export function CreateAcuerdoModal({ servicio, isSubmitting, onClose, onSubmit }
             </div>
             <div>
               <h2 className="text-lg font-serif text-[#4A4E4D]">Propuesta de Acuerdo</h2>
-              <p className="text-xs text-stone-500">Para: {servicio.titulo}</p>
+              <p className="text-xs text-stone-500">Para: {servicio.title}</p>
             </div>
           </div>
           <button 
