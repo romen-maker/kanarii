@@ -36,6 +36,12 @@ if [ ! -f "$TASK_FILE" ]; then
   exit 1
 fi
 
+# 1b. Eliminar lock ANTES del stage (evita que quede incluido en el commit)
+if [ -f "$LOCK" ]; then
+  rm "$LOCK"
+  echo "🔓 Lock eliminado antes del stage"
+fi
+
 # 2. Stage de todo lo modificado (código + docs ya editados por el agente)
 git -C "$ROOT" add -A
 
@@ -53,12 +59,6 @@ echo "📦 Task file archivado en _archived/"
 # 5. Commit atómico único
 git -C "$ROOT" commit -m "$MESSAGE"
 echo "✅ Commit realizado: $MESSAGE"
-
-# 6. Limpiar lock si existe
-if [ -f "$LOCK" ]; then
-  rm "$LOCK"
-  echo "🔓 Lock eliminado"
-fi
 
 echo ""
 echo "✅ $TASK_ID cerrada correctamente."
