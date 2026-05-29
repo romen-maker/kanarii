@@ -15,6 +15,7 @@ No se usa para seguir implementando cambios nuevos.
 - Dejar registrado lo que cambió y lo que queda pendiente.
 - Archivar la tarea activa.
 - Actualizar el sprint activo y archivarlo si está completado.
+- Actualizar CHANGELOG.md al cerrar un sprint.
 - Eliminar locks y temporales de sesión.
 - Dejar el repositorio listo para revisión, PR o integración según la política del proyecto.
 
@@ -34,6 +35,7 @@ Revisa solo las rutas genéricas o configurables que existan en el proyecto:
 - `.tmp/`
 - `backup/`
 - `.firebase/`
+- `CHANGELOG.md`
 
 Si existen otros artefactos temporales o de validación, deben quedar:
 - archivados en una ruta oficial,
@@ -87,26 +89,37 @@ Si el script falla:
 - `❌ Nada en stage` → todos los cambios ya estaban commitados; revisa con `git log --oneline -3`.
 - `⚠️ GUARDIA SPRINT` → la tarea no está marcada como `✅ Completada` en el sprint activo; edita el sprint primero.
 
-### 4. Archivar el sprint si está completado al 100%
+### 4. Archivar el sprint + actualizar CHANGELOG (si sprint completado al 100%)
 
-Despus del commit de cierre de tarea, verifica si el sprint activo quedó completado al 100%.
-Si es así, archiva el sprint con:
+Después del commit de cierre de tarea, verifica si el sprint activo quedó completado al 100%.
+Si es así, ejecuta **en este orden**:
 
 ```bash
+# 1. Genera la entrada de changelog (NO commitea — solo modifica CHANGELOG.md)
+bash scripts/agent/update-changelog.sh sprint-XX
+
+# 2. Archiva el sprint e incluye CHANGELOG.md en el mismo commit
 bash scripts/agent/close-sprint.sh sprint-XX
 ```
 
-El script verifica que todas las tareas están marcadas como `✅ Completada`, mueve el archivo
-`sprint-XX.md` (y su `sprint-XX-research.md` si existe) a `docs/sprints/_archived/` con `git mv`,
-y luego realiza un commit separado:
+El flujo completo es:
+- `update-changelog.sh` lee los commits del sprint, clasifica por tipo (Conventional Commits),
+  inserta una nueva sección `## [vX.Y.Z] — sprint-XX — YYYY-MM-DD` en `CHANGELOG.md`
+  y sugiere el bump de versión semver (major si hay breaking, minor si hay feat, patch si solo fix).
+- `close-sprint.sh` verifica que todas las tareas están `✅ Completada`, mueve el sprint a
+  `docs/sprints/_archived/` con `git mv`, hace `git add CHANGELOG.md` y commitea todo junto:
 
 ```bash
-git commit -m "chore: archive sprint-XX"
+git commit -m "chore: archive sprint-XX [vX.Y.Z]"
 ```
 
 > **✔️ Regla:** Los sprints en `docs/sprints/` son activos o en curso.
 > Los sprints completados deben vivir en `docs/sprints/_archived/`.
 > Nunca archives un sprint parcialmente completado.
+
+> **ℹ️ Si no quieres actualizar el changelog** (sprint de infraestructura, hotfix, etc.)
+> puedes saltar el paso 1 y ejecutar solo `close-sprint.sh`.
+> El changelog es obligatorio para sprints con features o fixes visibles para el usuario.
 
 ### 5. Detectar qué documentación adicional debe cerrarse
 - Si la sesión generó ADRs, revísalos en `docs/adrs/`.
@@ -136,8 +149,8 @@ Al terminar, debe quedar claro:
 
 - qué se cerró,
 - qué se archivó (tarea y/o sprint),
-- qué se documentó,
-- qué se limpie.
+- qué se documentó (incluyendo CHANGELOG si aplica),
+- qué se limpió.
 
 ## Integración y siguiente paso
 
@@ -158,3 +171,4 @@ El cierre de sesión no debe asumir una política de integración que no exista.
 - No forzar merge a `main` si la política no está definida.
 - **No ejecutar `git add` ni `git commit` manualmente durante el cierre de tarea — usar siempre `close-task.sh`.**
 - **El archivado del sprint (`close-sprint.sh`) va en un commit separado tras el commit de tarea.**
+- **`update-changelog.sh` siempre antes de `close-sprint.sh` si el sprint tiene feat: o fix:.**
