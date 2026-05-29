@@ -20,7 +20,7 @@ export default function SectionHelp({ title, description, animationNode }: Secti
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={toggle}
-        className="fixed bottom-24 right-6 md:static w-10 h-10 rounded-full bg-white border border-[#D2B48C]/30 shadow-md flex items-center justify-center text-[#5A5A40] hover:bg-[#FAF9F6] transition-colors z-40"
+        className="fixed bottom-20 right-6 md:static w-10 h-10 rounded-full bg-white border border-[#D2B48C]/30 shadow-md flex items-center justify-center text-[#5A5A40] hover:bg-[#FAF9F6] transition-colors z-[60]"
         aria-label="Ayuda contextual"
       >
         <Info size={20} strokeWidth={2.5} />

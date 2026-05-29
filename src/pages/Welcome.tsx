@@ -63,11 +63,16 @@ export function Welcome() {
 
   // Si el usuario está autenticado y tiene comunidades, renderizamos el Dashboard
   if (appUser && appUser.communityIds && appUser.communityIds.length > 0) {
-    const totalMiembros = members?.length || 0;
+    const safePropuestas = propuestas || [];
+    const safeTareas = tareas || [];
+    const safeMembers = members || [];
+    const safeProyectos = proyectos || [];
+
+    const totalMiembros = safeMembers.length;
     
     // Conteo de propuestas pendientes de opinión del usuario logueado
     // (status === 'abierta', autor no es el usuario, y el usuario no ha expresado su opinión)
-    const propuestasPendientes = propuestas.filter(p => 
+    const propuestasPendientes = safePropuestas.filter(p => 
       p.status === 'abierta' && 
       p.authorId !== appUser.uid && 
       (!p.userPositions || !p.userPositions[appUser.uid])
@@ -79,7 +84,7 @@ export function Welcome() {
       : 'Tu comunidad está al día. ¡Gracias por participar! ☀️';
 
     // Propuestas en periodo de objeción
-    const propuestasObjecion = propuestas.filter(p => p.status === 'en_objeciones');
+    const propuestasObjecion = safePropuestas.filter(p => p.status === 'en_objeciones');
     const propuestasObjecionesCount = propuestasObjecion.length;
     let propuestasObjecionesPercent = 0;
     if (propuestasObjecion.length > 0 && totalMiembros > 0) {
@@ -91,7 +96,7 @@ export function Welcome() {
     }
 
     // Propuestas en deliberación (abierta o integrando)
-    const propuestasDeliberacion = propuestas.filter(p => p.status === 'abierta' || p.status === 'integrando');
+    const propuestasDeliberacion = safePropuestas.filter(p => p.status === 'abierta' || p.status === 'integrando');
     const propuestasRevisionCount = propuestasDeliberacion.length;
     let propuestasRevisionPercent = 0;
     if (propuestasDeliberacion.length > 0 && totalMiembros > 0) {
@@ -103,7 +108,7 @@ export function Welcome() {
     }
 
     // Tareas activas de círculos
-    const tareasActivas = tareas.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso');
+    const tareasActivas = safeTareas.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso');
     const tareasActivasCount = tareasActivas.length;
     const tareasAsignadas = tareasActivas.filter(t => Boolean(t.asignadaA));
     const tareasAsignadasCount = tareasAsignadas.length;
@@ -134,6 +139,10 @@ export function Welcome() {
         date = new Date(timestamp);
       }
       
+      if (isNaN(date.getTime())) {
+        return 'Recientemente';
+      }
+      
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffMins = Math.floor(diffMs / 60000);
@@ -154,48 +163,52 @@ export function Welcome() {
       return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
     };
 
-    propuestas.forEach(p => {
-      const rawDate = p.updatedAt?.toDate?.() || p.createdAt?.toDate?.() || new Date();
-      let actionStr = 'actualizó la propuesta';
-      if (p.status === 'borrador') actionStr = 'creó el borrador de';
-      else if (p.status === 'abierta') actionStr = 'abrió a opinión';
-      else if (p.status === 'en_objeciones') actionStr = 'inició objeciones de';
-      else if (p.status === 'integrando') actionStr = 'integra objeciones de';
-      else if (p.status === 'acordada') actionStr = 'consensuó';
-      else if (p.status === 'descartada') actionStr = 'descartó';
+    try {
+      safePropuestas.forEach(p => {
+        const rawDate = p.updatedAt?.toDate?.() || p.createdAt?.toDate?.() || new Date();
+        let actionStr = 'actualizó la propuesta';
+        if (p.status === 'borrador') actionStr = 'creó el borrador de';
+        else if (p.status === 'abierta') actionStr = 'abrió a opinión';
+        else if (p.status === 'en_objeciones') actionStr = 'inició objeciones de';
+        else if (p.status === 'integrando') actionStr = 'integra objeciones de';
+        else if (p.status === 'acordada') actionStr = 'consensuó';
+        else if (p.status === 'descartada') actionStr = 'descartó';
 
-      activitiesList.push({
-        id: `p-${p.id}`,
-        time: formatRelativeTime(p.updatedAt || p.createdAt),
-        user: getMemberName(p.authorId),
-        action: actionStr,
-        target: p.title,
-        circle: 'Círculo General',
-        rawDate
+        activitiesList.push({
+          id: `p-${p.id}`,
+          time: formatRelativeTime(p.updatedAt || p.createdAt),
+          user: getMemberName(p.authorId),
+          action: actionStr,
+          target: p.title,
+          circle: 'Círculo General',
+          rawDate
+        });
       });
-    });
 
-    tareas.forEach(t => {
-      const rawDate = t.updatedAt?.toDate?.() || t.createdAt?.toDate?.() || new Date();
-      let actionStr = 'modificó la tarea';
-      if (t.estado === 'pendiente') actionStr = 'creó la tarea';
-      else if (t.estado === 'en_progreso') actionStr = 'inició la tarea';
-      else if (t.estado === 'completada') actionStr = 'completó la tarea';
-      else if (t.estado === 'archivada') actionStr = 'archivó la tarea';
+      safeTareas.forEach(t => {
+        const rawDate = t.updatedAt?.toDate?.() || t.createdAt?.toDate?.() || new Date();
+        let actionStr = 'modificó la tarea';
+        if (t.estado === 'pendiente') actionStr = 'creó la tarea';
+        else if (t.estado === 'en_progreso') actionStr = 'inició la tarea';
+        else if (t.estado === 'completada') actionStr = 'completó la tarea';
+        else if (t.estado === 'archivada') actionStr = 'archivó la tarea';
 
-      const proj = proyectos.find(pr => pr.id === t.proyectoId);
-      const circleName = proj ? `Círculo ${proj.titulo}` : 'Círculo General';
+        const proj = safeProyectos.find(pr => pr.id === t.proyectoId);
+        const circleName = proj ? `Círculo ${proj.titulo}` : 'Círculo General';
 
-      activitiesList.push({
-        id: `t-${t.id}`,
-        time: formatRelativeTime(t.updatedAt || t.createdAt),
-        user: getMemberName(t.creadaPor),
-        action: actionStr,
-        target: t.titulo,
-        circle: circleName,
-        rawDate
+        activitiesList.push({
+          id: `t-${t.id}`,
+          time: formatRelativeTime(t.updatedAt || t.createdAt),
+          user: getMemberName(t.creadaPor),
+          action: actionStr,
+          target: t.titulo,
+          circle: circleName,
+          rawDate
+        });
       });
-    });
+    } catch (err) {
+      console.error("Error al construir feed de actividades en Welcome:", err);
+    }
 
     const recentActivities = activitiesList
       .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime())

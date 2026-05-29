@@ -2,6 +2,312 @@
 
 Todos los cambios notables en este proyecto serán documentados en este archivo. El formato está basado en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] — sprint-09 — 2026-05-29
+
+### ✨ Features
+
+- feat: pasaporte ayudas(T-036)
+- feat: welcome hero sections(T-035)
+- feat: persistencia offline(T-037)
+- feat: close-sprint.sh includes CHANGELOG.md in archive commit
+- feat: add update-changelog.sh and integrate into session-close workflow
+- feat(scripts): add generate-digest.sh + complexity threshold in inventory-check
+- feat(agents): add inventory-check.sh + update sprint-planning and session-start with anti-duplication firewall
+- feat: modal respuesta s3(T-034)
+- feat: sala deliberacion s3(T-033)
+- feat: migracion triada comunitaria(T-023)
+- feat: fix fallback comunidad(T-032)
+- feat: maquina estados s3(T-031)
+- feat(governance): S3 status transition improvements for integrando and en_objeciones
+- feat: generalizar validation communityid(T-029)
+- feat: logout cleanup(T-028)
+- feat(workflow): close-task.sh y session-close.md sin argumentos, mensaje derivado de rama
+- feat(marketplace): vista de detalle de acuerdo, historial y enmiendas
+- feat(proyectos): contador de solicitudes de proyectos pendientes en sidebar
+- feat(agents): lazy-planning rule en caveman.md + cerrar hueco Searched-for en session-start.md
+- feat(agents): close-task.sh + simplificar session-close con protocolo atómico
+- feat(calendario): control de permisos en eventos y sanitizacion de payload antes de guardar en Firestore
+- feat(deliberacion): T-027 directorio de decisiones con filtros de estado y badge de atencion requerida
+- feat(agents): check-sprint.sh + actualizar sprint-planning y caveman con contrato de contexto
+- feat(T-020): ClarificationThread para hilos de aclaración de dudas
+- feat(T-019): CTA aclaración dudas + fixes compilación S3
+- feat(T-018): backfill members profile script & ADRs 009-011
+- feat(T-017): fix de sobreescritura de ficha y registro de ADR-008
+- feat(T-017): corregir displayName vacio al re-entrar por invitacion y solicitudes
+- feat(T-016): modularizar appService.ts por dominio en src/lib/services/
+- feat(T-015): diferenciar causas de error al canjear invitaciones
+- feat(T-014): aplicar DEFAULT_LIST_LIMIT = 50 a todas las listas de Firestore y actualizar sprint-04
+- feat(T-013): abstraer imports de Firebase en hooks y validar communityId
+- feat(T-011): move community switcher to sidebar header on desktop and bottom sheet on mobile
+- feat: implementar reglas de seguridad en firestore.rules para evitar bypass de membresía (T-010)
+- feat(T-009): sync user profile with community memberships and optimize listenAppUser
+- feat(security): T-008 restringir lectura/escritura en subcolecciones de propuestas y posts por comunidad
+- feat(security): implement firestore security rules for community_exits, profiles and fichas onboarding
+- feat(invitaciones): redirigir a comunidad despues de unirse y registrar miembro en batch
+- feat: asegurar reglas de seguridad Firestore para actas y fichas (T-005)
+- feat(T-002): eliminar email de admin hardcoded y alinear reglas de seguridad en espanol
+- feat(T-001): implementar firestore rules y corregir reactividad de auth
+- feat(workflow): añadir punto de entrada de investigación en Fase 2 de session-start
+- feat(workflow): añadir paso 6 de pausa y handoff a /session-start en sprint-planning
+- feat(.agents): add git-gardener skill with Phase 0 sync + gone branches + divergence detection
+- feat: sistema antisabotaje — núcleo completo
+- feat(.agents): token optimization - caveman, DOE framework, skill-manager, tasks template
+- feat: add database audit and cleanup scripts
+- feat: integración onboarding pedagógico con tour S3, escape hatch y progress tracker estático
+- feat(.agents): add inbox-integrator skill and inbox template manifest
+- feat(ficha-comunidad): landing v2 + arquetipos S3 + fix context crash al borrar comunidad + fix duplicate toast keys
+- feat(.agents): add agent-onboarding skill
+- feat(.agents): add chrome-devtools-first, agent-ready-web-contract skills and snapshot-over-screenshot rule
+- feat(comunidades): settings CRUD + auto-switch + ficha pública /c/:slug + configuración inline para admin
+- feat(comunidades): wizard de registro con geocodificación y banner corregido
+- feat(admin): add community health dashboard with metrics, chart and activity feed
+- feat(admin): restructure panel with tab navigation, URL persistence + fix TS bugs
+- feat(acuerdos): add counterproposal flow, negotiation turns, undo cancel + badge for contraoferta
+- feat(badge): notify solicitante when acuerdo status changes via localStorage timestamp
+- feat(ux): clean debug logs, update roadmap, fix redirects and modals
+- feat(nav): navigate to mis_acuerdos tab when badge clicked + cleanup logs
+- feat(acuerdos): chip fecha vencida + badge nav incluye en_curso expirado
+- feat(nav): badge acuerdos pendientes en Sidebar y BottomNav
+- feat(solicitudes): rejection flow with modal, reason display for admin and applicant
+- feat(hooks): add useFichaActions.ts
+- feat(community): member lifecycle - expulsion, voluntary exit, compound key community_members
+- feat(hooks): create useServicioActions and migrate MarketplaceView
+- feat(hooks): create useComunidadActions and migrate ComunidadesView and AdminSolicitudesView
+- feat(hooks): create useProyectoActions and migrate ProyectosView
+- feat(hooks): extend usePropuestaActions and migrate Gobernanza components (Wizard, PropuestaDetail, ResponseModal)
+- feat(hooks): migrate PostDetailModal to usePostActions, fix missing toast on addRespuesta, fix useActaActions to use saveActa
+- feat(hooks): create useEventoActions and migrate CalendarioView to action hook pattern
+- feat(hooks): create usePropuestaActions and migrate PropuestasView to action hook pattern
+- feat(hooks): create useActaActions and migrate ActasPanel to action hook pattern
+- feat(hooks): create usePostActions and migrate Tablon to action hook pattern
+- feat: display text positions (objections, doubts, concerns) in PropuestaDetail
+- feat: enforce mandatory text field for 'duda' response type in ResponseModal
+- feat: professionalize data architecture and member management system
+- feat(gobernanza): motor de quórum S3 completo
+- feat(infra): instalar agent-skills de Firebase y añadir skill personalizada firebase-kanarii
+- feat(propuestas): S3Timeline + ConsentGrid con privacidad por diseño
+- feat(propuestas): ResponseModal con jerarquía visual S3 y validación de objeciones
+- feat(propuestas): PropuestaDetail con diferenciación de roles y estado acordada
+- feat(propuestas): PropuestaCard + PropuestasView con Kanban de gobernanza
+- feat: complete marketplace sovereignty MVP level 1 with owner actions and undoable delete
+- feat: unified auth modal with login mode, fix magic link return flow for existing users
+- feat: unificación de persistencia de onboarding y fix de limbo arquitectónico (Abián)
+- feat: magic link cross-device persistence, membership guards, and admin ficha integration
+- feat: magic link auth + google on ficha save — unauthenticated onboarding with auth gate before persist
+- feat: invitation code generator and management in admin panel — mobile nav parity for communities and admin links
+- feat: community admin panel and navigation visibility fixes
+- feat: community model v2 — invitations, manifesto, multi-membership and discovery services
+- feat: update visual identity with palm icon in sidebar and logo in welcome screen
+- feat: replace placeholder icons with kanarii-logo.svg in sidebar
+- feat: inline editing for community board posts
+- feat: community board with needs/offers, async responses and state management
+- feat: community calendar with real-time sync and premium UI
+- feat: structured cruce analysis with CNV, shadows, rank map and enriched channels
+- feat: reactividad total en panel de detalle y modal de edición de actas
+- feat: refactor ProyectosView a arquitectura DRY con useProyectos y useEntityActions
+- feat: complete architectural refactor Phase 2 - dumb views and service centralization
+- feat: complete architecture refactor phase 1 - foundation hooks
+- feat: standard architecture rules, visual redesign of EntityCard and audit skill
+
+### 🐛 Bug Fixes
+
+- fix(protocol): cerrar grieta task files cruzados y Listed directory en .agents/tasks/
+- fix(protocol): ampliar checkpoint lazy-planning, tabla de violaciones y script fusionado
+- fix(workflow): checkpoint lazy-planning (Fase 2.5), auditoría vinculada, mecanismo en caveman, verificación en session-close y script check-lazy-planning.sh
+- fix(workflow): añadir campo audit trail en bloque de aprobación Fase 3.5
+- fix(workflow): eliminar lock antes del git add -A en close-task.sh
+- fix(gobernanza): usar currentCommunityId de ComunidadContext para validar acceso a propuestas
+- fix(T-017): añadir guardia de datos de perfil al sincronizar fichas
+- fix(T-017): forzar refresh de auth y leer profiles directamente para displayName en reingreso con sesión activa
+- fix(T-017): evitar sobreescribir displayName vacio en getAppUser needsUpdate
+- fix(T-017): refinar fallback de displayName y nombre en invitaciones
+- fix(T-017): fix displayName backfill y getMemberName fallback
+- fix(agents): detectar tareas En curso en FASE 1 y alertar antes de continuar
+- fix(agents): marcar sesión cerrada en task file ANTES de archivar (C4)
+- fix: mover firebase-crashlytics y firebase-data-connect a _archived/ con contenido completo
+- fix: auditoría QwenCoder + renombrar inbox/ → external-inbox/
+- fix: restaurar accesibilidad-comunitaria al activo + actualizar inventario
+- fix: defensive fallback for deleted servicioId in acuerdos
+- fix(dashboard): robust date parsing for acuerdos chart
+- fix(members): improve getMemberName fallback resolution
+- fix(marketplace): add stopPropagation to acuerdo modal trigger
+- fix(members): resolve rolComunitario field mapping
+- fix: remove arquetipo selector from FichaModal
+- fix: remove arquetipo selector from FichaModal
+- fix: rolComunitario field mapping in ComunidadSubTab
+- fix: AcuerdoDetailModal conditional in AdminPanelModals
+- fix(admin-panel): roles, gráfico dashboard y key prop en TareasPanel
+- fix(admin): fallback for invalid dates and deleted services in Marketplace tab
+- fix(members): getMemberName returns Miembro for unknown UIDs after load
+- fix(marketplace): use getMemberName from useCommunityMembers hook (DRY)
+- fix(nav): hoist isAdmin declaration in BottomNav
+- fix(acuerdos): replace undefined with null for fechaPropuesta + type safety
+- fix(solicitudes): create community_members doc on request approval
+- fix(ficha): show leave button using appUser.communityIds instead of stale ficha.communityId
+- fix(admin): show correct nombreUsuario in bajas recientes
+- fix(admin): member lifecycle bugs - nombre en bajas, Abián invisible en lista
+- fix(ficha): move displayFicha declaration before useEffect to resolve TDZ ReferenceError
+- fix(invitations): reactive appUser listener, duplicate membership guard, input sanitization, silent error toast control
+- fix: define closeModal in ActasPanel, fix EntityCard props, add useTareaActions and migrate TareasPanel and CreateActaModal
+- fix(hooks): add missing useCallback import in usePropuestaDetail
+- fix(hooks): normalize reload and error contract in useCommunityMembers, useActas, useFicha, usePropuestaDetail, usePropuestas, useTareas
+- fix(hooks): normalize reload and error contract in useAcuerdos, useEventos, usePosts, useServicios
+- fix(AdminPanel): consolidate imports and use correct getUserFicha export
+- fix: implement lazy TTL cleanup for pending fichas (Spark Plan optimization)
+- fix: ensure communityId persistence in community_members index
+- fix(appService): permitir respuesta del autor y corrección de tipos TS
+- fix(onboarding): propagar communityId a fichas/profiles al usar invitación
+- fix: communities view — mobile layout, input visibility and submission spinner reset
+- fix: AdminPanel crashes, data backfill and multi-community scoping
+- fix: resolver lectura de datos de Diseño Humano y cálculo de canales
+- fix: mejorar reactividad del panel de actas y limpieza de logs
+- fix: añadir import de saveActa y corregir uso de useToast
+- fix: corregir argumentos de saveActa en CreateActaModal
+- fix: restaurar funcionalidad de guardado en CreateActaModal
+- fix: sincronizar props de KanbanBoard y añadir loader visual
+- fix: añadir seguridad ante nulos en mapeo de habilidades de proyectos
+- fix: restaurar renderizado de ProyectosView añadiendo iconos faltantes
+- fix: startDelete config en renderProjectCard + import EntityVariant
+
+### ♻️ Refactoring
+
+- refactor: T-021 migrate all realtime firestore hooks to useFirestoreCollection & fix selected project reactivity bug
+- refactor(agents): compactar session-start.md bajo límite 12000 chars
+- refactor(admin-panel): SRP completo — AdminPanel.tsx de 1468 a 240 líneas
+- refactor(admin): extract useDashboardStats hook
+- refactor(admin): extract badge utilities and consolidate useCommunityMembers
+- refactor(pages): extract AdminSolicitudesView logic to hooks
+- refactor(hooks): fix useActas return signature to match project standard { items, loading, error, reload }
+- refactor: AuthContext delegates Firestore to appService, adds communityId to user context
+- refactor: extraer modales de Proyectos y Actas a componentes independientes
+- refactor: CruceView delega lógica a appService y usa useToast
+- refactor: ActasPanel usa EntityCard y acciones unificadas
+- refactor: TareasPanel delega lógica a hooks y unifica UI con KanbanBoard
+- refactor: crear useProyectos hook e integrarlo en ProyectosView
+
+### 📚 Documentación
+
+- docs(roadmap): update roadmap after implementation audit
+- docs: sprints archivados
+- docs: update session-close to include sprint archiving step
+- docs(sprint): archivar tarea T-025 y actualizar sprint-06.md
+- docs: remove active task-021 file after archiving
+- docs: close task-021, update sprint-05 and clean session lock
+- docs(rules): formalizar convención idioma componentes React y textos UI
+- docs(sprint-05): archivar task-020 y actualizar sprint con el cierre de sesión
+- docs: update sprint-05 task status for T-019
+- docs: remove deprecated idea-inbox.md in favor of structured date-based docs
+- docs(inbox): añadir ideas Pasaporte Comunitario y ADRs S3 para Sprint 06
+- docs(adr): add ADR-007 modularizacion appservice por dominio
+- docs(workflows): add check-inbox.sh and refactor sprint-planning step 3 to consolidate inbox processing
+- docs(workflows): update session-close and close task-011 correctly
+- docs(sprint): T-008 completar tarea en sprint-02 y archivar task-008
+- docs(idea): capture firestore rules testing emulator idea in inbox
+- docs(agents): auditoría II — cerrar gaps Fase 2, verificación _archived y lectura de código pre-aprobación
+- docs(agents): auditoría de protocolo — cerrar gap estado liminal post-ejecución
+- docs(T-006): archivar tarea 006 y registrar sintomas en idea-inbox
+- docs(sprint-02): guardar investigación Perplexity — reglas Firestore subcolecciones multi-tenant
+- docs: mejorar flujos — research por sprint, caso sprint completo en session-start, archivado de research en session-close
+- docs: actualizar roadmap y vaciar idea-inbox
+- docs: archivar task-005 y actualizar sprint-02
+- docs: actualizar ROADMAP.md verificado + crear idea-inbox con bugs detectados 23/05/2026
+- docs: move archived skills out of agent workspace Move .agents/skills/_archived/ → docs/archive/skills/
+- docs(inbox): añadir AUDIT-05, 06, 07 — recomendaciones de refactor QwenCoder
+- docs(workflow): añadir paso 2b — decisión sobre tareas incompletas al cambiar de sprint
+- docs(inbox): añadir auditoría QwenCoder mayo 2026 (AUDIT-01 a AUDIT-04)
+- docs(workflow): añadir protocolo de ingestión de auditorías externas
+- docs(T-002): registrar ADRs de gobernanza y documentar auditoria de datos de Firebase
+- docs: añadir documento de referencia del flujo de trabajo completo
+- docs(roadmap): merge análisis Qwen — añadir 15 items faltantes, corregir prioridades y consolidar estructura
+- docs: add code audit and improvement plan
+- docs: add technical audit - architecture, data model, flows, pages, hooks
+- docs(onboarding): add educational animations specification and update roadmap
+- docs(readme): link to kanairos context documentation
+- docs: add kanairos-context explaining kanarii's role in the ecosystem
+- docs(readme): link kanarii as first kanairos node
+- docs(roadmap): marcar tareas de comunidades como completadas
+- docs: add tech debt and comunidad auto-switch to roadmap
+- docs(roadmap): add global marketplace and community onboarding features
+- docs: add visual design system and agent identity rules as a skill
+- docs(roadmap): add marketplace interaction audit and architectural decision on HD modules
+- docs(roadmap): add invitation validation audit and membership removal backlog
+- docs(roadmap): add visual coherence session and login reactivity bug
+- docs: explicar infraestructura de agentes y flujo de verificación visual
+- docs(agent): prohibir diálogos nativos en principios core
+- docs(agent): blindar reglas de nomenclatura y modelo de datos
+- docs(agent): rewrite GEMINI.md and DEFINITION_OF_DONE.md for Kanarii context
+- docs: add open source infrastructure (CONTRIBUTING, CODE_OF_CONDUCT, CHANGELOG)
+- docs: add implementar-feature-dry skill
+- docs: setup agent skills and rules for Kanarii ecosystem
+- docs: update roadmap and readme to reflect current project state
+
+### 🔧 Mantenimiento
+
+- chore: add sprint completion guard to close-task.sh
+- chore: add close-sprint.sh — archive completed sprint to docs/sprints/_archived/
+- chore: eliminar lock de sesion
+- chore: remove lock from git tracking
+- chore(roadmap): marcar T-027 como completada en ROADMAP.md
+- chore(sprints): marcar T-027 como completada en sprint-06.md
+- chore(tasks): archivar task-027.md
+- chore(tasks): marcar sesion cerrada en task-027.md
+- chore: sprint 06 planning, archive ideas & update roadmap
+- chore(T-019): archive completed task file
+- chore(T-019): mark session as closed in task file
+- chore: archivar research de sprint-04 y remover lock de sesion
+- chore(sprint): marcar T-013 como completado en sprint-04
+- chore(T-013): archivar archivo de tarea T-013
+- chore: archivar task-010 y limpiar lock de sesión
+- chore: archive task-009
+- chore(sprint): mark T-007 as completed in sprint-02.md
+- chore: archive task-007 after completion
+- chore: cierre de sesión sprint-01 [T-002/T-003]
+- chore(workflow): añadir verificación de código pre-sprint en sprint-planning
+- chore(workflow): reforzar freno de aprobación en session-start y template
+- chore(workflow): añadir checklist de aprobación al template de tareas
+- chore(workflow): reforzar freno de aprobación en session-start
+- chore(T-002): actualizar sprint-01 y archivar documentacion de la tarea
+- chore(T-001): cierre administrativo de rescate task-001
+- chore: eliminar stubs vacíos de skills duplicadas en activo
+- chore: eliminar stubs de archivado del directorio activo
+- chore: vaciar skills archivadas de la carpeta activa
+- chore: archivar accesibilidad-comunitaria
+- chore: inventario de skills + archivar 12 skills inactivas
+- chore: expose _archived/ folders to git tracking
+- chore: track _archived README files (force-add past .gitignore)
+- chore: track useProfiles hook (previously untracked)
+- chore(agents): enforce hard stop protocol in strict-workflow
+- chore(agents): add audit-before-refactor rule
+- chore(agents): limpieza de skills irrelevantes y nuevas rules/skill de guardia
+- chore: rename .agent to .agents (official Antigravity naming convention)
+- chore(infra): unificar .agents/ en .agent/ para evitar duplicidad
+- chore: añadir favicon y actualizar título de la app
+
+### 📦 Otros
+
+- quitado el lazy point de session start
+- doc actualizada
+- cambios en check-inbox.sh para que detecte subcarpetas dentro de external-inbox y /session-start para que recomiende cambio de modelo para el /sprint-planning
+- test(T-012): configurar Firebase Emulator con JDK 21 local y tests locales de firestore rules
+- borrados flujos obsoletos
+- restaurada fase 3.5 a estado anterior
+- ROADMAP.md actualizado
+- añadido flujo session-close
+- test(T-002): agregar suite de validacion de reglas y configurar exclusion de temporales
+- Sprint 00 — Histórico
+- cambios en la documentación
+- external-inbox incluido
+- añadido en .agents/cli_onboarding.md
+- añadido inbox/
+- gitignore reparado
+- Title: Implement community member lifecycle management hooks and services
+- perf: limit node memory and optimize vite cache
+- Create LICENSE
+- iconos e imágenes añadidas a public
+- style: EntityCard alineada con paleta y botones de TareaCard
+- style: EntityCard replica TareaCard aesthetic con variables semánticas
+- design: semantic EntityCard with premium styling and dark mode support
+
 ## [Unreleased]
 
 ### Añadido

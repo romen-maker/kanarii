@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import KanariiOnboarding from '../components/onboarding/KanariiOnboarding';
+import GovernanceFlowAnimation from '../components/onboarding/GovernanceFlowAnimation';
 import AsynchronousLogicAnimation from '../components/onboarding/AsynchronousLogicAnimation';
 import RolesAnimation from '../components/onboarding/RolesAnimation';
 import CruceAnimation from '../components/onboarding/CruceAnimation';
@@ -158,7 +158,7 @@ export default function KanariiTourPage() {
 
         {view === 'tour' && (
           <motion.div key="tour" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
-            {tourStep === 0 && <KanariiOnboarding onNext={nextTourStep} onBack={backToMenu} progressTracker={progressTracker} />}
+            {tourStep === 0 && <GovernanceFlowAnimation onNext={nextTourStep} onBack={backToMenu} progressTracker={progressTracker} />}
             {tourStep === 1 && <ComunidadesCirculosAnimation onNext={nextTourStep} onBack={backToMenu} progressTracker={progressTracker} />}
             {tourStep === 2 && <DoubleLinkAnimation onNext={nextTourStep} onBack={backToMenu} progressTracker={progressTracker} />}
             {tourStep === 3 && <ConsentElectionAnimation onNext={nextTourStep} onBack={backToMenu} progressTracker={progressTracker} />}
@@ -169,7 +169,7 @@ export default function KanariiTourPage() {
 
         {view === 'individual' && (
           <motion.div key="individual" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen">
-            {selectedModule === 'a1' && <KanariiOnboarding onNext={() => setView('menu')} onBack={backToMenu} />}
+            {selectedModule === 'a1' && <GovernanceFlowAnimation onNext={() => setView('menu')} onBack={backToMenu} />}
             {selectedModule === 'a2' && <CruceAnimation onNext={() => setView('menu')} onBack={backToMenu} />}
             {selectedModule === 'a3' && <FichaRolesAnimation onNext={() => setView('menu')} onBack={backToMenu} />}
             {selectedModule === 'a4' && <AsynchronousLogicAnimation onNext={() => setView('menu')} onBack={backToMenu} />}

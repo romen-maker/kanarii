@@ -15,6 +15,8 @@ import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
 import { ProjectDetailOverlay } from '../components/ProjectDetailOverlay';
 import { CreateProjectModal } from '../components/CreateProjectModal';
+import SectionHelp from '../components/help/SectionHelp';
+import ProyectosUISimulation from '../components/help/ProyectosUISimulation';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'buscando_colaboradores', title: 'Buscando Ayuda', accentColor: 'var(--color-info)' },
@@ -153,7 +155,19 @@ export function ProyectosView() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 mb-2">
             <Briefcase className="w-8 h-8 text-[#D4C3A3]" />
-            <h1 className="font-serif text-3xl">Proyectos</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="font-serif text-3xl">Proyectos</h1>
+              <SectionHelp 
+                title="Proyectos Comunitarios" 
+                description={
+                  <div className="space-y-4">
+                    <p>Los Proyectos representan las iniciativas a mediano y largo plazo desarrolladas colectivamente en la comunidad.</p>
+                    <p>Cualquier miembro puede crear un proyecto o solicitar unirse a uno existente aportando sus talentos. El tablero Kanban permite visualizar el estado del proyecto: desde la búsqueda de ayuda inicial hasta su completa realización.</p>
+                  </div>
+                } 
+                animationNode={<ProyectosUISimulation />} 
+              />
+            </div>
           </div>
           {appUser && !showCreateModal && (
             <button 

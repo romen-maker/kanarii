@@ -1,13 +1,13 @@
 # Sprint 09 — 2026-06-04 → 2026-06-10
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-035 | Animaciones onboarding: crear GovernanceFlowAnimation y WelcomeHeroSections | L | ✅ Hecho | `.agents/tasks/task-035.md` |
-| T-036 | Pasaporte Comunitario: vista pública del perfil con Triada Comunitaria | M | ⬜ Pendiente | — |
+| T-035 | Animaciones onboarding: crear GovernanceFlowAnimation y WelcomeHeroSections | L | ✅ Completada | `.agents/tasks/_archived/task-035.md` |
+| T-036 | Pasaporte Comunitario: vista pública del perfil con Triada Comunitaria | M | ✅ Completada | `.agents/tasks/task-036.md` |
 | T-037 | Activar persistencia offline de Firestore (IndexedDB) con estrategia segura | M | ✅ Completada | `.agents/tasks/task-037.md` |
 
 ## Notas de planning

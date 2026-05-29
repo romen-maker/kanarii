@@ -14,6 +14,8 @@ import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { CreateActaModal } from '../components/CreateActaModal';
 import { ActaDetailOverlay } from '../components/ActaDetailOverlay';
 import { EntityCard } from '../components/ui/EntityCard';
+import SectionHelp from '../components/help/SectionHelp';
+import ActasUISimulation from '../components/help/ActasUISimulation';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
@@ -80,7 +82,19 @@ export function ActasPanel() {
       <header className="bg-white border-b border-[#EAE2D6] sticky top-0 z-20 shadow-sm py-4 px-6 md:px-12 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Leaf className="w-6 h-6 text-[#6B705C]" />
-          <span className="font-serif text-xl text-[#4A4E4D]">Biblioteca de Actas</span>
+          <div className="flex items-center gap-3">
+            <span className="font-serif text-xl text-[#4A4E4D]">Biblioteca de Actas</span>
+            <SectionHelp 
+              title="Biblioteca de Actas" 
+              description={
+                <div className="space-y-4">
+                  <p>La Biblioteca de Actas es la memoria viva de nuestra comunidad. Aquí se registran las decisiones colectivas que guían el rumbo del espacio común.</p>
+                  <p>Cada acta incluye el facilitador, los participantes, los temas abordados y las tareas resultantes, asegurando transparencia y continuidad en la gobernanza.</p>
+                </div>
+              } 
+              animationNode={<ActasUISimulation />} 
+            />
+          </div>
         </div>
       </header>
 

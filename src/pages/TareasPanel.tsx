@@ -20,6 +20,8 @@ import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { CreateTareaModal } from '../components/CreateTareaModal';
 import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
+import SectionHelp from '../components/help/SectionHelp';
+import TareasUISimulation from '../components/help/TareasUISimulation';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'pendiente', title: 'Pendientes', accentColor: 'var(--color-info)' },
@@ -156,7 +158,19 @@ export function TareasPanel() {
       <header className="bg-white border-b border-[#EAE2D6] sticky top-0 z-10 shadow-sm py-4 px-6 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Leaf className="w-6 h-6 text-[#6B705C]" />
-          <span className="font-serif text-xl text-[#4A4E4D]">Tareas Comunitarias</span>
+          <div className="flex items-center gap-3">
+            <span className="font-serif text-xl text-[#4A4E4D]">Tareas Comunitarias</span>
+            <SectionHelp 
+              title="Tareas de la Comunidad" 
+              description={
+                <div className="space-y-4">
+                  <p>El panel de Tareas Comunitarias organiza el trabajo del día a día de nuestro espacio común.</p>
+                  <p>Aquí gestionamos las labores pendientes, en progreso y completadas. Cualquier miembro puede autoasignarse responsabilidades o proponer nuevas tareas necesarias para el bienestar y mantenimiento del grupo.</p>
+                </div>
+              } 
+              animationNode={<TareasUISimulation />} 
+            />
+          </div>
         </div>
       </header>
 

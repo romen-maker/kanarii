@@ -18,19 +18,21 @@ Archivos autorizados para modification:
 - `src/pages/TareasPanel.tsx`
 - `src/components/onboarding/GovernanceFlowAnimation.tsx`
 - `src/components/onboarding/KanariiOnboarding.tsx`
+- `src/pages/KanariiTourPage.tsx`
+- `src/App.tsx`
 
 ## Criterios de done
-- [ ] Vista `PasaporteComunitarioView.tsx` creada/actualizada con `PasaporteVisual` y conectada a Firestore (sin números, con CTA "Conectar vía Tablón")
-- [ ] Ayudas contextuales de `help/` integradas en Marketplace, Actas, Proyectos y Tareas
-- [ ] `KanariiOnboarding.tsx` renombrado a `GovernanceFlowAnimation.tsx` y todos sus imports actualizados
-- [ ] Compilación sin errores TypeScript
+- [x] Vista `PasaporteComunitarioView.tsx` creada/actualizada con `PasaporteVisual` y conectada a Firestore (sin números, con CTA "Conectar vía Tablón")
+- [x] Ayudas contextuales de `help/` integradas en Marketplace, Actas, Proyectos y Tareas
+- [x] `KanariiOnboarding.tsx` renombrado a `GovernanceFlowAnimation.tsx` y todos sus imports actualizados
+- [x] Compilación sin errores TypeScript
 
 ## Estado de aprobación
 > Este bloque lo rellena el agente durante /session-start.
 > No modificar manualmente.
 
-- [ ] Plan presentado al usuario (Fase 3.5)
-- [ ] APROBADO recibido — fecha/hora: ___
-- [ ] Rama creada: ___
-- [ ] Lock activo: ___
-- [ ] Sesión cerrada correctamente
+- [x] Plan presentado al usuario (Fase 3.5)
+- [x] APROBADO recibido — fecha/hora: 2026-05-29T16:17:47+01:00
+- [x] Rama creada: feat/T-036-pasaporte-ayudas
+- [x] Lock activo: .agent-session.lock
+- [x] Sesión cerrada correctamente
