@@ -6,6 +6,11 @@
 # Propósito: Evitar que se describan tareas como "no implementadas" cuando ya existen.
 # Ejecutar ANTES de redactar el scope en .agents/tasks/task-XXX.md
 # y ANTES de añadir una tarea al sprint (paso 2c de sprint-planning).
+#
+# Al final del check, evalúa la señal de complejidad (0–3).
+# Si SIGNAL >= 2, genera automáticamente un digest de la zona caliente
+# via generate-digest.sh para que el agente tenga contexto panorámico.
+# El test -f en session-start sigue siendo el firewall determinista final.
 
 set -euo pipefail
 
@@ -24,6 +29,7 @@ echo "Directorio: $ROOT/src"
 echo ""
 
 FOUND_COUNT=0
+ALL_MATCHES=""
 
 # 1. Buscar archivos cuyo NOMBRE contiene alguna keyword (más barato que grep de contenido)
 echo "📁 Archivos cuyo nombre coincide:"
@@ -37,6 +43,7 @@ for keyword in $KEYWORDS; do
       [ "$(wc -c < "$f" 2>/dev/null)" -gt 3072 ] && FLAG="⚠️  EXISTE (${KB}KB)"
       echo "    ↳ ${f#$ROOT/}  [$FLAG]"
       FOUND_COUNT=$((FOUND_COUNT + 1))
+      ALL_MATCHES="$ALL_MATCHES\n$f"
     done <<< "$MATCHES"
   fi
 done
@@ -56,6 +63,7 @@ for keyword in $KEYWORDS; do
       [ "$(wc -c < "$f" 2>/dev/null)" -gt 3072 ] && FLAG="  ⚠️  ${KB}KB — no recrear"
       echo "    ↳ ${f#$ROOT/}${FLAG}"
       FOUND_COUNT=$((FOUND_COUNT + 1))
+      ALL_MATCHES="$ALL_MATCHES\n$f"
     done <<< "$MATCHES"
   fi
 done
@@ -71,6 +79,7 @@ if [ -f "$TYPES_FILE" ]; then
       echo "  '$keyword':"
       echo "$MATCHES" | sed 's|^|    ↳ |'
       FOUND_COUNT=$((FOUND_COUNT + 1))
+      ALL_MATCHES="$ALL_MATCHES\n$TYPES_FILE"
     fi
   done
   [ $FOUND_COUNT -eq 0 ] && echo "    (sin tipos relacionados)"
@@ -88,6 +97,7 @@ if [ -d "$ROOT/src/hooks" ]; then
   if [ -n "$MATCHES" ]; then
     echo "$MATCHES" | sed "s|$ROOT/||" | sed 's|^|    ↳ |'
     FOUND_COUNT=$((FOUND_COUNT + 1))
+    ALL_MATCHES="$ALL_MATCHES\n$MATCHES"
   else
     echo "    (ninguno)"
   fi
@@ -99,12 +109,56 @@ echo ""
 echo "=== FIN INVENTORY CHECK ==="
 echo ""
 
-if [ $FOUND_COUNT -gt 0 ]; then
-  echo "⚠️  Se encontraron coincidencias. ANTES de escribir el task file o añadir al sprint:"
-  echo "   1. Lee los archivos marcados con ⚠️  — contienen código existente relevante."
-  echo "   2. En el task file, añade una sección '## Código existente detectado' con lo que ya hay."
-  echo "   3. Describe SOLO lo que FALTA, no lo que ya está implementado."
-  echo "   4. Si el scope ya está >50% cubierto → consulta con el usuario antes de planificar."
+# ── Evaluación de complejidad para digest condicional ────────────────────────
+
+# 1. Archivos únicos detectados
+UNIQUE_FILES=$(printf "%b" "$ALL_MATCHES" | grep -v '^$' | sort -u | grep -c . 2>/dev/null || echo 0)
+
+# 2. Capas distintas afectadas (componentes, hooks, tipos)
+LAYERS=0
+printf "%b" "$ALL_MATCHES" | grep -qi "\.tsx\|component" && LAYERS=$((LAYERS + 1)) || true
+printf "%b" "$ALL_MATCHES" | grep -qi "use[A-Z]\|hook" && LAYERS=$((LAYERS + 1)) || true
+printf "%b" "$ALL_MATCHES" | grep -qi "_types\|interface\|type " && LAYERS=$((LAYERS + 1)) || true
+
+# 3. Subcarpeta caliente (>=2 archivos en la misma ruta de 2 niveles)
+HOT_FOLDER=$(printf "%b" "$ALL_MATCHES" | grep -v '^$' \
+  | grep -oP "src/[^/]+/[^/]+" 2>/dev/null \
+  | sort | uniq -c | sort -rn \
+  | awk '$1 >= 2 {print $2; exit}' || echo "")
+
+# 4. Evaluar umbral: >=2 condiciones activas
+SIGNAL=0
+[ "$UNIQUE_FILES" -ge 3 ] && SIGNAL=$((SIGNAL + 1)) || true
+[ "$LAYERS" -ge 2 ]       && SIGNAL=$((SIGNAL + 1)) || true
+[ -n "$HOT_FOLDER" ]      && SIGNAL=$((SIGNAL + 1)) || true
+
+echo "=== EVALUACIÓN DE COMPLEJIDAD ==="
+echo "  Archivos únicos:  $UNIQUE_FILES"
+echo "  Capas afectadas:  $LAYERS / 3 (componentes / hooks / tipos)"
+echo "  Carpeta caliente: ${HOT_FOLDER:-(ninguna)}"
+echo "  Señal total:      $SIGNAL / 3"
+echo ""
+
+if [ "$SIGNAL" -ge 2 ]; then
+  echo "⚠️  Señal de complejidad alta. Generando digest de contexto compacto..."
+  DIGEST_FILTER="${HOT_FOLDER:-src}"
+  EXCLUDE_OPTS=""
+  if [ "$DIGEST_FILTER" = "src" ]; then
+    echo "   (sin subcarpeta clara → digest de src/ excluyendo tests y stories)"
+    EXCLUDE_OPTS="--exclude-pattern '*.test.* *.spec.* *.stories.*'"
+  fi
+  echo ""
+  bash "$(dirname "$0")/generate-digest.sh" --filter "$DIGEST_FILTER" $EXCLUDE_OPTS
+  echo ""
+  echo "💡 Usa el digest para redactar '## Código existente detectado' en el task file."
+  echo "   El test -f en session-start sigue siendo el firewall determinista final."
+
+elif [ $FOUND_COUNT -gt 0 ]; then
+  echo "⚠️  Coincidencias encontradas pero señal de complejidad baja."
+  echo "   1. Lee los archivos marcados con ⚠️  antes de escribir el task file."
+  echo "   2. Describe SOLO lo que FALTA, no lo que ya está implementado."
+  echo "   3. Si el scope ya está >50% cubierto → consulta con el usuario antes de planificar."
+
 else
   echo "✅ Sin coincidencias. Puedes describir la tarea desde cero."
 fi

@@ -19,3 +19,8 @@ external-inbox/*
 backup/
 out.txt
 .firebase/
+
+# LLM Context Digests — generados bajo demanda, efímeros, no se versionan
+docs/llm-context/*
+!docs/llm-context/.gitkeep
+!docs/llm-context/README.md
