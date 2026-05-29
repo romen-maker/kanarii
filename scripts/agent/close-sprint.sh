@@ -4,15 +4,18 @@
 #
 # Solo archiva si TODAS las tareas del sprint están marcadas como ✅ o 🟢 Completada.
 # Archiva también el archivo -research.md si existe.
-# No hace commit — el commit lo gestiona close-task.sh o el agente manualmente.
+# Si CHANGELOG.md fue modificado por update-changelog.sh, lo incluye en el mismo commit.
 #
 # PREREQUISITO: El sprint-XX.md ya tiene estado "✅ Completado" en la sección ## Estado.
+# PREREQUISITO OPCIONAL: Haber ejecutado update-changelog.sh antes para que CHANGELOG.md
+#   esté modificado y listo para incluirse en este commit.
 
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 SPRINTS_DIR="$ROOT/docs/sprints"
 ARCHIVE_DIR="$ROOT/docs/sprints/_archived"
+CHANGELOG="$ROOT/CHANGELOG.md"
 
 # --- Validar argumento ---
 if [ -z "${1:-}" ]; then
@@ -48,6 +51,22 @@ if [ "$DONE" -lt "$TOTAL" ]; then
   echo "   ⚠️  FORCE=1 activo — archivando de todas formas."
 fi
 
+# --- Detectar versión sugerida en CHANGELOG (para el mensaje de commit) ---
+CHANGELOG_MODIFIED=false
+VERSION_TAG=""
+
+if [ -f "$CHANGELOG" ]; then
+  # Comprueba si CHANGELOG.md tiene cambios no commiteados (staged o unstaged)
+  if ! git -C "$ROOT" diff --quiet "$CHANGELOG" 2>/dev/null || \
+     ! git -C "$ROOT" diff --cached --quiet "$CHANGELOG" 2>/dev/null; then
+    CHANGELOG_MODIFIED=true
+    # Extrae la versión de la primera entrada del changelog
+    VERSION_TAG=$(grep -m1 '^## \[' "$CHANGELOG" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+    echo "📝 CHANGELOG.md modificado detectado — se incluirá en el commit."
+    [ -n "$VERSION_TAG" ] && echo "   Versión detectada: v${VERSION_TAG}"
+  fi
+fi
+
 # --- Archivar ---
 mkdir -p "$ARCHIVE_DIR"
 git -C "$ROOT" mv "$SPRINT_FILE" "$ARCHIVE_DIR/"
@@ -60,7 +79,24 @@ if [ -f "$RESEARCH_FILE" ]; then
   echo "📦 Archivado: ${SPRINT_NAME}-research.md → docs/sprints/_archived/"
 fi
 
+# --- Incluir CHANGELOG.md si fue modificado por update-changelog.sh ---
+if [ "$CHANGELOG_MODIFIED" = true ]; then
+  git -C "$ROOT" add "$CHANGELOG"
+  echo "📋 CHANGELOG.md añadido al stage."
+fi
+
+# --- Commit atómico ---
+if [ -n "$VERSION_TAG" ]; then
+  COMMIT_MSG="chore: archive ${SPRINT_NAME} [v${VERSION_TAG}]"
+else
+  COMMIT_MSG="chore: archive ${SPRINT_NAME}"
+fi
+
+git -C "$ROOT" commit -m "$COMMIT_MSG"
+
 echo ""
-echo "✅ $SPRINT_NAME archivado correctamente ($DONE/$TOTAL tareas ✅)."
-echo "   Siguiente paso: commitea con 'git commit -m \"chore: archive $SPRINT_NAME\"'"
-echo "   O deja que close-task.sh incluya este cambio en su commit atómico."
+echo "✅ $SPRINT_NAME archivado y commiteado ($DONE/$TOTAL tareas ✅)."
+echo "   Commit: $COMMIT_MSG"
+if [ "$CHANGELOG_MODIFIED" = true ]; then
+  echo "   CHANGELOG.md incluido en el commit."
+fi
