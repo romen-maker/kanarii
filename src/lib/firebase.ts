@@ -1,6 +1,14 @@
+/// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { 
+  initializeFirestore, 
+  getFirestore,
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  memoryLocalCache
+} from 'firebase/firestore';
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -11,5 +19,39 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID);
 export const auth = getAuth(app);
+
+function initDb() {
+  const hasLocalStorage = (() => {
+    try {
+      localStorage.setItem('_k', '1');
+      localStorage.removeItem('_k');
+      return true;
+    } catch { 
+      return false; 
+    }
+  })();
+
+  const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID;
+
+  try {
+    return initializeFirestore(
+      app,
+      {
+        localCache: hasLocalStorage
+          ? persistentLocalCache({
+              tabManager: persistentMultipleTabManager(),
+              cacheSizeBytes: 50 * 1024 * 1024 // 50MB
+            })
+          : memoryLocalCache()
+      },
+      databaseId
+    );
+  } catch (err: any) {
+    console.warn('[Firestore] Persistencia no disponible, usando fallback en memoria:', err.code);
+    return getFirestore(app, databaseId);
+  }
+}
+
+export const db = initDb();
+
