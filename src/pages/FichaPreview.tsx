@@ -99,7 +99,7 @@ export function FichaPreview() {
             const mappedData = {
               ...realFicha.datosPersona,
               ...realFicha.datosOnboarding,
-              rol: realFicha.rol || realFicha.datosPersona?.rol,
+              rol: realFicha.datosOnboarding?.rol_comunidad || realFicha.datosPersona?.rol,
               userId: appUser.uid
             };
             setPendingFicha(mappedData);
@@ -168,11 +168,7 @@ export function FichaPreview() {
       setEstadoVista('manual');
     } catch (e: any) {
       console.error("Failed to generate manual", e);
-      toast({
-        title: "Error al generar manual",
-        description: e.message || "Hubo un problema. Inténtalo de nuevo.",
-        variant: "destructive"
-      });
+      toast.error(e.message || "Hubo un problema. Inténtalo de nuevo.");
     } finally {
       setIsGenerating(false);
     }

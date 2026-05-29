@@ -47,7 +47,7 @@ const STEPS: Step[] = [
   }
 ];
 
-export default function KanariiOnboarding({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+export default function GovernanceFlowAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState(0);
 
   const nextStep = () => {

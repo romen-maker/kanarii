@@ -22,6 +22,7 @@ import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import MarketplaceView from './pages/MarketplaceView';
 import { RegistroComunidadView } from './pages/RegistroComunidadView';
 import { FichaComunidadView } from './pages/FichaComunidadView';
+import { PasaporteComunitarioView } from './pages/PasaporteComunitarioView';
 import KanariiTourPage from './pages/KanariiTourPage';
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
@@ -72,6 +73,7 @@ function AppContent() {
           <Route path="/onboarding" element={<OnboardingChat />} />
           <Route path="/ficha-preview" element={<FichaPreview />} />
           <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
+          <Route path="/welcome" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
           <Route path="/cruce" element={<ProtectedRoute requireAdmin><CruceView /></ProtectedRoute>} />
           <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />
@@ -85,6 +87,7 @@ function AppContent() {
           <Route path="/soberania" element={<ProtectedRoute><MarketplaceView /></ProtectedRoute>} />
           <Route path="/gobernanza" element={<ProtectedRoute><PropuestasView /></ProtectedRoute>} />
           <Route path="/c/:slug" element={<FichaComunidadView />} />
+          <Route path="/c/:slug/miembro/:userId" element={<PasaporteComunitarioView />} />
           <Route path="/tour" element={<KanariiTourPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>

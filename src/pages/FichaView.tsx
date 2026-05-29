@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useComunidad } from '../contexts/ComunidadContext';
 import { useFicha } from '../hooks/useFicha';
-import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut } from 'lucide-react';
+import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut, Eye, Copy } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -45,8 +46,19 @@ export function FichaView() {
   const [fichaEditadaDesdeGeneracion, setFichaEditadaDesdeGeneracion] = useState(false);
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [geoMessage, setGeoMessage] = useState('');
+  const { comunidad, currentCommunityId } = useComunidad();
+  const [copied, setCopied] = useState(false);
   
   const { abandonarComunidad } = useComunidadActions();
+
+  const handleCopyPasaporteUrl = () => {
+    if (!comunidad?.slug || !appUser?.uid) return;
+    const url = `${window.location.origin}/c/${comunidad.slug}/miembro/${appUser.uid}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaveStep, setLeaveStep] = useState<1 | 2 | 3>(1);
   const [leaveCommunityId, setLeaveCommunityId] = useState('');
@@ -121,8 +133,8 @@ export function FichaView() {
         setUserCommunities(filtered);
         
         // Auto-seleccionar la comunidad actual
-        if (displayFicha?.communityId && appUser.communityIds.includes(displayFicha.communityId)) {
-          setLeaveCommunityId(displayFicha.communityId);
+        if (currentCommunityId && appUser.communityIds.includes(currentCommunityId)) {
+          setLeaveCommunityId(currentCommunityId);
         } else if (filtered.length > 0) {
           setLeaveCommunityId(filtered[0].id);
         }
@@ -216,6 +228,31 @@ export function FichaView() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
                     <h2 className="text-3xl font-serif text-[#4A4E4D]">{datos?.nombre}</h2>
+                    {comunidad?.slug && appUser?.uid && (
+                      <div className="flex items-center gap-1 ml-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/c/${comunidad.slug}/miembro/${appUser.uid}`)}
+                          className="p-1 rounded-full hover:bg-stone-100 text-[#5A5A40] transition-colors"
+                          title="Ver Pasaporte Comunitario"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCopyPasaporteUrl}
+                          className="p-1 rounded-full hover:bg-stone-100 text-[#5A5A40] transition-colors flex items-center gap-1.5"
+                          title="Copiar enlace del Pasaporte"
+                        >
+                          <Copy size={18} />
+                          {copied && (
+                            <span className="text-xs font-serif text-[#CB997E] animate-fadeIn">
+                              ¡Copiado!
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    )}
                     {datos?.rol && (
                       <div className="flex">
                         {datos.rol === 'propietario' && <span className="px-3 py-1 bg-green-800 text-white rounded-full text-xs font-medium">Propietario/a</span>}
