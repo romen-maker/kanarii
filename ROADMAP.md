@@ -5,7 +5,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ## ✅ COMPLETADO (última verificación)
 - [x] Interacción detallada Marketplace (ServicioDetailModal implementado)
 - [x] Normalización lowercase en códigos invitación
-- [x] PWA con manifest.json y Service Worker básico
+- [x] PWA básica: manifest.json y Service Worker con caché mínima de index
 - [x] Validación YA_ES_MIEMBRO vs código inválido (parcial)
 - [x] Firestore Rules multi-comunidad con roles (Sprint 01 — T-001)
 - [x] Eliminar email admin hardcoded, usar campo `role` en Firestore (Sprint 01 — T-002)
@@ -24,7 +24,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Añadir `.limit(50)` a todos los hooks de listas (Sprint 04 — T-014)
 - [x] Mejorar feedback error códigos invitación: diferenciar "caducado", "agotado", "inválido" (Sprint 04 — T-015)
 - [x] Modularizar `appService.ts` por dominio en `src/lib/services/` (Sprint 04 — T-016)
-- [x] Fix displayName vacío al re-entrar por invitación tras expulsión (Sprint 04 — T-017, ADR-008)
+- [x] Fix bug displayName vacío al re-entrar por invitación tras expulsión (Sprint 04 — T-017, ADR-008)
 - [x] Migrar `community_member` docs antiguos para rellenar `displayName`/`email`/`photoURL` desde `/users/{uid}` (Sprint 05 — T-018)
 - [x] Crear hook genérico `useFirestoreCollection` para eliminar patrón `loading/error` duplicado en 10+ hooks (Sprint 05 — T-021)
 - [x] Permisos de edición de eventos en Calendario: solo el autor del evento o un admin pueden editarlo (Sprint 06 — T-025)
@@ -32,6 +32,17 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Generalizar validación de `communityId` a todos los hooks de entidad (Sprint 07 — T-029)
 - [x] Fix bug carga infinita "Cargando deliberación" para el perfil de Abián en Gobernanza (Sprint 07 — T-030)
 - [x] Máquina de estados S3: transición a integrando solo manual por autor; pase automático a en_objeciones (Sprint 07 — T-031)
+- [x] Modelo de datos S3: colección /propuestas con subcolecciones /respuestas e /hilos
+- [x] Campos críticos: activeObjectionsCount y responsibleIds[]
+- [x] Wizard de creación sociocrática: tensión/driver → propuesta → ejecución y revisión
+- [x] Sala de deliberación con timeline S3 y visualización de participantes
+- [x] Modal inline con 4 opciones de respuesta S3 (Consentimiento, Preocupación, Duda, Objeción)
+- [x] Flujo de registro de nueva comunidad en 4 pasos sin recarga
+- [x] Post-creación: redirigir a /admin?tab=comunidad, crear /comunidades/{slug}, asignar fundador como adminUids
+- [x] Vista pública /c/{slug} con perfil, mapa, tipo, capacidad, miembros visibles y CTA de acceso
+- [x] Backend: campo reviewDate persistido en Firestore
+- [x] Resto de animaciones (AsynchronousLogic, ComunidadesCirculos, ConsentElection, Cruce, DoubleLink, FichaRoles, Roles) implementadas en KanariiOnboarding
+- [x] Infraestructura de tipos: interfaz TriadaComunitaria definida en _types.ts con arrays separados
 
 ---
 
@@ -43,20 +54,11 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ## 🎯 Foco activo
 
 ### 2.4 Gestión de Propuestas y Consentimiento (S3)
-- [ ] [ALTO] Modelo de datos S3: colección `/propuestas` con subcolecciones `/respuestas` e `/hilos`.
-- [ ] [ALTO] Campos críticos: `activeObjectionsCount` y `responsibleIds[]`.
-- [ ] [ALTO] Wizard de creación sociocrática: tensión/driver → propuesta → ejecución y revisión.
 - [x] [ALTO] Directorio de decisiones con filtros por estado y badge "requiere tu atención" (Sprint 06 — T-027).
-- [ ] [ALTO] Sala de deliberación con timeline S3 y visualización de participantes.
-- [ ] [ALTO] Modal inline con 4 opciones de respuesta S3 (Consentimiento ✅, Preocupación 💭, Duda ❓, Objeción ⛔).
-- [ ] [ALTO] Gestión de dudas y objeciones con hilos de aclaración.
-- [ ] [MEDIO] Estado visual de "acuerdo cálido" con `reviewDate`.
+- [ ] [BAJO] UI: Badge visual "acuerdo cálido" diferenciado en PropuestaDetail
 - [ ] [BAJO] Estandarizar campo `reason` a `purpose` en colección `/propuestas`.
 
-### 2.5 Comunidades v2 — crecimiento
-- [ ] [ALTO] Flujo de registro de nueva comunidad en 4 pasos sin recarga (Identidad → Lugar → Cultura y acceso → Confirmación).
-- [ ] [ALTO] Post-creación: redirigir a `/admin?tab=comunidad`, crear `/comunidades/{slug}` y asignar fundador como `adminUids`.
-- [ ] [ALTO] Vista pública `/c/{slug}` con perfil, mapa, tipo, capacidad, miembros visibles y CTA de acceso.
+### 2.5 Comunidades v2 — crecimiento (Completado)
 
 ---
 
@@ -65,12 +67,12 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
-- [ ] [MEDIO] Migración limpia modelo de datos Triada Comunitaria: refactorizar `ofrendas[]`, `saberes[]`, `necesidades[]` como arrays separados en `DatosPersona`, script de migración, actualizar onboarding y ficha (T-023).
+- [ ] [MEDIO] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
 - [ ] [BAJO] Consolidar scripts de auditoría duplicados en `scripts/` y extraer helpers a `firestore-helpers.ts` (AUDIT-06).
-- [ ] [BAJO] Normalizar convenio de naming de funciones de consulta (sufijo `Query`) (AUDIT-07).
+- [ ] [BAJO] AUDIT-07: Renombrar 20+ funciones de consulta para añadir sufijo Query (getUserFicha, getPosts, getServiciosByProvider, getAcuerdosByUser, getAppUserDoc, etc.)
 - [ ] [BAJO] Marcar "Discrepancias Detectadas" como RESUELTO EN T-002 en `docs/firebase/current-data-model-audit.md` (AUDIT-03).
 - [ ] [BAJO] Centralizar formateo de fechas en `dateUtils.ts` (7+ sitios duplicados).
 - [ ] [BAJO] Memoizar transformación de fechas en `useEventos` (audit FIX-003).
@@ -86,7 +88,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Unificar patrón de apertura en tarjetas (Gobernanza: clic en tarjeta; Tareas: requiere lápiz — elegir uno).
 - [ ] [MEDIO] Definir criterio coherente Modal vs Drawer y aplicarlo en toda la app.
 - [ ] [BAJO] Crear `TourStepLayout.tsx` como wrapper común para onboarding (escape hatch, progress tracker, UI global). Resolver al añadir nueva animación al tour.
-- [ ] [MEDIO] Integrar 8 animaciones educativas (ver `docs/animated-onboarding.md`). Prioridad: `WelcomeHeroSections` (A7) y `GovernanceFlowAnimation` (A1, prompt listo).
+- [ ] [ALTO] Animaciones onboarding: crear GovernanceFlowAnimation (A1) y WelcomeHeroSections (A7) (faltan las dos de prioridad alta)
 
 ---
 
@@ -106,7 +108,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [ALTO] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura.
 - [ ] [MEDIO] Indicador visual de estado de conexión online/offline.
 - [ ] [MEDIO] Indicador de cambios pendientes de subir.
-- [ ] [MEDIO] PWA instalable con `manifest.json` y Service Workers.
+- [ ] [MEDIO] PWA: Implementar estrategia de caché avanzada offline-first (sw.js actual solo cachea index)
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
 ---
@@ -144,4 +146,4 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ---
 
-*Última actualización verificada contra código: 27 de mayo de 2026 (sprint-planning S06)*
+Última actualización verificada contra código: 29 de mayo de 2026 (auditoría digest + verificación directa GitHub)
