@@ -40,15 +40,14 @@ export function listenFichas(
 
 export async function getUserFicha(userId: string): Promise<Ficha | null> {
   try {
-    const q = query(collection(db, 'fichas'), where('userId', '==', userId));
-    const snapshot = await getDocs(q);
-    if (!snapshot.empty) {
-      const doc = snapshot.docs[0];
-      return { id: doc.id, ...doc.data() } as Ficha;
+    const docRef = doc(db, 'profiles', userId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Ficha;
     }
     return null;
   } catch (err) {
-    handleFirestoreError(err, OperationType.GET, 'fichas');
+    handleFirestoreError(err, OperationType.GET, 'profiles');
     return null;
   }
 }
@@ -285,7 +284,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         hora: horaVal,
         hora_aproximada: isHoraAproximada
       },
-      triada: triada || null,
+      ...(triada !== undefined && triada !== null ? { triada } : {}),
       estado,
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -456,6 +455,7 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
           rolComunitario: base.rol_comunidad || base.rol || 'miembro',
           rol: base.rol || 'miembro',
           estado: fichaFull.estado || 'activo',
+          ...(fichaFull.triada !== undefined && fichaFull.triada !== null ? { triada: fichaFull.triada } : {}),
           photoURL: userPhotoURL,
           email: userEmail,
           creadoEn: fichaFull.createdAt || serverTimestamp(),
@@ -912,7 +912,7 @@ export async function ensureSeedData(appUserUid: string) {
             },
             manualGenerado: `## Identidad Astral\nEste es un documento generado de ejemplo para ${seed.nombre}.\n\n## Diseño Humano\nAquí se incluiría el análisis del diseño humano.\n\n## Solución de Conflictos\nAbordando la tensión: "${seed.tension}".`,
             isSeedData: true,
-            communityId: 'arteara',
+            communityId: 'arteara', // TODO: usar communityId dinámico
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           };
@@ -954,14 +954,5 @@ export async function enrichFichaDatosBrutos(ficha: Ficha): Promise<void> {
 }
 
 export async function getFichaById(userId: string): Promise<Ficha | null> {
-  try {
-    const snap = await getDoc(doc(db, 'profiles', userId));
-    if (snap.exists()) {
-      return { userId, ...snap.data() } as Ficha;
-    }
-    return null;
-  } catch (error) {
-    console.error('Error fetching ficha by ID:', error);
-    return null;
-  }
+  return getUserFicha(userId);
 }

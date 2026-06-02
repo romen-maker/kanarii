@@ -83,9 +83,9 @@ export function FichaView() {
   const datos = getDatosPersona(displayFicha);
   const triada = getTriadaFromFicha(displayFicha);
 
-  const ofrendasState = useTagArray([]);
-  const saberesState = useTagArray([]);
-  const necesidadesState = useTagArray([]);
+  const ofrendasState = useTagArray(getTriadaFromFicha(ficha).ofrendas);
+  const saberesState = useTagArray(getTriadaFromFicha(ficha).saberes);
+  const necesidadesState = useTagArray(getTriadaFromFicha(ficha).necesidades);
 
   useEffect(() => {
     if (displayFicha) {
@@ -172,7 +172,8 @@ export function FichaView() {
   };
 
   const onSubmit = async (data: FichaFormData) => {
-    if (!appUser || !displayFicha?.id) return;
+    if (!appUser) return;
+    const fichaId = displayFicha?.id || appUser.uid;
     
     const triadaObj = {
       ofrendas: ofrendasState.tags,
@@ -180,9 +181,10 @@ export function FichaView() {
       necesidades: necesidadesState.tags
     };
 
-    await saveFicha(appUser.uid, data as DatosOnboarding, displayFicha.id, true, triadaObj);
+    await saveFicha(appUser.uid, data as DatosOnboarding, fichaId, true, triadaObj);
     setLocalFicha({ 
       ...displayFicha, 
+      id: fichaId,
       datosPersona: data, 
       datosOnboarding: undefined,
       triada: triadaObj
@@ -194,10 +196,16 @@ export function FichaView() {
   };
 
   const handleRegenerateManual = async () => {
-    if (!appUser || !displayFicha?.id || !datos) return;
+    if (!appUser || !datos) return;
+    const fichaId = displayFicha?.id || appUser.uid;
     setIsGenerating(true);
+    const triadaObj = {
+      ofrendas: ofrendasState.tags,
+      saberes: saberesState.tags,
+      necesidades: necesidadesState.tags
+    };
     try {
-      await saveFicha(appUser.uid, datos as any, displayFicha.id);
+      await saveFicha(appUser.uid, datos as any, fichaId, false, triadaObj);
       window.location.reload(); // Simple way to reload the updated ficha
     } catch (e) {
       console.error("Failed to generate manual:", e);
