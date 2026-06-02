@@ -6,7 +6,7 @@
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-038 | Bug Tríada Comunitaria: ofrendas y necesidades no persisten via TagArrayEditor | S | 🟡 En curso | .agents/tasks/task-038.md |
+| T-038 | Bug Tríada Comunitaria: ofrendas y necesidades no persisten via TagArrayEditor | S | ✅ Completada | .agents/tasks/task-038.md |
 | T-039 | Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda | M | ⬜ Pendiente | — |
 | T-040 | Indicador visual online/offline y cambios pendientes de subir | M | ⬜ Pendiente | — |
 | T-041 | Estandarizar cabeceras con PageHeader y layout con PageContainer | M | ⬜ Pendiente | — |
