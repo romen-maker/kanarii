@@ -39,3 +39,6 @@ El bug impide la persistencia de las ofrendas y necesidades dentro de la Ficha d
 Se detectó una regresión donde usuarios históricos (cuyas fichas tenían IDs autogenerados por Firestore) no veían su Manual Galáctico tras el despliegue de T-038.
 - **Causa**: Las reglas de seguridad de Firestore impiden queries de colección en `/fichas`, lo que hacía que `getUserFicha` fallara al buscar por el filtro `userId` cuando el ID del documento no era directamente el UID.
 - **Solución**: Unificar `getUserFicha` y `getFichaById` para que lean directamente desde `/profiles/{userId}` (donde `_writeFichaRaw` ya realiza escrituras consolidadas de la ficha). Se implementó un script de migración para mover los manuales antiguos de `/fichas` a `/profiles` de manera idempotente.
+
+## Cierre de Sesión
+- [x] Sesión cerrada correctamente
