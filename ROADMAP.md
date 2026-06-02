@@ -47,7 +47,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ---
 
 ## 🚨 Seguridad y confianza
-- [ ] [ALTO] Fix bug fallback de currentCommunityId a 'arteara' en cookies bloqueadas / Safari (T-032).
+- [x] Fix bug fallback de currentCommunityId a 'arteara' en cookies bloqueadas / Safari (T-032).
 
 ---
 
@@ -67,6 +67,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
+- [ ] [ALTO] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor. Tipos e interfaz existen (`TriadaComunitaria` en `_types.ts`), falla la escritura en Firestore desde el formulario de FichaView/onboarding.
 - [ ] [MEDIO] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
@@ -88,7 +89,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Unificar patrón de apertura en tarjetas (Gobernanza: clic en tarjeta; Tareas: requiere lápiz — elegir uno).
 - [ ] [MEDIO] Definir criterio coherente Modal vs Drawer y aplicarlo en toda la app.
 - [ ] [BAJO] Crear `TourStepLayout.tsx` como wrapper común para onboarding (escape hatch, progress tracker, UI global). Resolver al añadir nueva animación al tour.
-- [ ] [ALTO] Animaciones onboarding: crear GovernanceFlowAnimation (A1) y WelcomeHeroSections (A7) (faltan las dos de prioridad alta)
+- [x] Animaciones onboarding: GovernanceFlowAnimation (A1) y WelcomeHeroSections (A7) implementadas (Sprint 09 — T-035)
 
 ---
 
@@ -105,7 +106,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (T-024).
 
 ## 📱 Infraestructura offline
-- [ ] [ALTO] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura.
+- [x] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura (Sprint 09 — T-037).
 - [ ] [MEDIO] Indicador visual de estado de conexión online/offline.
 - [ ] [MEDIO] Indicador de cambios pendientes de subir.
 - [ ] [MEDIO] PWA: Implementar estrategia de caché avanzada offline-first (sw.js actual solo cachea index)
