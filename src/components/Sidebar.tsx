@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { listenSolicitudes, listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, listenPropuestasPendientesCount, listenSolicitudesProyectosPendientesCount, Acuerdo } from '../lib/appService';
 import { useState, useEffect } from 'react';
+import { SyncIndicator } from './ui/SyncIndicator';
+
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -195,6 +197,11 @@ export function Sidebar() {
           )}
         </div>
       )}
+
+      {/* Indicador de Sincronización / Conexión */}
+      <div className="mt-1 mb-2">
+        <SyncIndicator />
+      </div>
     </div>
 
       {/* Navigation Links */}

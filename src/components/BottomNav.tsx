@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
 import { listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, Acuerdo } from '../lib/appService';
+import { SyncIndicator } from './ui/SyncIndicator';
+
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -224,6 +226,11 @@ export function BottomNav() {
                 )}
               </div>
             )}
+
+            {/* Indicador de Sincronización en Móvil */}
+            <div className="mb-4">
+              <SyncIndicator />
+            </div>
 
             <div className="flex flex-col space-y-2">
               {moreNavItems.map((item, idx) => (
