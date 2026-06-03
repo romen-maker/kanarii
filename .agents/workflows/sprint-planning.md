@@ -68,7 +68,12 @@ Al cerrar el sprint anterior:
 > **Su objetivo: evitar que llegue al sprint trabajo que ya está hecho.**
 > Es el firewall principal antes de que una tarea entre al sprint.
 
-Para cada tarea candidata:
+**Paso previo obligatorio — leer el registro de features:**
+
+Antes de ejecutar `inventory-check.sh`, leer `docs/IMPLEMENTED.md`.  
+Si la feature candidata ya aparece en ese archivo → **no entra al sprint, se marca directamente como `✅ Hecho` en el roadmap**. No hace falta ejecutar inventory-check para esa tarea.
+
+Para cada tarea candidata que NO aparezca en `docs/IMPLEMENTED.md`:
 
 1. **Ejecutar inventory check:**
    ```bash
@@ -84,11 +89,12 @@ Para cada tarea candidata:
 
 | Resultado | Acción |
 |---|---|
-| ✅ >70% ya implementado | Marcar `✅ Hecho` en el sprint anterior; no arrastrar. Informar al usuario con evidencia de archivo. |
+| ✅ en `docs/IMPLEMENTED.md` | Marcar `✅ Hecho` en roadmap; no entra al sprint. |
+| ✅ >70% ya implementado (inventory) | Marcar `✅ Hecho` en el sprint anterior; no arrastrar. Informar al usuario con evidencia de archivo. |
 | ⚠️ 30–70% implementado | Preguntar al usuario si refinar la tarea para lo que falta |
 | ⬜ <30% o sin implementar | Proceder normalmente |
 
-4. **Presentar tabla al usuario** con: tarea, keywords buscadas, archivos encontrados, % estimado, acción propuesta.
+4. **Presentar tabla al usuario** con: tarea, fuente de verificación (IMPLEMENTED.md o inventory), archivos encontrados, % estimado, acción propuesta.
 
 5. **Esperar confirmación del usuario antes de continuar al paso 3.**
 
@@ -174,11 +180,11 @@ Reglas de selección de tareas:
 - Equilibrio de tamaños: no más de 1 tarea L por sprint.
 - Prioridad: tareas arrastradas del sprint anterior primero, luego ítems bloqueantes, luego por orden del roadmap.
 - Tamaños: **S** = < 1h, **M** = 1-3h, **L** = 3h+.
-- **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c).
+- **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c — ni en `docs/IMPLEMENTED.md` ni en inventory check).
 
 ### 5. Generación del prompt para Perplexity
 
-Antes de redactar el prompt, leer los archivos de código directamente relacionados con la tarea principal del sprint (máx. 3 archivos).
+Antes de redactar el prompt, usar como fuente primaria el digest generado por `inventory-check.sh` si la señal de complejidad fue ≥2 (el script lo genera automáticamente). Si la señal fue baja, leer directamente los archivos más relevantes del código relacionado con la tarea principal (máx. 3 archivos).
 Objetivo: identificar qué ya está implementado o parcialmente resuelto para no investigar desde cero. El resultado de esta lectura alimenta la sección `SITUACIÓN ACTUAL` del prompt.
 
 Producir un bloque de texto listo para pegar en Perplexity con este formato:
