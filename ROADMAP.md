@@ -84,8 +84,8 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ## 🎨 Coherencia visual transversal
 - [ ] [MEDIO] Estandarizar validación de formularios con `<FieldError />`.
-- [ ] [MEDIO] Estandarizar cabeceras con `<PageHeader />`.
-- [ ] [MEDIO] Crear `<PageContainer />` para unificar layout y fondo cálido (`#FDFBF7`).
+- [x] Estandarizar cabeceras con `<PageHeader />` (Sprint 10 — T-041).
+- [x] Crear `<PageContainer />` para unificar layout y fondo cálido (`#FDFBF7`) (Sprint 10 — T-041).
 - [ ] [MEDIO] Unificar patrón de apertura en tarjetas (Gobernanza: clic en tarjeta; Tareas: requiere lápiz — elegir uno).
 - [ ] [MEDIO] Definir criterio coherente Modal vs Drawer y aplicarlo en toda la app.
 - [ ] [BAJO] Crear `TourStepLayout.tsx` como wrapper común para onboarding (escape hatch, progress tracker, UI global). Resolver al añadir nueva animación al tour.
@@ -102,13 +102,13 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Sistema leído/no leído en acuerdos: campo `vistoPorSolicitante: boolean`, batch update al entrar a "Mis Acuerdos", badge desaparece solo al ver el cambio.
 - [ ] [MEDIO] Sistema de badges reactivos (patrón DRY) para Gobernanza (notificar miembros sin posición registrada en propuestas activas), Tareas (asignadas sin completar) y Calendario (eventos próximos sin confirmar). Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
 - [ ] [ALTO] Pasaporte Comunitario: vista pública del perfil como pasaporte, con Triada Comunitaria (ofrendas/saberes/necesidades), sin jerarquías visibles ni contadores numéricos (T-022).
-- [ ] [ALTO] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (T-026).
+- [x] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (Sprint 10 — T-039).
 - [ ] [MEDIO] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (T-024).
 
 ## 📱 Infraestructura offline
 - [x] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura (Sprint 09 — T-037).
-- [ ] [MEDIO] Indicador visual de estado de conexión online/offline.
-- [ ] [MEDIO] Indicador de cambios pendientes de subir.
+- [x] Indicador visual de estado de conexión online/offline (Sprint 10 — T-040).
+- [x] Indicador de cambios pendientes de subir (Sprint 10 — T-040).
 - [ ] [MEDIO] PWA: Implementar estrategia de caché avanzada offline-first (sw.js actual solo cachea index)
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
