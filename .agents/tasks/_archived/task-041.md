@@ -44,6 +44,6 @@ Archivos autorizados para modificación:
 ## Estado de aprobación
 - [x] Plan presentado al usuario (Fase 3.5)
 - [x] APROBADO recibido
-- [ ] Confirmación visual e integración a main realizada
-- [ ] Sesión cerrada correctamente
+- [x] Confirmación visual e integración a main realizada
+- [x] Sesión cerrada correctamente
 
