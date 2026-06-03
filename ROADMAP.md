@@ -67,7 +67,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
 
 ## 🧹 Calidad interna y DRY
-- [ ] [ALTO] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor. Tipos e interfaz existen (`TriadaComunitaria` en `_types.ts`), falla la escritura en Firestore desde el formulario de FichaView/onboarding.
+- [x] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor (Sprint 10 — T-038).
 - [ ] [MEDIO] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
@@ -103,13 +103,16 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Sistema de badges reactivos (patrón DRY) para Gobernanza (notificar miembros sin posición registrada en propuestas activas), Tareas (asignadas sin completar) y Calendario (eventos próximos sin confirmar). Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
 - [ ] [ALTO] Pasaporte Comunitario: vista pública del perfil como pasaporte, con Triada Comunitaria (ofrendas/saberes/necesidades), sin jerarquías visibles ni contadores numéricos (T-022).
 - [x] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (Sprint 10 — T-039).
-- [ ] [MEDIO] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (T-024).
+- [x] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (Sprint 06 — T-024).
 
 ## 📱 Infraestructura offline
 - [x] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura (Sprint 09 — T-037).
 - [x] Indicador visual de estado de conexión online/offline (Sprint 10 — T-040).
 - [x] Indicador de cambios pendientes de subir (Sprint 10 — T-040).
 - [ ] [MEDIO] PWA: Implementar estrategia de caché avanzada offline-first (sw.js actual solo cachea index)
+
+## 🚀 Infraestructura y despliegue
+- [ ] [ALTO] Despliegue Kanarii en `kanarii.romensuarez.com` (Coolify + Cloudflare + SSL). Servidor OCI ARM64, auto-deploy en push a main, vars de entorno Firebase en Coolify.
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
 ---
