@@ -10,6 +10,8 @@ import { PostDetailModal } from '../components/PostDetailModal';
 import { MessageSquare, Plus, Filter, Search } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 const CATEGORIAS = [
   { id: 'habilidad', label: 'Habilidad' },
@@ -64,22 +66,23 @@ export default function Tablon() {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6">
-      {/* Header & Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-serif text-[#4A4E4D]">Tablón Comunitario</h1>
-          <p className="text-stone-500 mt-1">Colaboración asíncrona y apoyo mutuo</p>
-        </div>
-        
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95"
-        >
-          <Plus size={20} />
-          <span className="font-bold">Publicar algo</span>
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Tablón Comunitario"
+        subtitle="Colaboración asíncrona y apoyo mutuo"
+        icon={MessageSquare}
+        actions={
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+            title="Publicar algo"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        }
+      />
+
+      <div className="p-6 space-y-6">
 
       {/* Main Tabs */}
       <div className="flex p-1.5 bg-stone-200/50 backdrop-blur-sm rounded-2xl w-fit">
@@ -237,6 +240,7 @@ export default function Tablon() {
           />
         );
       })()}
-    </div>
+      </div>
+    </PageContainer>
   );
 }

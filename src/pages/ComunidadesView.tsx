@@ -15,6 +15,8 @@ import {
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useToast } from '../components/Toaster';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 /**
  * TODO: Revisión sistémica de visibilidad de inputs en toda la app.
@@ -191,19 +193,25 @@ export function ComunidadesView() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] p-6 pb-24">
-      <div className="max-w-4xl mx-auto space-y-12">
-        
-        {/* Cabecera */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex p-3 bg-[#EAE2D6] rounded-2xl mb-2">
-            <Compass className="w-8 h-8 text-[#4A4E4D]" />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-serif text-[#4A4E4D]">Explorar Comunidades</h1>
-          <p className="text-[#8A817C] max-w-lg mx-auto">
-            Encuentra tu lugar en la red. Únete a un espacio existente o descubre nuevas formas de colaborar.
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        title="Explorar Comunidades"
+        subtitle="Encuentra tu lugar en la red. Únete a un espacio existente o descubre nuevas formas de colaborar."
+        icon={Compass}
+        actions={
+          appUser && (
+            <button
+              onClick={() => navigate('/nueva-comunidad')}
+              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+              title="Crear comunidad"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          )
+        }
+      />
+
+      <div className="p-6 space-y-12">
 
         {/* Sección 1: Código de Invitación */}
         <section className="bg-white border border-[#EAE2D6] rounded-3xl p-8 shadow-sm">
@@ -242,10 +250,6 @@ export function ComunidadesView() {
               <span className="text-sm font-medium text-[#8A817C] bg-[#EAE2D6] px-3 py-1 rounded-full">
                 {comunidades.length} espacios
               </span>
-              <button onClick={() => navigate('/nueva-comunidad')}
-                className="flex items-center gap-2 px-4 py-2 bg-[#6B705C] hover:bg-[#4A4E4D] text-white rounded-xl text-sm font-bold transition-all shadow-md">
-                <Plus className="w-4 h-4" />Crear comunidad
-              </button>
             </div>
           </div>
 
@@ -447,6 +451,6 @@ export function ComunidadesView() {
           </div>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

@@ -6,9 +6,10 @@ interface SectionHelpProps {
   title: string;
   description: string | ReactNode;
   animationNode?: ReactNode;
+  inline?: boolean;
 }
 
-export default function SectionHelp({ title, description, animationNode }: SectionHelpProps) {
+export default function SectionHelp({ title, description, animationNode, inline }: SectionHelpProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);
@@ -20,7 +21,7 @@ export default function SectionHelp({ title, description, animationNode }: Secti
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={toggle}
-        className="fixed bottom-20 right-6 md:static w-10 h-10 rounded-full bg-white border border-[#D2B48C]/30 shadow-md flex items-center justify-center text-[#5A5A40] hover:bg-[#FAF9F6] transition-colors z-[60]"
+        className={`${inline ? 'relative' : 'fixed bottom-20 right-6 md:static'} w-10 h-10 rounded-full bg-white border border-[#D2B48C]/30 shadow-md flex items-center justify-center text-[#5A5A40] hover:bg-[#FAF9F6] transition-colors z-[60]`}
         aria-label="Ayuda contextual"
       >
         <Info size={20} strokeWidth={2.5} />

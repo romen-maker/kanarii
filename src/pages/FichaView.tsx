@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useFicha } from '../hooks/useFicha';
-import { Leaf, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut, Eye, Copy } from 'lucide-react';
+import { User, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut, Eye, Copy } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -221,7 +221,7 @@ export function FichaView() {
       <div className="w-full max-w-3xl">
         <div className="flex justify-between items-center mb-10">
           <div className="flex items-center gap-3">
-            <Leaf className="text-[#6B705C] w-8 h-8" />
+            <User className="text-[#6B705C] w-8 h-8" />
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
           </div>
           {/* Navegación eliminada (unificada en Sidebar/BottomNav) */}

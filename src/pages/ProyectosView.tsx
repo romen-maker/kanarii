@@ -158,6 +158,7 @@ export function ProyectosView() {
             <div className="flex items-center gap-3">
               <h1 className="font-serif text-3xl">Proyectos</h1>
               <SectionHelp 
+                inline={true}
                 title="Proyectos Comunitarios" 
                 description={
                   <div className="space-y-4">

@@ -16,6 +16,8 @@ import { ActaDetailOverlay } from '../components/ActaDetailOverlay';
 import { EntityCard } from '../components/ui/EntityCard';
 import SectionHelp from '../components/help/SectionHelp';
 import ActasUISimulation from '../components/help/ActasUISimulation';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
@@ -78,25 +80,36 @@ export function ActasPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex flex-col relative overflow-hidden pb-20 md:pb-0">
-      <header className="bg-white border-b border-[#EAE2D6] sticky top-0 z-20 shadow-sm py-4 px-6 md:px-12 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <Leaf className="w-6 h-6 text-[#6B705C]" />
-          <div className="flex items-center gap-3">
-            <span className="font-serif text-xl text-[#4A4E4D]">Biblioteca de Actas</span>
-            <SectionHelp 
-              title="Biblioteca de Actas" 
-              description={
-                <div className="space-y-4">
-                  <p>La Biblioteca de Actas es la memoria viva de nuestra comunidad. Aquí se registran las decisiones colectivas que guían el rumbo del espacio común.</p>
-                  <p>Cada acta incluye el facilitador, los participantes, los temas abordados y las tareas resultantes, asegurando transparencia y continuidad en la gobernanza.</p>
-                </div>
-              } 
-              animationNode={<ActasUISimulation />} 
-            />
-          </div>
-        </div>
-      </header>
+    <PageContainer className="flex flex-col h-screen overflow-hidden pb-0">
+      <PageHeader
+        title="Biblioteca de Actas"
+        subtitle="La memoria viva y el registro histórico de las decisiones de nuestra comunidad."
+        icon={FileText}
+        helpNode={
+          <SectionHelp 
+            title="Biblioteca de Actas" 
+            inline={true}
+            description={
+              <div className="space-y-4">
+                <p>La Biblioteca de Actas es la memoria viva de nuestra comunidad. Aquí se registran las decisiones colectivas que guían el rumbo del espacio común.</p>
+                <p>Cada acta incluye el facilitador, los participantes, los temas abordados y las tareas resultantes, asegurando transparencia y continuidad en la gobernanza.</p>
+              </div>
+            } 
+            animationNode={<ActasUISimulation />} 
+          />
+        }
+        actions={
+          appUser?.role === 'admin' && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+              title="Nueva Acta"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          )
+        }
+      />
 
       <div className="flex-1 flex w-full max-w-[1600px] mx-auto relative overflow-hidden">
         {/* Lado izquierdo: Lista */}
@@ -115,14 +128,6 @@ export function ActasPanel() {
                 />
               </div>
             </div>
-            {appUser?.role === 'admin' && (
-              <button 
-                onClick={() => setIsModalOpen(true)} 
-                className="flex items-center gap-2 bg-[#A5A58D] text-white px-6 py-2.5 rounded-full font-medium hover:bg-[#6B705C] transition-colors shadow-md"
-              >
-                <Plus className="w-4 h-4" /> Nueva Acta
-              </button>
-            )}
           </div>
 
           <div className="space-y-4">
@@ -183,6 +188,6 @@ export function ActasPanel() {
           communityId={currentCommunityId || 'arteara'}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
