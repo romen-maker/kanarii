@@ -16,6 +16,8 @@ import { Evento } from '../lib/appService';
 import { CreateEventoModal } from '../components/CreateEventoModal';
 import { Plus, Calendar as CalendarIcon, List } from 'lucide-react';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 const locales = {
   'es': es,
@@ -131,24 +133,26 @@ export default function CalendarioView() {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-serif text-[#4A4E4D]">Calendario Comunitario</h1>
-          <p className="text-stone-500 mt-1">Sincroniza el latido de la comunidad</p>
-        </div>
-        <button
-          onClick={() => {
-            setSelectedEvento(null);
-            setInitialDates(undefined);
-            setIsModalOpen(true);
-          }}
-          className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm"
-        >
-          <Plus size={20} />
-          <span>Nuevo Evento</span>
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Calendario Comunitario"
+        subtitle="Sincroniza el latido de la comunidad"
+        icon={CalendarIcon}
+        actions={
+          <button
+            onClick={() => {
+              setSelectedEvento(null);
+              setInitialDates(undefined);
+              setIsModalOpen(true);
+            }}
+            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        }
+      />
+
+      <div className="p-6 space-y-6">
 
       <div className="flex-1 bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-6 overflow-hidden flex flex-col">
         <div className="flex gap-2 mb-4">
@@ -271,6 +275,7 @@ export default function CalendarioView() {
           color: #6B705C;
         }
       `}} />
-    </div>
+      </div>
+    </PageContainer>
   );
 }

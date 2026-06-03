@@ -10,7 +10,9 @@ import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { PropuestaCard } from '../components/PropuestaCard';
 import { PropuestaDetail } from '../components/PropuestaDetail';
 import { CreateProposalWizard } from '../components/CreateProposalWizard';
-import { Gavel, Plus, LayoutGrid, List, AlertCircle } from 'lucide-react';
+import { Scale, Plus, LayoutGrid, List, AlertCircle } from 'lucide-react';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'abierta', title: 'Deliberación', accentColor: 'var(--color-info)' },
@@ -106,15 +108,13 @@ export function PropuestasView() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F9F7F1] pb-24 font-sans max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="bg-[#4A4E4D] pt-12 pb-6 px-6 text-[#F9F7F1] shadow-md sticky top-0 z-20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 mb-2">
-            <Gavel className="w-8 h-8 text-[#D4C3A3]" />
-            <h1 className="font-serif text-3xl">Gobernanza</h1>
-          </div>
-          {appUser && (
+    <PageContainer>
+      <PageHeader
+        title="Gobernanza"
+        subtitle="Consentimiento y Sociocracia S3"
+        icon={Scale}
+        actions={
+          appUser && (
             <button 
               onClick={() => setShowCreateWizard(true)}
               className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
@@ -122,12 +122,9 @@ export function PropuestasView() {
             >
               <Plus className="w-6 h-6" />
             </button>
-          )}
-        </div>
-        <p className="text-[#D4C3A3] text-sm font-medium tracking-wide uppercase">
-          Consentimiento y Sociocracia S3
-        </p>
-      </div>
+          )
+        }
+      />
 
       <div className="p-6">
         {/* Toolbar Premium */}
@@ -277,6 +274,6 @@ export function PropuestasView() {
           }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -15,9 +15,11 @@ import { ServicioDetailModal } from '../components/ServicioDetailModal';
 import { AcuerdoDetailModal } from '../components/acuerdos/AcuerdoDetailModal';
 import { CreateProposalWizard } from '../components/CreateProposalWizard';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
-import { Heart, Package, Plus, Filter, Search, Handshake } from 'lucide-react';
+import { Heart, Package, Plus, Filter, Search, Handshake, Compass } from 'lucide-react';
 import SectionHelp from '../components/help/SectionHelp';
 import MarketplaceUISimulation from '../components/help/MarketplaceUISimulation';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 const CATEGORIAS_MARKET = [
   { id: 'artesanía', label: 'Artesanía' },
@@ -189,34 +191,35 @@ export default function MarketplaceView() {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6 pb-20 md:pb-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Marketplace de Soberanía</h1>
-            <SectionHelp 
-              title="Soberanía de Recursos" 
-              description={
-                <div className="space-y-4">
-                  <p>En Kanarii, la soberanía económica no se basa en el dinero, sino en las relaciones de confianza y el intercambio de talentos y recursos.</p>
-                  <p>Aquí puedes ofrecer tus habilidades o recursos materiales a la comunidad y proponer acuerdos colaborativos con otros miembros. Las propuestas de acuerdos pueden ser aceptadas, declinadas o contraofertadas para encontrar el equilibrio perfecto.</p>
-                </div>
-              } 
-              animationNode={<MarketplaceUISimulation />} 
-            />
-          </div>
-          <p className="text-stone-500 mt-1">Intercambio de talentos y recursos comunitarios</p>
-        </div>
-        
-        <button
-          onClick={() => { setServicioToEdit(null); setIsCreateServicioOpen(true); }}
-          className="bg-[#A5A58D] hover:bg-[#6B705C] text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95"
-        >
-          <Plus size={20} />
-          <span className="font-bold text-sm">Ofrecer algo</span>
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Marketplace de Soberanía"
+        subtitle="Intercambio de talentos y recursos comunitarios"
+        icon={Handshake}
+        helpNode={
+          <SectionHelp 
+            title="Soberanía de Recursos" 
+            inline={true}
+            description={
+              <div className="space-y-4">
+                <p>En Kanarii, la soberanía económica no se basa en el dinero, sino en las relaciones de confianza y el intercambio de talentos y recursos.</p>
+                <p>Aquí puedes ofrecer tus habilidades o recursos materiales a la comunidad y proponer acuerdos colaborativos con otros miembros. Las propuestas de acuerdos pueden ser aceptadas, declinadas o contraofertadas para encontrar el equilibrio perfecto.</p>
+              </div>
+            } 
+            animationNode={<MarketplaceUISimulation />} 
+          />
+        }
+        actions={
+          <button
+            onClick={() => { setServicioToEdit(null); setIsCreateServicioOpen(true); }}
+            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+          >
+            <Plus size={20} className="w-6 h-6" />
+          </button>
+        }
+      />
+
+      <div className="p-6 space-y-6">
 
       {/* Navigation Tabs */}
       <div className="flex p-1.5 bg-stone-200/50 backdrop-blur-sm rounded-2xl w-fit">
@@ -589,6 +592,7 @@ export default function MarketplaceView() {
           }}
         />
       )}
-    </div>
+      </div>
+    </PageContainer>
   );
 }

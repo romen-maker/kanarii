@@ -13,7 +13,7 @@ import {
 import { 
   Leaf, Plus, Calendar, User as UserIcon, CheckCircle2, 
   Clock, Trash2, ArrowRight, Edit, Archive, ChevronLeft, Briefcase,
-  Play, Pause, Search
+  Play, Pause, Search, CheckSquare
 } from 'lucide-react';
 import { useToast } from '../components/Toaster';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
@@ -22,6 +22,8 @@ import { KanbanBoard, KanbanColumnDef } from '../components/ui/KanbanBoard';
 import { EntityCard, EntityVariant } from '../components/ui/EntityCard';
 import SectionHelp from '../components/help/SectionHelp';
 import TareasUISimulation from '../components/help/TareasUISimulation';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'pendiente', title: 'Pendientes', accentColor: 'var(--color-info)' },
@@ -154,27 +156,36 @@ export function TareasPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] pb-20 md:pb-0">
-      <header className="bg-white border-b border-[#EAE2D6] sticky top-0 z-10 shadow-sm py-4 px-6 md:px-12 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Leaf className="w-6 h-6 text-[#6B705C]" />
-          <div className="flex items-center gap-3">
-            <span className="font-serif text-xl text-[#4A4E4D]">Tareas Comunitarias</span>
-            <SectionHelp 
-              title="Tareas de la Comunidad" 
-              description={
-                <div className="space-y-4">
-                  <p>El panel de Tareas Comunitarias organiza el trabajo del día a día de nuestro espacio común.</p>
-                  <p>Aquí gestionamos las labores pendientes, en progreso y completadas. Cualquier miembro puede autoasignarse responsabilidades o proponer nuevas tareas necesarias para el bienestar y mantenimiento del grupo.</p>
-                </div>
-              } 
-              animationNode={<TareasUISimulation />} 
-            />
-          </div>
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader
+        title="Tareas Comunitarias"
+        subtitle="Organización y asignación del trabajo diario del espacio común"
+        icon={CheckSquare}
+        actions={
+          <button
+            onClick={() => openCreateModal()}
+            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
+            title="Crear tarea"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        }
+        helpNode={
+          <SectionHelp
+            inline={true}
+            title="Tareas de la Comunidad"
+            description={
+              <div className="space-y-4">
+                <p>El panel de Tareas Comunitarias organiza el trabajo del día a día de nuestro espacio común.</p>
+                <p>Aquí gestionamos las labores pendientes, en progreso y completadas. Cualquier miembro puede autoasignarse responsabilidades o proponer nuevas tareas necesarias para el bienestar y mantenimiento del grupo.</p>
+              </div>
+            }
+            animationNode={<TareasUISimulation />}
+          />
+        }
+      />
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
+      <div className="p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
            <div className="flex bg-[#EAE2D6] p-1 rounded-xl w-fit overflow-x-auto">
              {(['todas', 'mis_tareas', 'sin_asignar', 'archivadas'] as const).map(f => (
@@ -224,13 +235,6 @@ export function TareasPanel() {
         )}
       </div>
 
-      <button
-        onClick={() => openCreateModal()}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-[#A5A58D] hover:bg-[#6B705C] text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105 z-20"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
-
       {isModalOpen && (
         <CreateTareaModal
           tareaToEdit={tareaToEdit}
@@ -241,6 +245,6 @@ export function TareasPanel() {
           onSubmit={handleSaveTarea}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
