@@ -36,4 +36,4 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-06-02T17:10:00Z (aprobado con correcciones de tracker y nav móvil)
 - [x] Rama creada: feat/T-040-sync-indicator-offline
 - [x] Lock activo: feat/T-040-sync-indicator-offline
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
