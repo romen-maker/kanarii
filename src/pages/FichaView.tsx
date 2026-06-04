@@ -7,7 +7,7 @@ import { User, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, Histor
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha, saveManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha } from '../lib/appService';
+import { saveFicha, saveManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha, Ficha, FichaDatosPersona } from '../lib/appService';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
@@ -68,14 +68,24 @@ export function FichaView() {
   const [userCommunities, setUserCommunities] = useState<Comunidad[]>([]);
   const [loadingCommunities, setLoadingCommunities] = useState(false);
   
-  function getDatosPersona(ficha: any) {
-    return ficha?.datosPersona ?? ficha?.datosOnboarding ?? {};
+  function getDatosPersona(ficha: Ficha | null | undefined): Partial<FichaDatosPersona> {
+    if (!ficha) return {};
+    if (ficha.datosPersona) return ficha.datosPersona;
+    if (ficha.datosOnboarding) {
+      return {
+        ...ficha.datosOnboarding,
+        antiguedad_anos: typeof ficha.datosOnboarding.antiguedad_anos === 'string'
+          ? parseInt(ficha.datosOnboarding.antiguedad_anos, 10) || 0
+          : ficha.datosOnboarding.antiguedad_anos
+      } as Partial<FichaDatosPersona>;
+    }
+    return {};
   }
 
   const { register, handleSubmit, getValues, setValue, watch, formState: { errors, isSubmitting }, reset } = useForm<FichaFormData>({
     // @ts-ignore
     resolver: zodResolver(fichaSchema),
-    defaultValues: getDatosPersona(ficha) as any
+    defaultValues: getDatosPersona(ficha) as FichaFormData
   });
 
   const watchRol = watch("rol");
@@ -125,7 +135,7 @@ export function FichaView() {
       navigate('/onboarding');
     } else if (ficha) {
       setLocalFicha(ficha);
-      reset(getDatosPersona(ficha) as any);
+      reset(getDatosPersona(ficha) as FichaFormData);
     }
   }, [ficha, loadingFicha]);
 
@@ -189,7 +199,7 @@ export function FichaView() {
     setLocalFicha({ 
       ...displayFicha, 
       id: fichaId,
-      datosPersona: data, 
+      datosPersona: data as FichaDatosPersona, 
       datosOnboarding: undefined,
       triada: triadaObj
     });
@@ -209,7 +219,7 @@ export function FichaView() {
       necesidades: necesidadesState.tags
     };
     try {
-      await saveFicha(appUser.uid, datos as any, fichaId, false, triadaObj);
+      await saveFicha(appUser.uid, datos as DatosOnboarding, fichaId, false, triadaObj);
       window.location.reload();
     } catch (e) {
       console.error("Failed to generate manual:", e);

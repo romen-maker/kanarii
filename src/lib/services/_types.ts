@@ -135,6 +135,84 @@ export interface TriadaComunitaria {
   necesidades: string[]; // Lo que necesito de la comunidad
 }
 
+export interface AstroPosicion {
+  planeta: string;
+  signo_nombre: string;
+}
+
+export interface CartaAstralCompleta {
+  posiciones: AstroPosicion[];
+  modalidad_dominante: string;
+  elemento_dominante: string;
+}
+
+export interface DisenoHumanoCanalDetalle {
+  nombre: string;
+  puertas: number[];
+}
+
+export type DisenoHumanoCanal = string | DisenoHumanoCanalDetalle;
+
+export interface DisenoHumanoDatos {
+  tipo: string;
+  autoridad: string;
+  perfil: string;
+  canales?: DisenoHumanoCanal[];
+  puertas_activas?: Array<number | string>;
+}
+
+export interface FichaDatosBrutos {
+  carta_astral_completa?: CartaAstralCompleta;
+  diseno_humano?: DisenoHumanoDatos;
+  [key: string]: any;
+}
+
+export interface FichaDatosPersona extends Omit<Partial<DatosOnboarding>, 'antiguedad_anos' | 'rol'> {
+  nombre: string;
+  fechaNacimiento: string;
+  hora: string;
+  genero: string;
+  saberes: string;
+  rol_comunidad: string;
+  antiguedad_anos: number;
+  tension: string;
+  lugar: string;
+  latitud?: number;
+  longitud?: number;
+  timezone?: string;
+  rol?: string;
+  fechaLlegada?: string;
+  fechaSalida?: string;
+  habilidadesVoluntario?: string;
+  plataformaOrigen?: string;
+  hora_aproximada?: boolean;
+  [key: string]: any;
+}
+
+export interface FichaPerfilVisual {
+  arquetipo?: string;
+  descripcion_arquetipo?: string;
+  fortalezas?: string[];
+  sombras?: string[];
+  aportaComunidad?: string[];
+  necesitaComunidad?: string[];
+  rol_sociocratico?: 'Coordinador' | 'Secretario' | 'Facilitador' | string;
+  justificacion_rol?: string;
+  dimensiones?: {
+    escucha: number;
+    accion: number;
+    estructura: number;
+    cuidado: number;
+  };
+}
+
+export interface FichaConfiguracion {
+  visible?: boolean;
+  compartirDatosPersona?: boolean;
+  compartirManual?: boolean;
+  [key: string]: any;
+}
+
 export interface Ficha {
   id?: string;
   userId: string;
@@ -145,12 +223,24 @@ export interface Ficha {
   fechaGeneracion?: any;
   versionesAnteriores?: any[];
   isSeedData?: boolean;
+  creadoEn?: any;
   createdAt?: any;
   updatedAt?: any;
   estado?: string;
-  datosBrutos?: any;
-  datosPersona?: any;
-  perfilVisual?: any;
+  datosBrutos?: FichaDatosBrutos;
+  datosPersona?: FichaDatosPersona;
+  perfilVisual?: FichaPerfilVisual;
+  configuracion?: FichaConfiguracion;
+  communityId?: string | null;
+  nombre?: string;
+  dimensiones?: {
+    escucha: number;
+    accion: number;
+    estructura: number;
+    cuidado: number;
+  };
+  versionManual?: number;
+  proximaRevision?: any;
 }
 
 export function getTriadaFromFicha(ficha: Ficha | null | undefined): TriadaComunitaria {
