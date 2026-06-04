@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Plus, X, Check } from 'lucide-react';
 import { Proyecto } from '../lib/appService';
+import { FieldError } from './ui/FieldError';
 
 interface CreateProjectModalProps {
   initialEstado?: Proyecto['estado'];
   onClose: () => void;
-  onCreate: (proyecto: Omit<Proyecto, 'id' | 'lider_uid' | 'colaboradores_uid' | 'solicitudes_uid'>) => Promise<void>;
+  onCreate: (proyecto: Omit<Proyecto, 'id' | 'lider_uid' | 'colaboradores_uid' | 'solicitudes_uid' | 'communityId'>) => Promise<void>;
 }
 
 export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateProjectModalProps) {
@@ -15,10 +16,26 @@ export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateP
   const [habilidadesNecesarias, setHabilidadesNecesarias] = useState<string[]>([]);
   const [newHabilidad, setNewHabilidad] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ titulo?: string; descripcion?: string }>({});
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo || !descripcion || isSubmitting) return;
+
+    const newErrors: { titulo?: string; descripcion?: string } = {};
+    if (!titulo.trim()) {
+      newErrors.titulo = 'El título de la iniciativa es obligatorio';
+    }
+    if (!descripcion.trim()) {
+      newErrors.descripcion = 'La descripción es obligatoria';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -28,7 +45,6 @@ export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateP
         estado,
         habilidadesNecesarias
       });
-      // El cierre lo gestiona la página después del éxito, o podemos cerrarlo aquí si onCreate es exitoso
     } catch (err) {
       console.error("Error in CreateProjectModal:", err);
     } finally {
@@ -71,25 +87,35 @@ export function CreateProjectModal({ initialEstado, onClose, onCreate }: CreateP
             <div className="md:col-span-2">
               <label className="block text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2 ml-1">Título del Proyecto</label>
               <input 
-                required
                 type="text" 
                 className="w-full p-4 rounded-2xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-4 focus:ring-[#EAE2D6]/30 outline-none transition-all"
                 value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
+                onChange={(e) => {
+                  setTitulo(e.target.value);
+                  if (errors.titulo) {
+                    setErrors((prev) => ({ ...prev, titulo: undefined }));
+                  }
+                }}
                 placeholder="Ej: Huerto Comunitario"
                 disabled={isSubmitting}
               />
+              <FieldError message={errors.titulo} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2 ml-1">Descripción</label>
               <textarea 
-                required
                 className="w-full p-4 rounded-2xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-4 focus:ring-[#EAE2D6]/30 outline-none min-h-[120px] transition-all"
                 value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
+                onChange={(e) => {
+                  setDescripcion(e.target.value);
+                  if (errors.descripcion) {
+                    setErrors((prev) => ({ ...prev, descripcion: undefined }));
+                  }
+                }}
                 placeholder="Describe el propósito y lo que se espera lograr..."
                 disabled={isSubmitting}
               />
+              <FieldError message={errors.descripcion} />
             </div>
             <div>
               <label className="block text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2 ml-1">Estado Inicial</label>
