@@ -14,6 +14,7 @@ import { geocodeLugar } from '../lib/geocoding';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useTagArray } from '../hooks/useTagArray';
 import { TagArrayEditor } from '../components/ui/TagArrayEditor';
+import { calcularKin } from '../lib/kinMaya';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -86,6 +87,9 @@ export function FichaView() {
   const ofrendasState = useTagArray(getTriadaFromFicha(ficha).ofrendas);
   const saberesState = useTagArray(getTriadaFromFicha(ficha).saberes);
   const necesidadesState = useTagArray(getTriadaFromFicha(ficha).necesidades);
+
+  // Calcular Kin Maya personal si hay fecha de nacimiento
+  const kinMaya = datos?.fechaNacimiento ? calcularKin(datos.fechaNacimiento) : null;
 
   useEffect(() => {
     if (displayFicha) {
@@ -206,7 +210,7 @@ export function FichaView() {
     };
     try {
       await saveFicha(appUser.uid, datos as any, fichaId, false, triadaObj);
-      window.location.reload(); // Simple way to reload the updated ficha
+      window.location.reload();
     } catch (e) {
       console.error("Failed to generate manual:", e);
     } finally {
@@ -224,7 +228,6 @@ export function FichaView() {
             <User className="text-[#6B705C] w-8 h-8" />
             <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
           </div>
-          {/* Navegación eliminada (unificada en Sidebar/BottomNav) */}
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden mb-8">
@@ -324,6 +327,20 @@ export function FichaView() {
                       <p className="text-stone-700">{datos?.genero}</p>
                     </div>
                   </div>
+
+                  {/* Firma Galáctica (Kin Maya) */}
+                  {kinMaya && (
+                    <div className="mt-4 pt-4 border-t border-[#EAE2D6]">
+                      <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6]">
+                        <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{kinMaya.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Firma Galáctica</h4>
+                          <p className="text-stone-800 font-medium text-base">{kinMaya.descripcionCorta}</p>
+                          <p className="text-stone-500 text-sm mt-1 leading-relaxed">{kinMaya.rolComunitario}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. Tríada Comunitaria */}
@@ -526,7 +543,8 @@ export function FichaView() {
                     
                     <TagArrayEditor
                       value={necesidadesState.tags}
-                      onChange={necesidadesState.setTags}
+                      onChange={necesidadesState.setTags
+                      }
                       label="Necesidades (Lo que requieres)"
                       placeholder="Ej: transporte, programar, herramientas..."
                       colorScheme="orange"
@@ -757,90 +775,55 @@ export function FichaView() {
               )}
 
               {leaveStep === 3 && (
-                <div className="space-y-6">
-                  <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex gap-3.5 items-start">
-                    <span className="text-red-500 font-bold text-lg leading-none shrink-0 mt-0.5">⚠️</span>
-                    <div>
-                      <h4 className="text-sm font-bold text-red-800">Consecuencias de la salida</h4>
-                      <ul className="list-disc list-inside text-xs text-red-700 leading-normal mt-1.5 space-y-1">
-                        <li>Perderás el acceso a los tableros de proyectos, tareas, actas y tablón.</li>
-                        <li>No estarás listado como miembro activo de la comunidad.</li>
-                        <li>Se revocarán tus permisos de edición e interacción.</li>
-                      </ul>
-                    </div>
+                <div className="space-y-6 text-center py-4">
+                  <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+                    <LogOut className="w-8 h-8 text-red-500" />
                   </div>
-
-                  <div className="p-4 bg-[#FDFBF7] rounded-2xl border border-[#EAE2D6] flex gap-3.5 items-start">
-                    <span className="text-teal-600 font-bold text-lg leading-none shrink-0 mt-0.5">✓</span>
-                    <div>
-                      <h4 className="text-sm font-bold text-stone-800">Qué conservarás en tu perfil</h4>
-                      <ul className="list-disc list-inside text-xs text-stone-600 leading-normal mt-1.5 space-y-1">
-                        <li>Tu ficha de identidad comunitaria no se borrará.</li>
-                        <li>Tu Manual de Usuario Humano seguirá siendo tuyo y accesible.</li>
-                        <li>Tus contribuciones previas quedarán registradas históricamente.</li>
-                      </ul>
-                    </div>
+                  <div>
+                    <h4 className="text-lg font-serif text-stone-900 mb-2">¿Confirmas que quieres salir?</h4>
+                    <p className="text-sm text-stone-500 max-w-sm mx-auto">
+                      Esta acción eliminará tu acceso a la comunidad. Podrás volver a unirte en el futuro si lo deseas.
+                    </p>
                   </div>
-
-                  <p className="text-xs text-stone-400 text-center italic mt-2">
-                    Podrás volver a solicitar acceso o unirte con un código de invitación en cualquier momento.
-                  </p>
                 </div>
               )}
             </div>
 
-            {/* Footer / Botones */}
-            <div className="flex justify-between items-center mt-8 border-t border-stone-100 pt-4">
-              <div>
-                {leaveStep > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (leaveStep === 2 && appUser?.communityIds && appUser.communityIds.length <= 1) {
-                        return;
-                      }
-                      setLeaveStep((prev) => (prev - 1) as any);
-                    }}
-                    className="px-5 py-2.5 border border-stone-200 hover:bg-stone-50 text-stone-600 rounded-xl text-sm font-medium transition-colors"
-                  >
-                    Atrás
-                  </button>
-                )}
-              </div>
+            {/* Footer del modal */}
+            <div className="flex justify-between items-center mt-6 pt-4 border-t border-stone-100">
+              {leaveStep > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setLeaveStep(prev => (prev - 1) as 1 | 2 | 3)}
+                  className="px-4 py-2 text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors"
+                >
+                  ← Atrás
+                </button>
+              ) : (
+                <div />
+              )}
               
-              <div className="flex gap-2">
+              {leaveStep < 3 ? (
                 <button
                   type="button"
                   onClick={() => {
-                    setShowLeaveModal(false);
-                    setLeaveStep(1);
-                    setLeaveMotivo('');
-                    setLeaveComentario('');
+                    if (leaveStep === 2 && !leaveMotivo) return;
+                    setLeaveStep(prev => (prev + 1) as 1 | 2 | 3);
                   }}
-                  className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition-colors"
+                  disabled={leaveStep === 2 && !leaveMotivo}
+                  className="px-6 py-2 bg-[#4A4E4D] text-white rounded-xl text-sm font-medium hover:bg-[#363a39] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Cancelar
+                  Continuar →
                 </button>
-
-                {leaveStep < 3 ? (
-                  <button
-                    type="button"
-                    disabled={leaveStep === 1 ? !leaveCommunityId : !leaveMotivo}
-                    onClick={() => setLeaveStep((prev) => (prev + 1) as any)}
-                    className="px-5 py-2.5 bg-[#A5A58D] hover:bg-[#6B705C] text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
-                  >
-                    Continuar
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleLeaveCommunity}
-                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
-                  >
-                    Confirmar y Salir
-                  </button>
-                )}
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleLeaveCommunity}
+                  className="px-6 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
+                >
+                  Confirmar salida
+                </button>
+              )}
             </div>
           </div>
         </div>
