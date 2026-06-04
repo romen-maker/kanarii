@@ -10,6 +10,8 @@
 | T-043 | Migración datos Triada: script batch `saberes: string` → `string[]` + actualizar UI onboarding | M | ⬜ Pendiente | — |
 | T-044 | Reducir usos de `any` en interfaces core (`datosBrutos`, `perfilVisual`, `configuracion`) con interfaces tipadas | M | ⬜ Pendiente | — |
 | T-045 | Estandarizar validación formularios con componente `<FieldError />` reutilizable | S | ⬜ Pendiente | — |
+| T-046 | Integración Kin Maya (Dreamspell): cálculo, widget en FichaView e inyección en prompts Gemini | M | ✅ Hecho | .agents/tasks/task-046.md |
+
 
 ## Notas de planning
 - Sprint anterior (sprint-10) completado y archivado limpiamente.

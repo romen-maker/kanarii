@@ -68,3 +68,5 @@
 | Indicador visual online/offline y cambios pendientes de subir | T-040 | sprint-10 | src/components/ui/OfflineIndicator.tsx |
 | Estandarización cabeceras PageHeader y layout PageContainer | T-041 | sprint-10 | src/components/layout/PageHeader.tsx, src/components/layout/PageContainer.tsx |
 | Tarea: — Despliegue Kanarii en `kanarii.romensuarez.com` con Firebase Hosting | T-042 | sprint-11 | — |
+| Kin Maya Dreamspell: widget FichaView + inyección en Gemini | T-046 | sprint-11 | src/lib/kinMaya.ts, src/lib/gemini.ts, src/pages/FichaView.tsx |
+

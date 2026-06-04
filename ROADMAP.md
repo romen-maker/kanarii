@@ -104,6 +104,9 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [ALTO] Pasaporte Comunitario: vista pública del perfil como pasaporte, con Triada Comunitaria (ofrendas/saberes/necesidades), sin jerarquías visibles ni contadores numéricos (T-022).
 - [x] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (Sprint 10 — T-039).
 - [x] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (Sprint 06 — T-024).
+- [ ] [BAJO] Kin Maya en CalendarioView: badge `kinDeHoy()` en cabecera (~10 líneas) | T-047
+- [ ] [MEDIO] Kin Maya en Cruce: cruzar Kines de dos personas en `generarAnalisisCruce` para detectar complementariedades y tensiones galácticas | T-048
+- [ ] [BAJO] Kin Maya en PasaporteComunitario: widget idéntico al de FichaView | T-049
 
 ## 📱 Infraestructura offline
 - [x] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura (Sprint 09 — T-037).
