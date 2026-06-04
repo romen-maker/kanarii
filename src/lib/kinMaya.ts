@@ -101,10 +101,34 @@ export interface KinData {
 // ─── Función principal ────────────────────────────────────────────────────────
 
 /**
- * Punto de inicio del ciclo Dreamspell: 26 de julio de 1987
- * (Convergencia Armónica, según José Argüelles)
+ * Punto de inicio del ciclo Dreamspell: 23 de junio de 1987
+ * (Para que el 26 de julio de 1987 sea Kin 34, según José Argüelles)
  */
-const INICIO_DREAMSPELL_UTC = Date.UTC(1987, 6, 3);  // 3 jul 1987 — Kin 1
+const INICIO_DREAMSPELL_UTC = Date.UTC(1987, 5, 23);  // 23 jun 1987 — Kin 1
+
+/**
+ * Cuenta cuántos 29 de febrero caen en el rango [desdeUTC, hastaUTC] inclusive.
+ * Ambos parámetros son timestamps en UTC con desdeUTC <= hastaUTC.
+ */
+function contarBisiestos(desdeUTC: number, hastaUTC: number): number {
+  const fechaDesde = new Date(desdeUTC);
+  const fechaHasta = new Date(hastaUTC);
+  
+  const anoDesde = fechaDesde.getUTCFullYear();
+  const anoHasta = fechaHasta.getUTCFullYear();
+  
+  let contador = 0;
+  for (let y = anoDesde; y <= anoHasta; y++) {
+    const esBisiesto = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+    if (esBisiesto) {
+      const feb29 = Date.UTC(y, 1, 29); // 1 = Febrero
+      if (feb29 >= desdeUTC && feb29 <= hastaUTC) {
+        contador++;
+      }
+    }
+  }
+  return contador;
+}
 
 /**
  * Calcula el Kin Maya para cualquier fecha.
@@ -125,9 +149,18 @@ export function calcularKin(fecha?: string | Date | null): KinData {
   }
 
   const diffDias = Math.floor((fechaUTC - INICIO_DREAMSPELL_UTC) / (1000 * 60 * 60 * 24));
+  
+  let diasEfectivos = diffDias;
+  if (fechaUTC >= INICIO_DREAMSPELL_UTC) {
+    const bisiestos = contarBisiestos(INICIO_DREAMSPELL_UTC, fechaUTC);
+    diasEfectivos = diffDias - bisiestos;
+  } else {
+    const bisiestos = contarBisiestos(fechaUTC, INICIO_DREAMSPELL_UTC);
+    diasEfectivos = diffDias + bisiestos;
+  }
 
-  // El módulo puede dar negativo en JS si diffDias < 0 — lo normalizamos siempre
-  const kinIndex = ((diffDias % 260) + 260) % 260;
+  // El módulo puede dar negativo en JS si diasEfectivos < 0 — lo normalizamos siempre
+  const kinIndex = ((diasEfectivos % 260) + 260) % 260;
   const kinNum = kinIndex + 1; // Kin va de 1 a 260
 
   const tonoIndex = kinIndex % 13;
