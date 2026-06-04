@@ -20,7 +20,7 @@ import {
   collection
 } from './_core';
 
-import { Ficha, DatosOnboarding, TriadaComunitaria } from './_types';
+import { Ficha, DatosOnboarding, TriadaComunitaria, FichaDatosBrutos, FichaDatosPersona, FichaPerfilVisual, FichaConfiguracion, AstroPosicion, DisenoHumanoCanal } from './_types';
 import { handleFirestoreError, OperationType } from '../error-handler';
 import { syncTracker } from './syncTracker';
 
@@ -53,7 +53,7 @@ export async function getUserFicha(userId: string): Promise<Ficha | null> {
   }
 }
 
-export async function calcularDatosBrutos(birthData: { fecha: string, hora: string, latitud: number, longitud: number, timezone: string }) {
+export async function calcularDatosBrutos(birthData: { fecha: string, hora: string, latitud: number, longitud: number, timezone: string }): Promise<FichaDatosBrutos> {
   const url = (import.meta as any).env.VITE_HD_API_URL || 'https://hd-api.romensuarez.com';
   const apiKey = (import.meta as any).env.VITE_HD_API_KEY;
 
@@ -101,7 +101,7 @@ export async function calcularDatosBrutos(birthData: { fecha: string, hora: stri
   }
 }
 
-export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record<string, number> {
+export function calcularDimensiones(datosBrutos: FichaDatosBrutos, datosPersona: FichaDatosPersona): Record<string, number> {
   let escucha = 0;
   let accion = 0;
   let estructura = 0;
@@ -109,10 +109,10 @@ export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record
 
   if (!datosBrutos) return { escucha: 0, accion: 0, estructura: 0, cuidado: 0 };
 
-  const lunaSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Moon' || p.planeta === 'Luna')?.signo_nombre || '';
-  const solSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Sun' || p.planeta === 'Sol')?.signo_nombre || '';
-  const saturnoSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Saturn' || p.planeta === 'Saturno')?.signo_nombre || '';
-  const venusSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: any) => p.planeta === 'Venus')?.signo_nombre || '';
+  const lunaSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: AstroPosicion) => p.planeta === 'Moon' || p.planeta === 'Luna')?.signo_nombre || '';
+  const solSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: AstroPosicion) => p.planeta === 'Sun' || p.planeta === 'Sol')?.signo_nombre || '';
+  const saturnoSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: AstroPosicion) => p.planeta === 'Saturn' || p.planeta === 'Saturno')?.signo_nombre || '';
+  const venusSigno = datosBrutos.carta_astral_completa?.posiciones?.find((p: AstroPosicion) => p.planeta === 'Venus')?.signo_nombre || '';
   
   const fuego = ['Aries', 'Leo', 'Sagitario', 'Sagittarius'];
   const tierra = ['Tauro', 'Taurus', 'Virgo', 'Capricornio', 'Capricorn'];
@@ -144,7 +144,7 @@ export function calcularDimensiones(datosBrutos: any, datosPersona: any): Record
   if (isTierra(saturnoSigno)) estructura += 30;
   if (perfil.startsWith('1') || perfil.includes('/4')) estructura += 30;
   if (modalidad.toLowerCase().includes('fija') || modalidad.toLowerCase().includes('fixed')) estructura += 25;
-  if (datosPersona?.antiguedad_anos && parseFloat(datosPersona.antiguedad_anos) >= 2) estructura += 15;
+  if (datosPersona?.antiguedad_anos && datosPersona.antiguedad_anos >= 2) estructura += 15;
 
   // CUIDADO (max 100):
   if (isAgua(lunaSigno)) cuidado += 30;
@@ -209,7 +209,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       if (estado !== "completo") estado = "pendiente_capa1";
     }
 
-    const datosPersona: any = {
+    const datosPersona: FichaDatosPersona = {
       nombre: datosOnboarding.nombre,
       fechaNacimiento: datosOnboarding.fechaNacimiento,
       hora: horaVal,
@@ -231,23 +231,30 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
     };
 
     // Remove undefined values to prevent Firestore errors
-    Object.keys(datosPersona).forEach(key => {
-      if (datosPersona[key] === undefined) {
-        delete datosPersona[key];
+    const recordPersona = datosPersona as Record<string, any>;
+    Object.keys(recordPersona).forEach(key => {
+      if (recordPersona[key] === undefined) {
+        delete recordPersona[key];
       }
     });
 
-    let perfilVisual = (datosOnboarding as any).preview_perfilVisual || null;
-    let manualMarkdown = (datosOnboarding as any).preview_manual || null;
+    let perfilVisual: FichaPerfilVisual | null = (datosOnboarding as any).preview_perfilVisual || null;
+    let manualMarkdown: string | null = (datosOnboarding as any).preview_manual || null;
     let fallbackToPending = false;
-    let dimensiones = (datosOnboarding as any).preview_dimensiones || null;
+    let dimensiones: Record<string, number> | null = (datosOnboarding as any).preview_dimensiones || null;
 
     if (rawData && !skipGemini) {
       try {
         const { generarPerfilVisual, generarManual } = await import('../gemini');
-        dimensiones = calcularDimensiones(rawData, datosPersona);
-        perfilVisual = await generarPerfilVisual(rawData, datosPersona, dimensiones);
-        perfilVisual.dimensiones = dimensiones;
+        const calculatedDims = calcularDimensiones(rawData, datosPersona);
+        dimensiones = calculatedDims;
+        perfilVisual = await generarPerfilVisual(rawData, datosPersona, calculatedDims);
+        perfilVisual.dimensiones = {
+          escucha: calculatedDims.escucha || 0,
+          accion: calculatedDims.accion || 0,
+          estructura: calculatedDims.estructura || 0,
+          cuidado: calculatedDims.cuidado || 0
+        };
         
         manualMarkdown = await generarManual(rawData, datosPersona, perfilVisual, undefined);
         estado = "completo";
@@ -269,15 +276,16 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
     d.setMonth(d.getMonth() + 6);
 
     const safeDatosOnboarding = { ...datosOnboarding };
-    Object.keys(safeDatosOnboarding).forEach(key => {
-      if ((safeDatosOnboarding as any)[key] === undefined) {
-        delete (safeDatosOnboarding as any)[key];
+    const recordOnboarding = safeDatosOnboarding as Record<string, any>;
+    Object.keys(recordOnboarding).forEach(key => {
+      if (recordOnboarding[key] === undefined) {
+        delete recordOnboarding[key];
       }
     });
 
-    const fichaFull: any = {
+    const fichaFull: Ficha = {
       userId,
-      datosBrutos: rawData || null,
+      datosBrutos: rawData || undefined,
       datosPersona,
       // Keeping original for backward compatibility
       datosOnboarding: {
@@ -289,7 +297,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
       estado,
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    } as any;
+    };
 
     if (!isUpdate) {
        fichaFull.createdAt = serverTimestamp();
@@ -301,7 +309,14 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
             fichaFull.manualGenerado = manualMarkdown;
             fichaFull.manualMarkdown = manualMarkdown;
         }
-        if (dimensiones !== null) fichaFull.dimensiones = dimensiones;
+        if (dimensiones !== null) {
+            fichaFull.dimensiones = {
+              escucha: dimensiones.escucha || 0,
+              accion: dimensiones.accion || 0,
+              estructura: dimensiones.estructura || 0,
+              cuidado: dimensiones.cuidado || 0
+            };
+        }
         fichaFull.versionManual = 1;
         fichaFull.proximaRevision = d;
     }
@@ -336,7 +351,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
  * Función interna de escritura directa a Firestore.
  * Evita duplicar lógica entre guardado normal y migración desde pendiente.
  */
-export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: boolean = true) {
+export async function _writeFichaRaw(userId: string, fichaFull: Ficha, isUpdate: boolean = true) {
   return syncTracker.trackWrite((async () => {
     // Intentar resolver communityId de forma inteligente si no viene explícito (ej: tras onboarding)
     let commId = fichaFull.communityId || fichaFull.datosOnboarding?.communityId || fichaFull.datosPersona?.communityId || null;
@@ -439,7 +454,7 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
     if (communityIds.length > 0) {
       try {
         const batch = writeBatch(db);
-        const base = fichaFull.datosPersona || fichaFull.datosOnboarding || {};
+        const base = (fichaFull.datosPersona || fichaFull.datosOnboarding || {}) as Partial<FichaDatosPersona>;
 
         for (const cId of communityIds) {
           const memberRef = doc(db, 'community_members', `${cId}_${userId}`);
@@ -485,7 +500,7 @@ export async function _writeFichaRaw(userId: string, fichaFull: any, isUpdate: b
  * Persiste temporalmente la ficha en Firestore antes de enviar el Magic Link.
  * Esto permite que el usuario recupere su progreso si abre el link en otro dispositivo.
  */
-export async function guardarFichaPendiente(email: string, ficha: any): Promise<void> {
+export async function guardarFichaPendiente(email: string, ficha: Partial<Ficha>): Promise<void> {
   if (!email || !ficha) return;
   
   return syncTracker.trackWrite((async () => {
@@ -524,11 +539,12 @@ export async function migrarFichaPendiente(email: string, uid: string): Promise<
         return false;
       }
       
-      const fichaMigrada: any = {
+      const fichaMigrada: Ficha = {
         ...data,
         userId: uid,
+        datosOnboarding: data.datosOnboarding || {},
         updatedAt: serverTimestamp()
-      };
+      } as Ficha;
 
       if (data.preview_manual) {
         fichaMigrada.manualGenerado = data.preview_manual;
@@ -648,7 +664,7 @@ const ALL_CHANNELS = [
   [32, 54], [34, 57], [35, 36], [37, 40], [39, 55], [42, 53], [47, 64]
 ];
 
-export function clasificarCanales(perfil1: any, perfil2: any) {
+export function clasificarCanales(perfil1: Ficha, perfil2: Ficha) {
   const result = {
     electromagneticos: [] as string[],
     compania: [] as string[],
@@ -661,8 +677,10 @@ export function clasificarCanales(perfil1: any, perfil2: any) {
 
   if (!db1 || !db2) return result;
 
-  const getCanales = (db: any) => Array.isArray(db?.diseno_humano?.canales) ? db.diseno_humano.canales : [];
-  const getPuertas = (db: any) => {
+  const getCanales = (db: FichaDatosBrutos | null | undefined): DisenoHumanoCanal[] => 
+    Array.isArray(db?.diseno_humano?.canales) ? db.diseno_humano.canales : [];
+    
+  const getPuertas = (db: FichaDatosBrutos | null | undefined): number[] => {
     const pa = db?.diseno_humano?.puertas_activas;
     if (Array.isArray(pa) && pa.length > 0) return pa.map(g => Math.floor(Number(g)));
     return [];
@@ -673,7 +691,7 @@ export function clasificarCanales(perfil1: any, perfil2: any) {
   const v1 = new Set(getPuertas(db1));
   const v2 = new Set(getPuertas(db2));
 
-  const hasCanal = (canales: any[], cName: string) => canales.some(c => {
+  const hasCanal = (canales: DisenoHumanoCanal[], cName: string) => canales.some(c => {
     if (typeof c === 'string') return c === cName;
     const normalizedNombre = c.nombre?.split('-').sort((a: string, b: string) => Number(a) - Number(b)).join('-');
     const normalizedPuertas = c.puertas?.slice().sort((a: number, b: number) => a - b).join('-');
@@ -731,20 +749,35 @@ export function clasificarCanales(perfil1: any, perfil2: any) {
   return result;
 }
 
-export function cruzarMiembros(perfil1: any, perfil2: any): AnalisisCruce {
+export function cruzarMiembros(perfil1: Ficha, perfil2: Ficha): AnalisisCruce {
   let puntuacion = 50; // base score
   const compatibilidades: string[] = [];
   const tensiones: string[] = [];
 
   if (!perfil1 || !perfil2) return { puntuacion: 0, compatibilidades, tensiones };
 
-  const hd1 = perfil1.datosBrutos?.tipo_hd ? { tipo: perfil1.datosBrutos.tipo_hd, autoridad: perfil1.datosBrutos.autoridad, perfil: perfil1.datosBrutos.perfil } : null;
-  const hd1Full = hd1 || perfil1.datosBrutos?.diseno_humano || (perfil1.tipo_hd ? { tipo: perfil1.tipo_hd, autoridad: perfil1.autoridad_hd } : null);
-  const hd2 = perfil2.datosBrutos?.tipo_hd ? { tipo: perfil2.datosBrutos.tipo_hd, autoridad: perfil2.datosBrutos.autoridad, perfil: perfil2.datosBrutos.perfil } : null;
-  const hd2Full = hd2 || perfil2.datosBrutos?.diseno_humano || (perfil2.tipo_hd ? { tipo: perfil2.tipo_hd, autoridad: perfil2.autoridad_hd } : null);
+  const db1 = perfil1.datosBrutos;
+  const db2 = perfil2.datosBrutos;
+  const p1Any = perfil1 as any;
+  const p2Any = perfil2 as any;
+
+  const hd1 = db1?.diseno_humano ? { tipo: db1.diseno_humano.tipo, autoridad: db1.diseno_humano.autoridad, perfil: db1.diseno_humano.perfil } : null;
+  const hd1Full = hd1 || db1?.diseno_humano || (p1Any.tipo_hd ? { tipo: p1Any.tipo_hd, autoridad: p1Any.autoridad_hd, perfil: p1Any.perfil_hd } : null);
+  const hd2 = db2?.diseno_humano ? { tipo: db2.diseno_humano.tipo, autoridad: db2.diseno_humano.autoridad, perfil: db2.diseno_humano.perfil } : null;
+  const hd2Full = hd2 || db2?.diseno_humano || (p2Any.tipo_hd ? { tipo: p2Any.tipo_hd, autoridad: p2Any.autoridad_hd, perfil: p2Any.perfil_hd } : null);
   
-  const dim1 = perfil1.perfilVisual?.dimensiones || perfil1.dimensiones || perfil1.perfilVisual;
-  const dim2 = perfil2.perfilVisual?.dimensiones || perfil2.dimensiones || perfil2.perfilVisual;
+  const getDimensiones = (ficha: Ficha) => {
+    if (ficha.perfilVisual?.dimensiones) return ficha.perfilVisual.dimensiones;
+    if (ficha.dimensiones) return ficha.dimensiones;
+    const pv = ficha.perfilVisual as any;
+    if (pv && typeof pv === 'object' && 'escucha' in pv) {
+      return pv as { escucha?: number; accion?: number; estructura?: number; cuidado?: number };
+    }
+    return null;
+  };
+
+  const dim1 = getDimensiones(perfil1);
+  const dim2 = getDimensiones(perfil2);
 
   // COMPATIBILIDADES
   if (hd1Full && hd2Full) {
@@ -890,8 +923,9 @@ export async function ensureSeedData(appUserUid: string) {
               rol_comunidad: seed.rol_comunidad,
               antiguedad_anos: seed.antiguedad_anos,
               tension: seed.tension,
-              rol: seed.rol,
-              fechaSalida: seed.fechaSalida
+              rol: seed.rol as "voluntario" | "miembro" | "propietario",
+              fechaSalida: seed.fechaSalida,
+              communityId: 'arteara'
             },
             datosPersona: {
               nombre: seed.nombre,

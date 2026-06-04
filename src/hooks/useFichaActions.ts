@@ -45,7 +45,7 @@ export function useFichaActions() {
    * @returns Promise<string> - El userId de la ficha guardada
    */
   const addFicha = async (
-    datosOnboarding: DatosOnboarding, 
+    datosOnboarding: DatosOnboarding & { userId: string }, 
     existingId?: string,
     skipGemini: boolean = false,
     options?: Parameters<typeof perform>[1]

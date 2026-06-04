@@ -71,3 +71,4 @@
 | Kin Maya Dreamspell: widget FichaView + inyección en Gemini | T-046 | sprint-11 | src/lib/kinMaya.ts, src/lib/gemini.ts, src/pages/FichaView.tsx |
 
 | — Fix calendario vacío tras PageContainer + widget Kin Maya en cabecera | T-043 | sprint-11 | src/pages/CalendarioView.tsx |
+| — Reducir usos de any en interfaces core (datosBrutos, perfilVisual, configuracion) con interfaces tipadas | T-044 | sprint-11 | — |
