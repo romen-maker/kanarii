@@ -3,7 +3,7 @@
 ## Estado de aprobación
 - [x] Plan aprobado por el usuario
 - [x] Caja de archivos declarada
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
 
 ## Información de la Tarea
 - **ID**: T-042
