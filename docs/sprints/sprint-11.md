@@ -6,7 +6,7 @@
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-042 | Despliegue Kanarii en `kanarii.romensuarez.com` (Coolify + Cloudflare + SSL + auto-deploy) | M | ⬜ Pendiente | — |
+| T-042 | Despliegue Kanarii en `kanarii.romensuarez.com` (Coolify + Cloudflare + SSL + auto-deploy) | M | ✅ Hecho | .agents/tasks/task-042.md |
 | T-043 | Migración datos Triada: script batch `saberes: string` → `string[]` + actualizar UI onboarding | M | ⬜ Pendiente | — |
 | T-044 | Reducir usos de `any` en interfaces core (`datosBrutos`, `perfilVisual`, `configuracion`) con interfaces tipadas | M | ⬜ Pendiente | — |
 | T-045 | Estandarizar validación formularios con componente `<FieldError />` reutilizable | S | ⬜ Pendiente | — |
