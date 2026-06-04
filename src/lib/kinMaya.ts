@@ -104,7 +104,7 @@ export interface KinData {
  * Punto de inicio del ciclo Dreamspell: 26 de julio de 1987
  * (Convergencia Armónica, según José Argüelles)
  */
-const INICIO_DREAMSPELL_UTC = Date.UTC(1987, 6, 26); // mes 0-indexed
+const INICIO_DREAMSPELL_UTC = Date.UTC(1987, 6, 3);  // 3 jul 1987 — Kin 1
 
 /**
  * Calcula el Kin Maya para cualquier fecha.

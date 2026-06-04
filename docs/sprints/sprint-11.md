@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-042 | Despliegue Kanarii en `kanarii.romensuarez.com` (Coolify + Cloudflare + SSL + auto-deploy) | M | ✅ Hecho | .agents/tasks/task-042.md |
-| T-043 | Migración datos Triada: script batch `saberes: string` → `string[]` + actualizar UI onboarding | M | ⬜ Pendiente | — |
+| T-043 | Fix calendario vacío tras PageContainer + widget Kin Maya del día en cabecera CalendarioView | S | ✅ Hecho | .agents/tasks/task-043.md |
 | T-044 | Reducir usos de `any` en interfaces core (`datosBrutos`, `perfilVisual`, `configuracion`) con interfaces tipadas | M | ⬜ Pendiente | — |
 | T-045 | Estandarizar validación formularios con componente `<FieldError />` reutilizable | S | ⬜ Pendiente | — |
 | T-046 | Integración Kin Maya (Dreamspell): cálculo, widget en FichaView e inyección en prompts Gemini | M | ✅ Hecho | .agents/tasks/task-046.md |
