@@ -18,6 +18,7 @@ import { Plus, Calendar as CalendarIcon, List } from 'lucide-react';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { kinDeHoy } from '../lib/kinMaya';
 
 const locales = {
   'es': es,
@@ -136,7 +137,7 @@ export default function CalendarioView() {
     <PageContainer>
       <PageHeader
         title="Calendario Comunitario"
-        subtitle="Sincroniza el latido de la comunidad"
+        subtitle={`Sincroniza el latido de la comunidad · ${kinDeHoy().emoji} Kin ${kinDeHoy().kin} — ${kinDeHoy().sello} ${kinDeHoy().nombreTono}`}
         icon={CalendarIcon}
         actions={
           <button
@@ -154,7 +155,7 @@ export default function CalendarioView() {
 
       <div className="p-6 space-y-6">
 
-      <div className="flex-1 bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-6 overflow-hidden flex flex-col">
+      <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-6 overflow-hidden">
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setView(Views.MONTH)}
@@ -170,7 +171,7 @@ export default function CalendarioView() {
           </button>
         </div>
 
-        <div className="flex-1 min-h-[500px]">
+        <div style={{ height: '520px' }}>
           {loading ? (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A5A58D]"></div>
