@@ -24,6 +24,9 @@
 - `firebase.json`
 - `.firebaserc`
 - `.github/workflows/deploy.yml`
+- `vite.config.ts`
+- `src/lib/services/fichas.ts`
+- `src/App.tsx`
 
 ## Pasos de Ejecución
 1. [x] Inicializar Firebase en el repositorio creando `firebase.json` y `.firebaserc`.
@@ -31,9 +34,14 @@
 3. [x] Crear `firebase.json` con la configuración de rewrites para React Router SPA y configuración de cabeceras de caché.
 4. [x] Crear `.github/workflows/deploy.yml` con la acción de GitHub Actions para desplegar en Firebase Hosting en cada push a `main`.
 5. [x] Solicitar al usuario asociar las credenciales (Token de Firebase o Service Account) y configurar el dominio en Cloudflare y Firebase Auth.
-6. [x] Validar el despliegue.
+6. [x] Validar el despliegue inicial.
+7. [x] Configurar `manualChunks` en `vite.config.ts` para separar las dependencias en vendors cacheables.
+8. [x] Resolver warning de importación estática/dinámica mixta en `fichas.ts` convirtiendo el import de `gemini.ts` a estático.
+9. [x] Validar compilación local, verificar el tamaño de los chunks y desplegar el build optimizado en Firebase Hosting.
 
 ## Criterios de Done
 - [x] Archivos de configuración de Firebase creados y correctos.
 - [x] GitHub Actions configurado para desplegar automáticamente al mergear en `main`.
 - [x] SPA redirecciona todas las rutas internas a `index.html` en producción.
+- [x] Optimización de bundle size aplicada separando vendors en manualChunks.
+- [x] Warnings de Rollup relativos a imports dinámicos y estáticos mixtos de `gemini.ts` solventados.

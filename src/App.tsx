@@ -4,28 +4,34 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Welcome } from './pages/Welcome';
 import { ContextConsent } from './pages/ContextConsent';
 import { OnboardingChat } from './pages/OnboardingChat';
-import { FichaView } from './pages/FichaView';
-import { FichaPreview } from './pages/FichaPreview';
-import { AdminPanel } from './pages/AdminPanel';
-import { TareasPanel } from './pages/TareasPanel';
-import { ActasPanel } from './pages/ActasPanel';
-import { ProyectosView } from './pages/ProyectosView';
-import CalendarioView from './pages/CalendarioView';
-import Tablon from './pages/Tablon';
-import { PropuestasView } from './pages/PropuestasView';
-import { BottomNav } from './components/BottomNav';
-import { Sidebar } from './components/Sidebar';
-import { CruceView } from './pages/CruceView';
-import { ComunidadesView } from './pages/ComunidadesView';
-import { AdminSolicitudesView } from './pages/AdminSolicitudesView';
-import { AuthCallbackPage } from './pages/AuthCallbackPage';
-import MarketplaceView from './pages/MarketplaceView';
-import { RegistroComunidadView } from './pages/RegistroComunidadView';
-import { FichaComunidadView } from './pages/FichaComunidadView';
-import { PasaporteComunitarioView } from './pages/PasaporteComunitarioView';
-import KanariiTourPage from './pages/KanariiTourPage';
+const FichaView = React.lazy(() => import('./pages/FichaView').then(m => ({ default: m.FichaView })));
+const FichaPreview = React.lazy(() => import('./pages/FichaPreview').then(m => ({ default: m.FichaPreview })));
+const AdminPanel = React.lazy(() => import('./pages/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const TareasPanel = React.lazy(() => import('./pages/TareasPanel').then(m => ({ default: m.TareasPanel })));
+const ActasPanel = React.lazy(() => import('./pages/ActasPanel').then(m => ({ default: m.ActasPanel })));
+const ProyectosView = React.lazy(() => import('./pages/ProyectosView').then(m => ({ default: m.ProyectosView })));
+const CalendarioView = React.lazy(() => import('./pages/CalendarioView'));
+const Tablon = React.lazy(() => import('./pages/Tablon'));
+const PropuestasView = React.lazy(() => import('./pages/PropuestasView').then(m => ({ default: m.PropuestasView })));
+const CruceView = React.lazy(() => import('./pages/CruceView').then(m => ({ default: m.CruceView })));
+const ComunidadesView = React.lazy(() => import('./pages/ComunidadesView').then(m => ({ default: m.ComunidadesView })));
+const AdminSolicitudesView = React.lazy(() => import('./pages/AdminSolicitudesView').then(m => ({ default: m.AdminSolicitudesView })));
+const MarketplaceView = React.lazy(() => import('./pages/MarketplaceView'));
+const RegistroComunidadView = React.lazy(() => import('./pages/RegistroComunidadView').then(m => ({ default: m.RegistroComunidadView })));
+const FichaComunidadView = React.lazy(() => import('./pages/FichaComunidadView').then(m => ({ default: m.FichaComunidadView })));
+const PasaporteComunitarioView = React.lazy(() => import('./pages/PasaporteComunitarioView').then(m => ({ default: m.PasaporteComunitarioView })));
+const KanariiTourPage = React.lazy(() => import('./pages/KanariiTourPage'));
+const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
 import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
+import { BottomNav } from './components/BottomNav';
+import { Sidebar } from './components/Sidebar';
+
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800" />
+  </div>
+);
 
 function AppContent() {
   const { appUser } = useAuth();
@@ -44,7 +50,8 @@ function AppContent() {
       {showNav && <Sidebar />}
       
       <main className="flex-1 min-w-0">
-        <Routes>
+        <React.Suspense fallback={<LoadingSpinner />}>
+          <Routes>
           <Route path="/" element={
             <>
               {appUser && !appUser.hasFicha && (
@@ -91,6 +98,7 @@ function AppContent() {
           <Route path="/tour" element={<KanariiTourPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>
+      </React.Suspense>
         
         {showNav && <BottomNav />}
       </main>
