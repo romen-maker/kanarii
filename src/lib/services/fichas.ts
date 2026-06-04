@@ -24,7 +24,6 @@ import { Ficha, DatosOnboarding, TriadaComunitaria } from './_types';
 import { handleFirestoreError, OperationType } from '../error-handler';
 import { syncTracker } from './syncTracker';
 
-
 /**
  * Escucha en tiempo real las fichas de los miembros (profiles).
  */
