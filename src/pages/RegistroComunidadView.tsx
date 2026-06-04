@@ -9,6 +9,7 @@ import { getComunidad } from '../lib/appService';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useToast } from '../components/Toaster';
 import { LocationAutocomplete } from '../components/LocationAutocomplete';
+import { FieldError } from '../components/ui/FieldError';
 
 const TIPOS = [
   { value: 'finca', label: 'Finca', icon: '🌿' },
@@ -196,12 +197,15 @@ export function RegistroComunidadView() {
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       {slugStatus === 'checking' && <Loader2 className="w-5 h-5 text-stone-400 animate-spin" />}
                       {slugStatus === 'available' && <CheckCircle2 className="w-5 h-5 text-green-500" />}
-                      {slugStatus === 'taken' && <AlertCircle className="w-5 h-5 text-red-500" />}
                     </div>
                   </div>
-                  <p className={`text-xs mt-1.5 ${slugStatus === 'taken' ? 'text-red-500 font-medium' : 'text-stone-400'}`}>
-                    {slugStatus === 'taken' ? 'Este identificador ya está en uso' : slugStatus === 'available' ? '✓ Disponible' : `kanarii.app/c/${form.slug || '...'}`}
-                  </p>
+                  {slugStatus === 'taken' ? (
+                    <FieldError message="Este identificador ya está en uso" />
+                  ) : (
+                    <p className="text-xs mt-1.5 text-stone-400">
+                      {slugStatus === 'available' ? '✓ Disponible' : `kanarii.app/c/${form.slug || '...'}`}
+                    </p>
+                  )}
                 </div>
 
                 <div>

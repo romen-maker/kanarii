@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Loader2, Leaf, Chrome, ArrowRight, CheckCircle2, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { FieldError } from './ui/FieldError';
 
 interface AuthGateModalProps {
   isOpen: boolean;
@@ -128,7 +129,7 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
                         className="w-full bg-white border border-[#EAE2D6] rounded-2xl py-4 pl-14 pr-6 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-[#A5A58D] transition-all"
                       />
                     </div>
-                    {error && <p className="text-red-500 text-xs ml-4 mt-1 font-medium">{error}</p>}
+                    <FieldError message={error || undefined} className="ml-4" />
                   </div>
 
                   <button

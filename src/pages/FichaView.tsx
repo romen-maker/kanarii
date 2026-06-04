@@ -15,6 +15,8 @@ import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useTagArray } from '../hooks/useTagArray';
 import { TagArrayEditor } from '../components/ui/TagArrayEditor';
 import { calcularKin } from '../lib/kinMaya';
+import { FieldError } from '../components/ui/FieldError';
+
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -468,17 +470,17 @@ export function FichaView() {
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-stone-600">Nombre</label>
                   <input {...register("nombre")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                  {errors.nombre && <p className="text-red-500 text-xs">{errors.nombre.message}</p>}
+                  <FieldError error={errors.nombre} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-stone-600">Fecha de Nacimiento</label>
                   <input type="date" {...register("fechaNacimiento")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                  {errors.fechaNacimiento && <p className="text-red-500 text-xs">{errors.fechaNacimiento.message}</p>}
+                  <FieldError error={errors.fechaNacimiento} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-stone-600">Hora de Nacimiento</label>
                   <input type="time" {...register("hora")} className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                  {errors.hora && <p className="text-red-500 text-xs">{errors.hora.message}</p>}
+                  <FieldError error={errors.hora} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-stone-600">Lugar de Nacimiento</label>
@@ -493,7 +495,7 @@ export function FichaView() {
                       {geoMessage}
                     </p>
                   )}
-                  {errors.lugar && <p className="text-red-500 text-xs">{errors.lugar.message}</p>}
+                  <FieldError error={errors.lugar} />
                 </div>
                 
                 <div className="space-y-1">
@@ -504,7 +506,7 @@ export function FichaView() {
                     <option value="no binario">no binario</option>
                     <option value="prefiero no decirlo">prefiero no decirlo</option>
                   </select>
-                  {errors.genero && <p className="text-red-500 text-xs">{errors.genero.message}</p>}
+                  <FieldError error={errors.genero} />
                 </div>
                 
                 <div className="space-y-1">
@@ -518,13 +520,13 @@ export function FichaView() {
                     <option value={4}>4 años</option>
                     <option value={5}>5 años o más</option>
                   </select>
-                  {errors.antiguedad_anos && <p className="text-red-500 text-xs">{errors.antiguedad_anos.message}</p>}
+                  <FieldError error={errors.antiguedad_anos} />
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-sm font-medium text-stone-600">Saberes y recorrido vital</label>
                   <textarea {...register("saberes")} rows={4} placeholder="Tu formación, experiencias, oficios, proyectos... todo cuenta" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                  {errors.saberes && <p className="text-red-500 text-xs">{errors.saberes.message}</p>}
+                  <FieldError error={errors.saberes} />
                 </div>
 
                 <div className="space-y-4 md:col-span-2 border-t border-[#EAE2D6] pt-4 mt-2">
@@ -565,13 +567,13 @@ export function FichaView() {
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-sm font-medium text-stone-600">Estado de tensión</label>
                   <textarea {...register("tension")} rows={4} placeholder="¿Qué estás sintiendo hoy en la convivencia?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                  {errors.tension && <p className="text-red-500 text-xs">{errors.tension.message}</p>}
+                  <FieldError error={errors.tension} />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-stone-600">Participación en Kanarii</label>
                   <textarea {...register("rol_comunidad")} rows={4} placeholder="¿Cómo contribuyes o te gustaría contribuir al proyecto?" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                  {errors.rol_comunidad && <p className="text-red-500 text-xs">{errors.rol_comunidad.message}</p>}
+                  <FieldError error={errors.rol_comunidad} />
                 </div>
 
                 <div className="space-y-1">
@@ -581,7 +583,7 @@ export function FichaView() {
                     <option value="miembro">Miembro</option>
                     <option value="voluntario">Voluntario</option>
                   </select>
-                  {errors.rol && <p className="text-red-500 text-xs">{errors.rol.message}</p>}
+                  <FieldError error={errors.rol} />
                 </div>
 
                 {watchRol === 'voluntario' && (

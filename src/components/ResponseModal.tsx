@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PropuestaRespuesta } from '../lib/appService';
 import { X, CheckCircle2, MessageSquare, HelpCircle, AlertCircle, Send } from 'lucide-react';
 import { usePropuestaActions } from '../hooks/usePropuestaActions';
+import { FieldError } from './ui/FieldError';
 
 interface ResponseModalProps {
   propuestaId: string;
@@ -164,11 +165,7 @@ export function ResponseModal({
                   ${error ? 'border-rose-200 focus:border-rose-400' : 'border-stone-100 focus:border-stone-300'}
                 `}
               />
-              {error && (
-                <p className="text-[10px] font-bold text-rose-500 flex items-center gap-1.5 ml-1">
-                  <AlertCircle className="w-3 h-3" /> {error}
-                </p>
-              )}
+              <FieldError message={error || undefined} className="ml-1" />
             </div>
           )}
         </div>

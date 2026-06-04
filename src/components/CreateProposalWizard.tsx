@@ -4,6 +4,7 @@ import { X, ArrowRight, ArrowLeft, Send, User, Calendar, Info, Gavel } from 'luc
 import { Propuesta } from '../lib/appService';
 import { usePropuestaActions } from '../hooks/usePropuestaActions';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
+import { FieldError } from './ui/FieldError';
 
 interface CreateProposalWizardProps {
   communityId: string;
@@ -163,12 +164,12 @@ export function CreateProposalWizard({
                 placeholder="Ej: Los martes hay mucho ruido en el salón común y los que trabajamos desde casa no podemos concentrarnos..."
                 className="w-full min-h-[150px] p-6 rounded-3xl border-2 border-[#EAE2D6] bg-white focus:border-[#6B705C] outline-none transition-all text-stone-700"
               />
+              <FieldError message={errors.reason} />
+              <FieldError message={errors.form} />
               <div className="flex justify-between items-center">
                 <span className={`text-[10px] font-bold uppercase ${reason.length < 30 ? 'text-rose-400' : 'text-teal-600'}`}>
                   {reason.length < 30 ? `Faltan ${30 - reason.length} caracteres` : 'Tensión bien formulada ✓'}
                 </span>
-                {errors.reason && <p className="text-[10px] font-bold text-rose-500 uppercase">{errors.reason}</p>}
-                {errors.form && <p className="text-[10px] font-bold text-rose-500 uppercase bg-rose-50 p-2 rounded-lg border border-rose-100">{errors.form}</p>}
               </div>
             </div>
           )}
@@ -194,7 +195,7 @@ export function CreateProposalWizard({
                     placeholder="Ej: Implementar zona de silencio los martes"
                     className="w-full p-4 rounded-2xl border-2 border-[#EAE2D6] bg-white focus:border-[#6B705C] outline-none transition-all"
                   />
-                  {errors.title && <p className="text-[10px] font-bold text-rose-500 uppercase mt-1 ml-1">{errors.title}</p>}
+                  <FieldError message={errors.title} />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 ml-1">Descripción detallada</label>
@@ -204,7 +205,7 @@ export function CreateProposalWizard({
                     placeholder="Detalla cómo se implementará, recursos necesarios, horarios..."
                     className="w-full min-h-[150px] p-6 rounded-3xl border-2 border-[#EAE2D6] bg-white focus:border-[#6B705C] outline-none transition-all text-stone-700"
                   />
-                  {errors.description && <p className="text-[10px] font-bold text-rose-500 uppercase mt-1 ml-1">{errors.description}</p>}
+                  <FieldError message={errors.description} />
                 </div>
               </div>
             </div>
