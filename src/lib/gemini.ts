@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { calcularKin } from './kinMaya';
 
 const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -93,7 +94,6 @@ async function callGeminiWithFallback(prompt: string): Promise<string> {
       }
     }
     
-    // Si no es un error de reintento (503/429), lanzamos el error original
     console.error("❌ Error no recuperable en Gemini 2.5:", err);
     throw err;
   }
@@ -114,8 +114,13 @@ function parsearRespuestaIA(text: string): any {
 }
 
 export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any, comunidadNombre: string = 'la comunidad'): Promise<any> {
+    // Calculamos el Kin Maya personal si hay fecha de nacimiento
+    const kinMaya = datosPersona?.fechaNacimiento
+      ? calcularKin(datosPersona.fechaNacimiento)
+      : null;
+
     const prompt = `
-   Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.
+   Eres un experto en Astrología Psicológica, Diseño Humano y Calendario Maya Dreamspell aplicados a comunidades de convivencia.
    Responde SOLO con JSON válido, sin markdown ni backticks ni texto extra.
    Schema de salida:
    {
@@ -126,12 +131,12 @@ export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, d
      "aportaComunidad": ["string (2-3 dones concretos para la finca)"],
      "necesitaComunidad": ["string (2-3 necesidades innegociables)"],
      "rol_sociocratico": "Coordinador" | "Secretario" | "Facilitador",
-     "justificacion_rol": "string (1 frase basada en Mercurio y Saturno)"
+     "justificacion_rol": "string (1 frase basada en Mercurio, Saturno y el Kin Maya si está disponible)"
    }
    
    Datos del usuario:
    (Nota: "saberes" se refiere a los saberes, formación y recorrido vital de la persona)
-   ${JSON.stringify({datosBrutos, datosPersona, dimensiones}, null, 2)}
+   ${JSON.stringify({ datosBrutos, datosPersona, dimensiones, kinMaya }, null, 2)}
    `;
 
   console.log("🤖 Gemini: Iniciando generación de Perfil Visual...");
@@ -149,10 +154,22 @@ export async function generarManual(datosBrutos: any, datosPersona: any, perfilV
       ? `\nEsta persona viene como voluntaria con estancia temporal. Adapta el tono para dar la bienvenida a alguien que viene a aportar por un período concreto, destacando cómo puede contribuir desde sus habilidades durante su estancia.\n`
       : "";
 
-   const prompt = `Eres un experto en Astrología Psicológica y Diseño Humano aplicados a comunidades de convivencia.${voluntarioContext}
+   // Calculamos el Kin Maya personal si hay fecha de nacimiento
+   const kinMaya = datosPersona?.fechaNacimiento
+     ? calcularKin(datosPersona.fechaNacimiento)
+     : null;
+
+   const kinMayaContext = kinMaya
+     ? `\nFirma Galáctica (Kin Maya Dreamspell): ${kinMaya.descripcionLarga}\n`
+     : "";
+
+   const prompt = `Eres un experto en Astrología Psicológica, Diseño Humano y Calendario Maya Dreamspell aplicados a comunidades de convivencia.${voluntarioContext}
 Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de ${comunidadNombre}.
 
-   1. ADN Astral e Ikigai Comunitario
+   1. ADN Astral, Kin Maya e Ikigai Comunitario — Cruza la misión de vida solar/HD con el Kin personal.
+      ${kinMayaContext}
+      Explica cómo el Sello y el Tono del Kin definen el rol natural de esta persona en la convivencia comunitaria.
+      Describe qué tipo de energía aporta al grupo según su Kin (ej. si es Viento: comunicación y oxigenación de procesos; si es Tormenta: catalizador de transformaciones necesarias).
    2. Anatomía del Poder (Democracia Profunda) — con los 4 tipos de rango: Social, Psicológico, Contextual, Espiritual
    3. El Espejo de la Tribu (Sombra y Procesos)
    4. Sintonía y Comunicación (CNV)
@@ -163,6 +180,7 @@ Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de
    Datos del miembro:
    Perfil Visual/Arquetipo/Sombras: ${JSON.stringify(perfilVisual, null, 2)}
    Datos Persona: ${JSON.stringify(datosPersona, null, 2)}
+   Firma Galáctica (Kin Maya): ${kinMaya ? JSON.stringify(kinMaya, null, 2) : 'No disponible'}
    Datos Brutos (diseño humano y astrología): ${JSON.stringify(datosBrutos, null, 2)}
    `;
 
@@ -265,14 +283,12 @@ Usa el Rango Contextual basado en 'antiguedad_anos' y 'rol' (propietario vs miem
     if (jsonStr) {
       structured = JSON.parse(jsonStr);
     } else {
-      // Fallback si no hay JSON
       throw new Error("No structured JSON found in Gemini response");
     }
 
     return { structured, narrative };
   } catch (err) {
     console.error("❌ Error parseando respuesta estructurada de Gemini:", err);
-    // Fallback desesperado para no romper la app: devolver el texto completo como narrativa
     return { 
       structured: null as any, 
       narrative: textResponse 
