@@ -43,7 +43,7 @@ export default defineConfig(({mode}) => {
           ],
         },
         manifest: {
-          name: 'Kanarii Tawāzawazt',
+          name: 'Kanarii',
           short_name: 'Kanarii',
           start_url: '/',
           display: 'standalone',
