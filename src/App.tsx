@@ -136,12 +136,15 @@ function ProtectedRoute({
   return <>{children}</>;
 }
 
+import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
+
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
           <AppContent />
+          <PwaUpdatePrompt />
         </BrowserRouter>
       </ToastProvider>
     </AuthProvider>

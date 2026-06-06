@@ -72,6 +72,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
+- [ ] [BAJO] Fix botón "Cancelar" en CreateTareaModal deshabilitado offline (disabled={isSubmitting} bloquea cuando Firestore queda pendiente).
 - [ ] [BAJO] Consolidar scripts de auditoría duplicados en `scripts/` y extraer helpers a `firestore-helpers.ts` (AUDIT-06).
 - [ ] [BAJO] AUDIT-07: Renombrar 20+ funciones de consulta para añadir sufijo Query (getUserFicha, getPosts, getServiciosByProvider, getAcuerdosByUser, getAppUserDoc, etc.)
 - [ ] [BAJO] Marcar "Discrepancias Detectadas" como RESUELTO EN T-002 en `docs/firebase/current-data-model-audit.md` (AUDIT-03).
@@ -101,10 +102,10 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Badge nav para solicitante en acuerdos (en progreso — incluir acuerdos donde eres `solicitanteId` con status cambiado).
 - [ ] [MEDIO] Sistema leído/no leído en acuerdos: campo `vistoPorSolicitante: boolean`, batch update al entrar a "Mis Acuerdos", badge desaparece solo al ver el cambio.
 - [ ] [MEDIO] Sistema de badges reactivos (patrón DRY) para Gobernanza (notificar miembros sin posición registrada en propuestas activas), Tareas (asignadas sin completar) y Calendario (eventos próximos sin confirmar). Considerar hook genérico `usePendingActionsCount(communityId, userId, query)`.
-- [ ] [ALTO] Pasaporte Comunitario: vista pública del perfil como pasaporte, con Triada Comunitaria (ofrendas/saberes/necesidades), sin jerarquías visibles ni contadores numéricos (T-022).
+- [ ] [ALTO] Pasaporte Comunitario completo (T-022): vista pública con Triada Comunitaria, OG tags dinámicos (`react-helmet-async`), flujo real de "Conectar" (solicitud de ingreso si no es miembro) y widget Kin Maya del miembro en PasaporteVisual.
 - [x] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (Sprint 10 — T-039).
 - [x] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (Sprint 06 — T-024).
-- [ ] [BAJO] Kin Maya en CalendarioView: badge `kinDeHoy()` en cabecera (~10 líneas) | T-047
+- [x] Kin Maya en CalendarioView: badge `kinDeHoy()` en cabecera (Sprint 11 — T-043)
 - [ ] [MEDIO] Kin Maya en Cruce: cruzar Kines de dos personas en `generarAnalisisCruce` para detectar complementariedades y tensiones galácticas | T-048
 - [ ] [BAJO] Kin Maya en PasaporteComunitario: widget idéntico al de FichaView | T-049
 
@@ -112,10 +113,10 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura (Sprint 09 — T-037).
 - [x] Indicador visual de estado de conexión online/offline (Sprint 10 — T-040).
 - [x] Indicador de cambios pendientes de subir (Sprint 10 — T-040).
-- [ ] [MEDIO] PWA: Implementar estrategia de caché avanzada offline-first (sw.js actual solo cachea index)
+- [ ] [MEDIO] PWA: Migrar a `vite-plugin-pwa` con `generateSW` + `registerType: 'autoUpdate'`. Eliminar `public/sw.js` manual y registro en `main.tsx`. Precachear chunks compilados (`dist/assets/*.js|css`).
 
 ## 🚀 Infraestructura y despliegue
-- [ ] [ALTO] Despliegue Kanarii en `kanarii.romensuarez.com` (Coolify + Cloudflare + SSL). Servidor OCI ARM64, auto-deploy en push a main, vars de entorno Firebase en Coolify.
+- [x] ~~Despliegue Kanarii en Coolify~~ — **Descartado por decisión de producto** (2026-06-05). Firebase Hosting es suficiente para la fase actual (Sprint 11 — T-042 lo resolvió).
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
 ---
@@ -153,4 +154,4 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ---
 
-Última actualización verificada contra código: 29 de mayo de 2026 (auditoría digest + verificación directa GitHub)
+Última actualización verificada contra código: 5 de junio de 2026 (sprint-planning sprint-12 + clasificación idea-inbox)
