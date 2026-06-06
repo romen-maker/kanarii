@@ -4,16 +4,29 @@ import { ArrowLeft, Loader2, AlertTriangle, Sparkles } from 'lucide-react';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { getUserFicha, getMemberInfo, getTriadaFromFicha, Ficha } from '../lib/appService';
 import PasaporteVisual from '../components/perfil/PasaporteVisual';
+import { calcularKin } from '../lib/kinMaya';
+import { useMemberConnection } from '../hooks/useMemberConnection';
+import { useToast } from '../hooks/useToast';
 
 export function PasaporteComunitarioView() {
   const { slug, userId } = useParams<{ slug: string; userId: string }>();
   const navigate = useNavigate();
   const { setCommunityId } = useComunidad();
+  const toast = useToast();
 
   const [ficha, setFicha] = useState<Ficha | null>(null);
   const [memberInfo, setMemberInfo] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { 
+    connection, 
+    connect, 
+    accept, 
+    disconnect, 
+    isSender, 
+    isSelf 
+  } = useMemberConnection(userId, slug);
 
   useEffect(() => {
     async function loadData() {
@@ -50,10 +63,34 @@ export function PasaporteComunitarioView() {
     loadData();
   }, [userId, slug]);
 
-  const handleConnect = () => {
-    if (slug) {
-      setCommunityId(slug);
-      navigate('/tablon');
+  const handleConnect = async () => {
+    if (isSelf) return;
+
+    try {
+      if (!connection) {
+        await connect();
+        toast.success('Solicitud de conexión enviada');
+      } else {
+        await disconnect();
+        if (connection.status === 'connected') {
+          toast.info('Conexión eliminada');
+        } else {
+          toast.info('Solicitud de conexión cancelada');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al procesar la conexión');
+    }
+  };
+
+  const handleAccept = async () => {
+    try {
+      await accept();
+      toast.success('¡Conexión aceptada! Ahora están conectados.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al aceptar la conexión');
     }
   };
 
@@ -104,6 +141,9 @@ export function PasaporteComunitarioView() {
     rolesArray.push(ficha.datosOnboarding.rol_comunidad);
   }
 
+  const birthDate = memberInfo?.fechaNacimiento || memberInfo?.datosPersona?.fechaNacimiento || ficha?.datosPersona?.fechaNacimiento || ficha?.datosOnboarding?.fechaNacimiento;
+  const kinMaya = birthDate ? calcularKin(birthDate) : undefined;
+
   const mappedUser = {
     name: memberInfo?.nombre || memberInfo?.displayName || ficha?.datosOnboarding?.nombre || 'Miembro',
     avatarUrl: memberInfo?.photoURL || ficha?.datosOnboarding?.plataformaOrigen || undefined, // fallback por si no tiene avatarUrl
@@ -111,7 +151,19 @@ export function PasaporteComunitarioView() {
     offerings: triada.ofrendas || [],
     knowledges: triada.saberes || [],
     needs: triada.necesidades || [],
+    kinMaya,
   };
+
+  let connectionStatus: 'none' | 'pending' | 'connected' | 'self' = 'none';
+  if (isSelf) {
+    connectionStatus = 'self';
+  } else if (connection) {
+    if (connection.status === 'connected') {
+      connectionStatus = 'connected';
+    } else if (connection.status === 'pending') {
+      connectionStatus = 'pending';
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] py-12 px-4 md:px-8 flex flex-col items-center justify-center">
@@ -129,7 +181,13 @@ export function PasaporteComunitarioView() {
         </div>
       </div>
 
-      <PasaporteVisual user={mappedUser} onConnect={handleConnect} />
+      <PasaporteVisual 
+        user={mappedUser} 
+        onConnect={handleConnect} 
+        onAccept={handleAccept}
+        connectionStatus={connectionStatus}
+        isSender={isSender}
+      />
     </div>
   );
 }

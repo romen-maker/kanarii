@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-051 | PWA: migrar a `vite-plugin-pwa` + eliminar `sw.js` manual + fix registro SW en main.tsx | M | ✅ Completado | `.agents/tasks/_archived/task-051.md` |
-| T-052 | Pasaporte Comunitario completo: OG tags dinámicos, flujo "Conectar" real, widget Kin Maya en PasaporteVisual | L | ⬜ Pendiente | — |
+| T-052 | Pasaporte Comunitario completo: OG tags dinámicos, flujo "Conectar" real, widget Kin Maya en PasaporteVisual | L | 🟡 En curso | `.agents/tasks/task-052.md` |
 | T-053 | Fix botón "Cancelar" en CreateTareaModal deshabilitado offline | S | ✅ Completado | `.agents/tasks/_archived/task-053.md` |
 
 ## Notas de planning

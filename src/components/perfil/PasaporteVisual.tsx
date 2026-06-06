@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
-import { Shield, Sparkles, MessageCircle, Heart, Award, ArrowUpRight } from 'lucide-react';
+import { Shield, Sparkles, MessageCircle, Heart, Award, ArrowUpRight, Check, Clock, UserCheck, UserPlus } from 'lucide-react';
+import { KinData } from '../../lib/kinMaya';
 
 interface UserPassport {
   name: string;
@@ -8,11 +9,15 @@ interface UserPassport {
   offerings: string[]; // Lo que doy
   knowledges: string[]; // Lo que sé
   needs: string[]; // Lo que busco
+  kinMaya?: KinData;
 }
 
 interface PasaporteVisualProps {
   user?: UserPassport;
   onConnect?: () => void;
+  connectionStatus?: 'none' | 'pending' | 'connected' | 'self';
+  isSender?: boolean;
+  onAccept?: () => void;
 }
 
 const defaultUser: UserPassport = {
@@ -27,6 +32,9 @@ const defaultUser: UserPassport = {
 export default function PasaporteVisual({
   user = defaultUser,
   onConnect,
+  connectionStatus = 'none',
+  isSender = false,
+  onAccept,
 }: PasaporteVisualProps) {
 
   return (
@@ -86,6 +94,20 @@ export default function PasaporteVisual({
                 </span>
               ))}
             </div>
+
+            {/* Firma Galáctica (Kin Maya) */}
+            {user.kinMaya && (
+              <div className="mt-4">
+                <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left">
+                  <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{user.kinMaya.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Firma Galáctica</h4>
+                    <p className="text-stone-800 font-medium text-base">{user.kinMaya.descripcionCorta}</p>
+                    <p className="text-stone-500 text-sm mt-1 leading-relaxed">{user.kinMaya.rolComunitario}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -176,15 +198,53 @@ export default function PasaporteVisual({
 
         {/* CTA: Call to Action (Cero Jerarquías, Sin mensajería privada directa para transparencia) */}
         <div className="pt-4 font-sans">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onConnect}
-            className="w-full bg-[#5A5A40] text-white py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-[#5A5A40]/10 hover:bg-[#4A4A35] transition-all cursor-pointer"
-          >
-            Conectar vía Tablón
-            <ArrowUpRight size={18} />
-          </motion.button>
+          {connectionStatus === 'self' ? (
+            <div className="w-full bg-[#FAF9F6] text-[#A5A58D] py-4 px-6 rounded-[24px] font-bold text-center border border-[#D2B48C]/20 text-sm cursor-default">
+              Tu Pasaporte Comunitario
+            </div>
+          ) : connectionStatus === 'connected' ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onConnect}
+              className="w-full bg-[#E8F5E9] text-[#2E7D32] py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 border border-[#C8E6C9] shadow-sm hover:bg-[#C8E6C9] transition-all cursor-pointer text-sm"
+            >
+              <UserCheck size={18} />
+              Conectados en Tribu
+            </motion.button>
+          ) : connectionStatus === 'pending' ? (
+            isSender ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onConnect}
+                className="w-full bg-[#FFF3E0] text-[#E65100] py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 border border-[#FFE0B2] shadow-sm hover:bg-[#FFE0B2] transition-all cursor-pointer text-sm"
+              >
+                <Clock size={18} className="animate-pulse" />
+                Conexión Pendiente (Enviada)
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onAccept}
+                className="w-full bg-[#CB997E] text-white py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-[#CB997E]/10 hover:bg-[#B58368] transition-all cursor-pointer text-sm"
+              >
+                <UserPlus size={18} />
+                Aceptar Conexión
+              </motion.button>
+            )
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onConnect}
+              className="w-full bg-[#5A5A40] text-white py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-[#5A5A40]/10 hover:bg-[#4A4A35] transition-all cursor-pointer text-sm"
+            >
+              Conectar vía Tablón
+              <ArrowUpRight size={18} />
+            </motion.button>
+          )}
           
           <p className="text-center text-[10px] text-[#A5A58D] mt-3 font-mono uppercase tracking-wider">
             La comunicación cooperativa fomenta la confianza mutua

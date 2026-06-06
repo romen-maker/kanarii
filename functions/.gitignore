@@ -1,0 +1,9 @@
+# Compiled JavaScript files
+lib/
+
+# Log files
+npm-debug.log
+yarn-error.log
+
+# Firebase keys and configuration
+.runtimeconfig.json

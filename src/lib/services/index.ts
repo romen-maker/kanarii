@@ -14,3 +14,4 @@ export * from './actas';
 export * from './eventos';
 export * from './servicios';
 export * from './acuerdos';
+export * from './connections';
