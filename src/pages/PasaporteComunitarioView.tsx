@@ -63,24 +63,12 @@ export function PasaporteComunitarioView() {
     loadData();
   }, [userId, slug]);
 
-  const handleConnect = async () => {
-    if (isSelf) return;
-
-    try {
-      if (!connection) {
-        await connect();
-        toast.success('Solicitud de conexión enviada');
-      } else {
-        await disconnect();
-        if (connection.status === 'connected') {
-          toast.info('Conexión eliminada');
-        } else {
-          toast.info('Solicitud de conexión cancelada');
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Error al procesar la conexión');
+  const handleConnect = () => {
+    if (slug) {
+      setCommunityId(slug);
+      navigate('/tablon', {
+        state: { openNewPostWithMention: mappedUser.name }
+      });
     }
   };
 

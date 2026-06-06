@@ -1,20 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Post } from '../lib/appService';
 
 interface CreatePostModalProps {
   isSubmitting: boolean;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
+  initialDescription?: string;
 }
 
-export function CreatePostModal({ isSubmitting, onClose, onSubmit }: CreatePostModalProps) {
+export function CreatePostModal({ 
+  isSubmitting, 
+  onClose, 
+  onSubmit, 
+  initialDescription 
+}: CreatePostModalProps) {
   const [formData, setFormData] = useState({
     tipo: 'necesidad' as Post['tipo'],
     titulo: '',
-    descripcion: '',
+    descripcion: initialDescription || '',
     categoria: 'habilidad' as Post['categoria'],
     estado: 'activo' as Post['estado']
   });
+
+  useEffect(() => {
+    if (initialDescription) {
+      setFormData(prev => ({ ...prev, descripcion: initialDescription }));
+    }
+  }, [initialDescription]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
