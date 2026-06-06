@@ -147,7 +147,6 @@ export function CreateTareaModal({
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-stone-500 hover:bg-[#FDFBF7] rounded-xl font-medium transition-colors"
-              disabled={isSubmitting}
             >
               Cancelar
             </button>
