@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePosts } from '../hooks/usePosts';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,12 +34,24 @@ export default function Tablon() {
   const { posts, loading } = usePosts(currentCommunityId || 'arteara');
   const { members } = useCommunityMembers(currentCommunityId || 'arteara');
   const { addPost, isExecuting: isSubmitting } = usePostActions();
+  const location = useLocation();
 
   const [activeTab, setActiveTab] = useState<'necesidad' | 'oferta'>('necesidad');
   const [filterCategoria, setFilterCategoria] = useState<string | null>(null);
   const [filterEstado, setFilterEstado] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [initialPostText, setInitialPostText] = useState<string | undefined>(undefined);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  useEffect(() => {
+    const mention = location.state?.openNewPostWithMention;
+    if (mention) {
+      setInitialPostText(
+        `Hola @${mention}, he visto tu Pasaporte Comunitario y me gustaría proponer un intercambio contigo. `
+      );
+      setIsCreateModalOpen(true);
+    }
+  }, [location.state]);
 
   const filteredPosts = posts.filter(post => {
     if (post.tipo !== activeTab) return false;
@@ -224,8 +237,12 @@ export default function Tablon() {
       {isCreateModalOpen && (
         <CreatePostModal
           isSubmitting={isSubmitting}
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setInitialPostText(undefined);
+          }}
           onSubmit={handleCreatePost}
+          initialDescription={initialPostText}
         />
       )}
 

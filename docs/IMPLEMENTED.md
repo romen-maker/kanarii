@@ -73,3 +73,4 @@
 | — Fix calendario vacío tras PageContainer + widget Kin Maya en cabecera | T-043 | sprint-11 | src/pages/CalendarioView.tsx |
 | — Reducir usos de any en interfaces core (datosBrutos, perfilVisual, configuracion) con interfaces tipadas | T-044 | sprint-11 | — |
 | — Estandarizar validación formularios con componente <FieldError /> reutilizable | T-045 | sprint-11 | — |
+| — Conectar vía Tablón con mención pre-rellenada | T-054 | sprint-12 | src/components/CreatePostModal.tsx,src/pages/PasaporteComunitarioView.tsx,src/pages/Tablon.tsx |
