@@ -20,6 +20,7 @@ backup/
 out.txt
 .firebase/
 functions/lib/
+dev-dist/
 
 # LLM Context Digests — generados bajo demanda, efímeros, no se versionan
 docs/llm-context/*
