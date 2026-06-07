@@ -852,19 +852,12 @@ export function cruzarMiembros(perfil1: Ficha, perfil2: Ficha): AnalisisCruce {
 }
 
 export function getFichaHash(ficha: Ficha): string {
-  try {
-    const str = "v2" + JSON.stringify(ficha.datosBrutos || {}) + JSON.stringify(ficha.perfilVisual || {});
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16).slice(0, 16);
-  } catch (err) {
-    console.error("Error generating hash:", err);
-    return 'hash_error';
-  }
+  const relevante = {
+    rol: ficha.datosPersona?.rol,
+    fechaNacimiento: ficha.datosPersona?.fechaNacimiento,
+  };
+  // btoa es browser-compatible, no depende de Node crypto
+  return btoa(JSON.stringify(relevante)).slice(0, 16);
 }
 
 export async function getCruce(id1: string, id2: string): Promise<any | null> {
@@ -999,3 +992,6 @@ export async function enrichFichaDatosBrutos(ficha: Ficha): Promise<void> {
 export async function getFichaById(userId: string): Promise<Ficha | null> {
   return getUserFicha(userId);
 }
+
+
+
