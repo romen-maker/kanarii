@@ -198,3 +198,73 @@ export function calcularKin(fecha?: string | Date | null): KinData {
 export function kinDeHoy(): KinData {
   return calcularKin(new Date());
 }
+
+// Relaciones entre sellos (sistema Dreamspell: cada sello tiene 4 guardianes)
+// Índice = posición del sello en el array SELLOS (0-19)
+// Análogo: sello + 5 (mod 20) | Antipoda: sello + 10 (mod 20)
+// Oculto: 19 - sello | Guía: depende del tono (ver tabla)
+export const RELACIONES_SELLOS: Record<number, {
+  analogo: number;
+  antipoda: number;
+  oculto: number;
+}> = {
+  0: { analogo: 5, antipoda: 10, oculto: 19 },   // Dragón
+  1: { analogo: 6, antipoda: 11, oculto: 18 },   // Viento
+  2: { analogo: 7, antipoda: 12, oculto: 17 },   // Noche
+  3: { analogo: 8, antipoda: 13, oculto: 16 },   // Semilla
+  4: { analogo: 9, antipoda: 14, oculto: 15 },   // Serpiente
+  5: { analogo: 10, antipoda: 15, oculto: 14 },  // Enlazador
+  6: { analogo: 11, antipoda: 16, oculto: 13 },  // Mano
+  7: { analogo: 12, antipoda: 17, oculto: 12 },  // Estrella
+  8: { analogo: 13, antipoda: 18, oculto: 11 },  // Luna
+  9: { analogo: 14, antipoda: 19, oculto: 10 },  // Perro
+  10: { analogo: 15, antipoda: 0, oculto: 9 },   // Mono
+  11: { analogo: 16, antipoda: 1, oculto: 8 },   // Humano
+  12: { analogo: 17, antipoda: 2, oculto: 7 },   // Caminante
+  13: { analogo: 18, antipoda: 3, oculto: 6 },   // Mago
+  14: { analogo: 19, antipoda: 4, oculto: 5 },   // Águila
+  15: { analogo: 0, antipoda: 5, oculto: 4 },    // Guerrero
+  16: { analogo: 1, antipoda: 6, oculto: 3 },    // Tierra
+  17: { analogo: 2, antipoda: 7, oculto: 2 },    // Espejo
+  18: { analogo: 3, antipoda: 8, oculto: 1 },    // Tormenta
+  19: { analogo: 4, antipoda: 9, oculto: 0 },    // Sol
+};
+
+// Descripción de qué significa cada relación en convivencia comunitaria
+export const SIGNIFICADO_RELACIONES: Record<string, string> = {
+  mismoSello: 'Espejo directo: comparten el mismo arquetipo. Alta resonancia pero riesgo de puntos ciegos compartidos.',
+  mismoColor: 'Misma familia cromática: comparten propósito y dirección energética. Fluyen en paralelo.',
+  analogo: 'Aliado natural: sus energías se complementan y potencian mutuamente sin fricción.',
+  antipoda: 'Polo opuesto: energías que se desafían. Tensión creativa con alto potencial transformador.',
+  oculto: 'Poder oculto: uno porta lo que el otro necesita desarrollar. Relación de crecimiento profundo.',
+  mismaTreceOndas: 'Comparten onda encantada: viajan con el mismo propósito de los 13 días. Alta sintonía de misión.',
+  tonosComplementarios: 'Tonos complementarios (suman 14): equilibrio entre acción y receptividad.',
+  tonosDesafiantes: 'Tonos en tensión (diferencia impar alta): estilos de acción distintos que requieren conciencia.',
+};
+
+// Función exportable que calcula la relación entre dos KinData
+export function calcularRelacionKines(kin1: KinData, kin2: KinData): {
+  tipo: string;
+  descripcion: string;
+  selloA: string;
+  selloB: string;
+} {
+  const s1 = SELLOS.indexOf(kin1.sello);
+  const s2 = SELLOS.indexOf(kin2.sello);
+  const relaciones1 = RELACIONES_SELLOS[s1];
+
+  if (s1 === s2) return { tipo: 'mismoSello', descripcion: SIGNIFICADO_RELACIONES['mismoSello'], selloA: kin1.sello, selloB: kin2.sello };
+  if (kin1.color === kin2.color) return { tipo: 'mismoColor', descripcion: SIGNIFICADO_RELACIONES['mismoColor'], selloA: kin1.sello, selloB: kin2.sello };
+  if (relaciones1 && relaciones1.analogo === s2) return { tipo: 'analogo', descripcion: SIGNIFICADO_RELACIONES['analogo'], selloA: kin1.sello, selloB: kin2.sello };
+  if (relaciones1 && relaciones1.antipoda === s2) return { tipo: 'antipoda', descripcion: SIGNIFICADO_RELACIONES['antipoda'], selloA: kin1.sello, selloB: kin2.sello };
+  if (relaciones1 && relaciones1.oculto === s2) return { tipo: 'oculto', descripcion: SIGNIFICADO_RELACIONES['oculto'], selloA: kin1.sello, selloB: kin2.sello };
+
+  const ondaA = Math.ceil(kin1.kin / 13);
+  const ondaB = Math.ceil(kin2.kin / 13);
+  if (ondaA === ondaB) return { tipo: 'mismaTreceOndas', descripcion: SIGNIFICADO_RELACIONES['mismaTreceOndas'], selloA: kin1.sello, selloB: kin2.sello };
+
+  const sumaTonos = kin1.tono + kin2.tono;
+  if (sumaTonos === 14) return { tipo: 'tonosComplementarios', descripcion: SIGNIFICADO_RELACIONES['tonosComplementarios'], selloA: kin1.sello, selloB: kin2.sello };
+
+  return { tipo: 'tonosDesafiantes', descripcion: SIGNIFICADO_RELACIONES['tonosDesafiantes'], selloA: kin1.sello, selloB: kin2.sello };
+}
