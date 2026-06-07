@@ -1,4 +1,4 @@
-# ADR 013: Introducción de Firebase Functions para OG Tags Dinámicos
+# ADR 017: Introducción de Firebase Functions para OG Tags Dinámicos
 
 **Estado:** Accepted
 **Fecha:** 2026-06-06
