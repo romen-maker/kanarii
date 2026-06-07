@@ -29,4 +29,5 @@ Archivos autorizados para modificación:
 - [x] APROBADO recibido — fecha/hora: 2026-06-07 11:30
 - [x] Rama creada: feat/T-055-migracion-saberes-onboarding
 - [x] Lock activo: .agent-session.lock
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
+
