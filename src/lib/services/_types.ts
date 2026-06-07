@@ -294,6 +294,7 @@ export interface CommunityMember {
   email?: string;
   // Arquetipo de rol comunitario (Sprint 3)
   arquetipo_s3?: 'Enlazador' | 'Guardián' | 'Creador' | 'Facilitador' | 'Tejedor' | 'Representante' | string;
+  unreadNotifCount?: number;
 }
 
 export interface Tarea {
@@ -448,5 +449,17 @@ export interface PresenciaParticipante {
   nombre: string;
   photoURL?: string;
   entradaEn: any;
+}
+
+export interface NotificacionKanarii {
+  id: string;
+  tipo: 'mencion_tablon' | 'propuesta_nueva' | 'tarea_asignada';
+  referenciaId: string; // id del post, propuesta o tarea
+  leida: boolean;
+  creadaAt: any; // Timestamp de Firestore
+  meta?: {
+    autorNombre: string;
+    excerpt: string; // Primeras palabras del elemento
+  };
 }
 

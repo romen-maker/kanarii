@@ -6,6 +6,8 @@ import { useComunidad } from '../contexts/ComunidadContext';
 import { listenSolicitudes, listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, listenPropuestasPendientesCount, listenSolicitudesProyectosPendientesCount, Acuerdo } from '../lib/appService';
 import { useState, useEffect } from 'react';
 import { SyncIndicator } from './ui/SyncIndicator';
+import { useNotificaciones } from '../hooks/useNotificaciones';
+import NotifBadge from './ui/NotifBadge';
 
 
 export function Sidebar() {
@@ -13,6 +15,7 @@ export function Sidebar() {
   const location = useLocation();
   const { user, appUser, logout } = useAuth();
   const { comunidad, comunidades, setCommunityId } = useComunidad();
+  const { unreadCount } = useNotificaciones(comunidad?.id, appUser?.uid);
   const [pendingCount, setPendingCount] = useState(0);
   const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
   const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
@@ -246,6 +249,9 @@ export function Sidebar() {
                 <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
                   {proyectosPendingCount}
                 </span>
+              )}
+              {item.label === 'Tablón' && unreadCount > 0 && !isActive && (
+                <NotifBadge unreadCount={unreadCount} className="ml-auto" />
               )}
               {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6B705C]" />}
             </button>
