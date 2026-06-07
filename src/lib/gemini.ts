@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { calcularKin } from './kinMaya';
+import { calcularKin, calcularRelacionKines } from './kinMaya';
 
 const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -194,6 +194,36 @@ export async function generarAnalisisCruce(
   resultadoDeterminista: any, 
   comunidadNombre: string = 'la comunidad'
 ): Promise<{ structured: AnalisisCruceStructured; narrative: string }> {
+  // TODO ADR-014: este contexto irá en generarCruceInsights() en sprint 14
+  // Calcular Kin Maya de ambas personas si tienen fechaNacimiento
+  const kin1 = perfil1.datosPersona?.fechaNacimiento
+    ? calcularKin(perfil1.datosPersona.fechaNacimiento)
+    : null;
+  const kin2 = perfil2.datosPersona?.fechaNacimiento
+    ? calcularKin(perfil2.datosPersona.fechaNacimiento)
+    : null;
+
+  const relacionKines = (kin1 && kin2)
+    ? calcularRelacionKines(kin1, kin2)
+    : null;
+
+  const kinMayaContext = (kin1 && kin2) ? `
+
+CRUCE GALÁCTICO (Calendario Dreamspell):
+Persona 1 — ${perfil1.datosPersona?.nombre}: ${kin1.descripcionLarga}
+Persona 2 — ${perfil2.datosPersona?.nombre}: ${kin2.descripcionLarga}
+
+Relación entre sus Kines: ${relacionKines?.tipo} — ${relacionKines?.descripcion}
+
+Instrucciones para el análisis galáctico:
+- Si la relación es "analogo": indica que su colaboración fluye de forma natural, sin esfuerzo consciente.
+- Si es "antipoda": señala la tensión creativa y cómo transformarla en motor de crecimiento colectivo.
+- Si es "oculto": explica qué porta cada uno que el otro necesita desarrollar (relación de crecimiento).
+- Si es "mismaTreceOndas": destaca la sintonía de propósito y misión compartida.
+- Si es "tonosComplementarios" (suman 14): explicar el equilibrio entre sus estilos de acción.
+- En todos los casos: conecta el Rol Comunitario de cada sello con su función en la ecoaldea.
+` : '';
+
    const prompt = `Eres un experto en Astrología Psicológica, Diseño Humano y Sociocracia aplicados a comunidades intencionales.
 Analiza la dinámica entre estos dos miembros de la comunidad ${comunidadNombre}.
 
@@ -212,6 +242,7 @@ Persona 2 (${perfil2.datosPersona?.nombre || 'Miembro 2'}): ${JSON.stringify({
 
 Cruce determinista:
 ${JSON.stringify(resultadoDeterminista, null, 2)}
+${kinMayaContext}
 
 INSTRUCCIONES DE SALIDA:
 Debes responder con dos bloques claramente diferenciados.
