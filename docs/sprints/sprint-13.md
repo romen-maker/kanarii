@@ -6,9 +6,9 @@
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-055 | Migración datos Tríada: script producción `saberes: string` → arrays + limpieza UI onboarding | S | ⬜ Pendiente | — |
+| T-055 | Migración datos Tríada: script producción `saberes: string` → arrays + limpieza UI onboarding | S | ✅ Completado | — |
 | T-056 | Kin Maya en Cruce: cruzar Kines de dos personas en `generarAnalisisCruce` para complementariedades y tensiones galácticas | M | ✅ Completado | `.agents/tasks/_archived/task-056.md` |
-| T-057 | Tagline oficial de Kanarii + actualizar copy bienvenida (`index.html`, `WelcomeHeroSections`, manifest) | S | ⬜ Pendiente | — |
+| T-057 | Tagline oficial de Kanarii + actualizar copy bienvenida (`index.html`, `WelcomeHeroSections`, manifest) | S | ✅ Completado | `.agents/tasks/_archived/task-057.md` |
 | T-058 | Notificaciones de menciones en Tablón — Opción A: campo `menciones[]` en post + listener en Sidebar para badge | M | ⬜ Pendiente | — |
 
 ## Notas de planning

@@ -75,3 +75,4 @@
 | — Estandarizar validación formularios con componente <FieldError /> reutilizable | T-045 | sprint-11 | — |
 | — Conectar vía Tablón con mención pre-rellenada | T-054 | sprint-12 | src/components/CreatePostModal.tsx,src/pages/PasaporteComunitarioView.tsx,src/pages/Tablon.tsx |
 | Tarea: Integrar Kin Maya de dos personas en generarAnalisisCruce | T-056 | sprint-13 | src/lib/gemini.ts,src/lib/kinMaya.ts |
+| Task-057: Tagline oficial de Kanarii + actualizar copy bienvenida (index.html, WelcomeHeroSections, manifest) | T-057 | sprint-13 | src/components/onboarding/WelcomeHeroSections.tsx |
