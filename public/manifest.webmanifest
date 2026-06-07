@@ -1,0 +1,13 @@
+{
+  "name": "Kanarii",
+  "short_name": "Kanarii",
+  "description": "Gobernanza viva para comunidades reales",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#6B705C",
+  "background_color": "#FDFBF7",
+  "icons": [
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}

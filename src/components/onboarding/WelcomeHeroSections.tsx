@@ -100,25 +100,25 @@ export default function WelcomeHeroSections({
     {
       id: 'gobernanza',
       title: 'Toma de Decisiones',
-      desc: 'Consenso sociocrático y objeciones sin tensiones.',
+      desc: 'Consenso dinámico y objeciones integradas para decidir en común.',
       tag: 'Gobernanza',
     },
     {
       id: 'cruce',
       title: 'El Cruce',
-      desc: 'Resolución armónica de tensiones y alineación de drivers.',
+      desc: 'Resolución armónica de tensiones y alineación del propósito comunitario.',
       tag: 'Resolución',
     },
     {
       id: 'ficha',
       title: 'Pasaporte & Roles',
-      desc: 'Fórmate partiendo de tus ofrendas, saberes y necesidades.',
+      desc: 'Encuentra tu lugar partiendo de tus ofrendas, saberes y necesidades.',
       tag: 'Identidad',
     },
     {
       id: 'estructura',
       title: 'Estructura S3',
-      desc: 'Círculos concéntricos y enlaces dobles para transparencia.',
+      desc: 'Círculos interconectados y enlaces dobles para un flujo transparente.',
       tag: 'Organización',
     },
   ];
@@ -135,7 +135,7 @@ export default function WelcomeHeroSections({
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-[#6B705C] rounded-full border border-emerald-100">
           <Sparkles size={14} className="text-emerald-700 animate-pulse" />
-          <span className="text-xs font-semibold tracking-wide uppercase">Círculo Activado</span>
+          <span className="text-xs font-semibold tracking-wide uppercase">Ecosistema Vivo</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#3E2723] tracking-tight">
           Hola, {userName}
@@ -303,7 +303,7 @@ export default function WelcomeHeroSections({
       <section className="space-y-4">
         <div className="flex items-center gap-2 justify-between">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">
-            Escuela de Estructura Sociocrática
+            Explora la Gobernanza Viva
           </h2>
           <span className="text-xs text-[#6B705C] bg-white border border-[#D2B48C]/20 px-3 py-1 rounded-full font-serif italic">
             Animaciones Pedagógicas
