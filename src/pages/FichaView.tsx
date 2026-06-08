@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { useFicha } from '../hooks/useFicha';
-import { User, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut, Eye, Copy } from 'lucide-react';
+import { User, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, History, RefreshCw, Loader2, MapPin, LogOut, Eye, Copy, Download } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,8 +14,10 @@ import { geocodeLugar } from '../lib/geocoding';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useTagArray } from '../hooks/useTagArray';
 import { TagArrayEditor } from '../components/ui/TagArrayEditor';
-import { calcularKin } from '../lib/kinMaya';
 import { FieldError } from '../components/ui/FieldError';
+import { calcularKin } from '../lib/kinMaya';
+import { useToast } from '../hooks/useToast';
+import { generateManualPdf, convertMarkdownToHtml, PdfSection } from '../lib/utils/generatePdf';
 
 const SECCIONES_MANUAL = [
   { id: 'adn_astral', label: 'ADN Astral', icon: '✨' },
@@ -68,6 +70,10 @@ export function FichaView() {
   const [copied, setCopied] = useState(false);
   const [activeManualTab, setActiveManualTab] = useState<'adn_astral' | 'anatomia_poder' | 'espejo_tribu' | 'sintonia_cnv' | 'mantenimiento_crisis'>('adn_astral');
 
+  const toast = useToast();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const hasShownToastRef = useRef<boolean>(false);
+
   const { abandonarComunidad } = useComunidadActions();
 
   const handleCopyPasaporteUrl = () => {
@@ -111,6 +117,55 @@ export function FichaView() {
   const displayFicha = localFicha || ficha;
   const datos = getDatosPersona(displayFicha);
   const triada = getTriadaFromFicha(displayFicha);
+
+  const resumen = displayFicha?.resumenManual as any;
+  const secciones = resumen?.secciones || {};
+  const todasGeneradas = SECCIONES_MANUAL.every(sec => {
+    const enFirestore = !!secciones[sec.id]?.narrativa;
+    const enMemoria = !!manualSecciones[sec.id];
+    return enFirestore || enMemoria;
+  });
+
+  useEffect(() => {
+    if (loadingFicha || !displayFicha?.resumenManual || hasShownToastRef.current) return;
+
+    if (!todasGeneradas) {
+      toast.info("Visita cada pestaña para generar tu manual. Podrás descargarlo en PDF cuando estén todas listas.");
+      hasShownToastRef.current = true;
+    }
+  }, [loadingFicha, displayFicha, todasGeneradas, toast]);
+
+  const handleDownloadPdf = () => {
+    setIsGeneratingPdf(true);
+    try {
+      const nombreMiembro = datos?.nombreCompleto || appUser?.displayName || 'Miembro de Kanarii';
+      const arquetipo = displayFicha?.perfilVisual?.arquetipo || 'Miembro';
+      const fecha = new Date().toLocaleDateString('es-ES');
+
+      const secciones: PdfSection[] = SECCIONES_MANUAL.map(sec => {
+        const narrativa = (displayFicha?.resumenManual as any)?.secciones?.[sec.id]?.narrativa || manualSecciones[sec.id] || '';
+        const contenidoHtml = convertMarkdownToHtml(narrativa);
+        return {
+          titulo: sec.label,
+          contenidoHtml
+        };
+      });
+
+      generateManualPdf({
+        nombreMiembro,
+        arquetipo,
+        fecha,
+        secciones
+      });
+      
+      toast.success("¡Preparando documento para imprimir/guardar como PDF!");
+    } catch (err) {
+      console.error("Error al generar PDF:", err);
+      toast.error("Hubo un error al preparar el PDF del manual.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   useEffect(() => {
     if (displayFicha?.resumenManual) {
@@ -656,14 +711,30 @@ export function FichaView() {
                   <h2 className="text-2xl font-serif">Manual de Usuario Humano</h2>
                 </div>
                 
-                <button
-                  onClick={handleRegenerateManual}
-                  disabled={isGenerating}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
-                >
-                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                  <span className="text-sm font-medium">Regenerar mi manual</span>
-                </button>
+                <div className="flex items-center gap-3">
+                  {todasGeneradas && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadPdf}
+                      disabled={isGeneratingPdf}
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full hover:bg-emerald-100 transition-colors shadow-sm disabled:opacity-50"
+                    >
+                      {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                      <span className="text-sm font-medium">
+                        {isGeneratingPdf ? 'Generando PDF...' : 'Descargar mi Manual'}
+                      </span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={handleRegenerateManual}
+                    disabled={isGenerating}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    <span className="text-sm font-medium">Regenerar mi manual</span>
+                  </button>
+                </div>
              </div>
 
              <div className="flex flex-wrap gap-2 mb-6 border-b border-[#EAE2D6] pb-4">
