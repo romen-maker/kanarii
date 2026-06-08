@@ -65,6 +65,8 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ## ⚡ Performance Firestore
 - [ ] [MEDIO] Implementar paginación cursor-based (`startAfter`) para scroll infinito en listas largas.
 - [ ] [BAJO] Crear índices compuestos en Firebase Console: `(communityId + fecha)`, `(communityId + updatedAt)`, `(communityId + inicio)`.
+- [ ] [MEDIO] Revisar persistencia en Firestore de narrativas del Manual Galáctico si el almacenamiento gratuito supera el 60% (ADR-018).
+
 
 ## 🧹 Calidad interna y DRY
 - [x] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor (Sprint 10 — T-038).
