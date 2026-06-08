@@ -7,7 +7,7 @@ import { User, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, Histor
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha, saveManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha, Ficha, FichaDatosPersona } from '../lib/appService';
+import { saveFicha, saveManual, saveResumenManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha, Ficha, FichaDatosPersona } from '../lib/appService';
 import Markdown from 'react-markdown';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
@@ -17,6 +17,13 @@ import { TagArrayEditor } from '../components/ui/TagArrayEditor';
 import { calcularKin } from '../lib/kinMaya';
 import { FieldError } from '../components/ui/FieldError';
 
+const SECCIONES_MANUAL = [
+  { id: 'adn_astral', label: 'ADN Astral', icon: '✨' },
+  { id: 'anatomia_poder', label: 'Anatomía del Poder', icon: '👑' },
+  { id: 'espejo_tribu', label: 'Espejo de la Tribu', icon: '👥' },
+  { id: 'sintonia_cnv', label: 'Sintonía (CNV)', icon: '💬' },
+  { id: 'mantenimiento_crisis', label: 'Mantenimiento y Crisis', icon: '🚨' }
+] as const;
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
@@ -42,7 +49,15 @@ type FichaFormData = z.infer<typeof fichaSchema>;
 export function FichaView() {
   const { appUser, logout } = useAuth();
   const navigate = useNavigate();
-  const { ficha, loadingFicha } = useFicha();
+  const { 
+    ficha, 
+    loadingFicha, 
+    reload,
+    manualSecciones,
+    seccionesLoading,
+    isGeneratingResumen,
+    generarSeccionLazy
+  } = useFicha();
   const [editing, setEditing] = useState(false);
   const [localFicha, setLocalFicha] = useState(ficha);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -51,7 +66,8 @@ export function FichaView() {
   const [geoMessage, setGeoMessage] = useState('');
   const { comunidad, currentCommunityId } = useComunidad();
   const [copied, setCopied] = useState(false);
-  
+  const [activeManualTab, setActiveManualTab] = useState<'adn_astral' | 'anatomia_poder' | 'espejo_tribu' | 'sintonia_cnv' | 'mantenimiento_crisis'>('adn_astral');
+
   const { abandonarComunidad } = useComunidadActions();
 
   const handleCopyPasaporteUrl = () => {
@@ -95,6 +111,12 @@ export function FichaView() {
   const displayFicha = localFicha || ficha;
   const datos = getDatosPersona(displayFicha);
   const triada = getTriadaFromFicha(displayFicha);
+
+  useEffect(() => {
+    if (displayFicha?.resumenManual) {
+      generarSeccionLazy(activeManualTab);
+    }
+  }, [activeManualTab, displayFicha?.resumenManual, generarSeccionLazy]);
 
   const ofrendasState = useTagArray(getTriadaFromFicha(ficha).ofrendas);
   const saberesState = useTagArray(getTriadaFromFicha(ficha).saberes);
@@ -222,7 +244,8 @@ export function FichaView() {
     };
     try {
       await saveFicha(appUser.uid, datos as DatosOnboarding, fichaId, false, triadaObj);
-      window.location.reload();
+      await saveResumenManual(appUser.uid, null, '');
+      reload();
     } catch (e) {
       console.error("Failed to generate manual:", e);
     } finally {
@@ -608,7 +631,22 @@ export function FichaView() {
         </div>
 
         {/* Manual Galáctico Section */}
-        {contenidoManual ? (
+        {isGeneratingResumen || (displayFicha?.perfilVisual?.arquetipo && !displayFicha?.resumenManual) ? (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
+            <div className="w-16 h-16 bg-[#F9F7F1] rounded-full flex items-center justify-center mb-4">
+              <Sparkles className="w-8 h-8 text-[#8A817C] animate-pulse" />
+            </div>
+            <h2 className="text-2xl font-serif text-[#4A4E4D] mb-2">Estructurando tu Manual Galáctico</h2>
+            <p className="text-stone-500 max-w-md mx-auto mb-6">
+              El Facilitador Galáctico está analizando tus tránsitos y diseño para estructurar las 5 secciones de tu manual...
+            </p>
+            <div className="flex items-center gap-3 px-6 py-3 bg-[#F9F7F1] text-stone-500 rounded-full font-medium">
+              <Loader2 className="w-5 h-5 animate-spin text-[#8A817C]" />
+              <span>Tejiendo la estructura inicial...</span>
+            </div>
+          </div>
+        ) : displayFicha?.resumenManual ? (
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
              
@@ -618,16 +656,87 @@ export function FichaView() {
                   <h2 className="text-2xl font-serif">Manual de Usuario Humano</h2>
                 </div>
                 
-                {fichaEditadaDesdeGeneracion && (
-                  <button
-                    onClick={handleRegenerateManual}
-                    disabled={isGenerating}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
-                  >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    <span className="text-sm font-medium">Regenerar mi manual</span>
-                  </button>
-                )}
+                <button
+                  onClick={handleRegenerateManual}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  <span className="text-sm font-medium">Regenerar mi manual</span>
+                </button>
+             </div>
+
+             <div className="flex flex-wrap gap-2 mb-6 border-b border-[#EAE2D6] pb-4">
+               {SECCIONES_MANUAL.map((sec) => {
+                 const isActive = activeManualTab === sec.id;
+                 const isLoaded = !!manualSecciones[sec.id] || !!(displayFicha?.resumenManual as any)?.secciones?.[sec.id]?.narrativa;
+                 return (
+                   <button
+                     key={sec.id}
+                     type="button"
+                     onClick={() => setActiveManualTab(sec.id)}
+                     className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                       isActive 
+                         ? 'bg-[#8A817C] text-white shadow-sm' 
+                         : 'bg-[#F9F7F1] text-stone-600 hover:bg-[#EAE2D6]'
+                     }`}
+                   >
+                     <span>{sec.icon}</span>
+                     <span>{sec.label}</span>
+                     {isLoaded && !isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>}
+                   </button>
+                 );
+               })}
+             </div>
+
+             {seccionesLoading[activeManualTab] ? (
+               <div className="flex flex-col items-center justify-center py-16 text-stone-500 space-y-4 animate-fadeIn">
+                 <Loader2 className="w-8 h-8 animate-spin text-[#8A817C]" />
+                 <p className="text-sm font-serif italic text-center max-w-sm">
+                   {activeManualTab === 'adn_astral' && 'Descifrando el tejido cósmico y tu Ikigai...'}
+                   {activeManualTab === 'anatomia_poder' && 'Analizando flujos de rango y democracia profunda...'}
+                   {activeManualTab === 'espejo_tribu' && 'Mirando en el espejo de la sombra comunitaria...'}
+                   {activeManualTab === 'sintonia_cnv' && 'Sintonizando el estilo de comunicación empática...'}
+                   {activeManualTab === 'mantenimiento_crisis' && 'Preparando el protocolo de mantenimiento y crisis...'}
+                 </p>
+               </div>
+             ) : (manualSecciones[activeManualTab] || (displayFicha?.resumenManual as any)?.secciones?.[activeManualTab]?.narrativa) ? (
+               <div className="prose prose-stone max-w-none text-stone-700 leading-relaxed text-sm md:text-base space-y-4 animate-fadeIn">
+                 <Markdown>{manualSecciones[activeManualTab] || (displayFicha?.resumenManual as any)?.secciones?.[activeManualTab]?.narrativa}</Markdown>
+               </div>
+             ) : (
+               <div className="text-center py-8 text-stone-400 italic text-sm">
+                 Selecciona una pestaña para ver la narrativa.
+               </div>
+             )}
+             
+             {displayFicha.fechaGeneracion && (
+                <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">
+                  <span>Generado por el Facilitador Galáctico</span>
+                  <span>
+                    El {new Date(displayFicha.fechaGeneracion.toDate ? displayFicha.fechaGeneracion.toDate() : displayFicha.fechaGeneracion).toLocaleDateString()}
+                  </span>
+                </div>
+             )}
+          </div>
+        ) : contenidoManual ? (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-2 h-full bg-[#8A817C]"></div>
+             
+             <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-3 text-[#4A4E4D]">
+                  <Sparkles className="w-7 h-7 text-[#8A817C]" />
+                  <h2 className="text-2xl font-serif">Manual de Usuario Humano (Legacy)</h2>
+                </div>
+                
+                <button
+                  onClick={handleRegenerateManual}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  <span className="text-sm font-medium">Actualizar al nuevo formato en capas</span>
+                </button>
              </div>
 
              <ManualViewer content={contenidoManual} />
