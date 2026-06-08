@@ -32,5 +32,5 @@
 - [x] La estructura inicial del manual (`resumenManual`) se genera en formato JSON estructurado.
 - [x] Las 5 secciones detalladas del manual se cargan de forma lazy y bajo demanda al visitar sus respectivas pestañas.
 - [x] Toda la información se persiste en el documento de la ficha en Firestore de forma plana (`resumenManual` y `resumenManualHash`), sin subcolecciones.
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente
 
