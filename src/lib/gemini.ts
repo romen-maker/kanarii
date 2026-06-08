@@ -112,6 +112,87 @@ const CRUCE_SCHEMA = {
 };
 
 
+const MANUAL_RESUMEN_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    adn_astral: {
+      type: Type.OBJECT,
+      properties: {
+        enfoque_clave: { type: Type.STRING },
+        puntos_principales: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      },
+      required: ['enfoque_clave', 'puntos_principales']
+    },
+    anatomia_poder: {
+      type: Type.OBJECT,
+      properties: {
+        enfoque_clave: { type: Type.STRING },
+        puntos_principales: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      },
+      required: ['enfoque_clave', 'puntos_principales']
+    },
+    espejo_tribu: {
+      type: Type.OBJECT,
+      properties: {
+        enfoque_clave: { type: Type.STRING },
+        puntos_principales: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      },
+      required: ['enfoque_clave', 'puntos_principales']
+    },
+    sintonia_cnv: {
+      type: Type.OBJECT,
+      properties: {
+        enfoque_clave: { type: Type.STRING },
+        puntos_principales: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      },
+      required: ['enfoque_clave', 'puntos_principales']
+    },
+    mantenimiento_crisis: {
+      type: Type.OBJECT,
+      properties: {
+        enfoque_clave: { type: Type.STRING },
+        puntos_principales: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      },
+      required: ['enfoque_clave', 'puntos_principales']
+    }
+  },
+  required: [
+    'adn_astral',
+    'anatomia_poder',
+    'espejo_tribu',
+    'sintonia_cnv',
+    'mantenimiento_crisis'
+  ]
+};
+
+export interface SeccionResumen {
+  enfoque_clave: string;
+  puntos_principales: string[];
+}
+
+export interface ResumenManualStructured {
+  adn_astral: SeccionResumen;
+  anatomia_poder: SeccionResumen;
+  espejo_tribu: SeccionResumen;
+  sintonia_cnv: SeccionResumen;
+  mantenimiento_crisis: SeccionResumen;
+}
+
 /**
  * Interfaces para el análisis estructurado de cruce
  */
@@ -247,7 +328,10 @@ export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, d
   return parsearRespuestaIA(textResponse);
 }
 
-export async function generarManual(datosBrutos: any, datosPersona: any, perfilVisual: any, comunidadNombre: string = 'la comunidad'): Promise<string> {
+/**
+ * @deprecated — reemplazar por generarResumenManual + generarSeccion en T-060
+ */
+export async function generarManual_legacy(datosBrutos: any, datosPersona: any, perfilVisual: any, comunidadNombre: string = 'la comunidad'): Promise<string> {
    const d = new Date();
    d.setMonth(d.getMonth() + 6);
    const formattedDate = d.toLocaleDateString();
@@ -287,8 +371,113 @@ Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de
    Datos Brutos (diseño humano y astrología): ${JSON.stringify(datosBrutos, null, 2)}
    `;
 
-  console.log("🤖 Gemini: Iniciando generación de Manual...");
+  console.log("🤖 Gemini: Iniciando generación de Manual Legacy...");
   return await callGeminiWithFallback(prompt);
+}
+
+/**
+ * @deprecated — reemplazar por generarResumenManual + generarSeccion en T-060
+ */
+export const generarManual = generarManual_legacy;
+
+export async function generarResumenManual(
+  perfilVisual: any,
+  comunidadNombre: string = 'la comunidad'
+): Promise<ResumenManualStructured> {
+  const prompt = `
+    Eres un experto en Astrología Psicológica, Diseño Humano y dinámicas comunitarias.
+    Genera el resumen de las 5 secciones del Manual de Usuario Humano para la comunidad ${comunidadNombre} basado en el Perfil Visual de la persona.
+    
+    El Perfil Visual contiene:
+    - Arquetipo: ${perfilVisual.arquetipo}
+    - Descripción: ${perfilVisual.descripcion_arquetipo}
+    - Fortalezas: ${JSON.stringify(perfilVisual.fortalezas)}
+    - Sombras: ${JSON.stringify(perfilVisual.sombras)}
+    - Aporte a la comunidad: ${JSON.stringify(perfilVisual.aportaComunidad)}
+    - Necesidades de la comunidad: ${JSON.stringify(perfilVisual.necesitaComunidad)}
+    - Dimensiones (Escucha, Acción, Estructura, Cuidado): ${JSON.stringify(perfilVisual.dimensiones)}
+
+    Genera un JSON estructurado de resúmenes (Capa 1) para las siguientes 5 secciones:
+    1. adn_astral: Enfoque clave y puntos principales que cruzan su arquetipo y fortalezas en la vida de la comunidad.
+    2. anatomia_poder: Enfoque clave y puntos principales sobre cómo maneja su poder e influencia (rango social, psicológico, contextual, espiritual).
+    3. espejo_tribu: Enfoque clave y puntos principales sobre sus patrones de sombra inconscientes y cómo se reflejan en el espejo grupal.
+    4. sintonia_cnv: Enfoque clave y puntos principales sobre su estilo de comunicación y cómo aplicar la Comunicación No Violenta (CNV).
+    5. mantenimiento_crisis: Enfoque clave y puntos principales sobre cómo actuar si entra en crisis o tensión ("si me ves X, haz Y").
+
+    Responde estrictamente en formato JSON que cumpla con el esquema requerido.
+  `;
+
+  const config = {
+    responseMimeType: 'application/json',
+    responseSchema: MANUAL_RESUMEN_SCHEMA,
+  };
+
+  console.log("🤖 Gemini: Iniciando generación de Resumen del Manual (Capa 1)...");
+  const textResponse = await callGeminiWithFallback(prompt, config);
+  if (!textResponse) throw new Error("La API de Gemini no retornó contenido para el resumen del manual.");
+  return JSON.parse(textResponse) as ResumenManualStructured;
+}
+
+export async function generarSeccion(
+  seccionId: 'adn_astral' | 'anatomia_poder' | 'espejo_tribu' | 'sintonia_cnv' | 'mantenimiento_crisis',
+  perfilVisual: any,
+  resumenManual: ResumenManualStructured,
+  comunidadNombre: string = 'la comunidad'
+): Promise<string> {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 6);
+  const formattedDate = d.toLocaleDateString();
+
+  const seccionInfo = resumenManual[seccionId];
+  if (!seccionInfo) throw new Error(`Sección no válida: ${seccionId}`);
+
+  const promptsPorSeccion = {
+    adn_astral: `Genera la sección "ADN Astral, Kin Maya e Ikigai Comunitario" del Manual de Usuario Humano para la comunidad ${comunidadNombre}.
+      Enfoque de la sección: ${seccionInfo.enfoque_clave}
+      Puntos guía: ${seccionInfo.puntos_principales.join(', ')}`,
+      
+    anatomia_poder: `Genera la sección "Anatomía del Poder (Democracia Profunda)" del Manual de Usuario Humano para la comunidad ${comunidadNombre}, abordando el rango Social, Psicológico, Contextual y Espiritual.
+      Enfoque de la sección: ${seccionInfo.enfoque_clave}
+      Puntos guía: ${seccionInfo.puntos_principales.join(', ')}`,
+      
+    espejo_tribu: `Genera la sección "El Espejo de la Tribu (Sombra y Procesos)" del Manual de Usuario Humano para la comunidad ${comunidadNombre}, enfocando los patrones de sombra y proyecciones.
+      Enfoque de la sección: ${seccionInfo.enfoque_clave}
+      Puntos guía: ${seccionInfo.puntos_principales.join(', ')}`,
+      
+    sintonia_cnv: `Genera la sección "Sintonía y Comunicación (CNV)" del Manual de Usuario Humano para la comunidad ${comunidadNombre}, aportando recomendaciones de comunicación no violenta.
+      Enfoque de la sección: ${seccionInfo.enfoque_clave}
+      Puntos guía: ${seccionInfo.puntos_principales.join(', ')}`,
+      
+    mantenimiento_crisis: `Genera la sección "Guía de Mantenimiento y Crisis" del Manual de Usuario Humano para la comunidad ${comunidadNombre}, ofreciendo instrucciones del estilo "Si me ves X, haz Y".
+      Enfoque de la sección: ${seccionInfo.enfoque_clave}
+      Puntos guía: ${seccionInfo.puntos_principales.join(', ')}
+      Al final de esta sección (y solo de esta), añade exactamente y literalmente: "*Revisión recomendada: ${formattedDate}*"`
+  };
+
+  const promptNarrativa = `
+    Eres un facilitador experto en procesos comunitarios, sociocracia y psicología grupal.
+    A partir de la siguiente información, genera una narrativa rica en Markdown libre para esta sección específica.
+    
+    Perfil Visual del miembro:
+    - Arquetipo: ${perfilVisual.arquetipo}
+    - Descripción: ${perfilVisual.descripcion_arquetipo}
+    - Fortalezas: ${JSON.stringify(perfilVisual.fortalezas)}
+    - Sombras: ${JSON.stringify(perfilVisual.sombras)}
+    
+    Sección a generar: ${seccionId}
+    Instrucciones específicas:
+    ${promptsPorSeccion[seccionId]}
+    
+    Reglas:
+    - Escribe en segunda persona, tono cálido y directo, como una facilitadora experta.
+    - Usa Markdown rico con emojis relevantes en los títulos de subsecciones.
+    - Estructura con ## para subtítulos, **negrita** para conceptos clave, y blockquotes (>) para ejemplos de comunicación o citas directas.
+    - No inventes información fuera del perfil visual ni de los puntos guía del resumen.
+    - Genera solo el contenido de la sección sin títulos principales extra que repitan el nombre de la sección.
+  `;
+
+  console.log(`🤖 Gemini: Iniciando generación de la sección narrativa lazy: ${seccionId}...`);
+  return await callGeminiWithFallback(promptNarrativa);
 }
 
 async function generarCruceInsights(prompt: string): Promise<AnalisisCruceStructured> {

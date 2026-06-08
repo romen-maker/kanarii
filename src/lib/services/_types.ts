@@ -241,6 +241,8 @@ export interface Ficha {
   };
   versionManual?: number;
   proximaRevision?: any;
+  resumenManual?: any;
+  resumenManualHash?: string;
 }
 
 export function getTriadaFromFicha(ficha: Ficha | null | undefined): TriadaComunitaria {

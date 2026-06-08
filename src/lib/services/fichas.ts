@@ -615,6 +615,61 @@ export async function saveManual(userId: string, manualGenerado: string, existin
   })());
 }
 
+export async function saveResumenManual(userId: string, resumenManual: any, hash: string) {
+  return syncTracker.trackWrite((async () => {
+    try {
+      const docRef = doc(db, 'fichas', userId);
+      await setDoc(docRef, {
+        resumenManual: resumenManual || null,
+        resumenManualHash: hash || null,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      try {
+        const profileRef = doc(db, 'profiles', userId);
+        await setDoc(profileRef, {
+          resumenManual: resumenManual || null,
+          resumenManualHash: hash || null,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (e) {
+        console.warn('saveResumenManual: no se pudo actualizar /profiles', e);
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'fichas');
+      throw err;
+    }
+  })());
+}
+
+export async function saveSeccionManual(
+  uid: string,
+  seccionKey: string,
+  contenido: string
+): Promise<void> {
+  return syncTracker.trackWrite((async () => {
+    try {
+      const ref = doc(db, 'fichas', uid);
+      await updateDoc(ref, {
+        [`resumenManual.secciones.${seccionKey}.narrativa`]: contenido
+      });
+
+      try {
+        const profileRef = doc(db, 'profiles', uid);
+        await updateDoc(profileRef, {
+          [`resumenManual.secciones.${seccionKey}.narrativa`]: contenido
+        });
+      } catch (e) {
+        console.warn('saveSeccionManual: no se pudo actualizar /profiles', e);
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, 'fichas');
+      throw err;
+    }
+  })());
+}
+
+
 export async function syncPendingOnboarding(userId: string) {
   const fichaData = JSON.parse(localStorage.getItem('kanarii_pendingFicha') || 'null');
   const responsesData = JSON.parse(localStorage.getItem('kanarii_pendingResponses') || '[]');
@@ -853,11 +908,27 @@ export function cruzarMiembros(perfil1: Ficha, perfil2: Ficha): AnalisisCruce {
 
 export function getFichaHash(ficha: Ficha): string {
   const relevante = {
-    rol: ficha.datosPersona?.rol,
-    fechaNacimiento: ficha.datosPersona?.fechaNacimiento,
+    rol: ficha.datosPersona?.rol || ficha.datosOnboarding?.rol || '',
+    fechaNacimiento: ficha.datosPersona?.fechaNacimiento || ficha.datosOnboarding?.fechaNacimiento || '',
+    arquetipo: ficha.perfilVisual?.arquetipo || '',
   };
-  // btoa es browser-compatible, no depende de Node crypto
-  return btoa(JSON.stringify(relevante)).slice(0, 16);
+  
+  // Serializar con claves ordenadas para garantizar determinismo independientemente del orden de ejecución
+  const keys = Object.keys(relevante).sort() as Array<keyof typeof relevante>;
+  const sortedObj: Record<string, any> = {};
+  for (const key of keys) {
+    sortedObj[key] = relevante[key] || '';
+  }
+  const serialized = JSON.stringify(sortedObj);
+
+  // Algoritmo djb2 para hashing determinista
+  let hash = 5381;
+  for (let i = 0; i < serialized.length; i++) {
+    hash = ((hash << 5) + hash) + serialized.charCodeAt(i);
+  }
+  
+  // Retornar en base 16 como entero sin signo de 32 bits
+  return (hash >>> 0).toString(16);
 }
 
 export async function getCruce(id1: string, id2: string): Promise<any | null> {

@@ -10,7 +10,7 @@ Arquitectura IA en capas — separar JSON estructurado (Capa 1) de narrativa on-
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-059 | Refactorizar `generarAnalisisCruce` → separar en `generarCruceInsights` (JSON, Capa 1) + `generarCruceNarrativa` (texto, Capa 2). `kinMayaContext` solo en Capa 1. Usar `responseSchema` para structured output. | M | ✅ Completada | [task-059.md](file:///.agents/tasks/task-059.md) |
-| T-060 | Refactorizar `generarManual` → separar en `generarResumenManual` (JSON cacheado con hash) + `generarSeccion` (narrativa lazy por pestaña). Invalidación via `getFichaHash`. | L | ⬜ Pendiente | — |
+| T-060 | Refactorizar `generarManual` → separar en `generarResumenManual` (JSON cacheado con hash) + `generarSeccion` (narrativa lazy por pestaña). Invalidación via `getFichaHash`. | L | ✅ Completada | [task-060.md](file:///.agents/tasks/task-060.md) |
 | T-061 | PDF opcional del Manual: botón "Descargar mi Manual" visible solo cuando todas las pestañas estén generadas. `jsPDF` + `html2canvas`, descarga directa sin Firebase Storage. | M | ⬜ Pendiente | — |
 
 ## Pre-trabajo completado (rama `feat/sprint-14-arquitectura-ia`)
