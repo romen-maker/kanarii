@@ -19,7 +19,9 @@ export default defineConfig(({mode}) => {
         injectRegister: 'auto',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon-192.svg', 'icon-512.svg'],
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,woff2}'], // Quitamos svg del patrón
+          globIgnores: ['**/*.svg'], // Medida explícita para ignorar SVGs
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // Aumentar a 5MB para seguridad
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//, /^\/__\//, /^\/firestore\//],
           cleanupOutdatedCaches: true,
