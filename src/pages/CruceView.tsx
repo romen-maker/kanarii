@@ -37,6 +37,9 @@ export function CruceView() {
   const { appUser } = useAuth();
   const navigate = useNavigate();
   const { fichas, loading } = useFichas();
+  const fichasUnicas = fichas.filter((ficha, index, self) => 
+    index === self.findIndex(f => f.userId === ficha.userId)
+  );
   const toast = useToast();
   const { perform } = useEntityActions();
   
@@ -67,8 +70,8 @@ export function CruceView() {
     setAnalyzing(true);
     setResult(null);
 
-    let f1 = fichas.find(f => f.userId === perfil1Id);
-    let f2 = fichas.find(f => f.userId === perfil2Id);
+    let f1 = fichasUnicas.find(f => f.userId === perfil1Id);
+    let f2 = fichasUnicas.find(f => f.userId === perfil2Id);
 
     if (!f1 || !f2) {
       toast.error("No se encontraron los perfiles seleccionados.");
@@ -204,7 +207,7 @@ export function CruceView() {
                   onChange={e => setPerfil1Id(e.target.value)}
                 >
                   <option value="">Selecciona un miembro...</option>
-                  {fichas.filter(f => f.userId !== perfil2Id).map(f => (
+                  {fichasUnicas.filter(f => f.userId !== perfil2Id).map(f => (
                     <option key={f.userId} value={f.userId}>{getNombre(f)}</option>
                   ))}
                 </select>
@@ -218,7 +221,7 @@ export function CruceView() {
                   onChange={e => setPerfil2Id(e.target.value)}
                 >
                   <option value="">Selecciona un miembro...</option>
-                  {fichas.filter(f => f.userId !== perfil1Id).map(f => (
+                  {fichasUnicas.filter(f => f.userId !== perfil1Id).map(f => (
                     <option key={f.userId} value={f.userId}>{getNombre(f)}</option>
                   ))}
                 </select>

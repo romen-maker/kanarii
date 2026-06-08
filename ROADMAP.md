@@ -68,7 +68,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ## 🧹 Calidad interna y DRY
 - [x] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor (Sprint 10 — T-038).
-- [ ] [MEDIO] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding
+- [x] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding (Sprint 13 — T-055).
 - [x] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas (Sprint 11 — T-044).
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
@@ -91,7 +91,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [MEDIO] Definir criterio coherente Modal vs Drawer y aplicarlo en toda la app.
 - [ ] [BAJO] Crear `TourStepLayout.tsx` como wrapper común para onboarding (escape hatch, progress tracker, UI global). Resolver al añadir nueva animación al tour.
 - [x] Animaciones onboarding: GovernanceFlowAnimation (A1) y WelcomeHeroSections (A7) implementadas (Sprint 09 — T-035)
-- [ ] [BAJO] Definir tagline oficial de Kanarii y actualizar copy de bienvenida (index.html, WelcomeHeroSections, manifest).
+- [x] Definir tagline oficial de Kanarii y actualizar copy de bienvenida (index.html, WelcomeHeroSections, manifest) (Sprint 13 — T-057).
 
 ---
 
@@ -107,9 +107,9 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Vista de detalle de Acuerdo en Marketplace: panel/modal con título, descripción, versión activa, historial y CTA de enmienda (Sprint 10 — T-039).
 - [x] Contador de solicitudes de proyectos pendientes en sidebar para proyectos liderados por el usuario (Sprint 06 — T-024).
 - [x] Kin Maya en CalendarioView: badge `kinDeHoy()` en cabecera (Sprint 11 — T-043)
-- [ ] [MEDIO] Kin Maya en Cruce: cruzar Kines de dos personas en `generarAnalisisCruce` para detectar complementariedades y tensiones galácticas | T-048
+- [x] Kin Maya en Cruce: cruzar Kines de dos personas en `generarAnalisisCruce` para detectar complementariedades y tensiones galácticas (Sprint 13 — T-056).
 - [x] Kin Maya en PasaporteComunitario: widget idéntico al de FichaView (Sprint 12 — T-052).
-- [ ] [MEDIO] Notificaciones de menciones en Tablón: campo `menciones[]` en post + listener en Sidebar para badge.
+- [x] Notificaciones de menciones en Tablón: campo `menciones[]` en post + listener en Sidebar para badge (Sprint 13 — T-058).
 
 ## 📱 Infraestructura offline
 - [x] Activar persistencia offline de Firestore (IndexedDB) con estrategia segura (Sprint 09 — T-037).
@@ -156,4 +156,4 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ---
 
-Última actualización verificada contra código: 6 de junio de 2026 (sprint-planning sprint-13 + clasificación idea-inbox)
+Última actualización verificada contra código: 7 de junio de 2026 (sprint-planning sprint-14 + archivado sprint-12/13)

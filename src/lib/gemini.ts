@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { calcularKin, calcularRelacionKines } from './kinMaya';
 
 const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -11,6 +11,106 @@ if (!geminiKey) {
 }
 
 const ai = new GoogleGenAI({ apiKey: geminiKey || '' });
+
+const CRUCE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    arquetipo_relacional: { type: Type.STRING },
+    clima_grupal_alerta: { type: Type.STRING },
+    mapa_rangos: {
+      type: Type.OBJECT,
+      properties: {
+        quien_tiene_mas_rango: { type: Type.STRING },
+        tipo_rango: {
+          type: Type.STRING,
+          enum: ['contextual', 'social', 'ambos']
+        },
+        alerta_rango: { type: Type.STRING }
+      },
+      required: ['quien_tiene_mas_rango', 'tipo_rango', 'alerta_rango']
+    },
+    canales_enriquecidos: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING },
+          nombre: { type: Type.STRING },
+          tipo: {
+            type: Type.STRING,
+            enum: ['electromagnetico', 'compania', 'dominancia', 'compromiso']
+          },
+          descripcion_comunitaria: { type: Type.STRING },
+          nota_rango: { type: Type.STRING, nullable: true }
+        },
+        required: ['id', 'nombre', 'tipo', 'descripcion_comunitaria']
+      }
+    },
+    cnv: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          persona: { type: Type.STRING },
+          situacion: { type: Type.STRING },
+          observacion: { type: Type.STRING },
+          sentimiento: { type: Type.STRING },
+          necesidad: { type: Type.STRING },
+          peticion: { type: Type.STRING }
+        },
+        required: ['persona', 'situacion', 'observacion', 'sentimiento', 'necesidad', 'peticion']
+      }
+    },
+    sombras: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          persona: { type: Type.STRING },
+          proceso_primario: { type: Type.STRING },
+          sombra_probable: { type: Type.STRING },
+          gancho_proyectivo: { type: Type.STRING }
+        },
+        required: ['persona', 'proceso_primario', 'sombra_probable', 'gancho_proyectivo']
+      }
+    },
+    acuerdo_doble_enlace: {
+      type: Type.OBJECT,
+      properties: {
+        dominio_1: {
+          type: Type.OBJECT,
+          properties: {
+            persona: { type: Type.STRING },
+            area: { type: Type.STRING },
+            fecha_revision: { type: Type.STRING }
+          },
+          required: ['persona', 'area', 'fecha_revision']
+        },
+        dominio_2: {
+          type: Type.OBJECT,
+          properties: {
+            persona: { type: Type.STRING },
+            area: { type: Type.STRING },
+            fecha_revision: { type: Type.STRING }
+          },
+          required: ['persona', 'area', 'fecha_revision']
+        },
+        metodologia: { type: Type.STRING }
+      },
+      required: ['dominio_1', 'dominio_2', 'metodologia']
+    }
+  },
+  required: [
+    'arquetipo_relacional',
+    'clima_grupal_alerta',
+    'mapa_rangos',
+    'canales_enriquecidos',
+    'cnv',
+    'sombras',
+    'acuerdo_doble_enlace'
+  ]
+};
+
 
 /**
  * Interfaces para el análisis estructurado de cruce
@@ -61,16 +161,19 @@ export interface AnalisisCruceStructured {
  * Wrapper resiliente para llamadas a Gemini.
  * Maneja el fallback automático de 2.5 a 1.5 en caso de saturación.
  */
-async function callGeminiWithFallback(prompt: string): Promise<string> {
+async function callGeminiWithFallback(prompt: string, config?: any): Promise<string> {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: config
     });
 
     if (!response.text) throw new Error('No response text from Gemini 2.5');
     return response.text;
   } catch (err: any) {
+    console.error("❌ Error inicial al invocar Gemini 2.5:", err); // Log para ver el error original (diagnóstico de schema/404/etc.)
+    
     const errStr = JSON.stringify(err);
     const isRetryable = 
       errStr.includes('503') || 
@@ -79,22 +182,22 @@ async function callGeminiWithFallback(prompt: string): Promise<string> {
       err.message?.includes('429');
 
     if (isRetryable) {
-      console.log("⚠️ Gemini 2.5 no disponible (saturación/cuota), usando 1.5 como fallback");
+      console.log("⚠️ Gemini 2.5 no disponible (saturación/cuota), usando 3.1-flash-lite como fallback");
       try {
         const fallbackResponse = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
+          model: 'gemini-3.1-flash-lite',
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          config: config
         });
 
-        if (!fallbackResponse.text) throw new Error('No response text from Gemini 1.5');
+        if (!fallbackResponse.text) throw new Error('No response text from Gemini 3.1-flash-lite');
         return fallbackResponse.text;
       } catch (fallbackErr) {
-        console.error("❌ Falló también el fallback de Gemini 1.5:", fallbackErr);
+        console.error("❌ Falló también el fallback de Gemini 3.1-flash-lite:", fallbackErr);
         throw new Error("Servicio de IA no disponible, inténtalo en unos minutos");
       }
     }
     
-    console.error("❌ Error no recuperable en Gemini 2.5:", err);
     throw err;
   }
 }
@@ -188,14 +291,45 @@ Genera el manual en Markdown con las 5 secciones del Manual de Usuario Humano de
   return await callGeminiWithFallback(prompt);
 }
 
+async function generarCruceInsights(prompt: string): Promise<AnalisisCruceStructured> {
+  const config = {
+    responseMimeType: 'application/json',
+    responseSchema: CRUCE_SCHEMA,
+  };
+
+  const textResponse = await callGeminiWithFallback(prompt, config);
+  if (!textResponse) throw new Error("La API de Gemini no retornó contenido de texto.");
+  return JSON.parse(textResponse) as AnalisisCruceStructured;
+}
+
+async function generarCruceNarrativa(
+  promptBase: string,
+  structured: AnalisisCruceStructured
+): Promise<string> {
+  const narrativaPrompt = `
+    ${promptBase}
+
+    Dado este análisis estructurado de cruce previo:
+    ${JSON.stringify(structured, null, 2)}
+        
+    Genera el análisis narrativo en Markdown con tono de facilitadora experta en procesos comunitarios.
+    Secciones requeridas: 
+    🌱 Lo que pueden construir juntos
+    ⚡ Dónde puede aparecer fricción
+    🔵 Recomendación Sociocrática
+    
+    Reglas: Usa los nombres reales de las personas. En la sección de comunicación, envuelve los ejemplos de CNV estrictamente en blockquotes (>).
+  `;
+
+  return await callGeminiWithFallback(narrativaPrompt);
+}
+
 export async function generarAnalisisCruce(
   perfil1: any, 
   perfil2: any, 
   resultadoDeterminista: any, 
   comunidadNombre: string = 'la comunidad'
 ): Promise<{ structured: AnalisisCruceStructured; narrative: string }> {
-  // TODO ADR-014: este contexto irá en generarCruceInsights() en sprint 14
-  // Calcular Kin Maya de ambas personas si tienen fechaNacimiento
   const kin1 = perfil1.datosPersona?.fechaNacimiento
     ? calcularKin(perfil1.datosPersona.fechaNacimiento)
     : null;
@@ -224,105 +358,34 @@ Instrucciones para el análisis galáctico:
 - En todos los casos: conecta el Rol Comunitario de cada sello con su función en la ecoaldea.
 ` : '';
 
-   const prompt = `Eres un experto en Astrología Psicológica, Diseño Humano y Sociocracia aplicados a comunidades intencionales.
+  const promptBaseSinKin = `Eres un experto en Astrología Psicológica, Diseño Humano y Sociocracia aplicados a comunidades intencionales.
 Analiza la dinámica entre estos dos miembros de la comunidad ${comunidadNombre}.
 
 Toma en cuenta sus perfiles:
 Persona 1 (${perfil1.datosPersona?.nombre || 'Miembro 1'}): ${JSON.stringify({
-  datosBrutos: perfil1.datosBrutos,
-  datosPersona: perfil1.datosPersona,
-  perfilVisual: perfil1.perfilVisual
-}, null, 2)}
+    datosBrutos: perfil1.datosBrutos,
+    datosPersona: perfil1.datosPersona,
+    perfilVisual: perfil1.perfilVisual
+  }, null, 2)}
 
 Persona 2 (${perfil2.datosPersona?.nombre || 'Miembro 2'}): ${JSON.stringify({
-  datosBrutos: perfil2.datosBrutos,
-  datosPersona: perfil2.datosPersona,
-  perfilVisual: perfil2.perfilVisual
-}, null, 2)}
+    datosBrutos: perfil2.datosBrutos,
+    datosPersona: perfil2.datosPersona,
+    perfilVisual: perfil2.perfilVisual
+  }, null, 2)}
 
 Cruce determinista:
 ${JSON.stringify(resultadoDeterminista, null, 2)}
-${kinMayaContext}
-
-INSTRUCCIONES DE SALIDA:
-Debes responder con dos bloques claramente diferenciados.
-PRIMERO: Un bloque JSON encerrado en \`\`\`json [JSON] \`\`\`
-SEGUNDO: El análisis narrativo en Markdown.
-
-EL JSON DEBE SEGUIR ESTA ESTRUCTURA EXACTA:
-{
-  "arquetipo_relacional": "Título evocador de 4-6 palabras",
-  "clima_grupal_alerta": "1 frase sobre el riesgo principal para el grupo",
-  "mapa_rangos": {
-    "quien_tiene_mas_rango": "Nombre o 'equilibrado'",
-    "tipo_rango": "contextual|social|ambos",
-    "alerta_rango": "1 frase operativa sobre cómo gestionar esta asimetría"
-  },
-  "canales_enriquecidos": [
-    {
-      "id": "ID del canal (ej: 2-14)",
-      "nombre": "Nombre del canal en HD",
-      "tipo": "electromagnetico|compania|dominancia|compromiso",
-      "descripcion_comunitaria": "Qué activa esto en la convivencia (1 frase)",
-      "nota_rango": "Aviso si hay asimetría/dominancia (opcional)"
-    }
-  ],
-  "cnv": [
-    {
-      "persona": "Nombre",
-      "situacion": "Breve descripción",
-      "observacion": "Hecho neutro",
-      "sentimiento": "Cómo se siente",
-      "necesidad": "Qué necesita",
-      "peticion": "Petición concreta"
-    }
-  ],
-  "sombras": [
-    {
-      "persona": "Nombre",
-      "proceso_primario": "Lo que cree que hace",
-      "sombra_probable": "Lo que proyecta",
-      "gancho_proyectivo": "Qué le 'dispara' del otro"
-    }
-  ],
-  "acuerdo_doble_enlace": {
-    "dominio_1": { "persona": "Nombre", "area": "Área de responsabilidad", "fecha_revision": "Fecha" },
-    "dominio_2": { "persona": "Nombre", "area": "Área de responsabilidad", "fecha_revision": "Fecha" },
-    "metodologia": "Cómo se coordinan"
-  }
-}
-
-EL NARRATIVO MARKDOWN DEBE SEGUIR ESTO:
-- Tono de facilitadora experta, cálido y directo.
-- Usa los nombres reales.
-- Secciones: 🌱 Lo que pueden construir juntos, ⚡ Dónde puede aparecer fricción, 🔵 Recomendación Sociocrática.
-- Frases CNV en blockquotes (>).
-
-Recuerda: Los canales electromagnéticos son claves para la sinergia. 
-Usa el Rango Contextual basado en 'antiguedad_anos' y 'rol' (propietario vs miembro vs voluntario).
 `;
 
-  console.log("🤖 Gemini: Iniciando generación de Análisis de Cruce Estructurado...");
-  const textResponse = await callGeminiWithFallback(prompt);
-  
-  try {
-    const jsonMatch = textResponse.match(/```json\s*([\s\S]*?)\s*```/);
-    const jsonStr = jsonMatch ? jsonMatch[1] : null;
-    const narrative = textResponse.replace(/```json[\s\S]*?```/, "").trim();
-    
-    let structured: AnalisisCruceStructured;
-    if (jsonStr) {
-      structured = JSON.parse(jsonStr);
-    } else {
-      throw new Error("No structured JSON found in Gemini response");
-    }
+  // Inyectamos kinMayaContext SOLO en Capa 1
+  const promptCapa1 = `${promptBaseSinKin}\n${kinMayaContext}`;
 
-    return { structured, narrative };
-  } catch (err) {
-    console.error("❌ Error parseando respuesta estructurada de Gemini:", err);
-    return { 
-      structured: null as any, 
-      narrative: textResponse 
-    };
-  }
+  console.log("🤖 Gemini: Iniciando generación de Análisis de Cruce Estructurado (Capa 1)...");
+  const structured = await generarCruceInsights(promptCapa1);
+
+  console.log("🤖 Gemini: Iniciando generación de Análisis de Cruce Narrativo (Capa 2)...");
+  const narrative = await generarCruceNarrativa(promptBaseSinKin, structured);
+
+  return { structured, narrative };
 }
