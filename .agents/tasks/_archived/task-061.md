@@ -21,11 +21,11 @@
 - [x] Implementar en `FichaView.tsx` la verificación de completitud reactiva (Firestore + memoria).
 - [x] Añadir el toast informativo cuando no se han completado las 5 secciones al ingresar a la pestaña del manual.
 - [x] Integrar el botón "Descargar mi Manual" en la sección de la UI de `FichaView.tsx` vinculándolo a `generateManualPdf`.
-- [ ] Validar el flujo de impresión en el navegador.
+- [x] Validar el flujo de impresión en el navegador.
 
 ## Criterios de aceptación (Definition of Done)
-- [ ] El botón de descarga sólo se muestra cuando las 5 secciones del manual están completadas (en Firestore o en sesión activa).
-- [ ] Al pulsar el botón se genera un HTML limpio semántico en una ventana temporal que invoca la impresión del sistema (PDF vectorial nativo).
-- [ ] El toast informativo advierte correctamente al usuario de visitar las pestañas si no tiene las 5 secciones generadas.
-- [ ] No quedan dependencias huérfanas de `jspdf` o `html2canvas` en el `package.json`.
-- [ ] Sesión cerrada correctamente
+- [x] El botón de descarga sólo se muestra cuando las 5 secciones del manual están completadas (en Firestore o en sesión activa).
+- [x] Al pulsar el botón se genera un HTML limpio semántico en una ventana temporal que invoca la impresión del sistema (PDF vectorial nativo).
+- [x] El toast informativo advierte correctamente al usuario de visitar las pestañas si no tiene las 5 secciones generadas.
+- [x] No quedan dependencias huérfanas de `jspdf` o `html2canvas` en el `package.json`.
+- [x] Sesión cerrada correctamente
