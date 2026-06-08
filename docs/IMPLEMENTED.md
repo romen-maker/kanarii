@@ -77,3 +77,4 @@
 | Tarea: Integrar Kin Maya de dos personas en generarAnalisisCruce | T-056 | sprint-13 | src/lib/gemini.ts,src/lib/kinMaya.ts |
 | Task-057: Tagline oficial de Kanarii + actualizar copy bienvenida (index.html, WelcomeHeroSections, manifest) | T-057 | sprint-13 | src/components/onboarding/WelcomeHeroSections.tsx |
 | Task-058: Notificaciones de menciones en Tablón — Opción A: campo menciones[] en post + listener en Sidebar para badge | T-058 | sprint-13 | src/components/Sidebar.tsx,src/components/ui/NotifBadge.tsx,src/hooks/useNotificaciones.ts |
+| Task-059: Refactorizar generarAnalisisCruce → Capa 1 (JSON) + Capa 2 (Narrativa) | T-059 | sprint-14 | src/lib/gemini.ts,src/pages/CruceView.tsx |

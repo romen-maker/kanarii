@@ -18,6 +18,10 @@ Este directorio contiene el registro de las decisiones de diseño arquitectónic
 | [ADR-010](ADR-010-resolucion-objeciones-retira.md) | Modelo de resolución de objeciones — "Objetor retira" | Accepted | 2026-05-27 |
 | [ADR-011](ADR-011-pasaporte-comunitario-equivalencia.md) | Pasaporte Comunitario — Principio de Equivalencia en UI | Accepted | 2026-05-27 |
 | [ADR-012](ADR-012-fuente-de-verdad-comunidad-activa.md) | Fuente de Verdad para la Comunidad Activa del Usuario | Accepted | 2026-05-28 |
-| [ADR-013](ADR-013-firebase-functions-para-og-tags.md) | Introducción de Firebase Functions para OG Tags Dinámicos | Accepted | 2026-06-06 |
+| [ADR-013](ADR-013-fuente-verdad-lectura-fichas-profiles.md) | Fuente de Verdad para la Lectura de Fichas Comunitarias en /profiles | Accepted | 2026-06-02 |
+| [ADR-014](ADR-014-generacion-ia-capas-progressive-disclosure.md) | Generación de Contenido IA en Capas (Progressive Disclosure) | Accepted | 2026-06-07 |
+| [ADR-015](ADR-015-persistencia-selectiva-outputs-gemini.md) | Persistencia Selectiva de Outputs de Gemini | Accepted | 2026-06-07 |
+| [ADR-016](ADR-016-sistema-notificaciones.md) | Sistema de notificaciones | Accepted | 2026-06-06 |
+| [ADR-017](ADR-017-firebase-functions-para-og-tags.md) | Introducción de Firebase Functions para OG Tags Dinámicos | Accepted | 2026-06-06 |
 
 
