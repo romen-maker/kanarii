@@ -1,6 +1,9 @@
 import { motion } from 'motion/react';
 import { Shield, Sparkles, MessageCircle, Heart, Award, ArrowUpRight, Check, Clock, UserCheck, UserPlus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { KinData } from '../../lib/kinMaya';
+import { ConfigPrivacidad, Comunidad } from '../../lib/appService';
+import { useComunidad } from '../../contexts/ComunidadContext';
 
 interface UserPassport {
   name: string;
@@ -10,10 +13,14 @@ interface UserPassport {
   knowledges: string[]; // Lo que sé
   needs: string[]; // Lo que busco
   kinMaya?: KinData;
+  arquetipo?: string;
+  descripcionArquetipo?: string;
+  communityIds?: string[];
 }
 
 interface PasaporteVisualProps {
   user?: UserPassport;
+  privacidad?: ConfigPrivacidad;
   onConnect?: () => void;
   connectionStatus?: 'none' | 'pending' | 'connected' | 'self';
   isSender?: boolean;
@@ -31,11 +38,20 @@ const defaultUser: UserPassport = {
 
 export default function PasaporteVisual({
   user = defaultUser,
+  privacidad,
   onConnect,
   connectionStatus = 'none',
   isSender = false,
   onAccept,
 }: PasaporteVisualProps) {
+  const { comunidades } = useComunidad();
+
+  const showKinMaya = privacidad ? privacidad.kinMaya !== false : true;
+  const showArquetipo = privacidad ? privacidad.arquetipo !== false : true;
+
+  const memberComunidades = (user.communityIds || [])
+    .map(id => comunidades.find(c => c.slug === id || c.id === id))
+    .filter(Boolean) as Comunidad[];
 
   return (
     <div className="w-full max-w-xl mx-auto bg-[#FDFBF7] text-[#5D4037] font-sans">
@@ -96,14 +112,30 @@ export default function PasaporteVisual({
             </div>
 
             {/* Firma Galáctica (Kin Maya) */}
-            {user.kinMaya && (
+            {user.kinMaya && showKinMaya && (
               <div className="mt-4">
-                <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left">
+                <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left transition-all hover:border-[#D2B48C]/40">
                   <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{user.kinMaya.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Firma Galáctica</h4>
-                    <p className="text-stone-800 font-medium text-base">{user.kinMaya.descripcionCorta}</p>
-                    <p className="text-stone-500 text-sm mt-1 leading-relaxed">{user.kinMaya.rolComunitario}</p>
+                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">Firma Galáctica</h4>
+                    <p className="text-[#3E2723] font-serif font-bold text-base">{user.kinMaya.descripcionCorta}</p>
+                    <p className="text-[#5D4037]/75 text-sm mt-1 leading-relaxed">{user.kinMaya.rolComunitario}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Arquetipo Comunitario */}
+            {user.arquetipo && showArquetipo && (
+              <div className="mt-3">
+                <div className="flex items-start gap-4 bg-[#FAF9F6] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left transition-all hover:border-[#D2B48C]/40">
+                  <span className="text-3xl leading-none mt-0.5" aria-hidden="true">🎯</span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">Arquetipo Comunitario</h4>
+                    <p className="text-[#3E2723] font-serif font-bold text-base">{user.arquetipo}</p>
+                    {user.descripcionArquetipo && (
+                      <p className="text-[#5D4037]/75 text-sm mt-1 leading-relaxed">{user.descripcionArquetipo}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -195,6 +227,38 @@ export default function PasaporteVisual({
           </div>
 
         </div>
+
+        {/* Bloque: COMUNIDADES A LAS QUE PERTENECE */}
+        {memberComunidades.length > 0 && (
+          <div className="space-y-3 pt-6 font-sans border-t border-[#D2B48C]/10">
+            <h3 className="text-xs font-black uppercase tracking-widest text-[#6B705C]">
+              Comunidades <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— Dónde participa</span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {memberComunidades.map((comm) => (
+                <Link
+                  key={comm.id || comm.slug}
+                  to={`/c/${comm.slug}`}
+                  className="inline-flex items-center gap-2 bg-[#FAF9F6] hover:bg-[#FAF9F6]/80 border border-[#D2B48C]/20 hover:border-[#5A5A40]/40 text-[#5D4037]/80 hover:text-[#5D4037] px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all shadow-sm hover:shadow active:scale-95 cursor-pointer"
+                >
+                  {comm.logoUrl ? (
+                    <img
+                      src={comm.logoUrl}
+                      alt={comm.nombre}
+                      className="w-5 h-5 rounded-full object-cover border border-[#D2B48C]/15"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <span className="w-5 h-5 rounded-full bg-[#EAE2D6] text-[10px] flex items-center justify-center font-bold text-[#6B705C] border border-[#D2B48C]/15">
+                      {comm.nombre.charAt(0)}
+                    </span>
+                  )}
+                  <span>{comm.nombre}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* CTA: Call to Action (Cero Jerarquías, Sin mensajería privada directa para transparencia) */}
         <div className="pt-4 font-sans">
