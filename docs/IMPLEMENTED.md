@@ -80,3 +80,4 @@
 | Task-059: Refactorizar generarAnalisisCruce → Capa 1 (JSON) + Capa 2 (Narrativa) | T-059 | sprint-14 | src/lib/gemini.ts,src/pages/CruceView.tsx |
 | : Refactorizar generarManual → separar en generarResumenManual (JSON cacheado con hash) + generarSeccion (narrativa lazy por pestaña) | T-060 | sprint-14 | — |
 | : PDF opcional del Manual | T-061 | sprint-14 | — |
+| Tarea: Unificación y Auditoría de Superficies de Perfil y Manual de Usuario | T-062 | sprint-15 | — |
