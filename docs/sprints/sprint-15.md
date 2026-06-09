@@ -6,7 +6,7 @@
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-062 | Unificar superficies de perfil y manual de usuario (Ficha, Expediente, Pasaporte, Cruce) con componente compartido `<ManualSeccionesViewer>` e integración híbrida (ADR-020) | L | ⬜ Pendiente | — |
+| T-062 | Unificar superficies de perfil y manual de usuario (Ficha, Expediente, Pasaporte, Cruce) con componente compartido `<ManualSeccionesViewer>` e integración híbrida (ADR-020) | L | ✅ Completada | [task-062.md](file:///.agents/tasks/task-062.md) |
 | T-063 | Rediseño del Pasaporte Comunitario de miembro y comunidad como landing social compartible | M | ⬜ Pendiente | — |
 | T-064 | UI: Badge visual "acuerdo cálido" diferenciado en PropuestaDetail | S | ⬜ Pendiente | — |
 | T-065 | Estandarizar campo `reason` a `purpose` en colección `/propuestas` | S | ⬜ Pendiente | — |
