@@ -58,6 +58,9 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] UI: Badge visual "acuerdo cálido" diferenciado en PropuestaDetail
 - [ ] [BAJO] Estandarizar campo `reason` a `purpose` en colección `/propuestas`.
 
+### 2.6 Unificación de Superficies de Perfil (ADR-020)
+- [ ] [ALTO] Unificar superficies de perfil y manual de usuario (Ficha, Expediente, Pasaporte, Cruce) con componente compartido `<ManualSeccionesViewer>` e integración híbrida (Sprint 15 — T-062).
+
 ### 2.5 Comunidades v2 — crecimiento (Completado)
 
 ---
@@ -98,6 +101,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ---
 
 ## 🌍 Siguiente expansión funcional
+- [ ] [ALTO] Rediseño del Pasaporte Comunitario de miembro y comunidad como landing social compartible (Sprint 15 — T-063).
 - [ ] [MEDIO] Admin Dashboard global: refinar con filtros por miembro y estado (refinamiento de feature existente en Fase 1, no feature nueva).
 - [ ] [MEDIO] Mejorar UI de aceptación/rechazo de colaboradores desde el detalle del proyecto.
 - [ ] [MEDIO] Gestión de visitas / recién llegados con ficha simplificada.
@@ -155,7 +159,8 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [POST-MVP] Evaluar alternativa opcional a passwordless (email + contraseña) si Magic Link genera fricción.
 - [ ] [POST-MVP] Verificar UX completo de onboarding con nuevas reglas de seguridad de Firestore.
 - [ ] [POST-MVP] Mapa interactivo editable de zonas, recursos y puntos de interés.
+- [ ] [MEDIO] Redirigir inicio de sidebar y bottomnav a `/` en vez de `/tour` y rediseñar landing (login vs no login).
 
 ---
 
-Última actualización verificada contra código: 7 de junio de 2026 (sprint-planning sprint-14 + archivado sprint-12/13)
+Última actualización verificada contra código: 8 de junio de 2026 (sprint-planning sprint-15)

@@ -1,0 +1,17 @@
+task: T-062
+sprint: 15
+branch: feat/T-062-unificacion-manual-perfil
+opened: 2026-06-08T20:42:50Z
+status: open
+approved_plan: true
+authorized_files:
+  - src/lib/manualNormalizer.ts
+  - src/components/ManualSeccionesViewer.tsx
+  - src/components/AdminPanel/AdminPanelModals.tsx
+  - src/pages/FichaView.tsx
+  - src/hooks/useFicha.ts
+  - src/lib/services/_types.ts
+  - src/lib/appService.ts
+  - src/lib/pasaporte.ts
+  - firestore.rules
+  - docs/adrs/ADR-020-unificacion-superficies-perfil-manual.md

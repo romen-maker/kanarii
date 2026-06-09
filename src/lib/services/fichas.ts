@@ -155,7 +155,14 @@ export function calcularDimensiones(datosBrutos: FichaDatosBrutos, datosPersona:
   return { escucha, accion, estructura, cuidado };
 }
 
-export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding, existingId?: string, skipGemini: boolean = false, triada?: TriadaComunitaria) {
+export async function saveFicha(
+  userId: string,
+  datosOnboarding: DatosOnboarding,
+  existingId?: string,
+  skipGemini: boolean = false,
+  triada?: TriadaComunitaria,
+  privacidad?: any
+) {
   const isUpdate = !!existingId;
   const docRefId = existingId || userId; // enforcing userId as the document id
   try {
@@ -294,6 +301,7 @@ export async function saveFicha(userId: string, datosOnboarding: DatosOnboarding
         hora_aproximada: isHoraAproximada
       },
       ...(triada !== undefined && triada !== null ? { triada } : {}),
+      ...(privacidad !== undefined && privacidad !== null ? { privacidad } : {}),
       estado,
       creadoEn: serverTimestamp(),
       updatedAt: serverTimestamp(),

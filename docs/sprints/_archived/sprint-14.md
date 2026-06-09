@@ -1,7 +1,7 @@
 # Sprint 14 — 2026-06-09 → 2026-06-15
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Objetivo
 Arquitectura IA en capas — separar JSON estructurado (Capa 1) de narrativa on-demand (Capa 2) en Cruce y Manual. ADRs de referencia: ADR-014, ADR-015.
@@ -12,6 +12,7 @@ Arquitectura IA en capas — separar JSON estructurado (Capa 1) de narrativa on-
 | T-059 | Refactorizar `generarAnalisisCruce` → separar en `generarCruceInsights` (JSON, Capa 1) + `generarCruceNarrativa` (texto, Capa 2). `kinMayaContext` solo en Capa 1. Usar `responseSchema` para structured output. | M | ✅ Completada | [task-059.md](file:///.agents/tasks/task-059.md) |
 | T-060 | Refactorizar `generarManual` → separar en `generarResumenManual` (JSON cacheado con hash) + `generarSeccion` (narrativa lazy por pestaña). Invalidación via `getFichaHash`. | L | ✅ Completada | [task-060.md](file:///.agents/tasks/task-060.md) |
 | T-061 | PDF opcional del Manual: botón "Descargar mi Manual" visible solo cuando todas las pestañas estén generadas. `jsPDF` + `html2canvas`, descarga directa sin Firebase Storage. | M | ✅ Completada | [task-061.md](file:///.agents/tasks/task-061.md) |
+| T-062 | Auditoría de Superficies de Perfil. Mapear estado de consumo de datos de perfil/manual en vistas públicas y privadas. Propuesta en ADR-020. | S | ✅ Completada | N/A |
 
 ## Pre-trabajo completado (rama `feat/sprint-14-arquitectura-ia`)
 - ✅ Tarea 0: Colisión ADR-013 → ADR-017 resuelta

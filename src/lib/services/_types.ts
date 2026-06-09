@@ -213,6 +213,22 @@ export interface FichaConfiguracion {
   [key: string]: any;
 }
 
+export interface ConfigPrivacidad {
+  disenoHumano: boolean;
+  arquetipo: boolean;
+  kinMaya: boolean;
+  manualCompleto: boolean;
+  datosAstrologicos: boolean;
+}
+
+export const PRIVACIDAD_DEFAULT: ConfigPrivacidad = {
+  disenoHumano: false,
+  arquetipo: true,
+  kinMaya: true,
+  manualCompleto: false,
+  datosAstrologicos: false,
+};
+
 export interface Ficha {
   id?: string;
   userId: string;
@@ -243,6 +259,7 @@ export interface Ficha {
   proximaRevision?: any;
   resumenManual?: any;
   resumenManualHash?: string;
+  privacidad?: ConfigPrivacidad;
 }
 
 export function getTriadaFromFicha(ficha: Ficha | null | undefined): TriadaComunitaria {
