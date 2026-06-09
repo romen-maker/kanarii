@@ -1,6 +1,6 @@
 import { X, AlertCircle, Handshake } from 'lucide-react';
 import { Ficha, Acuerdo, Servicio, CommunityMember, updateCommunityMember } from '../../lib/appService';
-import { ManualViewer } from '../ManualViewer';
+import { ManualSeccionesViewer } from '../ManualSeccionesViewer';
 
 /**
  * Helper para extraer datos de una ficha normalizada.
@@ -87,7 +87,7 @@ export default function AdminPanelModals({
                       "{getDatosPersona(selectedFicha).tension || 'No hay tensiones registradas.'}"
                     </p>
                   </section>
-                  <ManualViewer content={selectedFicha.manualGenerado || '# Sin manual generado'} />
+                  <ManualSeccionesViewer ficha={selectedFicha} modoAdmin={true} />
                 </div>
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm space-y-4">

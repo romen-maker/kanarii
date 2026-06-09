@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Ficha, getUserFicha, saveResumenManual, getFichaHash, saveSeccionManual } from '../lib/appService';
+import { Ficha, getUserFicha, saveResumenManual, getFichaHash } from '../lib/appService';
 import { generarResumenManual, generarSeccion } from '../lib/gemini';
 
 export function useFicha() {
@@ -86,20 +86,33 @@ export function useFicha() {
     if (seccionesLoading[seccionId]) return;
     if (manualSecciones[seccionId]) return;
 
-    // Verificar si ya existe en Firestore
+    const uid = appUser?.uid || ficha?.userId || '';
+    if (!uid) return;
+
+    const cacheKey = `manual_${uid}_${seccionId}`;
+
+    // 1. Verificar sessionStorage
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setManualSecciones(prev => ({ ...prev, [seccionId]: cached }));
+      return;
+    }
+
+    // 2. Verificar si ya existe en Firestore
     const resumen = ficha?.resumenManual as any;
     const narrativaFirestore = resumen?.secciones?.[seccionId]?.narrativa;
     if (narrativaFirestore) {
       setManualSecciones(prev => ({ ...prev, [seccionId]: narrativaFirestore }));
+      sessionStorage.setItem(cacheKey, narrativaFirestore);
       return;
     }
 
-    if (!ficha?.resumenManual || !ficha?.perfilVisual || !appUser) return;
+    if (!ficha?.resumenManual || !ficha?.perfilVisual) return;
 
     setSeccionesLoading(prev => ({ ...prev, [seccionId]: true }));
     try {
       const narrativa = await generarSeccion(seccionId, ficha.perfilVisual, ficha.resumenManual);
-      await saveSeccionManual(appUser.uid, seccionId, narrativa);
+      sessionStorage.setItem(cacheKey, narrativa);
       setManualSecciones(prev => ({ ...prev, [seccionId]: narrativa }));
     } catch (err) {
       console.error(`Error al generar la sección ${seccionId}:`, err);

@@ -7,9 +7,9 @@ import { User, Edit2, Check, X, Fingerprint, Sparkles, Users, HeartPulse, Histor
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { saveFicha, saveManual, saveResumenManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha, Ficha, FichaDatosPersona } from '../lib/appService';
+import { saveFicha, saveManual, saveResumenManual, DatosOnboarding, getComunidades, Comunidad, getTriadaFromFicha, Ficha, FichaDatosPersona, PRIVACIDAD_DEFAULT } from '../lib/appService';
 import Markdown from 'react-markdown';
-import { ManualViewer } from '../components/ManualViewer';
+import { ManualSeccionesViewer } from '../components/ManualSeccionesViewer';
 import { geocodeLugar } from '../lib/geocoding';
 import { useComunidadActions } from '../hooks/useComunidadActions';
 import { useTagArray } from '../hooks/useTagArray';
@@ -84,6 +84,37 @@ export function FichaView() {
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
+  const handleTogglePrivacidad = async (key: string) => {
+    if (!appUser || !displayFicha) return;
+    const currentPrivacidad = displayFicha.privacidad || PRIVACIDAD_DEFAULT;
+    const nuevaPrivacidad = {
+      ...currentPrivacidad,
+      [key]: !currentPrivacidad[key as keyof typeof currentPrivacidad]
+    };
+    const updatedFicha = {
+      ...displayFicha,
+      privacidad: nuevaPrivacidad
+    };
+
+    setLocalFicha(updatedFicha);
+
+    try {
+      const triadaObj = {
+        ofrendas: ofrendasState.tags,
+        saberes: saberesState.tags,
+        necesidades: necesidadesState.tags
+      };
+      await saveFicha(appUser.uid, datos as any, displayFicha.id || appUser.uid, true, triadaObj, nuevaPrivacidad);
+
+      const { sincronizarPasaporte } = await import('../lib/pasaporte');
+      await sincronizarPasaporte(updatedFicha, appUser.uid, appUser.displayName || undefined, appUser.photoURL || undefined);
+      toast.success("Ajustes de privacidad sincronizados con tu Pasaporte");
+    } catch (e) {
+      console.error("Error al guardar privacidad:", e);
+      toast.error("Error al guardar los ajustes de privacidad");
+    }
+  };
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaveStep, setLeaveStep] = useState<1 | 2 | 3>(1);
   const [leaveCommunityId, setLeaveCommunityId] = useState('');
@@ -121,9 +152,11 @@ export function FichaView() {
   const resumen = displayFicha?.resumenManual as any;
   const secciones = resumen?.secciones || {};
   const todasGeneradas = SECCIONES_MANUAL.every(sec => {
+    const uid = appUser?.uid || displayFicha?.userId || displayFicha?.id || '';
     const enFirestore = !!secciones[sec.id]?.narrativa;
     const enMemoria = !!manualSecciones[sec.id];
-    return enFirestore || enMemoria;
+    const enCache = uid ? !!sessionStorage.getItem(`manual_${uid}_${sec.id}`) : false;
+    return enFirestore || enMemoria || enCache;
   });
 
   useEffect(() => {
@@ -143,7 +176,11 @@ export function FichaView() {
       const fecha = new Date().toLocaleDateString('es-ES');
 
       const secciones: PdfSection[] = SECCIONES_MANUAL.map(sec => {
-        const narrativa = (displayFicha?.resumenManual as any)?.secciones?.[sec.id]?.narrativa || manualSecciones[sec.id] || '';
+        const uid = appUser?.uid || displayFicha?.userId || displayFicha?.id || '';
+        const enFirestore = (displayFicha?.resumenManual as any)?.secciones?.[sec.id]?.narrativa || '';
+        const enMemoria = manualSecciones[sec.id] || '';
+        const enCache = uid ? sessionStorage.getItem(`manual_${uid}_${sec.id}`) || '' : '';
+        const narrativa = enFirestore || enMemoria || enCache;
         const contenidoHtml = convertMarkdownToHtml(narrativa);
         return {
           titulo: sec.label,
@@ -685,6 +722,57 @@ export function FichaView() {
           )}
         </div>
 
+        {/* Panel de Privacidad */}
+        {!editing && (
+          <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden mb-8">
+            <div className="absolute top-0 left-0 w-2 h-full bg-[#A5A58D]"></div>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <Eye className="text-[#6B705C] w-6 h-6" />
+              <h3 className="text-xl font-serif text-[#4A4E4D]">Privacidad del Pasaporte Comunitario</h3>
+            </div>
+            
+            <p className="text-stone-500 text-sm mb-6 leading-relaxed">
+              El Pasaporte Comunitario es tu carta de presentación social y pública en Kanarii. Elige qué dimensiones de tu perfil deseas compartir públicamente con la comunidad.
+            </p>
+            
+            <div className="space-y-4">
+              {[
+                { key: 'arquetipo', label: 'Arquetipo y Perfil', desc: 'Muestra tu arquetipo de personalidad, fortalezas, sombras y rol sociocrático sugerido.' },
+                { key: 'disenoHumano', label: 'Diseño Humano', desc: 'Muestra tu tipo de diseño humano, autoridad y perfil.' },
+                { key: 'kinMaya', label: 'Kin Maya / Firma Galáctica', desc: 'Muestra tu Kin Maya, sello galáctico y rol comunitario maya.' },
+                { key: 'datosAstrologicos', label: 'Datos Astrológicos', desc: 'Muestra tu Sol, Luna, Ascendente y elementos dominantes.' },
+                { key: 'manualCompleto', label: 'Manual de Usuario Humano', desc: 'Muestra el manual de convivencia autogenerado con tus 5 secciones.' }
+              ].map(({ key, label, desc }) => {
+                const privacidad = displayFicha?.privacidad || PRIVACIDAD_DEFAULT;
+                const isEnabled = privacidad[key as keyof typeof privacidad] ?? true;
+                return (
+                  <div key={key} className="flex items-start justify-between gap-4 p-4 rounded-2xl bg-[#F9F7F1] border border-[#EAE2D6] transition-all duration-200">
+                    <div className="flex-1 min-w-0">
+                      <span className="font-serif font-medium text-stone-800 text-sm md:text-base">{label}</span>
+                      <p className="text-stone-500 text-xs md:text-sm mt-0.5 leading-relaxed">{desc}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePrivacidad(key)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        isEnabled ? 'bg-[#6B705C]' : 'bg-stone-300'
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          isEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Manual Galáctico Section */}
         {isGeneratingResumen || (displayFicha?.perfilVisual?.arquetipo && !displayFicha?.resumenManual) ? (
           <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden flex flex-col items-center justify-center text-center">
@@ -737,49 +825,12 @@ export function FichaView() {
                 </div>
              </div>
 
-             <div className="flex flex-wrap gap-2 mb-6 border-b border-[#EAE2D6] pb-4">
-               {SECCIONES_MANUAL.map((sec) => {
-                 const isActive = activeManualTab === sec.id;
-                 const isLoaded = !!manualSecciones[sec.id] || !!(displayFicha?.resumenManual as any)?.secciones?.[sec.id]?.narrativa;
-                 return (
-                   <button
-                     key={sec.id}
-                     type="button"
-                     onClick={() => setActiveManualTab(sec.id)}
-                     className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                       isActive 
-                         ? 'bg-[#8A817C] text-white shadow-sm' 
-                         : 'bg-[#F9F7F1] text-stone-600 hover:bg-[#EAE2D6]'
-                     }`}
-                   >
-                     <span>{sec.icon}</span>
-                     <span>{sec.label}</span>
-                     {isLoaded && !isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>}
-                   </button>
-                 );
-               })}
-             </div>
-
-             {seccionesLoading[activeManualTab] ? (
-               <div className="flex flex-col items-center justify-center py-16 text-stone-500 space-y-4 animate-fadeIn">
-                 <Loader2 className="w-8 h-8 animate-spin text-[#8A817C]" />
-                 <p className="text-sm font-serif italic text-center max-w-sm">
-                   {activeManualTab === 'adn_astral' && 'Descifrando el tejido cósmico y tu Ikigai...'}
-                   {activeManualTab === 'anatomia_poder' && 'Analizando flujos de rango y democracia profunda...'}
-                   {activeManualTab === 'espejo_tribu' && 'Mirando en el espejo de la sombra comunitaria...'}
-                   {activeManualTab === 'sintonia_cnv' && 'Sintonizando el estilo de comunicación empática...'}
-                   {activeManualTab === 'mantenimiento_crisis' && 'Preparando el protocolo de mantenimiento y crisis...'}
-                 </p>
-               </div>
-             ) : (manualSecciones[activeManualTab] || (displayFicha?.resumenManual as any)?.secciones?.[activeManualTab]?.narrativa) ? (
-               <div className="prose prose-stone max-w-none text-stone-700 leading-relaxed text-sm md:text-base space-y-4 animate-fadeIn">
-                 <Markdown>{manualSecciones[activeManualTab] || (displayFicha?.resumenManual as any)?.secciones?.[activeManualTab]?.narrativa}</Markdown>
-               </div>
-             ) : (
-               <div className="text-center py-8 text-stone-400 italic text-sm">
-                 Selecciona una pestaña para ver la narrativa.
-               </div>
-             )}
+             <ManualSeccionesViewer
+               ficha={displayFicha}
+               manualSecciones={manualSecciones}
+               seccionesLoading={seccionesLoading}
+               generarSeccionLazy={generarSeccionLazy}
+             />
              
              {displayFicha.fechaGeneracion && (
                 <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">
