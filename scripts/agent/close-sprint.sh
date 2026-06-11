@@ -19,9 +19,30 @@ CHANGELOG="$ROOT/CHANGELOG.md"
 
 # --- Validar argumento ---
 if [ -z "${1:-}" ]; then
-  echo "❌ Uso: bash scripts/agent/close-sprint.sh <nombre-sprint>"
+  echo "❌ Uso: bash scripts/agent/close-sprint.sh <nombre-sprint> o --auto"
   echo "   Ejemplo: bash scripts/agent/close-sprint.sh sprint-07"
   exit 1
+fi
+
+if [ "$1" = "--auto" ]; then
+  echo "🔍 Buscando sprints completados en $SPRINTS_DIR..."
+  FOUND_ANY=0
+  shopt -s nullglob
+  for f in "$SPRINTS_DIR"/sprint-*.md; do
+    [ -f "$f" ] || continue
+    SPRINT_NAME_BASE=$(basename "$f" .md)
+    if grep -q "✅ Completado" "$f"; then
+      echo "🚀 Detectado sprint completado: $SPRINT_NAME_BASE. Archivando..."
+      bash "$0" "$SPRINT_NAME_BASE"
+      FOUND_ANY=1
+    fi
+  done
+  shopt -u nullglob
+
+  if [ "$FOUND_ANY" -eq 0 ]; then
+    echo "✅ No hay sprints completados pendientes de archivar"
+  fi
+  exit 0
 fi
 
 SPRINT_NAME="$1"
