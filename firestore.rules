@@ -256,7 +256,7 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         resource.data.solicitanteId == request.auth.uid ||
         resource.data.providerId == request.auth.uid ||
-        hasRole(resource.data.communityId, 'admin') ||
+        hasMinRole(resource.data.communityId, 'miembro') ||
         isGlobalAdmin()
       );
       allow create: if request.auth != null && hasMinRole(request.resource.data.communityId, 'miembro');
