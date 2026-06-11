@@ -2,13 +2,25 @@
 description: Inicia una sesión de desarrollo. Detecta sesiones colgadas, selecciona la tarea activa, declara la Caja de archivos y activa el modo ejecución.
 ---
 
-# Workflow: /session-start
+# session-start
 
 > Ejecutar al inicio de cada sesión, antes de escribir cualquier línea de código.
 
----
+## Objetivo
 
-## FASE 0 — Detección de sesión anterior (Modo Rescate)
+- Iniciar formalmente una sesión de desarrollo identificando la tarea activa.
+- Declarar y configurar la Caja de archivos autorizados.
+- Crear el archivo de lock `.agent-session.lock` y preparar el entorno de ejecución.
+
+## Archivos y rutas a revisar
+
+- `.agent-session.lock`
+- `docs/sprints/`
+- `.agents/tasks/`
+
+## Protocolo
+
+### FASE 0 — Detección de sesión anterior (Modo Rescate)
 
 ```bash
 bash scripts/agent/check-session.sh
@@ -17,9 +29,7 @@ bash scripts/agent/check-session.sh
 - `NO_ACTIVE_SESSION` → ir a Fase 1.
 - **JSON devuelto** → sesión sin cerrar. Leer `task`, `sprint`, `opened`. Avisar: `"⚠️ Sesión anterior sin cerrar: [task] desde [opened]. Preparando cierre para aprobación."` No commitear aún. Reflejar rescate en el plan. Continuar a Fase 1.
 
----
-
-## FASE 1 — Lectura de contexto
+### FASE 1 — Lectura de contexto
 
 1. Leer sprint file más reciente en `docs/sprints/`.
 2. **Comprobar tareas `🟡 En curso`:** si existe alguna, mostrar alerta y esperar confirmación:
@@ -43,9 +53,7 @@ bash scripts/agent/check-session.sh
 
 **Petición nueva sin task file:** informar `"Requiere planificación."` Sugerir `/sprint-planning`. No leer archivos ni preparar planes.
 
----
-
-## FASE 2 — Creación o carga del task file
+### FASE 2 — Creación o carga del task file
 
 1. Comprobar `.agents/tasks/task-XXX.md`.
 2. **Si no existe**, buscar en `_archived/`:
@@ -70,22 +78,16 @@ bash scripts/agent/check-session.sh
 
 > ⚠️ Completar el task file **no autoriza la ejecución**. La única autorización es el APROBADO en Fase 3.5.
 
----
-
-## FASE 3 — Declaración de la Caja
+### FASE 3 — Declaración de la Caja
 
 1. Leer `## Caja de archivos` del task file y mostrar archivos autorizados.
 2. Identificar skill relevante. No activarla aún.
 
----
+### FASE 3.5 — Plan para aprobación (OBLIGATORIA Y BLOQUEANTE)
 
-## FASE 3.5 — Plan para aprobación (OBLIGATORIA Y BLOQUEANTE)
+El agente DEBE generar y mostrar el siguiente bloque completo **antes de realizar cualquier acción operativa**. Este bloque es obligatorio. No hay excepción posible.
 
-El agente DEBE generar y mostrar el siguiente bloque completo **antes de realizar
-cualquier acción operativa**. Este bloque es obligatorio. No hay excepción posible.
-
-El bloque debe aparecer exactamente con esta estructura y el token `⏳ ESPERANDO`
-al final — es la señal que indica que el agente está en pausa activa:
+El bloque debe aparecer exactamente con esta estructura y el token `⏳ ESPERANDO` al final — es la señal que indica que el agente está en pausa activa:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -125,10 +127,9 @@ al final — es la señal que indica que el agente está en pausa activa:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### Regla dura (no negociable)
+#### Regla dura (no negociable)
 
-Hasta recibir `APROBADO` o `APROBADO CON CAMBIOS` en este chat, el agente tiene
-prohibido de forma absoluta:
+Hasta recibir `APROBADO` o `APROBADO CON CAMBIOS` en este chat, el agente tiene prohibido de forma absoluta:
 
 - ❌ Crear `.agent-session.lock`
 - ❌ Crear o cambiar de rama (`git checkout`, `git branch`)
@@ -143,21 +144,18 @@ prohibido de forma absoluta:
 
 ✅ Está permitido leer **exclusivamente** el task file activo (`task-XXX.md`), el sprint file y el research file. Para construir el plan, inferir desde la descripción del task file sin explorar código ni otros task files.
 
-Si el agente detecta que ha ejecutado cualquier acción operativa sin haber
-recibido `APROBADO`, debe:
+Si el agente detecta que ha ejecutado cualquier acción operativa sin haber recibido `APROBADO`, debe:
 1. Detenerse inmediatamente.
 2. Informar al usuario de qué ejecutó.
 3. Proponer el rollback correspondiente.
 4. Presentar el plan de nuevo y esperar aprobación.
 
-### Respuestas válidas del usuario
+#### Respuestas válidas del usuario
 - `APROBADO` → ejecutar el plan tal cual
 - `APROBADO CON CAMBIOS: [descripción]` → ajustar el plan y confirmar los cambios antes de ejecutar
 - `CANCELAR` → cerrar la sesión sin ninguna acción
 
----
-
-## FASE 4 — Apertura del lock
+### FASE 4 — Apertura del lock
 
 **Solo tras aprobación explícita.** Crear rama aprobada. Si está en `main`/`master` sin poder crearla: detenerse y avisar.
 
@@ -167,21 +165,17 @@ El `branch` del lock debe coincidir con la rama de trabajo. Si no: detenerse has
 
 Mostrar: `"🔒 Sesión abierta. Ejecución autorizada para [T-XXX]."`
 
----
-
-## FASE 5 — Ejecución controlada
+### FASE 5 — Ejecución controlada
 
 1. Activar skill relevante.
 2. Ejecutar plan aprobado paso a paso.
 3. Si hay que salir de la Caja o cambiar enfoque: detener, presentar mini-plan (mismo formato Fase 3.5), esperar nueva aprobación.
 
----
-
-## FASE 5b — 🔴 BLOQUEADO (tarea completada)
+### FASE 5b — 🔴 BLOQUEADO (tarea completada)
 
 Al completar todos los criterios de done:
 
-1. Detener ejecución. No leer más archivos ni preparar planes.
+1. Detener execution. No leer más archivos ni preparar planes.
 2. Mostrar: `"✅ Tarea completada. ¿Confirmas commit y cierre?"`
 3. Respuestas válidas: `sí, commitea` / `cierra` → Fase 6. `no, primero…` → escuchar sin actuar.
 4. Petición nueva en el mismo mensaje: capturar en `docs/idea-inbox/YYYY-MM-DD.md`. Responder: `"💡 Capturada. Primero cierro. ¿Confirmas?"` No leer ni preparar nada nuevo.
@@ -189,16 +183,14 @@ Al completar todos los criterios de done:
 
 > ❌ **VIOLACIÓN CRÍTICA**: actuar sobre petición nueva antes de cerrar → detener, informar, proponer rollback.
 
----
+### FASE 6 — Cierre de sesión
 
-## FASE 6 — Cierre de sesión
-
-### C1. Verificación de la Caja
+#### C1. Verificación de la Caja
 `git diff --name-only` → comparar con `authorized_files`. Si hay archivos fuera: informar y esperar instrucción.
 
 Durante el cierre: prohibido leer fuera de la Caja, preparar planes nuevos o analizar trabajo futuro. Si el usuario lanza una petición nueva, confirmar que está capturada en idea-inbox y proceder al cierre sin desviarse.
 
-### C2. Commit atómico
+#### C2. Commit atómico
 Usar siempre el script de cierre:
 ```bash
 bash scripts/agent/close-task.sh T-XXX "tipo(scope): descripción del cambio"
@@ -207,44 +199,44 @@ El script hace `git add -A`, archiva el task file, realiza el commit atómico y 
 
 Prerequisito: edita `docs/sprints/sprint-XX.md` y `task-XXX.md` marcando la tarea como completada **antes** de llamar al script.
 
-### C3. Actualización del sprint file
+#### C3. Actualización del sprint file
 - Completa → `✅ Hecho` | Incompleta → `⏸ Pausada` con nota.
 - Editar **antes** de ejecutar `close-task.sh`.
 
-### C4. Actualización del task file
+#### C4. Actualización del task file
 1. Marcar `- [x] Sesión cerrada correctamente` en `## Estado de aprobación`.
 2. Guardar.
 3. `close-task.sh` se encarga del `git mv` a `_archived/`. No lo hagas manualmente.
 
-### C5. Limpieza del idea-inbox
+#### C5. Limpieza del idea-inbox
 Mover ideas al sprint file solo si pertenecen a la tarea cerrada. Si la tarea se completó en Fase 5b, las ideas permanecen en `idea-inbox/` hasta el próximo `/sprint-planning`.
 
-### C5b. Archivado del research
+#### C5b. Archivado del research
 Solo si **todas** las tareas del sprint quedan `✅ Hecho`:
 ```bash
 bash scripts/agent/close-sprint.sh sprint-XX
 ```
 El script archiva el sprint file y su research asociado en `docs/sprints/_archived/`.
 
-### C6. Borrar el lock
+#### C6. Borrar el lock
 El script `close-task.sh` lo elimina automáticamente. Si por algún motivo persiste:
 ```bash
 rm .agent-session.lock
 ```
 Mostrar: `"✅ Sesión cerrada. Hasta la próxima."`
 
-## Contrato de completitud (ADR-021)
+## Reglas
+
+### Contrato de completitud (ADR-021)
 Antes de cerrar cualquier tarea que toque Firestore, revisar:
 - Nueva colección → regla en firestore.rules + deploy
 - Nuevo modelo → migración de datos existentes
 - Nuevos permisos → community_members sincronizado
 - Escritura múltiple → writeBatch obligatorio
 
-## Contrato de trazabilidad de flujos (flow-bug-traceability)
-Antes de cerrar cualquier tarea que corrija un bug en producción
-o modifique permisos/listeners/modelos de datos:
+### Contrato de trazabilidad de flujos (flow-bug-traceability)
+Antes de cerrar cualquier tarea que corrija un bug en producción o modifique permisos/listeners/modelos de datos:
 - Consultar `docs/critical-flows.md`
 - Añadir el caso de borde detectado al flujo correspondiente
 - Actualizar el estado de cobertura (⬜ / 🟡 / ✅)
 - Incluir `docs/critical-flows.md` en el commit de cierre
-
