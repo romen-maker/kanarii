@@ -1,94 +1,50 @@
 ---
-description: Generate changelog from git history
+description: Generar el registro de cambios (changelog) de un sprint utilizando los scripts del repositorio.
 ---
 
-# Workflow: /changelog
+# changelog
 
-**Ejecutar cuando:** Release, fin de sprint, documentar cambios
+Workflow para la actualización automatizada del historial de cambios del proyecto y la propuesta del bump de versión semver al finalizar un sprint.
 
-## Proceso
+## Objetivo
 
-### 1. Identificar Rango
+- Extraer y clasificar los commits de un sprint basándose en la especificación de *Conventional Commits*.
+- Actualizar el archivo `CHANGELOG.md` con los cambios del sprint de forma estructurada.
+- Sugerir y validar el bump de versión semver adecuado para el release.
 
-```
-"¿Desde cuándo generar changelog?"
+## Archivos y rutas a revisar
 
-- Desde último tag → git log v1.0.0..HEAD
-- Desde fecha → git log --since="2025-01-01"
-- Desde commit → git log abc123..HEAD
-```
+- `CHANGELOG.md`
+- `scripts/agent/update-changelog.sh`
+- `scripts/agent/close-sprint.sh`
 
-### 2. Extraer Commits
+## Protocolo
+
+### 1. Identificar el Sprint
+- Determina el identificador del sprint activo que se va a cerrar (por ejemplo, `sprint-15`).
+
+### 2. Generar el Changelog localmente
+- Ejecuta el script de generación del changelog pasando el nombre del sprint como argumento. Esto modificará `CHANGELOG.md` pero no realizará ningún commit:
 
 ```bash
-git log --oneline --no-merges [rango]
+bash scripts/agent/update-changelog.sh [sprint-id]
 ```
 
-### 3. Clasificar por Tipo
+### 3. Revisar cambios y versión propuesta
+- Abre `CHANGELOG.md` y verifica la nueva sección insertada en la parte superior.
+- Revisa la versión sugerida por el script (bump de tipo Major si hay *breaking changes*, Minor para *features*, o Patch para *fixes*).
+- Si necesitas ajustar o corregir la descripción de algún commit para que sea más amigable en el changelog final, edítala manualmente en `CHANGELOG.md` en este momento.
 
-Basado en Conventional Commits:
-- `feat:` → ✨ Features
-- `fix:` → 🐛 Bug Fixes
-- `docs:` → 📚 Documentation
-- `refactor:` → ♻️ Refactoring
-- `test:` → 🧪 Tests
-- `chore:` → 🔧 Maintenance
+### 4. Archivar el Sprint
+- Una vez validado el changelog, procede a archivar el sprint para persistir los cambios del changelog en el repositorio:
 
-### 4. Generar CHANGELOG
-
-```markdown
-# Changelog
-
-## [v1.1.0] - 2025-12-16
-
-### ✨ Features
-- Añadido ContentGenerator con productos dinámicos (#123)
-- Nuevo endpoint /publish/index (#125)
-
-### 🐛 Bug Fixes
-- Corregido template_type forzado a guide (#127)
-
-### 📚 Documentation
-- Actualizado roadmap con Sprint 5A/5B (#128)
-
-### ♻️ Refactoring
-- Reorganizado structure de workflows
+```bash
+bash scripts/agent/close-sprint.sh [sprint-id]
 ```
+- Este script validará que todas las tareas estén completadas en el sprint file, moverá el sprint file a `docs/sprints/_archived/`, agregará los cambios de `CHANGELOG.md` al stage de Git y creará el commit atómico de cierre de sprint.
 
-### 5. Sugerir Versión
+## Reglas
 
-```
-Basándome en los cambios:
-- 3 features nuevos
-- 1 fix
-- 0 breaking changes
-
-Sugiero: v1.1.0 (minor bump)
-
-¿Aceptas o prefieres otra versión?
-```
-
-## Output
-
-- `CHANGELOG.md` actualizado
-- Sugerencia de versión semver
-
-## Ejemplo
-
-```
-User: /changelog
-
-Agent:
-"Analizando commits desde v1.0.0...
-
-Encontrados:
-- 5 feat commits
-- 2 fix commits
-- 3 docs commits
-
-Generando changelog...
-
-Versión sugerida: v1.1.0
-
-¿Lo añado a CHANGELOG.md?"
-```
+- **Orden estricto**: Siempre ejecuta `update-changelog.sh` antes de `close-sprint.sh` para garantizar que los cambios en el changelog entren en el commit de archivado.
+- **Sin commits manuales**: No ejecutes `git commit` ni `git add` sobre `CHANGELOG.md` de forma manual. Deja que `close-sprint.sh` gestione el commit atómico de archivado.
+- **Validación de tareas**: No intentes cerrar el sprint si existen tareas con estado `⬜ Pendiente` o `🟡 En curso`. Todo debe estar resuelto o resuelto mediante *spillover*.
