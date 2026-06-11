@@ -8,27 +8,30 @@ service cloud.firestore {
     
     // Devuelve true si el usuario tiene el rol exacto pedido en la comunidad
     function hasRole(communityId, role) {
-      let path = /databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid);
-      return request.auth != null && exists(path) && get(path).data.rol == role;
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid)) && 
+             get(/databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid)).data.rol == role;
     }
 
     // Devuelve true si el usuario tiene al menos ese nivel de rol local
     // Orden: visitante < miembro < admin
     function hasMinRole(communityId, minRole) {
-      let path = /databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid);
-      let existsMember = exists(path);
-      let rol = existsMember ? get(path).data.rol : 'ninguno';
-      return request.auth != null && existsMember && (
-        minRole == 'visitante' ||
-        (minRole == 'miembro' && (rol == 'miembro' || rol == 'admin')) ||
-        (minRole == 'admin' && rol == 'admin')
-      );
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid)) && (
+               minRole == 'visitante' ||
+               (minRole == 'miembro' && (
+                 get(/databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid)).data.rol == 'miembro' || 
+                 get(/databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid)).data.rol == 'admin'
+               )) ||
+               (minRole == 'admin' && get(/databases/$(database)/documents/community_members/$(communityId + '_' + request.auth.uid)).data.rol == 'admin')
+             );
     }
 
     // Devuelve true si el usuario es el administrador global de la plataforma
     function isGlobalAdmin() {
-      let path = /databases/$(database)/documents/users/$(request.auth.uid);
-      return request.auth != null && exists(path) && get(path).data.role == 'admin';
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Devuelve true si el usuario es el autor del recurso que se está actualizando/borrando
@@ -39,13 +42,11 @@ service cloud.firestore {
     // Devuelve true si la invitación existe, está activa, no ha expirado y no ha superado sus usos máximos
     function isValidInvitation(invitationCode, communityId) {
       let path = /databases/$(database)/documents/invitaciones/$(invitationCode);
-      let existsInv = exists(path);
-      let inv = existsInv ? get(path) : null;
-      return existsInv 
-        && inv.data.activo == true 
-        && inv.data.communityId == communityId 
-        && (inv.data.expiraEn == null || inv.data.expiraEn > request.time)
-        && (inv.data.usosMaximos == null || inv.data.usosActuales < inv.data.usosMaximos);
+      return exists(path)
+        && get(path).data.activo == true
+        && get(path).data.communityId == communityId
+        && (get(path).data.expiraEn == null || get(path).data.expiraEn > request.time)
+        && (get(path).data.usosMaximos == null || get(path).data.usosActuales < get(path).data.usosMaximos);
     }
 
     // Devuelve true si el usuario es administrador de la comunidad en los datos almacenados
@@ -59,21 +60,21 @@ service cloud.firestore {
     // ─── USUARIOS GLOBALES ─────────────────────────────────────────────────
     match /users/{uid} {
       allow read:  if request.auth != null;
-      allow create: if request.auth.uid == uid && (
+      allow create: if request.auth != null && request.auth.uid == uid && (
         !('role' in request.resource.data) || 
         request.resource.data.role == 'user' || 
         request.resource.data.role == 'member'
       ) || isGlobalAdmin();
-      allow update: if (request.auth.uid == uid && (
+      allow update: if (request.auth != null && request.auth.uid == uid && (
         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
       )) || isGlobalAdmin();
-      allow delete: if request.auth.uid == uid || isGlobalAdmin();
+      allow delete: if (request.auth != null && request.auth.uid == uid) || isGlobalAdmin();
     }
 
     // ─── PERFILES DE USUARIO ───────────────────────────────────────────────
     match /profiles/{uid} {
       allow read:  if request.auth != null;
-      allow write: if request.auth.uid == uid || isGlobalAdmin();
+      allow write: if (request.auth != null && request.auth.uid == uid) || isGlobalAdmin();
     }
 
     // ─── COMUNIDADES ───────────────────────────────────────────────────────
@@ -90,7 +91,8 @@ service cloud.firestore {
         allow create: if request.auth != null && request.resource.data.solicitante_uid == request.auth.uid;
         allow read, update, delete: if request.auth != null && (
           resource.data.solicitante_uid == request.auth.uid ||
-          hasRole(communityId, 'admin')
+          hasRole(communityId, 'admin') ||
+          isGlobalAdmin()
         );
       }
     }
@@ -173,7 +175,7 @@ service cloud.firestore {
       // Crear: El propio usuario al salir
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       // Actualizar/Borrar: Solo admin global
-      allow update, delete: if isGlobalAdmin();
+      allow update, delete: if request.auth != null && isGlobalAdmin();
     }
 
     // ─── PROPUESTAS (Gobernanza) ──────────────────────────────────────────
@@ -293,6 +295,22 @@ service cloud.firestore {
     match /pasaportes/{uid} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && (request.auth.uid == uid || isGlobalAdmin());
+    }
+
+    // ─── CONEXIONES DE MIEMBROS ─────────────────────────────────────────────
+    match /connections/{connectionId} {
+      allow read: if request.auth != null && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if request.auth != null && (
+        request.resource.data.senderId == request.auth.uid ||
+        request.resource.data.receiverId == request.auth.uid
+      );
+      allow update, delete: if request.auth != null && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
     }
 
     // ─── SOLICITUDES GLOBALES ──────────────────────────────────────────────

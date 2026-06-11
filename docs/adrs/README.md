@@ -26,6 +26,7 @@ Este directorio contiene el registro de las decisiones de diseño arquitectónic
 | [ADR-018](ADR-018-persistencia-narrativas-manual.md) | Persistencia de narrativas del Manual Galáctico (Capa 2) | Proposed | 2026-06-08 |
 | [ADR-019](ADR-019-generacion-pdf-print-html.md) | Generación de PDF mediante print-HTML nativo | Accepted | 2026-06-08 |
 | [ADR-020](ADR-020-unificacion-superficies-perfil-manual.md) | Unificación de Superficies de Perfil y Manual de Usuario Humano | Proposed | 2026-06-08 |
+| [ADR-021](ADR-021-contrato-completitud-tareas.md) | Contrato de Completitud de Tareas | Active | 2026-06-11 |
 
 
 

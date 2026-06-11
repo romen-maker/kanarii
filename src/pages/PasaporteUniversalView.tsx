@@ -1,39 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertTriangle, Sparkles } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { getUserFicha, getMemberInfo, getTriadaFromFicha, Ficha, getAppUserDoc, getComunidad } from '../lib/appService';
+import { useToast } from '../hooks/useToast';
+import { getUserFicha, getTriadaFromFicha, Ficha, getAppUserDoc } from '../lib/appService';
 import PasaporteVisual from '../components/perfil/PasaporteVisual';
 import { calcularKin } from '../lib/kinMaya';
-import { useMemberConnection } from '../hooks/useMemberConnection';
-import { useToast } from '../hooks/useToast';
 
-export function PasaporteComunitarioView() {
-  const { slug, userId } = useParams<{ slug: string; userId: string }>();
+export function PasaporteUniversalView() {
+  const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
+  const { appUser: currentUser } = useAuth();
   const { setCommunityId } = useComunidad();
   const toast = useToast();
 
   const [ficha, setFicha] = useState<Ficha | null>(null);
-  const [memberInfo, setMemberInfo] = useState<any | null>(null);
-  const [memberUserDoc, setMemberUserDoc] = useState<any | null>(null);
-  const [comunidadInfo, setComunidadInfo] = useState<any | null>(null);
+  const [userDoc, setUserDoc] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { 
-    connection, 
-    connect, 
-    accept, 
-    disconnect, 
-    isSender, 
-    isSelf 
-  } = useMemberConnection(userId, slug);
-
   useEffect(() => {
     async function loadData() {
-      if (!userId || !slug) {
-        setError('Parámetros de URL inválidos.');
+      if (!uid) {
+        setError('ID de usuario no proporcionado.');
         setLoading(false);
         return;
       }
@@ -42,49 +32,111 @@ export function PasaporteComunitarioView() {
       setError(null);
 
       try {
-        // Ejecutar las llamadas en paralelo para optimizar la velocidad
-        const [fichaData, memberData, memberUserData, communityData] = await Promise.all([
-          getUserFicha(userId),
-          getMemberInfo(userId, slug),
-          getAppUserDoc(userId),
-          getComunidad(slug)
+        const [fichaData, userData] = await Promise.all([
+          getUserFicha(uid),
+          getAppUserDoc(uid)
         ]);
 
         setFicha(fichaData);
-        setMemberInfo(memberData);
-        setMemberUserDoc(memberUserData);
-        setComunidadInfo(communityData);
+        setUserDoc(userData);
 
-        if (!fichaData && !memberData) {
-          setError('No se encontró información del miembro o su ficha en esta comunidad.');
+        if (!fichaData && !userData) {
+          setError('El pasaporte solicitado no está disponible.');
         }
       } catch (err) {
-        console.error('Error al cargar datos del pasaporte:', err);
-        setError('Ocurrió un error al cargar la información del miembro.');
+        console.error('Error al cargar pasaporte universal:', err);
+        setError('Ocurrió un error al consultar la información.');
       } finally {
         setLoading(false);
       }
     }
 
     loadData();
-  }, [userId, slug]);
+  }, [uid]);
+
+  // Construir mappedUser
+  const triada = ficha ? getTriadaFromFicha(ficha) : { ofrendas: [], saberes: [], necesidades: [] };
+  
+  let rolesArray: string[] = [];
+  if (ficha?.datosOnboarding?.rol_comunidad) {
+    rolesArray.push(ficha.datosOnboarding.rol_comunidad);
+  }
+
+  const birthDate = ficha?.datosPersona?.fechaNacimiento || ficha?.datosOnboarding?.fechaNacimiento || userDoc?.fechaNacimiento;
+  const kinMaya = birthDate ? calcularKin(birthDate) : undefined;
+
+  const mappedUser = {
+    name: userDoc?.nombre || userDoc?.displayName || ficha?.datosOnboarding?.nombre || 'Miembro',
+    avatarUrl: userDoc?.photoURL || ficha?.datosOnboarding?.plataformaOrigen || undefined,
+    roles: rolesArray,
+    offerings: triada.ofrendas || [],
+    knowledges: triada.saberes || [],
+    needs: triada.necesidades || [],
+    kinMaya,
+    arquetipo: ficha?.perfilVisual?.arquetipo,
+    descripcionArquetipo: ficha?.perfilVisual?.descripcion_arquetipo,
+    communityIds: userDoc?.communityIds || [],
+  };
+
+  // Dinámica de Metatags OG
+  useEffect(() => {
+    if (!mappedUser.name || loading || error) return;
+
+    const setMetaTag = (property: string, content: string) => {
+      let element = document.querySelector(`meta[property="${property}"]`);
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute('property', property);
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', content);
+    };
+
+    const prevTitle = document.title;
+    document.title = `${mappedUser.name} | Kanarii`;
+
+    setMetaTag('og:title', `${mappedUser.name} en Kanarii`);
+    setMetaTag('og:description', `Perfil de ${mappedUser.name}, miembro de comunidades en Kanarii.`);
+    setMetaTag('og:url', window.location.href);
+    setMetaTag('og:type', 'profile');
+    if (mappedUser.avatarUrl) {
+      setMetaTag('og:image', mappedUser.avatarUrl);
+    }
+
+    return () => {
+      document.title = prevTitle;
+      ['og:title', 'og:description', 'og:url', 'og:type', 'og:image'].forEach(prop => {
+        const element = document.querySelector(`meta[property="${prop}"]`);
+        if (element) {
+          element.remove();
+        }
+      });
+    };
+  }, [mappedUser.name, mappedUser.avatarUrl, loading, error]);
+
+  const isSelf = currentUser?.uid === uid;
+  const connectionStatus = isSelf ? 'self' : 'none';
 
   const handleConnect = () => {
-    if (slug) {
-      setCommunityId(slug);
+    if (!currentUser) {
+      toast.info('Inicia sesión para conectar con este miembro.');
+      navigate('/');
+      return;
+    }
+
+    // Buscar una comunidad común
+    const viewerCommunityIds = currentUser.communityIds || [];
+    const memberCommunityIds = mappedUser.communityIds || [];
+    const commonCommunityId = viewerCommunityIds.find((id: string) => memberCommunityIds.includes(id));
+
+    if (commonCommunityId) {
+      setCommunityId(commonCommunityId);
       navigate('/tablon', {
         state: { openNewPostWithMention: mappedUser.name }
       });
-    }
-  };
-
-  const handleAccept = async () => {
-    try {
-      await accept();
-      toast.success('¡Conexión aceptada! Ahora están conectados.');
-    } catch (err) {
-      console.error(err);
-      toast.error('Error al aceptar la conexión');
+    } else {
+      toast.info(`Para conectar con ${mappedUser.name}, debes compartir alguna comunidad.`);
+      navigate('/comunidades');
     }
   };
 
@@ -92,97 +144,54 @@ export function PasaporteComunitarioView() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-[#8A817C] p-4">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#A5A58D]" />
-        <p className="font-medium font-serif">Cargando pasaporte comunitario...</p>
+        <p className="font-medium font-serif">Cargando pasaporte galáctico...</p>
       </div>
     );
   }
 
-  if (error || (!ficha && !memberInfo)) {
+  if (error || (!ficha && !userDoc)) {
     return (
       <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6 text-stone-800">
         <div className="max-w-md w-full text-center space-y-6 bg-white border border-[#D2B48C]/15 rounded-[2.5rem] p-8 shadow-sm">
           <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto text-rose-500 border border-rose-100 shadow-inner">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-serif font-bold text-[#3E2723]">Pasaporte no disponible</h1>
+          <h1 className="text-2xl font-serif font-bold text-[#3E2723]">Este pasaporte no está disponible</h1>
           <p className="text-stone-600 text-sm">
-            {error || 'El pasaporte solicitado no existe o no tienes permisos para visualizarlo en este momento.'}
+            {error || 'El pasaporte solicitado no existe o no se puede cargar en este momento.'}
           </p>
           <div className="pt-4">
-            <Link
-              to={slug ? `/c/${slug}` : '/'}
+            <button
+              onClick={() => navigate('/')}
               className="inline-flex items-center gap-2 bg-[#5A5A40] hover:bg-[#4A4A35] text-white py-3.5 px-8 rounded-2xl font-bold text-sm transition-all shadow-md active:scale-95"
             >
               <ArrowLeft className="w-4 h-4" />
-              {slug ? 'Volver a la comunidad' : 'Ir al inicio'}
-            </Link>
+              Ir al inicio
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Mapear los datos de Firestore al formato que requiere el componente PasaporteVisual
-  const triada = getTriadaFromFicha(ficha);
-  
-  // Extraer roles de la información del miembro
-  let rolesArray: string[] = [];
-  if (memberInfo?.rol_comunidad) {
-    rolesArray.push(memberInfo.rol_comunidad);
-  } else if (memberInfo?.rolComunitario) {
-    rolesArray.push(memberInfo.rolComunitario);
-  } else if (ficha?.datosOnboarding?.rol_comunidad) {
-    rolesArray.push(ficha.datosOnboarding.rol_comunidad);
-  }
-
-  const birthDate = memberInfo?.fechaNacimiento || memberInfo?.datosPersona?.fechaNacimiento || ficha?.datosPersona?.fechaNacimiento || ficha?.datosOnboarding?.fechaNacimiento;
-  const kinMaya = birthDate ? calcularKin(birthDate) : undefined;
-
-  const mappedUser = {
-    name: memberInfo?.nombre || memberInfo?.displayName || ficha?.datosOnboarding?.nombre || 'Miembro',
-    avatarUrl: memberInfo?.photoURL || ficha?.datosOnboarding?.plataformaOrigen || undefined, // fallback por si no tiene avatarUrl
-    roles: rolesArray,
-    offerings: triada.ofrendas || [],
-    knowledges: triada.saberes || [],
-    needs: triada.necesidades || [],
-    kinMaya,
-    arquetipo: ficha?.perfilVisual?.arquetipo || memberInfo?.arquetipo_s3,
-    descripcionArquetipo: ficha?.perfilVisual?.descripcion_arquetipo,
-    communityIds: memberUserDoc?.communityIds || [],
-  };
-
-  let connectionStatus: 'none' | 'pending' | 'connected' | 'self' = 'none';
-  if (isSelf) {
-    connectionStatus = 'self';
-  } else if (connection) {
-    if (connection.status === 'connected') {
-      connectionStatus = 'connected';
-    } else if (connection.status === 'pending') {
-      connectionStatus = 'pending';
-    }
-  }
-
-  // TODO T-064: ruta /p/:uid — pasaporte universal sin contexto de comunidad. Ver docs/adrs/ADR-020 y sprint-15-research.md
-
-  const shareUrl = `${window.location.origin}/p/${userId}`;
-  const shareText = `Conoce a ${mappedUser.name}, miembro de ${comunidadInfo?.nombre || slug} en Kanarii: ${shareUrl}`;
-
+  const shareUrl = `${window.location.origin}/p/${uid}`;
+  const shareText = `Conoce a ${mappedUser.name} en Kanarii: ${shareUrl}`;
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Conoce a ${mappedUser.name}, miembro de ${comunidadInfo?.nombre || slug} en Kanarii`)}`;
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Conoce a ${mappedUser.name} en Kanarii`)}`;
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] py-12 px-4 md:px-8 flex flex-col items-center justify-center">
       <div className="w-full max-w-xl mb-6 flex justify-between items-center px-2">
-        <Link
-          to={`/c/${slug}`}
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#6B705C] hover:text-[#5A5A40] transition-colors"
         >
           <ArrowLeft size={14} />
-          Volver a la comunidad
-        </Link>
+          Atrás
+        </button>
         <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#A5A58D]">
           <Sparkles size={12} />
-          Vista Pública
+          Pasaporte Universal
         </div>
       </div>
 
@@ -190,9 +199,7 @@ export function PasaporteComunitarioView() {
         user={mappedUser} 
         privacidad={ficha?.privacidad}
         onConnect={handleConnect} 
-        onAccept={handleAccept}
         connectionStatus={connectionStatus}
-        isSender={isSender}
       />
 
       {/* Compartir Pasaporte Section */}

@@ -1,0 +1,15 @@
+{
+  "task": "T-064",
+  "sprint": "15",
+  "branch": "feat/T-064-pasaporte-universal",
+  "opened": "2026-06-10T12:25:00Z",
+  "status": "open",
+  "approved_plan": true,
+  "authorized_files": [
+    "src/App.tsx",
+    "src/pages/PasaporteUniversalView.tsx",
+    "src/pages/PasaporteComunitarioView.tsx",
+    ".agents/tasks/task-064-pasaporte-universal.md",
+    "docs/sprints/sprint-15.md"
+  ]
+}

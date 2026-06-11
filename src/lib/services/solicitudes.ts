@@ -212,5 +212,8 @@ export function listenSolicitudes(
   return onSnapshot(q, (snap) => {
     const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SolicitudAcceso));
     callback(list);
+  }, (err) => {
+    console.error("Error en listenSolicitudes:", err);
+    callback([]);
   });
 }

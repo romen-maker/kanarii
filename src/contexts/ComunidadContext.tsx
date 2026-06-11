@@ -63,24 +63,31 @@ export const ComunidadProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     safeStorageSet('session', 'kanarii_current_community_id', id);
   };
 
-  // Cargar lista de comunidades en tiempo real e inicializar seed
+  // Inicializar seed una sola vez cuando esté autenticado si no existe la comunidad
   useEffect(() => {
+    if (status !== 'authenticated') return;
     const init = async () => {
       try {
-        await seedArteara(); // Asegurar que existe al menos Arteara
+        const exist = await getComunidad('arteara');
+        if (!exist) {
+          await seedArteara(); // Asegurar que existe al menos Arteara
+        }
       } catch (e) {
         console.error("Error seeding default community:", e);
       }
     };
     init();
+  }, [status]);
 
-    // Escuchar comunidades en tiempo real
+  // Escuchar comunidades en tiempo real cuando esté autenticado
+  useEffect(() => {
+    if (status !== 'authenticated') return;
     const unsubscribe = listenComunidades((list) => {
       setComunidades(list);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [status]);
 
   // Sincronizar con el perfil del usuario (multi-membership)
   useEffect(() => {

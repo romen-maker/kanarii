@@ -86,11 +86,11 @@ export async function getAppUser(
     let hasFicha = userData.hasFicha;
     if (hasFicha === undefined) {
       // Fallback de una sola vez para usuarios existentes sin el flag
-      const [fichasSnapshot, profilesSnap] = await Promise.all([
-        getDocs(query(collection(db, 'fichas'), where('userId', '==', uid))),
+      const [fichaSnap, profilesSnap] = await Promise.all([
+        getDoc(doc(db, 'fichas', uid)),
         getDoc(doc(db, 'profiles', uid))
       ]);
-      hasFicha = !fichasSnapshot.empty || profilesSnap.exists();
+      hasFicha = fichaSnap.exists() || profilesSnap.exists();
       userData.hasFicha = hasFicha;
       needsUpdate = true;
     }
