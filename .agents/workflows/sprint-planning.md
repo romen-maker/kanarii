@@ -182,6 +182,37 @@ Reglas de selección de tareas:
 - Tamaños: **S** = < 1h, **M** = 1-3h, **L** = 3h+.
 - **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c — ni en `docs/IMPLEMENTED.md` ni en inventory check).
 
+### 4b. Actualización del MVP Tracker
+
+> Este paso se ejecuta siempre, justo después de generar el sprint file.
+> Su objetivo: mantener el progreso hacia MVP sincronizado con el estado real del producto.
+
+Ejecutar:
+```bash
+bash scripts/agent/update-mvp-tracker.sh
+```
+
+El script recalcula el **% global** leyendo los valores de `% cap.` de la tabla en `docs/MVP-TRACKER.md` y actualiza la fila `TOTAL` y el historial automáticamente.
+
+**A continuación, revisar manualmente si alguna capacidad requiere actualizar su `% cap.`:**
+
+- Leer `docs/IMPLEMENTED.md` y el sprint recién cerrado.
+- Para cada capacidad (C1–C6), evaluar si el trabajo completado desde el último planning mueve el % de esa capacidad.
+- Aplicar la escala: `0 / 25 / 50 / 75 / 100`.
+- Actualizar los valores en la tabla de `docs/MVP-TRACKER.md` si procede.
+- Ejecutar de nuevo `update-mvp-tracker.sh` para recalcular el total con los valores actualizados.
+- Añadir una fila en la tabla `## Historial de actualizaciones` con fecha, sprint y % global resultante.
+
+**Regla de escalado:**
+
+| % capacidad | Significado |
+|---|---|
+| 0 | Sin implementación |
+| 25 | Base iniciada, flujo principal no funcional |
+| 50 | Flujo principal funcional, casos edge pendientes |
+| 75 | Funcional y probado, falta pulido o un criterio menor |
+| 100 | Todos los criterios "Done para MVP" cumplidos y validados |
+
 ### 5. Generación del prompt para Perplexity
 
 Antes de redactar el prompt, usar como fuente primaria el digest generado por `inventory-check.sh` si la señal de complejidad fue ≥2 (el script lo genera automáticamente). Si la señal fue baja, leer directamente los archivos más relevantes del código relacionado con la tarea principal (máx. 3 archivos).
@@ -253,5 +284,17 @@ Justo antes del mensaje de pausa del paso 6, mostrar al usuario:
 2. Decisiones tomadas sobre tareas incompletas del sprint anterior (si las hubo).
 3. Resultado de la verificación de código del paso 2c (tabla con evidencias).
 4. Las tareas del sprint seleccionadas con su tamaño.
-5. El prompt para Perplexity listo para copiar.
-6. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.
+5. **Progreso MVP actualizado** — mostrar en este formato exacto:
+   ```
+   📊 Progreso MVP: XX%
+      C1 Acceso y membresía        ██████████ 100%
+      C2 Perfiles, fichas, tríada  ██████████ 100%
+      C3 Gobernanza S3             ████████░░  80%
+      C4 Marketplace               ███████░░░  70%
+      C5 Onboarding                ██████████ 100%
+      C6 Robustez base             ████████░░  75%
+   ```
+   Donde cada barra tiene 10 bloques (█ lleno, ░ vacío) proporcionales al % de la capacidad.
+   Si alguna capacidad bajó desde el planning anterior, añadir ⚠️ junto a esa línea.
+6. El prompt para Perplexity listo para copiar.
+7. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.
