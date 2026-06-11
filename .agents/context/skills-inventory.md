@@ -1,7 +1,7 @@
 # Inventario de Skills — Kanarii
 
 > Fuente de verdad del estado de cada skill. Actualizar al activar, archivar o crear skills.
-> Última actualización: 22 May 2026
+> Última actualización: 11 Jun 2026
 
 ---
 
@@ -30,6 +30,7 @@
 | `structure-guardian` | Auditoría manual de arquitectura completa | Revisiones periódicas |
 | `tech-scout` | Investigación de tecnologías externas | Antes de añadir dependencias |
 | `test-e2e-kanarii` | Tests end-to end | QA de features críticas |
+| `workflow-designer` | Crea, revisa y refactoriza workflows de Antigravity siguiendo el estándar | Al crear o revisar workflows en `.agents/workflows/` |
 
 ---
 
