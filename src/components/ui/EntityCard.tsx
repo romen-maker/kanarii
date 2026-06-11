@@ -70,12 +70,12 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
   const getVariantClasses = (variant: EntityVariant) => {
     const classes = {
-      success: 'bg-[#C1E1C1] text-[#2C4C3B]',
-      warning: 'bg-[#F9E2AF] text-[#81651D]',
-      info: 'bg-[#A8DADC] text-[#1D3557]',
-      primary: 'bg-[#A8DADC] text-[#1D3557]',
-      danger: 'bg-[#F9C0C0] text-[#7C1D1D]',
-      neutral: 'bg-[#EAE2D6] text-stone-700',
+      success: 'bg-status-success-bg text-status-success-text',
+      warning: 'bg-status-warning-bg text-status-warning-text',
+      info: 'bg-status-info-bg text-status-info-text',
+      primary: 'bg-status-info-bg text-status-info-text',
+      danger: 'bg-status-danger-bg text-status-danger-text',
+      neutral: 'bg-status-neutral-bg text-stone-700',
     };
     return classes[variant] || classes.neutral;
   };
@@ -84,15 +84,15 @@ export const EntityCard: React.FC<EntityCardProps> = ({
     <div 
       onClick={onClick}
       className={`
-        group relative bg-white border border-[#EAE2D6] rounded-3xl p-5 shadow-sm
-        hover:border-[#D4C3A3] hover:shadow-md transition-all duration-200 cursor-pointer
+        group relative bg-white border border-border rounded-3xl p-5 shadow-sm
+        hover:border-border-hover hover:shadow-md transition-all duration-200 cursor-pointer
         ${className}
       `}
     >
       {/* Absolute Completion Icon */}
       {onStateChange?.isCompleted && (
         <div className="absolute top-0 right-0 p-4">
-          <CheckCircle2 className="w-8 h-8 text-[#C1E1C1]" />
+          <CheckCircle2 className="w-8 h-8 text-status-success-bg" />
         </div>
       )}
 
@@ -124,10 +124,10 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         {metadata.map((item, idx) => (
           <div 
             key={idx} 
-            className={`flex items-center gap-1 bg-[#FDFBF7] px-2 py-1 rounded text-xs font-medium text-stone-500 ${item.className || ''}`} 
+            className={`flex items-center gap-1 bg-bg-page px-2 py-1 rounded text-xs font-medium text-stone-500 ${item.className || ''}`} 
             title={item.tooltip}
           >
-            <item.icon className={`w-3.5 h-3.5 ${item.className ? '' : 'text-[#A5A58D]'}`} />
+            <item.icon className={`w-3.5 h-3.5 ${item.className ? '' : 'text-forest-mid'}`} />
             <span>{item.text}</span>
           </div>
         ))}
@@ -135,7 +135,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
       {/* Quick Actions Bar - Unified TareaCard Layout */}
       {(quickActions.length > 0 || onStateChange || onArchive || onUnarchive) && (
-        <div className="mt-5 pt-4 border-t border-[#FDFBF7] flex justify-between items-center">
+        <div className="mt-5 pt-4 border-t border-border flex justify-between items-center">
           
           {/* Izquierda: Flujo de Trabajo (Estado + showLabel actions) */}
           <div className="flex items-center gap-1">
@@ -162,7 +162,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                 {onStateChange?.next && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); onStateChange.next!(); }}
-                    className={`flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3 ${!onStateChange.prev ? '-ml-3' : ''}`}
+                    className={`flex items-center gap-1.5 text-xs font-medium text-forest-deep hover:text-text-ink transition-colors p-3 ${!onStateChange.prev ? '-ml-3' : ''}`}
                   >
                     {onStateChange.nextLabel || 'Avanzar'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -179,7 +179,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                   <button
                     key={idx}
                     onClick={(e) => { e.stopPropagation(); action.onClick(); }}
-                    className={`flex items-center gap-1.5 text-xs font-medium text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3 ${isFirst ? '-ml-3' : ''}`}
+                    className={`flex items-center gap-1.5 text-xs font-medium text-forest-deep hover:text-text-ink transition-colors p-3 ${isFirst ? '-ml-3' : ''}`}
                     title={action.label}
                   >
                     <action.icon className="w-3.5 h-3.5" />
@@ -194,7 +194,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
             {onArchive && (
               <button
                 onClick={(e) => { e.stopPropagation(); onArchive(); }}
-                className={`flex items-center justify-center text-[#6B705C] hover:text-[#4A4E4D] transition-colors p-3 ${quickActions.filter(a => !a.showLabel).length === 0 ? '-mr-3' : ''}`}
+                className={`flex items-center justify-center text-forest-deep hover:text-text-ink transition-colors p-3 ${quickActions.filter(a => !a.showLabel).length === 0 ? '-mr-3' : ''}`}
                 title="Archivar"
               >
                 <Archive className="w-4 h-4" />
@@ -211,8 +211,8 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                     onClick={(e) => { e.stopPropagation(); action.onClick(); }}
                     className={`flex items-center justify-center transition-colors p-3
                       ${action.variant === 'danger' 
-                        ? 'text-[#6B705C] hover:text-red-600' 
-                        : 'text-[#6B705C] hover:text-[#4A4E4D]'}
+                        ? 'text-forest-deep hover:text-red-600' 
+                        : 'text-forest-deep hover:text-text-ink'}
                       ${isLast ? '-mr-3' : ''}
                     `}
                     title={action.label}

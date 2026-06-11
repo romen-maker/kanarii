@@ -4,6 +4,31 @@
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Besley", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  /* Fondos unificados */
+  --color-bg-page: #FDFBF7;
+  --color-bg-surface: #F9F7F1;
+  --color-text-ink: #4A4E4D;
+
+  /* Bordes */
+  --color-border: #EAE2D6;
+  --color-border-hover: #D4C3A3;
+
+  /* Colores de Marca (Brand) */
+  --color-brand-terracota: #CB997E;
+  --color-forest-deep: #6B705C;
+  --color-forest-mid: #A5A58D;
+
+  /* Estados de EntityCard */
+  --color-status-success-bg: #C1E1C1;
+  --color-status-success-text: #2C4C3B;
+  --color-status-warning-bg: #F9E2AF;
+  --color-status-warning-text: #81651D;
+  --color-status-info-bg: #A8DADC;
+  --color-status-info-text: #1D3557;
+  --color-status-danger-bg: #F9C0C0;
+  --color-status-danger-text: #7C1D1D;
+  --color-status-neutral-bg: #EAE2D6;
 }
 
 .manual-prose {

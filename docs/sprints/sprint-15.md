@@ -11,6 +11,7 @@
 | T-064 | Pasaporte universal en /p/:uid — landing pública del miembro sin contexto de comunidad | M | ✅ Completada | [task-064-pasaporte-universal.md](file:///.agents/tasks/task-064-pasaporte-universal.md) |
 | T-065 | Estandarizar campo `reason` a `purpose` en colección `/propuestas` | S | ✅ Completada | [task-065.md](file:///.agents/tasks/task-065.md) |
 | T-066 | UI: Badge visual "acuerdo cálido" diferenciado en PropuestaDetail | S | ✅ Completada | [task-066.md](file:///.agents/tasks/task-066.md) |
+| T-067 | Crear sistema de design tokens en @theme (DRY de colores) | M | ✅ Completada | [task-067.md](file:///.agents/tasks/task-067.md) |
 
 ## Notas de planning
 - Sprint 14 se cerró limpio sin spillover.
