@@ -239,3 +239,12 @@ Antes de cerrar cualquier tarea que toque Firestore, revisar:
 - Nuevo modelo → migración de datos existentes
 - Nuevos permisos → community_members sincronizado
 - Escritura múltiple → writeBatch obligatorio
+
+## Contrato de trazabilidad de flujos (flow-bug-traceability)
+Antes de cerrar cualquier tarea que corrija un bug en producción
+o modifique permisos/listeners/modelos de datos:
+- Consultar `docs/critical-flows.md`
+- Añadir el caso de borde detectado al flujo correspondiente
+- Actualizar el estado de cobertura (⬜ / 🟡 / ✅)
+- Incluir `docs/critical-flows.md` en el commit de cierre
+
