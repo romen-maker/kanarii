@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -6,7 +6,7 @@ import { useServicios } from '../hooks/useServicios';
 import { useAcuerdos } from '../hooks/useAcuerdos';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useServicioActions } from '../hooks/useServicioActions';
-import { Servicio, Acuerdo, arrayUnion } from '../lib/appService';
+import { Servicio, Acuerdo, arrayUnion, marcarAcuerdosVistosDesdeCache } from '../lib/appService';
 import { ServicioCard } from '../components/ServicioCard';
 import { CreateServicioModal } from '../components/CreateServicioModal';
 import { CreateAcuerdoModal } from '../components/CreateAcuerdoModal';
@@ -44,6 +44,12 @@ export default function MarketplaceView() {
   const [activeTab, setActiveTab] = useState<'servicios' | 'mis_acuerdos'>(
     location.state?.initialTab || 'servicios'
   );
+
+  useEffect(() => {
+    if (activeTab === 'mis_acuerdos' && appUser?.uid && acuerdos.length > 0) {
+      marcarAcuerdosVistosDesdeCache(acuerdos, appUser.uid);
+    }
+  }, [activeTab, appUser?.uid, acuerdos]);
   const [filterTipo, setFilterTipo] = useState<'talento' | 'recurso' | null>(null);
   const [filterCategoria, setFilterCategoria] = useState<string | null>(null);
   const [isCreateServicioOpen, setIsCreateServicioOpen] = useState(false);

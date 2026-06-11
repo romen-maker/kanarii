@@ -260,7 +260,16 @@ service cloud.firestore {
         isGlobalAdmin()
       );
       allow create: if request.auth != null && hasMinRole(request.resource.data.communityId, 'miembro');
-      allow update, delete: if request.auth != null && (
+      allow update: if request.auth != null && (
+        resource.data.solicitanteId == request.auth.uid ||
+        resource.data.providerId == request.auth.uid ||
+        hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin()
+      ) && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['solicitanteLastSeenAt']) ||
+        request.auth.uid == resource.data.solicitanteId
+      );
+      allow delete: if request.auth != null && (
         resource.data.solicitanteId == request.auth.uid ||
         resource.data.providerId == request.auth.uid ||
         hasRole(resource.data.communityId, 'admin') ||

@@ -3,11 +3,12 @@ import { User, LogOut, ChevronDown, MapPin, Compass, ShieldCheck, Scale } from '
 import { navigationConfig } from '../config/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
-import { listenSolicitudes, listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, listenPropuestasPendientesCount, listenSolicitudesProyectosPendientesCount, Acuerdo } from '../lib/appService';
+import { listenSolicitudes, listenPropuestasPendientesCount, listenSolicitudesProyectosPendientesCount } from '../lib/appService';
 import { useState, useEffect } from 'react';
 import { SyncIndicator } from './ui/SyncIndicator';
 import { useNotificaciones } from '../hooks/useNotificaciones';
 import NotifBadge from './ui/NotifBadge';
+import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
 
 
 export function Sidebar() {
@@ -17,8 +18,7 @@ export function Sidebar() {
   const { comunidad, comunidades, setCommunityId } = useComunidad();
   const { unreadCount } = useNotificaciones(comunidad?.id, appUser?.uid);
   const [pendingCount, setPendingCount] = useState(0);
-  const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
-  const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
+  const { acuerdosPendingCount, acuerdosSolicitanteCount } = useAcuerdosBadge();
   const [propuestasPendingCount, setPropuestasPendingCount] = useState(0);
   const [proyectosPendingCount, setProyectosPendingCount] = useState(0);
 
@@ -48,48 +48,6 @@ export function Sidebar() {
       setPendingCount(0);
     }
   }, [comunidad?.id, isCommunityAdmin, appUser?.uid]);
-
-  useEffect(() => {
-    if (!comunidad?.id || !appUser?.uid) {
-      setAcuerdosPendingCount(0);
-      return;
-    }
-
-    try {
-      const unsubscribe = listenAcuerdosPendientesAsProvider(
-        comunidad.id,
-        appUser.uid,
-        (count) => {
-          setAcuerdosPendingCount(count);
-        }
-      );
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Error suscribiéndose a acuerdos pendientes:", error);
-      setAcuerdosPendingCount(0);
-    }
-  }, [comunidad?.id, appUser?.uid]);
-
-  useEffect(() => {
-    if (!comunidad?.id || !appUser?.uid) {
-      setAcuerdosSolicitante([]);
-      return;
-    }
-
-    try {
-      const unsubscribe = listenAcuerdosActivosAsSolicitante(
-        comunidad.id,
-        appUser.uid,
-        (acuerdos) => {
-          setAcuerdosSolicitante(acuerdos);
-        }
-      );
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Error suscribiéndose a acuerdos activos del solicitante:", error);
-      setAcuerdosSolicitante([]);
-    }
-  }, [comunidad?.id, appUser?.uid]);
 
   useEffect(() => {
     if (!comunidad?.id || !appUser?.uid || !isMemberOrAdmin) {
@@ -132,23 +90,6 @@ export function Sidebar() {
       setProyectosPendingCount(0);
     }
   }, [comunidad?.id, appUser?.uid, isMemberOrAdmin]);
-
-  useEffect(() => {
-    if (location.pathname === '/soberania' && appUser?.uid) {
-      localStorage.setItem(`kanarii_last_soberania_visit_${appUser.uid}`, new Date().toISOString());
-    }
-  }, [location.pathname, appUser?.uid]);
-
-  const lastVisitKey = appUser?.uid ? `kanarii_last_soberania_visit_${appUser.uid}` : null;
-  const lastVisitStr = lastVisitKey ? localStorage.getItem(lastVisitKey) : null;
-  const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0);
-
-  const acuerdosSolicitanteCount = acuerdosSolicitante.filter(a => {
-    const updatedTime = a.actualizadoEn?.toDate?.() ?? 
-      (a.actualizadoEn instanceof Date ? a.actualizadoEn : 
-      (a.actualizadoEn ? new Date(a.actualizadoEn) : new Date(0)));
-    return updatedTime > lastVisit;
-  }).length;
   
   // Dividimos los items en principales y admin
   const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin || !!comunidad?.id;

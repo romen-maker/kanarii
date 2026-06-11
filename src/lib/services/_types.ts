@@ -412,6 +412,7 @@ export interface Acuerdo {
   historial?: AcuerdoHistorialEntry[];
   creadoEn: any;
   actualizadoEn: any;
+  solicitanteLastSeenAt?: any; // Timestamp | null — para sistema leído/no leído
 }
 
 export interface Propuesta {

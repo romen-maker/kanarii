@@ -4,8 +4,8 @@ import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale, ChevronDown, MapPi
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
-import { listenAcuerdosPendientesAsProvider, listenAcuerdosActivosAsSolicitante, Acuerdo } from '../lib/appService';
 import { SyncIndicator } from './ui/SyncIndicator';
+import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
 
 
 export function BottomNav() {
@@ -14,70 +14,10 @@ export function BottomNav() {
   const { appUser, logout } = useAuth();
   const { comunidad, comunidades, setCommunityId } = useComunidad();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [acuerdosPendingCount, setAcuerdosPendingCount] = useState(0);
-  const [acuerdosSolicitante, setAcuerdosSolicitante] = useState<Acuerdo[]>([]);
+  const { acuerdosPendingCount, acuerdosSolicitanteCount } = useAcuerdosBadge();
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
-
-  useEffect(() => {
-    if (!comunidad?.id || !appUser?.uid) {
-      setAcuerdosPendingCount(0);
-      return;
-    }
-
-    try {
-      const unsubscribe = listenAcuerdosPendientesAsProvider(
-        comunidad.id,
-        appUser.uid,
-        (count) => {
-          setAcuerdosPendingCount(count);
-        }
-      );
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Error suscribiéndose a acuerdos pendientes:", error);
-      setAcuerdosPendingCount(0);
-    }
-  }, [comunidad?.id, appUser?.uid]);
-
-  useEffect(() => {
-    if (!comunidad?.id || !appUser?.uid) {
-      setAcuerdosSolicitante([]);
-      return;
-    }
-
-    try {
-      const unsubscribe = listenAcuerdosActivosAsSolicitante(
-        comunidad.id,
-        appUser.uid,
-        (acuerdos) => {
-          setAcuerdosSolicitante(acuerdos);
-        }
-      );
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Error suscribiéndose a acuerdos activos del solicitante:", error);
-      setAcuerdosSolicitante([]);
-    }
-  }, [comunidad?.id, appUser?.uid]);
-
-  useEffect(() => {
-    if (location.pathname === '/soberania' && appUser?.uid) {
-      localStorage.setItem(`kanarii_last_soberania_visit_${appUser.uid}`, new Date().toISOString());
-    }
-  }, [location.pathname, appUser?.uid]);
-
-  const lastVisitKey = appUser?.uid ? `kanarii_last_soberania_visit_${appUser.uid}` : null;
-  const lastVisitStr = lastVisitKey ? localStorage.getItem(lastVisitKey) : null;
-  const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0);
-
-  const acuerdosSolicitanteCount = acuerdosSolicitante.filter(a => {
-    const updatedTime = a.actualizadoEn?.toDate?.() ?? 
-      (a.actualizadoEn instanceof Date ? a.actualizadoEn : 
-      (a.actualizadoEn ? new Date(a.actualizadoEn) : new Date(0)));
-    return updatedTime > lastVisit;
-  }).length;
 
   // Filtramos por pertenencia a comunidades
   const hasCommunities = (appUser?.communityIds && appUser.communityIds.length > 0) || isAdmin || !!comunidad?.id;
