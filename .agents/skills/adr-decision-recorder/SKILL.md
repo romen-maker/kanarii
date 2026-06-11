@@ -38,7 +38,7 @@ Esta skill estandariza la memoria arquitectónica del proyecto para que decision
 
 **Estado:** [Proposed | Accepted | Deprecated | Superseded]
 **Fecha:** [YYYY-MM-DD]
-**Contexto:** [Proyecto]
+**Contexto:** [Tarea en la que se está trabajando o sprint en curso]
 
 ## Contexto
 [Descripción del problema, restricciones y trade-offs]
