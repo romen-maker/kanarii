@@ -2,9 +2,24 @@
 description: Ritual de inicio de semana. Lee el roadmap, vacía el idea-inbox, genera el sprint file semanal y produce el prompt listo para investigación en Perplexity.
 ---
 
-# Workflow: /sprint-planning
+# sprint-planning
 
 > Duración estimada: 15 min. Ejecutar los lunes antes de abrir cualquier sesión de desarrollo.
+
+## Objetivo
+
+- Analizar el roadmap del proyecto, vaciar los inboxes priorizando MVP y preparar las tareas del nuevo sprint.
+- Sincronizar el progreso real del producto en `docs/MVP-TRACKER.md`.
+- Generar el prompt de investigación técnica para Perplexity.
+
+## Archivos y rutas a revisar
+
+- `ROADMAP.md`
+- `docs/sprints/`
+- `docs/idea-inbox/`
+- `external-inbox/`
+- `docs/MVP-TRACKER.md`
+- `docs/IMPLEMENTED.md`
 
 ## Prerrequisitos
 - `ROADMAP.md` en la raíz del proyecto (mayúsculas exactas).
@@ -12,7 +27,7 @@ description: Ritual de inicio de semana. Lee el roadmap, vacía el idea-inbox, g
 
 ---
 
-## Pasos
+## Protocolo
 
 ### 1. Detección de sesión colgada y archivado de sprints completados
 
@@ -132,8 +147,6 @@ Para cada manifiesto listado, leer los campos Origen, ¿Qué hace?, Archivos que
 
 #### 3b. idea-inbox (si hay entradas)
 
-Para cada archivo listado:
-
 1. **Ejecutar inventory check ANTES de clasificar:**
    ```bash
    bash scripts/agent/inventory-check.sh "keywords de la idea"
@@ -175,13 +188,6 @@ Crear `docs/sprints/sprint-XX.md` (incrementar número respecto al último exist
 [Observaciones del sprint anterior, dependencias, riesgos]
 ```
 
-Reglas de selección de tareas:
-- **3 a 5 tareas** por sprint.
-- Equilibrio de tamaños: no más de 1 tarea L por sprint.
-- Prioridad: tareas arrastradas del sprint anterior primero, luego ítems bloqueantes, luego por orden del roadmap.
-- Tamaños: **S** = < 1h, **M** = 1-3h, **L** = 3h+.
-- **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c — ni en `docs/IMPLEMENTED.md` ni en inventory check).
-
 ### 4b. Actualización del MVP Tracker
 
 > Este paso se ejecuta siempre, justo después de generar el sprint file.
@@ -198,20 +204,9 @@ El script recalcula el **% global** leyendo los valores de `% cap.` de la tabla 
 
 - Leer `docs/IMPLEMENTED.md` y el sprint recién cerrado.
 - Para cada capacidad (C1–C6), evaluar si el trabajo completado desde el último planning mueve el % de esa capacidad.
-- Aplicar la escala: `0 / 25 / 50 / 75 / 100`.
 - Actualizar los valores en la tabla de `docs/MVP-TRACKER.md` si procede.
 - Ejecutar de nuevo `update-mvp-tracker.sh` para recalcular el total con los valores actualizados.
 - Añadir una fila en la tabla `## Historial de actualizaciones` con fecha, sprint y % global resultante.
-
-**Regla de escalado:**
-
-| % capacidad | Significado |
-|---|---|
-| 0 | Sin implementación |
-| 25 | Base iniciada, flujo principal no funcional |
-| 50 | Flujo principal funcional, casos edge pendientes |
-| 75 | Funcional y probado, falta pulido o un criterio menor |
-| 100 | Todos los criterios "Done para MVP" cumplidos y validados |
 
 ### 5. Generación del prompt para Perplexity
 
@@ -247,13 +242,11 @@ Mostrar al usuario el siguiente mensaje y **no continuar hasta recibir respuesta
 ⏸ Este workflow queda en pausa. Hasta luego.
 ```
 
-> **Nota para el agente:** No ejecutes `/session-start` automáticamente. El usuario necesita
-> hacer la investigación en Perplexity antes de continuar. El handoff es intencional.
+> **Nota para el agente:** No ejecutes `/session-start` automáticamente. El usuario necesita hacer la investigación en Perplexity antes de continuar. El handoff es intencional.
 
 ### 6b. Recepción de hallazgos de Perplexity (cuando el usuario vuelve)
 
-> Este paso se ejecuta cuando el usuario regresa con los hallazgos de Perplexity,
-> antes de lanzar `/session-start`.
+> Este paso se ejecuta cuando el usuario regresa con los hallazgos de Perplexity, antes de lanzar `/session-start`.
 
 1. Recibir el output de Perplexity del usuario.
 2. Crear `docs/sprints/sprint-XX-research.md` con este formato:
@@ -298,3 +291,25 @@ Justo antes del mensaje de pausa del paso 6, mostrar al usuario:
    Si alguna capacidad bajó desde el planning anterior, añadir ⚠️ junto a esa línea.
 6. El prompt para Perplexity listo para copiar.
 7. Ruta del sprint file creado: `docs/sprints/sprint-XX.md`.
+
+## Reglas
+
+### Selección de Tareas
+- **3 a 5 tareas** por sprint.
+- Equilibrio de tamaños: no más de 1 tarea L por sprint.
+- Prioridad: tareas arrastradas del sprint anterior primero, luego ítems bloqueantes, luego por orden del roadmap.
+- Tamaños: **S** = < 1h, **M** = 1-3h, **L** = 3h+.
+- **Solo entran tareas verificadas como no implementadas** (resultado del paso 2c — ni en `docs/IMPLEMENTED.md` ni en inventory check).
+
+### Escala de Progreso del MVP
+Para la actualización manual de las capacidades C1–C6 en `docs/MVP-TRACKER.md`, aplicar esta escala:
+- **0%**: Sin implementación.
+- **25%**: Base iniciada, flujo principal no funcional.
+- **50%**: Flujo principal funcional, casos edge pendientes.
+- **75%**: Funcional y probado, falta pulido o un criterio menor.
+- **100%**: Todos los criterios "Done para MVP" cumplidos y validados.
+
+### Guardias de Flujo y Verificación
+- **Limpieza previa**: Es obligatorio ejecutar `check-session.sh` y resolver sesiones colgadas antes de iniciar la planificación.
+- **Auditoría de completado**: Si `check-sprint.sh` alerta de un "sprint completado sin marcar", es obligatorio actualizar el estado del sprint anterior a `✅ Completado` antes de generar el nuevo sprint.
+- **Restricción de lectura**: El agente solo leerá los archivos devueltos por el script de `inventory-check.sh`. Está prohibido navegar o realizar búsquedas manuales sobre el directorio de código fuente `src/` para evitar consumos de tokens y asegurar la neutralidad.
