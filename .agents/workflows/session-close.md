@@ -121,14 +121,61 @@ git commit -m "chore: archive sprint-XX [vX.Y.Z]"
 > puedes saltar el paso 1 y ejecutar solo `close-sprint.sh`.
 > El changelog es obligatorio para sprints con features o fixes visibles para el usuario.
 
-### 5. Detectar qué documentación adicional debe cerrarse
+### 5. Auditar el MVP-TRACKER (si la sesión tocó capacidades MVP)
+
+Este paso es obligatorio si la tarea cerrada implementó o modificó alguna capacidad
+listada en `docs/MVP-TRACKER.md`.
+
+**¿Cuándo ejecutarlo?**
+- Si el task file de la sesión menciona alguna capacidad C1–C6 del tracker.
+- Si se modificaron archivos en `src/` relacionados con propuestas, acuerdos, servicios,
+  secciones del manual, notificaciones o paginación.
+- Si vas a ejecutar `update-mvp-tracker.sh` a continuación.
+
+**Paso obligatorio antes de `update-mvp-tracker.sh`:**
+
+```bash
+# Modo rápido: solo greps (~3 segundos)
+bash scripts/agent/audit-mvp-tracker.sh --fast
+```
+
+Revisar la salida:
+- `✅ VERIFICADO` — el símbolo existe en el scope esperado. Si tiene `🔍 REVISAR MANUAL`,
+  no marques el criterio como completo sin revisar la integración real.
+- `⚠️ FALSO POSITIVO` — el símbolo no está en el código. **No actualices el porcentaje
+  de esa capacidad hasta implementarlo.** Corrige el criterio en el tracker primero.
+
+Solo tras resolver todas las advertencias `⚠️`, ejecuta:
+
+```bash
+bash scripts/agent/update-mvp-tracker.sh
+```
+
+**Para revisión profunda de integración** (no solo existencia de símbolo):
+
+```bash
+# Genera digests LLM de las subcarpetas relevantes
+bash scripts/agent/audit-mvp-tracker.sh --digest
+```
+
+El modo `--digest` genera archivos en `docs/llm-context/` con el contexto de código
+necesario para verificar que un componente no solo existe sino que está integrado
+correctamente (comunidadId, roles, contexto reactivo).
+
+> **Advertencia de rango:** `audit-mvp-tracker.sh --fast` detecta *ausencia* de símbolos
+> pero no calidad de integración. Un símbolo puede existir en `src/components/` sin estar
+> usado en `src/pages/`. El script marca esto como `🔍 REVISAR MANUAL` — nunca como `✅`.
+> La responsabilidad de verificar la integración real siempre es humana o del agente
+> con el digest cargado.
+
+### 6. Detectar qué documentación adicional debe cerrarse
 - Si la sesión generó ADRs, revísalos en `docs/adrs/`.
 - Si generó auditorías o referencias de Firebase, revísalos en `docs/firebase/`.
 - Si generó scripts reutilizables, revísalos en `scripts/`.
 - Si generó archivos temporales o scratch, decide si se eliminan o se convierten en archivos oficiales.
 - Si hay documentación adicional que commitear, hacer un commit separado con `git add <archivo> && git commit -m "docs: ..."`.
 
-### 6. Verificación final
+### 7. Verificación final
 - Ejecuta `git status` una sola vez para confirmar que el árbol está limpio.
 - Resume el cierre en una nota breve.
 
@@ -150,6 +197,7 @@ Al terminar, debe quedar claro:
 - qué se cerró,
 - qué se archivó (tarea y/o sprint),
 - qué se documentó (incluyendo CHANGELOG si aplica),
+- qué se auditó (MVP-TRACKER si aplica),
 - qué se limpió.
 
 ## Integración y siguiente paso
@@ -172,3 +220,5 @@ El cierre de sesión no debe asumir una política de integración que no exista.
 - **No ejecutar `git add` ni `git commit` manualmente durante el cierre de tarea — usar siempre `close-task.sh`.**
 - **El archivado del sprint (`close-sprint.sh`) va en un commit separado tras el commit de tarea.**
 - **`update-changelog.sh` siempre antes de `close-sprint.sh` si el sprint tiene feat: o fix:.**
+- **`audit-mvp-tracker.sh --fast` siempre antes de `update-mvp-tracker.sh` si la sesión tocó capacidades MVP.**
+- **No actualizar porcentajes del tracker si hay advertencias `⚠️ FALSO POSITIVO` sin resolver.**
