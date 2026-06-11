@@ -102,11 +102,20 @@ export function PropuestaDetail({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header S3 Style */}
-        <div className="bg-[#4A4E4D] p-8 text-white shrink-0">
+        <div className={`${propuesta.status === 'acordada' ? 'bg-[#2D5A44]' : 'bg-[#4A4E4D]'} p-8 text-white shrink-0`}>
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
-              <Gavel className="w-6 h-6 text-[#D4C3A3]" />
-              <span className="text-xs font-bold uppercase tracking-widest text-[#D4C3A3]">Proceso de Consentimiento</span>
+              {propuesta.status === 'acordada' ? (
+                <>
+                  <CheckCircle2 className="w-6 h-6 text-emerald-300" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-200">Acuerdo Cálido</span>
+                </>
+              ) : (
+                <>
+                  <Gavel className="w-6 h-6 text-[#D4C3A3]" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#D4C3A3]">Proceso de Consentimiento</span>
+                </>
+              )}
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <X className="w-6 h-6" />
@@ -115,18 +124,42 @@ export function PropuestaDetail({
           <h2 className="font-serif text-3xl mb-4 leading-tight">{propuesta.title}</h2>
           <div className="flex flex-wrap gap-4 items-center">
              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-               <User className="w-4 h-4 text-[#D4C3A3]" />
+               <User className={`w-4 h-4 ${propuesta.status === 'acordada' ? 'text-emerald-300' : 'text-[#D4C3A3]'}`} />
                <span className="text-xs font-medium">Propuesto por {isAuthor ? 'ti' : 'un miembro'}</span>
              </div>
              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-               <Clock className="w-4 h-4 text-[#D4C3A3]" />
+               <Clock className={`w-4 h-4 ${propuesta.status === 'acordada' ? 'text-emerald-300' : 'text-[#D4C3A3]'}`} />
                <span className="text-xs font-medium">Creado el {format(propuesta.createdAt.toDate(), "d 'de' MMMM", { locale: es })}</span>
              </div>
+             {propuesta.status === 'acordada' && (
+               <div className="flex items-center gap-2 bg-emerald-500/20 px-3 py-1.5 rounded-full border border-emerald-500/30 text-emerald-200 animate-in fade-in duration-300">
+                 <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                 <span className="text-xs font-semibold uppercase tracking-wider">Acuerdo Cálido</span>
+               </div>
+             )}
           </div>
         </div>
 
         {/* Content Scrollable */}
         <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+          {propuesta.status === 'acordada' && (
+            <div className="bg-emerald-50/60 border border-emerald-100 p-6 rounded-3xl flex items-start gap-4 shadow-sm animate-in fade-in duration-300">
+              <div className="p-3 bg-emerald-100 rounded-2xl text-emerald-700 shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-emerald-950">Acuerdo Cálido Activo</h4>
+                <p className="text-xs text-stone-600 leading-relaxed">
+                  Esta propuesta ha sido adoptada formalmente por consentimiento de la comunidad. Es un Acuerdo Cálido vivo que guía nuestra convivencia y decisiones.
+                </p>
+                {propuesta.reviewDate && (
+                  <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider pt-2">
+                    Próxima revisión: {format(propuesta.reviewDate.toDate ? propuesta.reviewDate.toDate() : new Date(propuesta.reviewDate), "d 'de' MMMM 'de' yyyy", { locale: es })}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           {/* Driver & Reason */}
           <section className="space-y-4">
             <div>
