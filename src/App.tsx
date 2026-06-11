@@ -20,6 +20,7 @@ const MarketplaceView = React.lazy(() => import('./pages/MarketplaceView'));
 const RegistroComunidadView = React.lazy(() => import('./pages/RegistroComunidadView').then(m => ({ default: m.RegistroComunidadView })));
 const FichaComunidadView = React.lazy(() => import('./pages/FichaComunidadView').then(m => ({ default: m.FichaComunidadView })));
 const PasaporteComunitarioView = React.lazy(() => import('./pages/PasaporteComunitarioView').then(m => ({ default: m.PasaporteComunitarioView })));
+const PasaporteUniversalView = React.lazy(() => import('./pages/PasaporteUniversalView').then(m => ({ default: m.PasaporteUniversalView })));
 const KanariiTourPage = React.lazy(() => import('./pages/KanariiTourPage'));
 const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage').then(m => ({ default: m.AuthCallbackPage })));
 import { Activity, ArrowRight } from 'lucide-react';
@@ -95,6 +96,7 @@ function AppContent() {
           <Route path="/gobernanza" element={<ProtectedRoute><PropuestasView /></ProtectedRoute>} />
           <Route path="/c/:slug" element={<FichaComunidadView />} />
           <Route path="/c/:slug/miembro/:userId" element={<PasaporteComunitarioView />} />
+          <Route path="/p/:uid" element={<PasaporteUniversalView />} />
           <Route path="/tour" element={<KanariiTourPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>

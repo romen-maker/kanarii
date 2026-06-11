@@ -24,6 +24,11 @@ export function Sidebar() {
 
   const isAdmin = appUser?.role === 'admin';
   const isCommunityAdmin = !!(isAdmin || (comunidad?.adminUids && Array.isArray(comunidad.adminUids) && comunidad.adminUids.includes(appUser?.uid || '')));
+  const isMemberOrAdmin = !!(
+    isAdmin || 
+    (comunidad?.id && appUser?.communityIds && appUser.communityIds.includes(comunidad.id)) ||
+    (comunidad?.adminUids && appUser?.uid && comunidad.adminUids.includes(appUser.uid))
+  );
 
   useEffect(() => {
     // Si no hay comunidad, no somos admin de comunidad, o no hay usuario, limpiar y salir
@@ -87,7 +92,7 @@ export function Sidebar() {
   }, [comunidad?.id, appUser?.uid]);
 
   useEffect(() => {
-    if (!comunidad?.id || !appUser?.uid) {
+    if (!comunidad?.id || !appUser?.uid || !isMemberOrAdmin) {
       setPropuestasPendingCount(0);
       return;
     }
@@ -105,10 +110,10 @@ export function Sidebar() {
       console.error("Error suscribiéndose a propuestas pendientes:", error);
       setPropuestasPendingCount(0);
     }
-  }, [comunidad?.id, appUser?.uid]);
+  }, [comunidad?.id, appUser?.uid, isMemberOrAdmin]);
 
   useEffect(() => {
-    if (!comunidad?.id || !appUser?.uid) {
+    if (!comunidad?.id || !appUser?.uid || !isMemberOrAdmin) {
       setProyectosPendingCount(0);
       return;
     }
@@ -126,7 +131,7 @@ export function Sidebar() {
       console.error("Error suscribiéndose a solicitudes de proyectos:", error);
       setProyectosPendingCount(0);
     }
-  }, [comunidad?.id, appUser?.uid]);
+  }, [comunidad?.id, appUser?.uid, isMemberOrAdmin]);
 
   useEffect(() => {
     if (location.pathname === '/soberania' && appUser?.uid) {
