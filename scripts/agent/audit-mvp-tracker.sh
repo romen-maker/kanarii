@@ -17,8 +17,10 @@
 #     4. Imprime AUDIT SUMMARY con conteo y lista de advertencias
 #
 #   Modo --digest:
-#     Igual que --fast + llama a generate-digest.sh con los --filter de las
-#     capacidades que tienen advertencias, dejando el digest en docs/llm-context/.
+#     Igual que --fast + llama a generate-digest.sh por cada subcarpeta única
+#     de los criterios con SCOPE definido (o src/ completo para los sin SCOPE).
+#     Los digests se guardan en docs/llm-context/ y NO se versionan en git.
+#     Al final imprime un bloque INSTRUCCIONES DE REVISIÓN para el agente/humano.
 #
 # Qué NO hace:
 #   - No modifica MVP-TRACKER.md ni ningún archivo del repo
@@ -95,6 +97,7 @@ echo ""
 WARNINGS=()
 VERIFIED=0
 TOTAL_CHECKS=${#AUDIT_SYMBOLS[@]}
+DIGEST_SCOPES=()  # Subcarpetas únicas a digerir si MODE=digest
 
 for ENTRY in "${AUDIT_SYMBOLS[@]}"; do
   # Parsear los tres campos
@@ -106,9 +109,16 @@ for ENTRY in "${AUDIT_SYMBOLS[@]}"; do
   if [ -n "$SCOPE" ]; then
     SEARCH_PATH="$SRC/$SCOPE"
     SCOPE_LABEL="src/$SCOPE/"
+    DIGEST_KEY="src/$SCOPE"
   else
     SEARCH_PATH="$SRC"
     SCOPE_LABEL="src/"
+    DIGEST_KEY="src"
+  fi
+
+  # Acumular scopes únicos para el digest
+  if [[ ! " ${DIGEST_SCOPES[*]:-} " =~ " ${DIGEST_KEY} " ]]; then
+    DIGEST_SCOPES+=("$DIGEST_KEY")
   fi
 
   # Ejecutar git grep (--extended-regexp para soportar \| como OR)
@@ -118,8 +128,6 @@ for ENTRY in "${AUDIT_SYMBOLS[@]}"; do
     FILE_COUNT=$(echo "$FOUND" | wc -l | tr -d ' ')
     echo -e "${GREEN}✅ VERIFICADO${RESET}   ${CAPACIDAD}"
     echo   "             Símbolo: '$SYMBOL_RAW' → $FILE_COUNT archivo(s) en $SCOPE_LABEL"
-    # Si el scope es específico (pages), también comprobamos que NO esté SOLO en components
-    # Esto es solo informativo, no genera warning
     if [ -n "$SCOPE" ]; then
       echo   "   🔍 REVISAR MANUAL: verificar que la integración es correcta (no solo importado)"
     fi
@@ -160,9 +168,56 @@ fi
 echo ""
 echo "=== END AUDIT ==="
 
-# ── Modo digest: nada más en esta versión (se amplía en el siguiente commit) ──
+# ── Modo --digest: generar digests por cada scope único ──────────────────────
 if [ "$MODE" = "digest" ]; then
   echo ""
-  echo "ℹ️  Modo --digest activado. Generando digests de capacidades con advertencias..."
-  echo "   (Función disponible tras próximo commit — usa --fast por ahora)"
+  echo "=== GENERANDO DIGESTS LLM ==="
+
+  if [ ! -f "$DIGEST_SCRIPT" ]; then
+    echo "❌ No encontrado: $DIGEST_SCRIPT"
+    echo "   El modo --digest requiere generate-digest.sh en scripts/agent/"
+    exit 1
+  fi
+
+  DIGESTS_GENERADOS=()
+  for SCOPE_KEY in "${DIGEST_SCOPES[@]}"; do
+    echo ""
+    echo "⚙️  Generando digest para: $SCOPE_KEY"
+    if bash "$DIGEST_SCRIPT" --filter "$SCOPE_KEY" 2>&1; then
+      DIGESTS_GENERADOS+=("$SCOPE_KEY")
+    else
+      echo "⚠️  Fallo al generar digest para $SCOPE_KEY — continua con el siguiente"
+    fi
+  done
+
+  echo ""
+  echo "=== INSTRUCCIONES DE REVISIÓN MANUAL ==="
+  echo ""
+  echo "Se generaron ${#DIGESTS_GENERADOS[@]} digest(s) en docs/llm-context/"
+  echo "Usa el digest junto con los criterios del tracker para revisar:"
+  echo ""
+  echo "Criterios que requieren revisión de integración (símbolo encontrado pero no verificado):"
+  for ENTRY in "${AUDIT_SYMBOLS[@]}"; do
+    CAPACIDAD=$(echo "$ENTRY" | cut -d'|' -f1)
+    SCOPE=$(echo "$ENTRY" | cut -d'|' -f3)
+    if [ -n "$SCOPE" ]; then
+      echo "   🔍 $CAPACIDAD"
+      echo "      Pregunta: ¿El símbolo se usa en src/$SCOPE/ con el comportamiento esperado?"
+      echo "      ¿Está conectado al contexto de comunidad (comunidadId) correctamente?"
+    fi
+  done
+
+  if [ ${#WARNINGS[@]} -gt 0 ]; then
+    echo ""
+    echo "Criterios con falso positivo (símbolo ausente — no digerir, corregir primero):"
+    for W in "${WARNINGS[@]}"; do
+      echo "   ❌ $W"
+    done
+  fi
+
+  echo ""
+  echo "   Para actualizar el tracker tras la revisión:"
+  echo "   bash scripts/agent/update-mvp-tracker.sh"
+  echo ""
+  echo "=== END DIGEST ==="
 fi
