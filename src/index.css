@@ -9,6 +9,7 @@
   --color-bg-page: #FDFBF7;
   --color-bg-surface: #F9F7F1;
   --color-text-ink: #4A4E4D;
+  --color-text-strong: #2D302F;
 
   /* Bordes */
   --color-border: #EAE2D6;
@@ -32,7 +33,7 @@
 }
 
 .manual-prose {
-  color: #4A4E4D;
+  color: var(--color-text-ink);
   max-width: 680px;
   margin-left: auto;
   margin-right: auto;
@@ -47,7 +48,7 @@
 .manual-prose h2, 
 .manual-prose h3, 
 .manual-prose h4 {
-  color: #4A4E4D;
+  color: var(--color-text-ink);
   line-height: 1.4;
 }
 
@@ -97,5 +98,5 @@
 
 .manual-prose strong {
   font-weight: 600;
-  color: #2D302F;
+  color: var(--color-text-strong);
 }

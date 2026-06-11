@@ -28,6 +28,7 @@ Durante la fase de auditoría del piloto se identificó que el separador del foo
   --color-bg-page: #FDFBF7;
   --color-bg-surface: #F9F7F1;
   --color-text-ink: #4A4E4D;
+  --color-text-strong: #2D302F;
 
   /* Bordes */
   --color-border: #EAE2D6;
