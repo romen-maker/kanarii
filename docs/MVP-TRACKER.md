@@ -30,14 +30,14 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 | ID | Capacidad | Peso | Estado | % cap. | Tareas clave | Pendiente para 100% |
 |---|---|---:|---|---:|---|---|
 | C1 | Acceso y membresía multi-comunidad | 15 | 🟢 | 95 | T-001, T-002, T-003, T-006, T-010, T-011, T-017, T-032 | Fix Safari cookies edge cases |
-| C2 | Perfiles, fichas y tríada comunitaria | 15 | 🟡 | 80 | T-009, T-018, T-022, T-036, T-038, T-052, T-055 | T-062: unificación superficies perfil (ALTO) |
-| C3 | Gobernanza S3 operativa end-to-end | 25 | 🟡 | 85 | T-019, T-020, T-027, T-031, T-033, T-034, T-030 | Badge acuerdo cálido (BAJO); prueba sesión real |
+| C2 | Perfiles, fichas y tríada comunitaria | 15 | 🟢 | 90 | T-009, T-018, T-022, T-036, T-038, T-052, T-055, T-062, T-063, T-064 | Pulido menor pasaportes |
+| C3 | Gobernanza S3 operativa end-to-end | 25 | 🟢 | 90 | T-019, T-020, T-027, T-031, T-033, T-034, T-030, T-065, T-066 | Prueba sesión real con ≥2 miembros |
 | C4 | Marketplace y acuerdos | 15 | 🟡 | 80 | T-023, T-026, T-039, T-024, T-043 | Badges reactivos acuerdos (MEDIO); sistema leído/no leído |
 | C5 | Onboarding y ayuda contextual | 10 | 🟢 | 95 | T-035, T-057, sprint-00 onboarding base | TourStepLayout.tsx wrapper (BAJO) |
 | C6 | Robustez base: permisos, consistencia, offline | 20 | 🟡 | 80 | T-001, T-005, T-007, T-008, T-012, T-028, T-029, T-032, T-037, T-040, T-051 | Paginación cursor-based (MEDIO); auditar listeners (MEDIO) |
-| **TOTAL** | | **100** | | **84%** | | |
+| **TOTAL** | | **100** | | **88%** | | |
 
-> 🧮 Cálculo: (15×95 + 15×80 + 25×85 + 15×80 + 10×95 + 20×80) / 100 = **84.25%** → redondeado a **84%**
+> 🧮 Cálculo: (15×95 + 15×90 + 25×90 + 15×80 + 10×95 + 20×80) / 100 = **87.75%** → redondeado a **88%**
 
 ---
 
@@ -57,7 +57,9 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 - [x] Ficha comunitaria editable y legible por todos los miembros.
 - [x] Tríada (ofrendas, saberes, necesidades) persistente — bug fix TagArrayEditor (T-038), migración legacy (T-055).
 - [x] Pasaporte visual usable con Tríada, OG tags y widget Kin Maya (T-052).
-- [ ] **T-062** (ALTO): Unificar superficies de perfil con `<ManualSeccionesViewer>` e integración híbrida.
+- [x] **T-062** (ALTO): Unificar superficies de perfil con `<ManualSeccionesViewer>` e integración híbrida (Sprint 15).
+- [x] **T-063** (ALTO): Rediseño Pasaporte Comunitario como landing social compartible (Sprint 15).
+- [x] **T-064** (ALTO): Pasaporte Universal /p/:uid (Sprint 15).
 
 ### C3 — Gobernanza S3 operativa end-to-end
 - [x] Wizard de creación: tensión/driver → propuesta → ejecución y revisión.
@@ -67,7 +69,8 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 - [x] Transición automática en_deliberacion → en_objeciones; integrando solo manual por autor (T-031).
 - [x] Directorio de decisiones con filtros por estado y badge "requiere atención" (T-027).
 - [x] Fix bug carga infinita deliberación (T-030).
-- [ ] Badge visual "acuerdo cálido" diferenciado en PropuestaDetail (BAJO).
+- [x] Badge visual "acuerdo cálido" diferenciado en PropuestaDetail (Sprint 15 — T-066).
+- [x] Estandarizar campo `reason` a `purpose` en propuestas (Sprint 15 — T-065).
 - [ ] Prueba en sesión real con ≥2 miembros externos documentada.
 
 ### C4 — Marketplace y acuerdos
@@ -104,3 +107,4 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 | Fecha | Sprint | % global | Cambios reseñables |
 |---|---|---:|---|
 | 2026-06-11 | sprint-15 | 84% | Seed inicial con historial sprints 00–15. C1 y C5 al 95%, resto en 80–85%. |
+| 2026-06-11 | sprint-16 | 88% | C2 80→90% (T-062/063/064), C3 85→90% (T-065/066). Sprint 15 cerrado 6/6 ✅. |

@@ -83,4 +83,6 @@
 | Tarea: Unificación y Auditoría de Superficies de Perfil y Manual de Usuario | T-062 | sprint-15 | — |
 | Tarea: Estandarizar campo reason a purpose en colección /propuestas | T-065 | sprint-15 | src/components/CreateProposalWizard.tsx,src/components/PropuestaCard.tsx,src/components/PropuestaDetail.tsx |
 | Task-066: UI: Badge visual acuerdo cálido diferenciado en PropuestaDetail | T-066 | sprint-15 | src/components/PropuestaDetail.tsx |
+| Task-063: Rediseño Pasaporte Comunitario como landing social compartible | T-063 | sprint-15 | src/pages/PasaporteComunitarioView.tsx,src/components/perfil/PasaporteVisual.tsx |
+| Task-064: Pasaporte Universal en /p/:uid — landing pública del miembro | T-064 | sprint-15 | src/pages/PasaporteUniversalView.tsx,src/lib/pasaporte.ts |
 | Task-067: Crear sistema de design tokens en @theme (DRY de colores) | T-067 | sprint-15 | src/components/ui/EntityCard.tsx,src/index.css |

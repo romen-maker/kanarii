@@ -55,11 +55,11 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ### 2.4 Gestión de Propuestas y Consentimiento (S3)
 - [x] [ALTO] Directorio de decisiones con filtros por estado y badge "requiere tu atención" (Sprint 06 — T-027).
-- [ ] [BAJO] UI: Badge visual "acuerdo cálido" diferenciado en PropuestaDetail
-- [ ] [BAJO] Estandarizar campo `reason` a `purpose` en colección `/propuestas`.
+- [x] [BAJO] UI: Badge visual "acuerdo cálido" diferenciado en PropuestaDetail (Sprint 15 — T-066).
+- [x] [BAJO] Estandarizar campo `reason` a `purpose` en colección `/propuestas` (Sprint 15 — T-065).
 
 ### 2.6 Unificación de Superficies de Perfil (ADR-020)
-- [ ] [ALTO] Unificar superficies de perfil y manual de usuario (Ficha, Expediente, Pasaporte, Cruce) con componente compartido `<ManualSeccionesViewer>` e integración híbrida (Sprint 15 — T-062).
+- [x] [ALTO] Unificar superficies de perfil y manual de usuario (Ficha, Expediente, Pasaporte, Cruce) con componente compartido `<ManualSeccionesViewer>` e integración híbrida (Sprint 15 — T-062).
 
 ### 2.5 Comunidades v2 — crecimiento (Completado)
 
@@ -85,6 +85,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [BAJO] Memoizar transformación de fechas en `useEventos` (audit FIX-003).
 - [ ] [BAJO] Optimizar `getMemberName` con Map en `useCommunityMembers` (audit FIX-004).
 - [ ] [BAJO] Script de sanity check periódico para validar contadores desnormalizados (`activeObjectionsCount`, `totalResponsesCount`).
+- [ ] [BAJO] Accesibilidad: revisar formularios (solicitud/invitación) con `<input>` sin atributo `id` ni `name`.
 
 ---
 
@@ -101,7 +102,8 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 ---
 
 ## 🌍 Siguiente expansión funcional
-- [ ] [ALTO] Rediseño del Pasaporte Comunitario de miembro y comunidad como landing social compartible (Sprint 15 — T-063).
+- [x] [ALTO] Rediseño del Pasaporte Comunitario de miembro y comunidad como landing social compartible (Sprint 15 — T-063).
+- [x] [ALTO] Pasaporte universal en /p/:uid — landing pública del miembro sin contexto de comunidad (Sprint 15 — T-064).
 - [ ] [MEDIO] Admin Dashboard global: refinar con filtros por miembro y estado (refinamiento de feature existente en Fase 1, no feature nueva).
 - [ ] [MEDIO] Mejorar UI de aceptación/rechazo de colaboradores desde el detalle del proyecto.
 - [ ] [MEDIO] Gestión de visitas / recién llegados con ficha simplificada.
@@ -163,4 +165,4 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ---
 
-Última actualización verificada contra código: 8 de junio de 2026 (sprint-planning sprint-15)
+Última actualización verificada contra código: 11 de junio de 2026 (sprint-planning sprint-16)

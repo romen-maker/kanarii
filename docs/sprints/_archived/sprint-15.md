@@ -1,7 +1,7 @@
 # Sprint 15 — 08/06/2026 → 12/06/2026
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
