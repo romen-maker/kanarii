@@ -111,7 +111,7 @@ export const PropuestaCard: React.FC<PropuestaCardProps> = ({
     <EntityCard
       id={propuesta.id!}
       title={propuesta.title}
-      subtitle={propuesta.reason}
+      subtitle={propuesta.purpose}
       status={statusConfig}
       metadata={metadata}
       quickActions={quickActions}
