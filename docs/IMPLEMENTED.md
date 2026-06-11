@@ -86,3 +86,4 @@
 | Task-063: Rediseño Pasaporte Comunitario como landing social compartible | T-063 | sprint-15 | src/pages/PasaporteComunitarioView.tsx,src/components/perfil/PasaporteVisual.tsx |
 | Task-064: Pasaporte Universal en /p/:uid — landing pública del miembro | T-064 | sprint-15 | src/pages/PasaporteUniversalView.tsx,src/lib/pasaporte.ts |
 | Task-067: Crear sistema de design tokens en @theme (DRY de colores) | T-067 | sprint-15 | src/components/ui/EntityCard.tsx,src/index.css |
+| Task-069: Sistema leído/no leído en acuerdos | T-069 | sprint-16 | src/App.tsx,src/components/BottomNav.tsx,src/components/Sidebar.tsx |

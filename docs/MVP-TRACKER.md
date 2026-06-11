@@ -32,12 +32,12 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 | C1 | Acceso y membresía multi-comunidad | 15 | 🟢 | 95 | T-001, T-002, T-003, T-006, T-010, T-011, T-017, T-032 | Fix Safari cookies edge cases |
 | C2 | Perfiles, fichas y tríada comunitaria | 15 | 🟢 | 90 | T-009, T-018, T-022, T-036, T-038, T-052, T-055, T-062, T-063, T-064 | Pulido menor pasaportes |
 | C3 | Gobernanza S3 operativa end-to-end | 25 | 🟢 | 90 | T-019, T-020, T-027, T-031, T-033, T-034, T-030, T-065, T-066 | Prueba sesión real con ≥2 miembros |
-| C4 | Marketplace y acuerdos | 15 | 🟡 | 80 | T-023, T-026, T-039, T-024, T-043 | Badges reactivos acuerdos (MEDIO); sistema leído/no leído |
+| C4 | Marketplace y acuerdos | 15 | 🟡 | 90 | T-023, T-026, T-039, T-024, T-043, T-069, T-070 | Pulido menor de flujos de contraoferta |
 | C5 | Onboarding y ayuda contextual | 10 | 🟢 | 95 | T-035, T-057, sprint-00 onboarding base | TourStepLayout.tsx wrapper (BAJO) |
-| C6 | Robustez base: permisos, consistencia, offline | 20 | 🟡 | 80 | T-001, T-005, T-007, T-008, T-012, T-028, T-029, T-032, T-037, T-040, T-051 | Paginación cursor-based (MEDIO); auditar listeners (MEDIO) |
-| **TOTAL** | | **100** | | **88%** | | |
+| C6 | Robustez base: permisos, consistencia, offline | 20 | 🟡 | 90 | T-001, T-005, T-007, T-008, T-012, T-028, T-029, T-032, T-037, T-040, T-051, T-071 | Paginación cursor-based (MEDIO) |
+| **TOTAL** | | **100** | | **91%** | | |
 
-> 🧮 Cálculo: (15×95 + 15×90 + 25×90 + 15×80 + 10×95 + 20×80) / 100 = **87.75%** → redondeado a **88%**
+> 🧮 Cálculo: (15×95 + 15×90 + 25×90 + 15×90 + 10×95 + 20×90) / 100 = **91.25%** → redondeado a **91%**
 
 ---
 
@@ -78,8 +78,8 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 - [x] Creación y cierre de acuerdos funcional.
 - [x] Vista de detalle con historial y CTA de enmienda (T-039).
 - [x] Directorio global accesible.
-- [ ] Sistema leído/no leído en acuerdos (campo `vistoPorSolicitante`) (MEDIO).
-- [ ] Badge nav reactivo para solicitante en acuerdos con status cambiado (MEDIO).
+- [x] Sistema leído/no leído en acuerdos (campo `vistoPorSolicitante`) (MEDIO).
+- [x] Badge nav reactivo para solicitante en acuerdos con status cambiado (MEDIO).
 
 ### C5 — Onboarding y ayuda contextual
 - [x] Flujo onboarding completo sin bloqueos hasta entrar en comunidad.
@@ -98,7 +98,7 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 - [x] PWA con `vite-plugin-pwa` + `registerType: autoUpdate` (T-051).
 - [x] Tests Firestore rules con Firebase Emulator (T-012).
 - [ ] Paginación cursor-based (`startAfter`) para listas largas (MEDIO).
-- [ ] Auditar listeners y queries duplicados en Sidebar/BottomNav (MEDIO).
+- [x] Auditar listeners y queries duplicados en Sidebar/BottomNav (MEDIO).
 
 ---
 
@@ -106,5 +106,6 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 
 | Fecha | Sprint | % global | Cambios reseñables |
 |---|---|---:|---|
-| 2026-06-11 | sprint-15 | 84% | Seed inicial con historial sprints 00–15. C1 y C5 al 95%, resto en 80–85%. |
 | 2026-06-11 | sprint-16 | 88% | C2 80→90% (T-062/063/064), C3 85→90% (T-065/066). Sprint 15 cerrado 6/6 ✅. |
+| 2026-06-11 | sprint-16 | 91% | C4 80→90% (T-069/070), C6 80→90% (T-071). Implementado sistema unread y auditados listeners. |
+| 2026-06-11 | — | 91% | Actualizado automáticamente por update-mvp-tracker.sh |

@@ -139,14 +139,17 @@ function ProtectedRoute({
 }
 
 import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
+import { AcuerdosProvider } from './contexts/AcuerdosContext';
 
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
-          <AppContent />
-          <PwaUpdatePrompt />
+          <AcuerdosProvider>
+            <AppContent />
+            <PwaUpdatePrompt />
+          </AcuerdosProvider>
         </BrowserRouter>
       </ToastProvider>
     </AuthProvider>

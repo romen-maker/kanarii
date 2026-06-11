@@ -11,6 +11,7 @@ import {
   orderBy,
   limit,
   serverTimestamp,
+  writeBatch,
   DEFAULT_LIST_LIMIT
 } from './_core';
 import { Acuerdo } from './_types';
@@ -130,3 +131,38 @@ export function listenAcuerdosActivosAsSolicitante(
 
   return unsubscribe;
 }
+
+export async function marcarAcuerdosVistosDesdeCache(
+  acuerdos: Acuerdo[],
+  uid: string
+): Promise<void> {
+  const batch = writeBatch(db);
+  let counter = 0;
+
+  const toDateHelper = (val: any): Date => {
+    if (!val) return new Date(0);
+    if (val.toDate) return val.toDate();
+    if (val instanceof Date) return val;
+    return new Date(val);
+  };
+
+  acuerdos.forEach((acuerdo) => {
+    if (acuerdo.solicitanteId === uid) {
+      const tieneBadge = !acuerdo.solicitanteLastSeenAt || 
+        toDateHelper(acuerdo.actualizadoEn) > toDateHelper(acuerdo.solicitanteLastSeenAt);
+
+      if (tieneBadge && acuerdo.id) {
+        const docRef = doc(db, 'acuerdos', acuerdo.id);
+        batch.update(docRef, {
+          solicitanteLastSeenAt: serverTimestamp()
+        });
+        counter++;
+      }
+    }
+  });
+
+  if (counter > 0) {
+    await batch.commit();
+  }
+}
+
