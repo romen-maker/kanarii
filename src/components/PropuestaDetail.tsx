@@ -130,8 +130,8 @@ export function PropuestaDetail({
           {/* Driver & Reason */}
           <section className="space-y-4">
             <div>
-              <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2">La Tensión (Driver)</h4>
-              <p className="text-stone-700 leading-relaxed text-lg italic">"{propuesta.reason}"</p>
+              <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2">Propósito (Purpose)</h4>
+              <p className="text-stone-700 leading-relaxed text-lg italic">"{propuesta.purpose}"</p>
             </div>
             <div>
               <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-2">La Propuesta v{propuesta.version || 1}</h4>

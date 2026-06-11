@@ -29,7 +29,7 @@ export function CreateProposalWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
-  const [reason, setReason] = useState('');
+  const [purpose, setPurpose] = useState('');
   const [title, setTitle] = useState(initialTitle || '');
   const [description, setDescription] = useState('');
   const [responsibleIds, setResponsibleIds] = useState<string[]>([authorId]);
@@ -44,7 +44,7 @@ export function CreateProposalWizard({
       const data: Partial<Propuesta> = {
         title: title || 'Sin título',
         description,
-        reason,
+        purpose,
         authorId,
         communityId,
         status: 'borrador',
@@ -56,7 +56,7 @@ export function CreateProposalWizard({
       if (proposalId) {
         await editPropuesta(proposalId, data);
         return proposalId;
-      } else if (reason.length >= 5) {
+      } else if (purpose.length >= 5) {
         const id = await addPropuesta(data);
         setProposalId(id);
         return id;
@@ -71,8 +71,8 @@ export function CreateProposalWizard({
 
   const validateStep = (s: number) => {
     const newErrors: Record<string, string> = {};
-    if (s === 1 && reason.length < 30) {
-      newErrors.reason = 'Mínimo 30 caracteres para describir la tensión.';
+    if (s === 1 && purpose.length < 30) {
+      newErrors.purpose = 'Mínimo 30 caracteres para describir el propósito.';
     }
     if (s === 2) {
       if (!title) newErrors.title = 'El título es obligatorio.';
@@ -153,22 +153,22 @@ export function CreateProposalWizard({
           {step === 1 && (
             <div className="space-y-6 animate-in slide-in-from-right-4">
               <div>
-                <h4 className="text-xl font-serif text-stone-800 mb-2">¿Qué está pasando que necesita cambiar?</h4>
+                <h4 className="text-xl font-serif text-stone-800 mb-2">¿Cuál es el propósito o tensión que motiva esta propuesta?</h4>
                 <p className="text-xs text-stone-500 leading-relaxed">
-                  Describe la situación actual, no la solución. La propuesta viene después. Esto ayuda a la comunidad a entender el "por qué".
+                  Describe la situación actual o necesidad, no la solución. La propuesta viene después. Esto ayuda a la comunidad a entender el "por qué".
                 </p>
               </div>
               <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Ej: Los martes hay mucho ruido en el salón común y los que trabajamos desde casa no podemos concentrarnos..."
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                placeholder="Ej: Resolver las dificultades de concentración y facilitar el trabajo remoto mediante la regulación del ruido en el salón común los martes..."
                 className="w-full min-h-[150px] p-6 rounded-3xl border-2 border-[#EAE2D6] bg-white focus:border-[#6B705C] outline-none transition-all text-stone-700"
               />
-              <FieldError message={errors.reason} />
+              <FieldError message={errors.purpose} />
               <FieldError message={errors.form} />
               <div className="flex justify-between items-center">
-                <span className={`text-[10px] font-bold uppercase ${reason.length < 30 ? 'text-rose-400' : 'text-teal-600'}`}>
-                  {reason.length < 30 ? `Faltan ${30 - reason.length} caracteres` : 'Tensión bien formulada ✓'}
+                <span className={`text-[10px] font-bold uppercase ${purpose.length < 30 ? 'text-rose-400' : 'text-teal-600'}`}>
+                  {purpose.length < 30 ? `Faltan ${30 - purpose.length} caracteres` : 'Propósito bien formulado ✓'}
                 </span>
               </div>
             </div>

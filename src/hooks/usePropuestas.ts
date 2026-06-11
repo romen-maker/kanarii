@@ -15,7 +15,13 @@ export function usePropuestas(communityId: string) {
         return () => {};
       }
       const q = getPropuestasQuery(communityId);
-      return subscribeToCollection(q, onData, 'Listar propuestas', onError);
+      return subscribeToCollection(q, (data) => {
+        const mapped = data.map(p => ({
+          ...p,
+          purpose: p.purpose ?? p.reason ?? ''
+        }));
+        onData(mapped);
+      }, 'Listar propuestas', onError);
     },
     [communityId, hasCommunity]
   );

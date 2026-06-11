@@ -32,7 +32,16 @@ export function listenPropuesta(
   callback: (propuesta: Propuesta | null) => void,
   onError?: (err: Error) => void
 ): () => void {
-  return subscribeToDocument<Propuesta>('propuestas', propuestaId, callback, `propuesta/${propuestaId}`, onError);
+  return subscribeToDocument<any>('propuestas', propuestaId, (data) => {
+    if (data) {
+      callback({
+        ...data,
+        purpose: data.purpose ?? data.reason ?? ''
+      } as Propuesta);
+    } else {
+      callback(null);
+    }
+  }, `propuesta/${propuestaId}`, onError);
 }
 
 export async function createPropuesta(propuesta: Partial<Propuesta>): Promise<string> {
@@ -41,7 +50,7 @@ export async function createPropuesta(propuesta: Partial<Propuesta>): Promise<st
       ...propuesta,
       title: propuesta.title || 'Sin título',
       description: propuesta.description || '',
-      reason: propuesta.reason || '',
+      purpose: propuesta.purpose || '',
       deadline: propuesta.deadline instanceof Date ? Timestamp.fromDate(propuesta.deadline) : (propuesta.deadline || null),
       reviewDate: propuesta.reviewDate instanceof Date ? Timestamp.fromDate(propuesta.reviewDate) : (propuesta.reviewDate || null),
       status: propuesta.status || 'borrador',
@@ -99,7 +108,11 @@ export async function registerPropuestaResponse(
     if (!propSnap.exists()) {
       throw new Error('Propuesta no encontrada');
     }
-    const propData = propSnap.data() as Propuesta;
+    const rawData = propSnap.data();
+    const propData = {
+      ...rawData,
+      purpose: rawData?.purpose ?? rawData?.reason ?? ''
+    } as Propuesta;
 
     const batch = writeBatch(db);
     
@@ -204,7 +217,11 @@ export async function integratePropuestaObjeciones(
     const propSnap = await getDoc(propRef);
     if (!propSnap.exists()) throw new Error('Propuesta no encontrada');
     
-    const propData = propSnap.data() as Propuesta;
+    const rawData = propSnap.data();
+    const propData = {
+      ...rawData,
+      purpose: rawData?.purpose ?? rawData?.reason ?? ''
+    } as Propuesta;
     const batch = writeBatch(db);
 
     // 1. Actualizar la propuesta principal

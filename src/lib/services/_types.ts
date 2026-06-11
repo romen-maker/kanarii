@@ -418,7 +418,7 @@ export interface Propuesta {
   id?: string;
   title: string;
   description: string;
-  reason: string;
+  purpose: string;
   authorId: string;
   communityId: string;
   status: 'borrador' | 'abierta' | 'en_objeciones' | 'integrando' | 'acordada' | 'descartada';
