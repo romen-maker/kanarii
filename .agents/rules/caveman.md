@@ -84,7 +84,7 @@ Si un archivo fuera de la Caja tiene un error bloqueante, el agente debe **pedir
 Cuando durante una sesión el usuario lance una idea, pregunta o sugerencia que no sea parte de la tarea activa en el `task-XXX.md`:
 
 1. El agente **no debate, no analiza, no desvía** el flujo.
-2. Escribe la idea en `docs/idea-inbox/YYYY-MM-DD.md` con esta estructura:
+2. Escribe la idea en `docs/idea-inbox/YYYY-MM-DD.md` (si el archivo ya existe, **concatena** la idea al final para no sobreescribir ideas previas del mismo día) con esta estructura:
 
 ```markdown
 - **Idea:** [descripción de la idea]
