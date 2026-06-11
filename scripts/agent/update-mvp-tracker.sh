@@ -45,7 +45,7 @@ echo "🔍 Leyendo capacidades desde $TRACKER..."
 # --- Parsear filas de capacidad (| C1 | ... | peso | estado | % | ... ) ---
 # Formato esperado: | C? | Nombre | peso | estado | % | ... |
 # Usamos python3 para la aritmtica de punto flotante
-PYTHON_RESULT=$(python3 - <<'EOF'
+PYTHON_RESULT=$(python3 - "$TRACKER" <<'EOF'
 import sys, re, pathlib
 
 tracker = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "").read_text() if len(sys.argv) > 1 else open('/dev/stdin').read()
@@ -68,9 +68,9 @@ if capacities_found == 0:
     sys.exit(1)
 
 global_pct = total_weighted / 100
-print(f"{global_pct:.2f}")
+print(round(global_pct))
 EOF
-"$TRACKER")
+)
 
 if [[ "$PYTHON_RESULT" == ERROR* ]]; then
   echo "❌ $PYTHON_RESULT"
@@ -78,7 +78,7 @@ if [[ "$PYTHON_RESULT" == ERROR* ]]; then
 fi
 
 GLOBAL_PCT="$PYTHON_RESULT"
-GLOBAL_PCT_ROUNDED=$(printf "%.0f" "$GLOBAL_PCT")
+GLOBAL_PCT_ROUNDED="$GLOBAL_PCT"
 TODAY=$(date +%Y-%m-%d)
 
 echo "📊 Progreso MVP calculado: ${GLOBAL_PCT}% → ${GLOBAL_PCT_ROUNDED}%"
