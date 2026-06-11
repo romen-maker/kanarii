@@ -123,12 +123,13 @@ service cloud.firestore {
           )
         )
       );
-      // Actualizar: solo admin de la comunidad
-      allow update: if request.auth != null && hasRole(resource.data.communityId, 'admin');
-      // Borrar: Propio usuario que sale de la comunidad o admin de la comunidad que expulsa
+      // Actualizar: solo admin de la comunidad o admin global
+      allow update: if request.auth != null && (hasRole(resource.data.communityId, 'admin') || isGlobalAdmin());
+      // Borrar: Propio usuario que sale de la comunidad o admin de la comunidad que expulsa o admin global
       allow delete: if request.auth != null && (
         resource.data.userId == request.auth.uid ||
-        hasRole(resource.data.communityId, 'admin')
+        hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin()
       );
 
       // Subcolección de notificaciones del miembro
@@ -141,9 +142,10 @@ service cloud.firestore {
     // ─── INVITACIONES (Colección Plana) ────────────────────────────────────
     match /invitaciones/{codigo} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && hasRole(request.resource.data.communityId, 'admin');
+      allow create: if request.auth != null && (hasRole(request.resource.data.communityId, 'admin') || isGlobalAdmin());
       allow update: if request.auth != null && (
         hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin() ||
         (
           // Incremento controlado de usos al unirse
           request.resource.data.usosActuales == resource.data.usosActuales + 1 &&
@@ -161,7 +163,7 @@ service cloud.firestore {
           )
         )
       );
-      allow delete: if request.auth != null && hasRole(resource.data.communityId, 'admin');
+      allow delete: if request.auth != null && (hasRole(resource.data.communityId, 'admin') || isGlobalAdmin());
     }
 
     // ─── REGISTROS DE SALIDA (Colección Plana) ──────────────────────────────
@@ -254,40 +256,46 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         resource.data.solicitanteId == request.auth.uid ||
         resource.data.providerId == request.auth.uid ||
-        hasRole(resource.data.communityId, 'admin')
+        hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin()
       );
       allow create: if request.auth != null && hasMinRole(request.resource.data.communityId, 'miembro');
       allow update, delete: if request.auth != null && (
         resource.data.solicitanteId == request.auth.uid ||
         resource.data.providerId == request.auth.uid ||
-        hasRole(resource.data.communityId, 'admin')
+        hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin()
       );
     }
 
     // ─── ACTAS ─────────────────────────────────────────────────────────────
     match /actas/{actaId} {
       allow read: if request.auth != null && hasMinRole(resource.data.communityId, 'visitante');
-      allow create: if request.auth != null && hasRole(request.resource.data.communityId, 'admin');
-      allow update, delete: if request.auth != null && hasRole(resource.data.communityId, 'admin');
+      allow create: if request.auth != null && (hasRole(request.resource.data.communityId, 'admin') || isGlobalAdmin());
+      allow update, delete: if request.auth != null && (hasRole(resource.data.communityId, 'admin') || isGlobalAdmin());
     }
 
     // ─── FICHAS (Privadas: solo dueño o admin de comunidad) ─────────────────
     match /fichas/{fichaId} {
       allow read: if request.auth != null && (
         request.auth.uid == fichaId || 
-        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin'))
+        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin')) ||
+        isGlobalAdmin()
       );
       allow create: if request.auth != null && (
         request.auth.uid == fichaId || 
-        (request.resource.data.communityId != null && hasRole(request.resource.data.communityId, 'admin'))
+        (request.resource.data.communityId != null && hasRole(request.resource.data.communityId, 'admin')) ||
+        isGlobalAdmin()
       );
       allow update: if request.auth != null && (
         request.auth.uid == fichaId || 
-        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin'))
+        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin')) ||
+        isGlobalAdmin()
       );
       allow delete: if request.auth != null && (
         request.auth.uid == fichaId || 
-        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin'))
+        (resource.data.communityId != null && hasRole(resource.data.communityId, 'admin')) ||
+        isGlobalAdmin()
       );
     }
 
@@ -318,7 +326,8 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow read, update, delete: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
-        hasRole(resource.data.communityId, 'admin')
+        hasRole(resource.data.communityId, 'admin') ||
+        isGlobalAdmin()
       );
     }
   }
