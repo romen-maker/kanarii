@@ -232,3 +232,10 @@ El script `close-task.sh` lo elimina automáticamente. Si por algún motivo pers
 rm .agent-session.lock
 ```
 Mostrar: `"✅ Sesión cerrada. Hasta la próxima."`
+
+## Contrato de completitud (ADR-021)
+Antes de cerrar cualquier tarea que toque Firestore, revisar:
+- Nueva colección → regla en firestore.rules + deploy
+- Nuevo modelo → migración de datos existentes
+- Nuevos permisos → community_members sincronizado
+- Escritura múltiple → writeBatch obligatorio
