@@ -5,7 +5,7 @@ description: Experto en la creación de nuevas habilidades (Skills) para Antigra
 
 # Creador de Habilidades
 
-Esta habilidad te convierte en un experto capaz de guiar e implementar nuevas Skills dentro del ecosistema Antigravity, asegurando consistencia y calidad.
+Esta habilidad te convierte en un experto capaz de guiar e implementar nuevas Skills dentro del ecosistema Antigravity de cualquier proyecto, asegurando consistencia y calidad.
 
 ## Prerrequisitos
 - Comprender el propósito de la nueva habilidad.
@@ -57,7 +57,17 @@ Pasos detallados, secuenciales y deterministas que el agente debe seguir.
 
 ### 4. Registro en Inventario
 1.  **Localizar Inventario**:
-    - El archivo suele estar en `.agents/context/agent-skills-inventory.md`.
+    - El archivo de inventario del proyecto destino debe ser `.agents/context/skills-inventory.md`.
+    - **Guardia Obligatoria**: Si el archivo `.agents/context/skills-inventory.md` o el directorio `.agents/context/` no existen, créalos.
+      - Si el directorio `.agents/context/` no existe, ejecute: `mkdir -p .agents/context/`.
+      - Cree el archivo `.agents/context/skills-inventory.md` con las siguientes cabeceras iniciales:
+        ```markdown
+        # Inventario de Habilidades de {{PROJECT_NAME}}
+
+        Este archivo mantiene el registro y la documentación de las habilidades (skills) del agente en el proyecto.
+
+        ## Lista de Habilidades Activas
+        ```
 2.  **Añadir Entrada**:
     - Añade una nueva entrada al final de la lista "Lista de Habilidades Activas".
     - Sigue el formato:
@@ -67,7 +77,7 @@ Pasos detallados, secuenciales y deterministas que el agente debe seguir.
       - **Cómo invocar**: <ejemplo-invocación>
       - **Ubicación**: `.agents/skills/<nombre-tecnico>/`
       ```
-    - Asegúrate de incrementar el número secuencial (N).
+    - Asegúrate de incrementar el número secuencial (N). Si es un archivo nuevo, empieza con `1`.
 3.  **Actualizar Fecha**:
     - Ve al final del documento y actualiza la línea `*Última actualización: ...*` con la fecha actual.
 

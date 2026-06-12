@@ -70,12 +70,7 @@ fi
 # Regla clave: si un componente puede existir en components/ pero necesita
 # estar *usado* en pages/ para considerarse integrado, usa SCOPE="pages".
 AUDIT_SYMBOLS=(
-  "C2:ManualSeccionesViewer integrado en páginas de perfil|ManualSeccionesViewer|pages"
-  "C4:sistema leído/no leído (vistoPorSolicitante)|vistoPorSolicitante|"
-  "C4:badge reactivo nav acuerdos|acuerdoBadge\|badgeAcuerdo\|badgeReactivo|"
-  "C5:SectionHelp presente en páginas clave|SectionHelp|"
-  "C5:TourStepLayout wrapper común|TourStepLayout|"
-  "C6:paginación cursor-based startAfter|startAfter|"
+  # "C1:Ejemplo de criterio|SímboloAGrear|"
 )
 
 # ── Colores (degradan graciosamente si no hay tty) ────────────────────────────

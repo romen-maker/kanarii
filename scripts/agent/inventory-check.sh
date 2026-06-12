@@ -68,23 +68,24 @@ for keyword in $KEYWORDS; do
   fi
 done
 
-# 3. Buscar interfaces/tipos en _types.ts
+# 3. Buscar interfaces/tipos en archivos _types.ts
 echo ""
-echo "📄 Tipos relacionados en _types.ts:"
-TYPES_FILE="$ROOT/src/lib/services/_types.ts"
-if [ -f "$TYPES_FILE" ]; then
-  for keyword in $KEYWORDS; do
-    MATCHES=$(grep -i "$keyword" "$TYPES_FILE" 2>/dev/null | head -3 || true)
-    if [ -n "$MATCHES" ]; then
-      echo "  '$keyword':"
-      echo "$MATCHES" | sed 's|^|    ↳ |'
-      FOUND_COUNT=$((FOUND_COUNT + 1))
-      ALL_MATCHES="$ALL_MATCHES\n$TYPES_FILE"
-    fi
+echo "📄 Tipos relacionados en archivos _types.ts:"
+TYPES_FILES=$(find "$ROOT/src" -name "_types.ts" 2>/dev/null || true)
+if [ -n "$TYPES_FILES" ]; then
+  for TYPES_FILE in $TYPES_FILES; do
+    for keyword in $KEYWORDS; do
+      MATCHES=$(grep -i "$keyword" "$TYPES_FILE" 2>/dev/null | head -3 || true)
+      if [ -n "$MATCHES" ]; then
+        echo "  '$keyword' en $(basename "$TYPES_FILE"):"
+        echo "$MATCHES" | sed 's|^|    ↳ |'
+        FOUND_COUNT=$((FOUND_COUNT + 1))
+        ALL_MATCHES="$ALL_MATCHES\n$TYPES_FILE"
+      fi
+    done
   done
-  [ $FOUND_COUNT -eq 0 ] && echo "    (sin tipos relacionados)"
 else
-  echo "    (_types.ts no encontrado)"
+  echo "    (sin archivos _types.ts encontrados)"
 fi
 
 # 4. Hooks relacionados

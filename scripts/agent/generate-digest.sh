@@ -101,7 +101,7 @@ for pat in "${EXCLUDE_PATTERNS[@]}"; do
 done
 
 {
-  echo "# Kanarii — LLM Context Digest"
+  echo "# ${PROJECT_NAME} — LLM Context Digest"
   echo "# Generado: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
   echo "# Rama: $BRANCH | SHA: $SHA | Commit: $COMMIT_MSG"
   echo "# Filtro: $FILTER"
@@ -128,4 +128,6 @@ done
 
 TOKEN_ESTIMATE=$(wc -w < "$OUT_FILE" | awk '{printf "%dk", $1/750}')
 echo "✅ Digest local generado: $FILENAME (~$TOKEN_ESTIMATE tokens estimados)"
+echo "   Ruta: $OUT_FILE"
+ados)"
 echo "   Ruta: $OUT_FILE"

@@ -1,11 +1,11 @@
 ---
 name: workflow-designer
-description: Crea, revisa y refactoriza workflows de Antigravity (.agents/workflows/) siguiendo el estándar oficial y las convenciones del repo Kanarii.
+description: Crea, revisa y refactoriza workflows de Antigravity (.agents/workflows/) siguiendo el estándar oficial y las convenciones del proyecto.
 ---
 
 # Workflow Designer
 
-Esta habilidad convierte al agente en experto en el ciclo de vida completo de los workflows de Antigravity: creación desde cero, revisión de calidad, refactorización y registro en inventario. Se activa cuando el usuario quiere crear un flujo nuevo, mejorar uno existente o auditar que los workflows actuales siguen el estándar.
+Esta habilidad convierte al agente en experto en el ciclo de vida completo de los workflows de Antigravity: creación desde cero, revisión de calidad, refactorización y registro. Se activa cuando el usuario quiere crear un flujo nuevo, mejorar uno existente o auditar que los workflows actuales siguen el estándar.
 
 ## Diferencia clave: Workflow vs Skill vs Rule
 
@@ -58,6 +58,8 @@ description: <Qué hace este workflow en una línea — aparece en el tooltip de
 <Lista de rutas relevantes para este workflow — ayuda al agente a orientarse>
 
 ## Protocolo
+
+
 
 ### 1. <Primer paso>
 - Acción concreta.
@@ -123,7 +125,7 @@ Usar cuando el usuario dice: "revisa el workflow X", "¿está bien escrito?", "�
 - [ ] Los pasos que pueden bloquearse tienen instrucción de salida (`SKIP_*=1` o similar)
 
 **Advertencia de rango:** si el workflow menciona roles (admin, miembro, visitante),
-verifica que la lógica de acceso sea consistente con la gobernanza S3 del proyecto.
+verifica que la lógica de acceso sea consistente con la gobernanza y la matriz de permisos del proyecto.
 Los workflows no deben crear jerarquías invisibles de permisos.
 
 ### Entrega de la revisión
@@ -154,7 +156,7 @@ Un workflow es demasiado grande si:
 En ese caso, propón dividirlo en dos workflows con nombres distintos.
 
 ## Ejemplos de workflows bien formados en este repo
-
+(Revisar en `.agents/workflows/` si existen):
 - `session-close.md` — protocolo de cierre con scripts, guardrails y reglas claras
 - `session-start.md` — activación de contexto con verificaciones de estado
 - `sprint-planning.md` — planning con llamada a `check-sprint.sh`

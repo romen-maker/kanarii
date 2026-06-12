@@ -18,7 +18,7 @@ LOCK="$ROOT/.agent-session.lock"
 TASK_ID="${1:-}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🔍 CHECK LAZY-PLANNING — Kanarii"
+echo "🔍 CHECK LAZY-PLANNING"
 [ -n "$TASK_ID" ] && echo "    Tarea: $TASK_ID"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
