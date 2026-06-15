@@ -26,6 +26,17 @@ TARGET_SKILLS="$TARGET_PROJECT/.agents/skills"
 
 echo "🔄 Sincronizando Agent OS con $TARGET_PROJECT..."
 
+# Comprobar actualizaciones de Agent OS Core remoto
+if [ -d "$AGENT_OS_PATH/.git" ]; then
+    AGENT_OS_LOCAL=$(git -C "$AGENT_OS_PATH" rev-parse HEAD 2>/dev/null)
+    AGENT_OS_REMOTE=$(timeout 3 git -C "$AGENT_OS_PATH" ls-remote origin HEAD 2>/dev/null | cut -f1)
+    if [[ -n "$AGENT_OS_REMOTE" && "$AGENT_OS_LOCAL" != "$AGENT_OS_REMOTE" ]]; then
+        echo "⚠️  AGENT OS CORE: El núcleo tiene actualizaciones pendientes en GitHub."
+        echo "   Haz 'git pull' en $AGENT_OS_PATH y vuelve a ejecutar sync.sh."
+        echo "---"
+    fi
+fi
+
 if [ ! -d "$TARGET_RULES" ]; then
     echo "⚠️ La carpeta $TARGET_RULES no existe. ¿Has ejecutado install.sh primero?"
     exit 1
@@ -39,6 +50,17 @@ for rule in "$AGENT_OS_RULES"/*.md; do
     echo "    [sync] $filename"
 done
 
+if [ -d "$TARGET_PROJECT/.agents/workflows" ]; then
+    echo "  Sincronizando workflows..."
+    AGENT_OS_WORKFLOWS="$AGENT_OS_PATH/.agents/workflows"
+    TARGET_WORKFLOWS="$TARGET_PROJECT/.agents/workflows"
+    for wf in "$AGENT_OS_WORKFLOWS"/*.md; do
+        filename=$(basename "$wf")
+        cp -n "$wf" "$TARGET_WORKFLOWS/$filename"
+        echo "    [sync] $filename"
+    done
+fi
+
 if [ -d "$TARGET_SCRIPTS" ]; then
     echo "  Sincronizando scripts..."
     for script in "$AGENT_OS_SCRIPTS"/*.sh; do
@@ -47,6 +69,11 @@ if [ -d "$TARGET_SCRIPTS" ]; then
         chmod +x "$TARGET_SCRIPTS/$filename"
         echo "    [sync] $filename"
     done
+    if [ -d "$AGENT_OS_SCRIPTS/lib" ]; then
+        cp -r "$AGENT_OS_SCRIPTS/lib" "$TARGET_SCRIPTS/" 2>/dev/null || true
+        chmod +x "$TARGET_SCRIPTS"/lib/*.sh 2>/dev/null || true
+        echo "    [sync] folder: lib"
+    fi
 fi
 
 if [ -d "$AGENT_OS_SKILLS" ]; then
@@ -65,5 +92,15 @@ if [ -d "$AGENT_OS_SKILLS" ]; then
         fi
     done
 fi
+
+# Copiar changelog del core a .agents/context/agent-os-changelog.md
+mkdir -p "$TARGET_PROJECT/.agents/context"
+if [ -f "$AGENT_OS_PATH/changelog.md" ]; then
+    cp "$AGENT_OS_PATH/changelog.md" "$TARGET_PROJECT/.agents/context/agent-os-changelog.md"
+    echo "  Sincronizando changelog del core..."
+fi
+
+# Guardar marca de fecha de última sincronización
+echo "$(date -u +%Y-%m-%d)" > "$TARGET_PROJECT/.agents/context/last-sync.md"
 
 echo "✅ Sincronización completada."
