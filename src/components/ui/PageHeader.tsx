@@ -7,6 +7,7 @@ interface PageHeaderProps {
   icon?: LucideIcon;
   actions?: React.ReactNode;
   helpNode?: React.ReactNode;
+  hideRightActions?: boolean;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export function PageHeader({
   icon: Icon,
   actions,
   helpNode,
+  hideRightActions = false,
   className = '',
 }: PageHeaderProps) {
   return (
@@ -28,7 +30,7 @@ export function PageHeader({
             {helpNode}
           </div>
         </div>
-        {actions && (
+        {!hideRightActions && actions && (
           <div className="flex items-center shrink-0">
             {actions}
           </div>

@@ -113,3 +113,4 @@
 | Task File: — Unificar Servicios en MCP y Validar Pertenencia a Comunidad | T-094 | sprint-22 | src/adapters/mcp/server.ts,src/lib/services/acuerdos.ts,src/lib/services/tareas.ts |
 | Task File: — Suite de Tests de Integración Multicanal (HTTP, Telegram, MCP) y Checklist de Verificación | T-095 | sprint-22 | — |
 | Task File: — Auditoría y Resolución de Warning CSP `unsafe-eval` | T-096 | sprint-22 | — |
+| Task File: — Limpieza de Acciones Solapadas y Adaptación Móvil de TopBar | T-099 | sprint-22 | src/components/layout/TopBar.tsx,src/components/ui/PageHeader.tsx,src/hooks/useTopBarActions.ts |
