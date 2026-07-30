@@ -129,12 +129,18 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] ~~Despliegue Kanarii en Coolify~~ — **Descartado por decisión de producto** (2026-06-05). Firebase Hosting es suficiente para la fase actual (Sprint 11 — T-042 lo resolvió).
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
-## 🤖 Agentes e Interfaces Conversacionales (Sprint 17)
-- [ ] [ALTO] **T-072**: Core Domain Use-Cases & Contrato de Identidad/Trazabilidad (`ExecutionCtx` + Audit).
-- [ ] [ALTO] **T-073**: Flujo de Vinculación de Identidad Telegram <-> Kanarii (Deep Link / Token Efímero).
-- [ ] [ALTO] **T-074**: Telegram Bot Adapter (Cliente ligero con UX conversacional y botones inline).
-- [ ] [MEDIO] **T-075**: MCP Adapter Server (Herramientas de alto nivel orientadas a resultados para LLMs).
-- [ ] [BAJO] **T-076**: Documentación de Integración, Trazabilidad por Canal y ADR-024.
+## 🤖 Identidad, Trazabilidad y Confirmaciones — Fundación (Sprint 17)
+- [ ] [ALTO] **T-072**: Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`).
+- [ ] [ALTO] **T-073**: Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`).
+- [ ] [ALTO] **T-074**: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`).
+- [ ] [ALTO] **T-075**: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`).
+- [ ] [BAJO] **T-076**: UI Web: Modal de Vinculación Telegram en Perfil de Usuario (`PerfilView.tsx`).
+
+## 🤖 Agentes e Interfaces Conversacionales — Integración (Sprint 18)
+- [ ] [ALTO] **T-077**: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard.
+- [ ] [ALTO] **T-078**: MCP Adapter Server exponiendo herramientas orientadas a resultados.
+- [ ] [MEDIO] **T-079**: Endpoints HTTP API y middleware de autenticación por token.
+- [ ] [BAJO] **T-080**: Documentación de Arquitectura de Agentes e instalación de ADR-024.
 
 ---
 
