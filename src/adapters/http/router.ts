@@ -8,8 +8,8 @@ import { confirmPendingAction, cancelPendingAction } from '../../lib/services/pe
 export function createHttpRouter(): Router {
   const router = Router();
 
-  // Aplicar middleware de autenticación por token
-  router.use(authenticateApiToken);
+  // Aplicar middleware de autenticación por token exclusivamente a endpoints de la API (/api)
+  router.use('/api', authenticateApiToken);
 
   /**
    * POST /api/v1/pending-actions/:id/confirm

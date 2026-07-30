@@ -1,7 +1,7 @@
 # Sprint 20 — 30/07/2026 → 03/08/2026: Backend Node en Docker & Despliegue en Coolify
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Objetivo del Sprint
 Construir un servidor ejecutable unificado en Node.js/Express (`src/server.ts`), empaquetarlo en una imagen de contenedor Docker multi-etapa de producción y configurar la orquestación para Coolify (VPS), permitiendo servir el frontend SPA estático, la API REST multicanal, la integración del bot de Telegram y la verificación mediante `/health` bajo una URL temporal y lista para un dominio propio.
@@ -16,8 +16,8 @@ Construir un servidor ejecutable unificado en Node.js/Express (`src/server.ts`),
 |---|---|---|---|---|
 | T-084 | Servidor Unificado Node.js (`src/server.ts`) | M | ✅ Completada | [task-084.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-084.md) |
 | T-085 | Dockerización de Producción Multi-etapa (`Dockerfile` + `.dockerignore`) | M | ✅ Completada | [task-085.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-085.md) |
-| T-086 | Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`) | S | ✅ Completada | [task-086.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-086.md) |
-| T-087 | Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck) | S | ⬜ Pendiente | — |
+| T-086 | Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`) | S | ✅ Completada | [task-086.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-086.md) |
+| T-087 | Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck) | S | ✅ Completada | [task-087.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-087.md) |
 
 ## Lo que se deja Fuera Explícitamente
 - ❌ Refactors en capas de UI o componentes de React.
