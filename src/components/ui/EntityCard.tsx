@@ -51,6 +51,8 @@ interface EntityCardProps {
   onArchive?: () => void;
   onUnarchive?: () => void;
   onClick?: () => void;
+  onActionClick?: () => void;
+  actionLabel?: string;
   className?: string;
 }
 
