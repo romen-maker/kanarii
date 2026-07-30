@@ -9,7 +9,6 @@ import { SyncIndicator } from './ui/SyncIndicator';
 import { useNotificaciones } from '../hooks/useNotificaciones';
 import NotifBadge from './ui/NotifBadge';
 import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
-import { UserAvatarMenu } from './layout/UserAvatarMenu';
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -114,12 +113,9 @@ export function Sidebar() {
     <aside className="hidden md:flex flex-col w-[240px] h-screen sticky top-0 bg-[#FDFBF7] border-r border-[#EAE2D6] overflow-y-auto">
     {/* Header / Logo y Selector de Comunidad */}
     <div className="p-6 pb-4">
-      <div className="flex items-center justify-between gap-2 mb-6">
-        <div className="flex items-center gap-3">
-          <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
-          <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
-        </div>
-        <UserAvatarMenu />
+      <div className="flex items-center gap-3 mb-6">
+        <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+        <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
       </div>
 
       {/* Selector de Comunidad Premium */}

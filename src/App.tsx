@@ -27,6 +27,7 @@ import { Activity, ArrowRight } from 'lucide-react';
 import { ToastProvider, useToast } from './components/Toaster';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
+import { Header } from './components/layout/Header';
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -48,9 +49,10 @@ function AppContent() {
 
   return (
     <div className="flex min-h-screen bg-[#F9F7F1]">
+      {showNav && <Header />}
       {showNav && <Sidebar />}
       
-      <main className="flex-1 min-w-0">
+      <main className={`flex-1 min-w-0 ${showNav ? 'pt-14 md:pt-0' : ''}`}>
         <React.Suspense fallback={<LoadingSpinner />}>
           <Routes>
           <Route path="/" element={
