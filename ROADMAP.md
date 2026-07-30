@@ -142,9 +142,15 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] [BAJO] **T-080**: Documentación de Arquitectura de Agentes, integración UI y ADR-024.
 
 ## 🧪 Verificación End-to-End & Validación Multicanal (Sprint 19)
-- [ ] [ALTO] **T-081**: Integration Test Suite End-to-End Multicanal (`tests/e2e-multichannel.test.ts`).
-- [ ] [ALTO] **T-082**: Runner CLI de Simulación Interactiva Multicanal (`scripts/simulate-multichannel-flow.ts`).
-- [ ] [MEDIO] **T-083**: Hardening y Ajustes de Integración Multicanal.
+- [x] [ALTO] **T-081**: Integration Test Suite End-to-End Multicanal (`tests/e2e-multichannel.test.ts`).
+- [x] [ALTO] **T-082**: Runner CLI de Simulación Interactiva Multicanal (`scripts/simulate-multichannel-flow.ts`).
+- [x] [MEDIO] **T-083**: Hardening y Ajustes de Integración Multicanal.
+
+## 🐳 Backend Node en Docker & Despliegue en Coolify (Sprint 20)
+- [ ] [ALTO] **T-084**: Servidor Unificado Node.js (`src/server.ts`).
+- [ ] [ALTO] **T-085**: Dockerización de Producción Multi-etapa (`Dockerfile` + `.dockerignore`).
+- [ ] [MEDIO] **T-086**: Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`).
+- [ ] [MEDIO] **T-087**: Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck).
 
 ---
 
