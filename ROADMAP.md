@@ -136,10 +136,10 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] [ALTO] **T-075**: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`).
 
 ## 🤖 Agentes e Interfaces Conversacionales — Integración (Sprint 18)
-- [ ] [ALTO] **T-077**: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard.
-- [ ] [ALTO] **T-078**: MCP Adapter Server exponiendo herramientas orientadas a resultados.
-- [ ] [MEDIO] **T-079**: Endpoints HTTP API y middleware de autenticación por token.
-- [ ] [BAJO] **T-080**: Documentación de Arquitectura de Agentes, integración UI y ADR-024.
+- [x] [ALTO] **T-077**: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard.
+- [x] [ALTO] **T-078**: MCP Adapter Server exponiendo herramientas orientadas a resultados.
+- [x] [MEDIO] **T-079**: Endpoints HTTP API y middleware de autenticación por token.
+- [x] [BAJO] **T-080**: Documentación de Arquitectura de Agentes, integración UI y ADR-024.
 
 ---
 
