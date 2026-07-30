@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Compass, ShieldCheck, Ticket, Key, Info, MessageSquare, ArrowRight, Loader2, X, CheckCircle2, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -17,6 +17,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useToast } from '../components/Toaster';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 
 /**
  * TODO: Revisión sistémica de visibilidad de inputs en toda la app.
@@ -192,23 +193,32 @@ export function ComunidadesView() {
     );
   }
 
+  // --- Botón de TopBar ---
+  const goToNuevaComunidad = useCallback(() => navigate('/nueva-comunidad'), [navigate]);
+
+  const topBarActionBtn = useMemo(() => (
+    appUser ? (
+      <button
+        onClick={goToNuevaComunidad}
+        className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+        title="Crear comunidad"
+      >
+        <Plus className="w-4 h-4 text-emerald-300" />
+        <span className="hidden sm:inline">Crear comunidad</span>
+        <span className="sm:hidden">Crear</span>
+      </button>
+    ) : null
+  ), [appUser, goToNuevaComunidad]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
+
   return (
     <PageContainer>
       <PageHeader
         title="Explorar Comunidades"
         subtitle="Encuentra tu lugar en la red. Únete a un espacio existente o descubre nuevas formas de colaborar."
         icon={Compass}
-        actions={
-          appUser && (
-            <button
-              onClick={() => navigate('/nueva-comunidad')}
-              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-              title="Crear comunidad"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-          )
-        }
+        hideRightActions={true}
       />
 
       <div className="p-6 space-y-12">

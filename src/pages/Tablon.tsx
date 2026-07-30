@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePosts } from '../hooks/usePosts';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
@@ -13,6 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 
 const CATEGORIAS = [
   { id: 'habilidad', label: 'Habilidad' },
@@ -42,6 +43,22 @@ export default function Tablon() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [initialPostText, setInitialPostText] = useState<string | undefined>(undefined);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  const openCreateModal = useCallback(() => setIsCreateModalOpen(true), []);
+
+  const topBarActionBtn = useMemo(() => (
+    <button
+      onClick={openCreateModal}
+      className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+      title="Publicar algo"
+    >
+      <Plus className="w-4 h-4 text-emerald-300" />
+      <span className="hidden sm:inline">Publicar</span>
+      <span className="sm:hidden">+</span>
+    </button>
+  ), [openCreateModal]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   useEffect(() => {
     const mention = location.state?.openNewPostWithMention;
@@ -84,15 +101,7 @@ export default function Tablon() {
         title="Tablón Comunitario"
         subtitle="Colaboración asíncrona y apoyo mutuo"
         icon={MessageSquare}
-        actions={
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-            title="Publicar algo"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        }
+        hideRightActions={true}
       />
 
       <div className="p-6 space-y-6">

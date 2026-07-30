@@ -183,7 +183,7 @@ export function CruceView() {
           </button>
           <div className="flex items-center gap-3">
             <Layers className="text-[#6B705C] w-8 h-8" />
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Cruce de Perfiles</h1>
+            <h1 className="text-3xl font-serif text-text-heading">Cruce de Perfiles</h1>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
@@ -18,6 +18,7 @@ import SectionHelp from '../components/help/SectionHelp';
 import ActasUISimulation from '../components/help/ActasUISimulation';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
@@ -52,6 +53,24 @@ export function ActasPanel() {
     if (!actaSeleccionada) return null;
     return actas.find(a => a.id === actaSeleccionada.id) || actaSeleccionada;
   }, [actas, actaSeleccionada]);
+
+  const openNuevaActa = useCallback(() => setIsModalOpen(true), []);
+
+  const topBarActionBtn = useMemo(() => (
+    appUser?.role === 'admin' ? (
+      <button
+        onClick={openNuevaActa}
+        className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+        title="Nueva Acta"
+      >
+        <Plus className="w-4 h-4 text-emerald-300" />
+        <span className="hidden sm:inline">Nueva Acta</span>
+        <span className="sm:hidden">Nueva</span>
+      </button>
+    ) : null
+  ), [appUser?.role, openNuevaActa]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   const handleConfirmDelete = (id: string) => {
     if (actaSeleccionada?.id === id) setActaSeleccionada(null);
@@ -98,17 +117,7 @@ export function ActasPanel() {
             animationNode={<ActasUISimulation />} 
           />
         }
-        actions={
-          appUser?.role === 'admin' && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-              title="Nueva Acta"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-          )
-        }
+        hideRightActions={true}
       />
 
       <div className="flex-1 flex w-full max-w-[1600px] mx-auto relative overflow-hidden">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer, View, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -15,6 +15,7 @@ import { Plus, Calendar as CalendarIcon, List } from 'lucide-react';
 import { useUndoableDelete } from '../hooks/useUndoableDelete';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 import { kinDeHoy } from '../lib/kinMaya';
 
 const locales = {
@@ -61,6 +62,26 @@ export default function CalendarioView() {
   const canEdit = !selectedEvento || isCreator || isAdmin;
 
   const filteredEventos = eventos.filter(e => e.id !== pendingId);
+
+  const openAddEvento = useCallback(() => {
+    setSelectedEvento(null);
+    setInitialDates(undefined);
+    setIsModalOpen(true);
+  }, []);
+
+  const topBarActionBtn = useMemo(() => (
+    <button
+      onClick={openAddEvento}
+      className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+      title="Añadir evento"
+    >
+      <Plus className="w-4 h-4 text-emerald-300" />
+      <span className="hidden sm:inline">Añadir evento</span>
+      <span className="sm:hidden">Añadir</span>
+    </button>
+  ), [openAddEvento]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   const getEventoToEdit = () => {
     if (!selectedEvento) return null;
@@ -136,18 +157,7 @@ export default function CalendarioView() {
         title="Calendario Comunitario"
         subtitle={`Sincroniza el latido de la comunidad · ${kinDeHoy().emoji} Kin ${kinDeHoy().kin} — ${kinDeHoy().sello} ${kinDeHoy().nombreTono}`}
         icon={CalendarIcon}
-        actions={
-          <button
-            onClick={() => {
-              setSelectedEvento(null);
-              setInitialDates(undefined);
-              setIsModalOpen(true);
-            }}
-            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        }
+        hideRightActions={true}
       />
 
       <div className="p-6 space-y-6">

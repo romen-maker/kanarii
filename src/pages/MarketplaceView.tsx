@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
@@ -20,6 +20,7 @@ import SectionHelp from '../components/help/SectionHelp';
 import MarketplaceUISimulation from '../components/help/MarketplaceUISimulation';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 
 const CATEGORIAS_MARKET = [
   { id: 'artesanía', label: 'Artesanía' },
@@ -59,6 +60,22 @@ export default function MarketplaceView() {
   const [acuerdoToCounter, setAcuerdoToCounter] = useState<Acuerdo | null>(null);
   const [selectedAcuerdoId, setSelectedAcuerdoId] = useState<string | null>(null);
   const [enmiendaTitle, setEnmiendaTitle] = useState<string | null>(null);
+
+  const openCreateServicio = useCallback(() => { setServicioToEdit(null); setIsCreateServicioOpen(true); }, []);
+
+  const topBarActionBtn = useMemo(() => (
+    <button
+      onClick={openCreateServicio}
+      className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+      title="Publicar oferta"
+    >
+      <Plus className="w-4 h-4 text-emerald-300" />
+      <span className="hidden sm:inline">Publicar oferta</span>
+      <span className="sm:hidden">Publicar</span>
+    </button>
+  ), [openCreateServicio]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   const selectedServicioForDetail = servicios.find(s => s.id === selectedServicioId) || null;
   const selectedAcuerdoForDetail = acuerdos.find(a => a.id === selectedAcuerdoId) || null;
@@ -215,14 +232,7 @@ export default function MarketplaceView() {
             animationNode={<MarketplaceUISimulation />} 
           />
         }
-        actions={
-          <button
-            onClick={() => { setServicioToEdit(null); setIsCreateServicioOpen(true); }}
-            className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-          >
-            <Plus size={20} className="w-6 h-6" />
-          </button>
-        }
+        hideRightActions={true}
       />
 
       <div className="p-6 space-y-6">

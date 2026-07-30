@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { usePropuestas } from '../hooks/usePropuestas';
@@ -13,6 +13,7 @@ import { CreateProposalWizard } from '../components/CreateProposalWizard';
 import { Scale, Plus, LayoutGrid, List, AlertCircle } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'abierta', title: 'Deliberación', accentColor: 'var(--color-info)' },
@@ -42,6 +43,24 @@ export function PropuestasView() {
   });
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('todas');
+
+  const openCreateWizard = useCallback(() => setShowCreateWizard(true), []);
+
+  const topBarActionBtn = useMemo(() => (
+    appUser ? (
+      <button
+        onClick={openCreateWizard}
+        className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+        title="Nueva Propuesta"
+      >
+        <Plus className="w-4 h-4 text-emerald-300" />
+        <span className="hidden sm:inline">Nueva Propuesta</span>
+        <span className="sm:hidden">Nueva</span>
+      </button>
+    ) : null
+  ), [appUser, openCreateWizard]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   const handleViewModeChange = (mode: 'kanban' | 'list') => {
     setViewMode(mode);
@@ -113,17 +132,7 @@ export function PropuestasView() {
         title="Gobernanza"
         subtitle="Consentimiento y Sociocracia S3"
         icon={Scale}
-        actions={
-          appUser && (
-            <button 
-              onClick={() => setShowCreateWizard(true)}
-              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-              title="Nueva Propuesta"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-          )
-        }
+        hideRightActions={true}
       />
 
       <div className="p-6">

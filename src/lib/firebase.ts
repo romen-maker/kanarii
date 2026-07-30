@@ -7,11 +7,6 @@ import {
   memoryLocalCache
 } from 'firebase/firestore';
 
-import dotenv from 'dotenv';
-if (typeof process !== 'undefined') {
-  dotenv.config({ path: '.env.local' });
-  dotenv.config();
-}
 
 const getEnvVar = (key: string) => {
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Proyecto } from '../lib/appService';
 import { useProyectoActions } from '../hooks/useProyectoActions';
@@ -17,6 +17,9 @@ import { ProjectDetailOverlay } from '../components/ProjectDetailOverlay';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 import SectionHelp from '../components/help/SectionHelp';
 import ProyectosUISimulation from '../components/help/ProyectosUISimulation';
+import { PageHeader } from '../components/ui/PageHeader';
+import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBarActions } from '../hooks/useTopBarActions';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'buscando_colaboradores', title: 'Buscando Ayuda', accentColor: 'var(--color-info)' },
@@ -48,6 +51,24 @@ export function ProyectosView() {
   const [initialCreateStatus, setInitialCreateStatus] = useState<Proyecto['estado']>();
 
   const loading = loadingProyectos || loadingTareas || loadingFicha;
+
+  const openCreateModal = useCallback(() => setShowCreateModal(true), []);
+
+  const topBarActionBtn = useMemo(() => (
+    appUser ? (
+      <button
+        onClick={openCreateModal}
+        className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+        title="Nuevo Proyecto"
+      >
+        <Plus className="w-4 h-4 text-emerald-300" />
+        <span className="hidden sm:inline">Nuevo Proyecto</span>
+        <span className="sm:hidden">Nuevo</span>
+      </button>
+    ) : null
+  ), [appUser, openCreateModal]);
+
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -149,40 +170,26 @@ export function ProyectosView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F7F1] pb-24 font-sans max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="bg-[#4A4E4D] pt-12 pb-6 px-6 text-[#F9F7F1] shadow-md sticky top-0 z-20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 mb-2">
-            <Briefcase className="w-8 h-8 text-[#D4C3A3]" />
-            <div className="flex items-center gap-3">
-              <h1 className="font-serif text-3xl">Proyectos</h1>
-              <SectionHelp 
-                inline={true}
-                title="Proyectos Comunitarios" 
-                description={
-                  <div className="space-y-4">
-                    <p>Los Proyectos representan las iniciativas a mediano y largo plazo desarrolladas colectivamente en la comunidad.</p>
-                    <p>Cualquier miembro puede crear un proyecto o solicitar unirse a uno existente aportando sus talentos. El tablero Kanban permite visualizar el estado del proyecto: desde la búsqueda de ayuda inicial hasta su completa realización.</p>
-                  </div>
-                } 
-                animationNode={<ProyectosUISimulation />} 
-              />
-            </div>
-          </div>
-          {appUser && !showCreateModal && (
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="p-3 bg-[#D4C3A3] text-[#4A4E4D] rounded-full hover:scale-110 transition-all shadow-lg active:scale-95"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-          )}
-        </div>
-        <p className="text-[#D4C3A3] text-sm font-medium tracking-wide">
-          Gestiona las iniciativas estratégicas de Kanarii
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Proyectos"
+        subtitle="Gestiona las iniciativas estratégicas de Kanarii"
+        icon={Briefcase}
+        helpNode={
+          <SectionHelp 
+            inline={true}
+            title="Proyectos Comunitarios" 
+            description={
+              <div className="space-y-4">
+                <p>Los Proyectos representan las iniciativas a mediano y largo plazo desarrolladas colectivamente en la comunidad.</p>
+                <p>Cualquier miembro puede crear un proyecto o solicitar unirse a uno existente aportando sus talentos. El tablero Kanban permite visualizar el estado del proyecto: desde la búsqueda de ayuda inicial hasta su completa realización.</p>
+              </div>
+            } 
+            animationNode={<ProyectosUISimulation />} 
+          />
+        }
+        hideRightActions={true}
+      />
 
       <div className="p-6">
         {loading ? (
@@ -234,6 +241,6 @@ export function ProyectosView() {
           onCreate={handleCreate}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

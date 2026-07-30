@@ -95,7 +95,7 @@ export function AdminPanel() {
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <Leaf className="text-[#6B705C] w-8 h-8" />
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel de Control Admin</h1>
+            <h1 className="text-3xl font-serif text-text-heading">Panel de Control Admin</h1>
           </div>
           <div className="hidden md:flex items-center gap-4">
             <button onClick={() => navigate('/cruce')} className="px-4 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">

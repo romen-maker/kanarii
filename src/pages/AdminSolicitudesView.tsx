@@ -356,7 +356,7 @@ export function AdminSolicitudesView() {
         
         {/* Cabecera */}
         <div className="space-y-1">
-          <h1 className="text-3xl font-serif text-[#4A4E4D]">Solicitudes de acceso</h1>
+          <h1 className="text-3xl font-serif text-text-heading">Solicitudes de acceso</h1>
           <p className="text-[#8A817C]">
             Gestiona quién puede unirse a <span className="font-bold text-[#4A4E4D]">{comunidad?.nombre}</span>
           </p>
