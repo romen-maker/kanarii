@@ -1,13 +1,79 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { logAuditEvent, getAuditLogsByCommunity } from '../../lib/services/audit';
-import { query, where, colTareas, colAcuerdos, getDocs } from '../../lib/services/_core';
-import { Tarea, Acuerdo } from '../../lib/services/_types';
+import { getMemberInfo } from '../../lib/services/members';
+import { getTareasByCommunity } from '../../lib/services/tareas';
+import { getAcuerdosByCommunity } from '../../lib/services/acuerdos';
 import { ExecutionCtx } from '../../lib/services/contracts';
 
+export type McpAccessErrorCode = 
+  | 'visitante' 
+  | 'sin_comunidad_activa' 
+  | 'no_pertenece_a_comunidad' 
+  | 'recurso_no_encontrado';
+
+export interface McpAccessResult {
+  allowed: boolean;
+  errorCode?: McpAccessErrorCode;
+  errorMessage?: string;
+  exec?: ExecutionCtx;
+}
+
 /**
- * Crea e inicializa la instancia del servidor MCP (Model Context Protocol) para Kanarii,
- * registrando las herramientas de alto nivel de consulta e inyectando ExecutionCtx.
+ * Valida el acceso del usuario a la comunidad en la capa MCP reutilizando getMemberInfo.
+ */
+export async function validateMcpAccess(userId: string, communityId: string): Promise<McpAccessResult> {
+  if (!userId || userId.startsWith('visitante') || userId === 'guest') {
+    return {
+      allowed: false,
+      errorCode: 'visitante',
+      errorMessage: 'ERROR_VISITANTE: El usuario es visitante o no posee una cuenta de Kanarii vinculada.'
+    };
+  }
+
+  if (!communityId) {
+    return {
+      allowed: false,
+      errorCode: 'sin_comunidad_activa',
+      errorMessage: 'ERROR_SIN_COMUNIDAD_ACTIVA: Se requiere indicar un ID de comunidad activa válido.'
+    };
+  }
+
+  try {
+    const memberInfo = await getMemberInfo(userId, communityId);
+    if (!memberInfo || memberInfo.isFallback) {
+      return {
+        allowed: false,
+        errorCode: 'no_pertenece_a_comunidad',
+        errorMessage: `ERROR_NO_PERTENECE_A_COMUNIDAD: El usuario '${userId}' no es miembro activo de la comunidad '${communityId}'.`
+      };
+    }
+
+    const rawRole = (memberInfo.rolComunitario || memberInfo.rol || memberInfo.role || '').toLowerCase();
+    const userRole: 'admin' | 'member' = rawRole === 'admin' ? 'admin' : 'member';
+
+    return {
+      allowed: true,
+      exec: {
+        userId,
+        communityId,
+        userRole,
+        channel: 'mcp',
+        agentId: 'mcp-server',
+        sourceAction: 'mcp_tool_call'
+      }
+    };
+  } catch (error: any) {
+    return {
+      allowed: false,
+      errorCode: 'no_pertenece_a_comunidad',
+      errorMessage: `ERROR_PERMISO: No se pudo verificar la pertenencia a la comunidad: ${error?.message || 'Fallo de autenticación'}`
+    };
+  }
+}
+
+/**
+ * Crea e inicializa la instancia del servidor MCP (Model Context Protocol) para Kanarii.
  */
 export function createMcpServer() {
   const server = new McpServer(
@@ -20,26 +86,32 @@ export function createMcpServer() {
     'kanarii_get_community_tasks',
     {
       title: 'Consultar tareas de la comunidad',
-      description: 'Obtiene las tareas asociadas a una comunidad en Kanarii.',
+      description: 'Obtiene las tareas asociadas a una comunidad en Kanarii reutilizando los servicios centralizados.',
       inputSchema: z.object({
         userId: z.string().min(1).describe('ID del usuario que solicita la información'),
         communityId: z.string().min(1).describe('ID de la comunidad a consultar')
       })
     },
     async (args) => {
-      const exec: ExecutionCtx = {
-        userId: args.userId,
-        communityId: args.communityId,
-        userRole: 'member',
-        channel: 'mcp',
-        agentId: 'mcp-server',
-        sourceAction: 'mcp_tool_call'
-      };
+      const access = await validateMcpAccess(args.userId, args.communityId);
+      if (!access.allowed || !access.exec) {
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ error: access.errorCode, message: access.errorMessage }) }],
+          isError: true
+        };
+      }
+
+      const exec = access.exec;
 
       try {
-        const q = query(colTareas, where('communityId', '==', args.communityId));
-        const snap = await getDocs(q);
-        const tareas = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Tarea));
+        const tareas = await getTareasByCommunity(exec.communityId);
+
+        if (!tareas || tareas.length === 0) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify({ error: 'recurso_no_encontrado', message: `No se encontraron tareas en la comunidad '${exec.communityId}'.` }) }],
+            isError: false
+          };
+        }
 
         await logAuditEvent({
           userId: exec.userId,
@@ -73,7 +145,7 @@ export function createMcpServer() {
         });
 
         return {
-          content: [{ type: 'text', text: `Error consultando tareas: ${error.message}` }],
+          content: [{ type: 'text', text: JSON.stringify({ error: 'error_interno', message: `Error consultando tareas: ${error.message}` }) }],
           isError: true
         };
       }
@@ -85,26 +157,32 @@ export function createMcpServer() {
     'kanarii_list_agreements',
     {
       title: 'Listar acuerdos de la comunidad',
-      description: 'Obtiene los acuerdos (sociocráticos o de intercambio) de una comunidad.',
+      description: 'Obtiene los acuerdos de una comunidad reutilizando los servicios centralizados.',
       inputSchema: z.object({
         userId: z.string().min(1).describe('ID del usuario que solicita la consulta'),
         communityId: z.string().min(1).describe('ID de la comunidad')
       })
     },
     async (args) => {
-      const exec: ExecutionCtx = {
-        userId: args.userId,
-        communityId: args.communityId,
-        userRole: 'member',
-        channel: 'mcp',
-        agentId: 'mcp-server',
-        sourceAction: 'mcp_tool_call'
-      };
+      const access = await validateMcpAccess(args.userId, args.communityId);
+      if (!access.allowed || !access.exec) {
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ error: access.errorCode, message: access.errorMessage }) }],
+          isError: true
+        };
+      }
+
+      const exec = access.exec;
 
       try {
-        const q = query(colAcuerdos, where('communityId', '==', args.communityId));
-        const snap = await getDocs(q);
-        const acuerdos = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Acuerdo));
+        const acuerdos = await getAcuerdosByCommunity(exec.communityId);
+
+        if (!acuerdos || acuerdos.length === 0) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify({ error: 'recurso_no_encontrado', message: `No se encontraron acuerdos en la comunidad '${exec.communityId}'.` }) }],
+            isError: false
+          };
+        }
 
         await logAuditEvent({
           userId: exec.userId,
@@ -138,7 +216,7 @@ export function createMcpServer() {
         });
 
         return {
-          content: [{ type: 'text', text: `Error consultando acuerdos: ${error.message}` }],
+          content: [{ type: 'text', text: JSON.stringify({ error: 'error_interno', message: `Error consultando acuerdos: ${error.message}` }) }],
           isError: true
         };
       }
@@ -158,14 +236,15 @@ export function createMcpServer() {
       })
     },
     async (args) => {
-      const exec: ExecutionCtx = {
-        userId: args.userId,
-        communityId: args.communityId,
-        userRole: 'member',
-        channel: 'mcp',
-        agentId: 'mcp-server',
-        sourceAction: 'mcp_tool_call'
-      };
+      const access = await validateMcpAccess(args.userId, args.communityId);
+      if (!access.allowed || !access.exec) {
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ error: access.errorCode, message: access.errorMessage }) }],
+          isError: true
+        };
+      }
+
+      const exec = access.exec;
 
       try {
         const logs = await getAuditLogsByCommunity(args.communityId, args.limitCount);
@@ -202,7 +281,7 @@ export function createMcpServer() {
         });
 
         return {
-          content: [{ type: 'text', text: `Error consultando logs de auditoría: ${error.message}` }],
+          content: [{ type: 'text', text: JSON.stringify({ error: 'error_interno', message: `Error consultando logs de auditoría: ${error.message}` }) }],
           isError: true
         };
       }
