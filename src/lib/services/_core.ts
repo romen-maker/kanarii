@@ -51,6 +51,9 @@ export const colAcuerdos = collection(db, 'acuerdos');
 export const colPropuestas = collection(db, 'propuestas');
 export const colProfiles = collection(db, 'profiles');
 export const colCommunityMembers = collection(db, 'community_members');
+export const colUserTelegramIdentities = collection(db, 'user_telegram_identities');
+export const colAuditLogs = collection(db, 'audit_logs');
+export const colPendingActions = collection(db, 'pending_actions');
 
 // --- QUERIES ESTÁNDAR PARA HOOKS ---
 export const getFichasQuery = () => query(colFichas, limit(DEFAULT_LIST_LIMIT));

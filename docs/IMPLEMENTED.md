@@ -87,3 +87,4 @@
 | Task-064: Pasaporte Universal en /p/:uid — landing pública del miembro | T-064 | sprint-15 | src/pages/PasaporteUniversalView.tsx,src/lib/pasaporte.ts |
 | Task-067: Crear sistema de design tokens en @theme (DRY de colores) | T-067 | sprint-15 | src/components/ui/EntityCard.tsx,src/index.css |
 | Task-069: Sistema leído/no leído en acuerdos | T-069 | sprint-16 | src/App.tsx,src/components/BottomNav.tsx,src/components/Sidebar.tsx |
+| Task-072: Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`) | T-072 | sprint-17 | src/lib/services/_core.ts,src/lib/services/contracts.ts |
