@@ -462,6 +462,7 @@ export interface FeedbackSalida {
   communityId: string;
   motivo: string;
   comentario?: string;
+  fecha?: any;
 }
 
 export interface PresenciaParticipante {

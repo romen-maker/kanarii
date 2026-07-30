@@ -861,7 +861,11 @@ export function FichaView() {
                 </button>
              </div>
 
-             <ManualViewer content={contenidoManual} />
+              {contenidoManual && (
+                <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 text-stone-700 font-mono text-sm whitespace-pre-wrap">
+                  {contenidoManual}
+                </div>
+              )}
              
              {displayFicha.fechaGeneracion && (
                 <div className="mt-8 pt-6 border-t border-[#EAE2D6] flex justify-between items-center text-sm text-stone-400">

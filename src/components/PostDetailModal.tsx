@@ -112,9 +112,9 @@ export function PostDetailModal({ post, members, onClose }: PostDetailModalProps
     if (!post.id) return;
     startDelete(post.id, {
       onDelete: (id) => removePost(id),
-      successMessage: "Publicación eliminada",
-      onSuccess: onClose
+      successMessage: "Publicación eliminada"
     });
+    onClose();
   };
 
   const getMemberName = (uid: string) => {

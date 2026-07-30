@@ -13,7 +13,7 @@ export function useProyectoActions() {
   const { perform, isExecuting } = useEntityActions();
 
   const addProyecto = async (payload: Omit<Proyecto, 'id' | 'lider_uid' | 'colaboradores_uid' | 'solicitudes_uid'> & Partial<Proyecto>, options?: Parameters<typeof perform>[1]) => {
-    return perform(crearProyecto(payload), options);
+    return perform(crearProyecto(payload as any), options);
   };
 
   const submitSolicitud = async (proyectoId: string, memberUid: string, options?: Parameters<typeof perform>[1]) => {
