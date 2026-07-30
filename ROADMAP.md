@@ -147,10 +147,16 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] [MEDIO] **T-083**: Hardening y Ajustes de Integración Multicanal.
 
 ## 🐳 Backend Node en Docker & Despliegue en Coolify (Sprint 20)
-- [ ] [ALTO] **T-084**: Servidor Unificado Node.js (`src/server.ts`).
-- [ ] [ALTO] **T-085**: Dockerización de Producción Multi-etapa (`Dockerfile` + `.dockerignore`).
-- [ ] [MEDIO] **T-086**: Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`).
-- [ ] [MEDIO] **T-087**: Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck).
+- [x] [ALTO] **T-084**: Servidor Unificado Node.js (`src/server.ts`).
+- [x] [ALTO] **T-085**: Dockerización de Producción Multi-etapa (`Dockerfile` + `.dockerignore`).
+- [x] [MEDIO] **T-086**: Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`).
+- [x] [MEDIO] **T-087**: Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck).
+
+## ⚙️ CI Pipeline & Suite Base de Tests Unitarios con Vitest (Sprint 21)
+- [ ] [ALTO] **T-088**: Configuración e Instalación de Vitest (`vitest.config.ts`).
+- [ ] [ALTO] **T-089**: Suite Base de Tests Unitarios para Servicios Core (`tests/unit/`).
+- [ ] [ALTO] **T-090**: GitHub Actions CI Workflow (`.github/workflows/ci.yml`).
+- [ ] [MEDIO] **T-091**: Verificación de CI Pipeline y Cobertura de Tests.
 
 ---
 
