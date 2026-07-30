@@ -160,25 +160,24 @@ export default function CalendarioView() {
         hideRightActions={true}
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6">
+        <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-4 md:p-6">
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setView(Views.MONTH)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${view === Views.MONTH ? 'bg-[#FDFBF7] text-[#A5A58D] border border-[#A5A58D]' : 'text-stone-500 hover:bg-stone-50'}`}
+            >
+              Mes
+            </button>
+            <button
+              onClick={() => setView(Views.AGENDA)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${view === Views.AGENDA ? 'bg-[#FDFBF7] text-[#A5A58D] border border-[#A5A58D]' : 'text-stone-500 hover:bg-stone-50'}`}
+            >
+              Agenda
+            </button>
+          </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-6 overflow-hidden">
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setView(Views.MONTH)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${view === Views.MONTH ? 'bg-[#FDFBF7] text-[#A5A58D] border border-[#A5A58D]' : 'text-stone-500 hover:bg-stone-50'}`}
-          >
-            Mes
-          </button>
-          <button
-            onClick={() => setView(Views.AGENDA)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${view === Views.AGENDA ? 'bg-[#FDFBF7] text-[#A5A58D] border border-[#A5A58D]' : 'text-stone-500 hover:bg-stone-50'}`}
-          >
-            Agenda
-          </button>
-        </div>
-
-        <div style={{ height: '520px' }}>
+          <div className="h-[520px] md:h-[640px]">
           {loading ? (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A5A58D]"></div>

@@ -16,8 +16,8 @@ import { ActaDetailOverlay } from '../components/ActaDetailOverlay';
 import { EntityCard } from '../components/ui/EntityCard';
 import SectionHelp from '../components/help/SectionHelp';
 import ActasUISimulation from '../components/help/ActasUISimulation';
-import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { PageHeader } from '../components/ui/PageHeader';
 import { useTopBarActions } from '../hooks/useTopBarActions';
 
 export function ActasPanel() {
@@ -99,7 +99,7 @@ export function ActasPanel() {
   }
 
   return (
-    <PageContainer className="flex flex-col h-screen overflow-hidden pb-0">
+    <PageContainer>
       <PageHeader
         title="Biblioteca de Actas"
         subtitle="La memoria viva y el registro histórico de las decisiones de nuestra comunidad."
@@ -120,7 +120,7 @@ export function ActasPanel() {
         hideRightActions={true}
       />
 
-      <div className="flex-1 flex w-full max-w-[1600px] mx-auto relative overflow-hidden">
+      <div className="flex w-full max-w-[1600px] mx-auto relative">
         {/* Lado izquierdo: Lista */}
         <div className={`w-full ${actaSeleccionada ? 'hidden md:block md:w-[400px] lg:w-[500px] border-r border-[#EAE2D6]' : 'max-w-4xl mx-auto'} h-full overflow-y-auto px-4 md:px-8 py-8 shrink-0 transition-all duration-500`}>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
