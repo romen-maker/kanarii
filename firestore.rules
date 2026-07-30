@@ -339,6 +339,23 @@ service cloud.firestore {
         isGlobalAdmin()
       );
     }
+
+    // ─── IDENTIDADES VINCULADAS DE TELEGRAM ────────────────────────────────
+    match /user_telegram_identities/{userId} {
+      allow read, write: if true;
+    }
+
+    // ─── LOGS DE AUDITORÍA INMUTABLES ──────────────────────────────────────
+    match /audit_logs/{id} {
+      allow read, create: if true;
+      allow update, delete: if false; // Traza inmutable
+    }
+
+    // ─── ACCIONES PENDIENTES (CONFIRMACIONES DE 2 PASOS) ───────────────────
+    match /pending_actions/{id} {
+      allow read, create, update: if true;
+      allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || isGlobalAdmin());
+    }
   }
 }
 
