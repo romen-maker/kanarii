@@ -104,3 +104,4 @@
 | Task-087: Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck) | T-087 | sprint-20 | src/adapters/http/router.ts,src/server.ts |
 | Task-088: Configuración e Instalación de Vitest (vitest.config.ts) | T-088 | sprint-21 | — |
 | Task-089: Suite Base de Tests Unitarios para Servicios Core (tests/unit/) | T-089 | sprint-21 | — |
+| Task-090: GitHub Actions CI Workflow (.github/workflows/ci.yml) | T-090 | sprint-21 | — |

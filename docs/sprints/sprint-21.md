@@ -15,8 +15,8 @@ Instalar y configurar Vitest como runner principal de unit tests (`vitest.config
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-088 | Configuración e Instalación de Vitest (`vitest.config.ts`) | M | ✅ Completada | [task-088.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-088.md) |
-| T-089 | Suite Base de Tests Unitarios para Servicios Core (`tests/unit/`) | M | ✅ Completada | [task-089.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-089.md) |
-| T-090 | GitHub Actions CI Workflow (`.github/workflows/ci.yml`) | S | ⬜ Pendiente | — |
+| T-089 | Suite Base de Tests Unitarios para Servicios Core (`tests/unit/`) | M | ✅ Completada | [task-089.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-089.md) |
+| T-090 | GitHub Actions CI Workflow (`.github/workflows/ci.yml`) | S | ✅ Completada | [task-090.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-090.md) |
 | T-091 | Verificación de CI Pipeline y Cobertura de Tests | S | ⬜ Pendiente | — |
 
 ## Lo que se deja Fuera Explícitamente
