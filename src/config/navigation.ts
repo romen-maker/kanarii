@@ -14,11 +14,6 @@ export const navigationConfig: NavItem[] = [
     icon: Home,
   },
   {
-    label: 'Mi Ficha',
-    href: '/ficha',
-    icon: User,
-  },
-  {
     label: 'Tareas',
     href: '/tareas',
     icon: CheckSquare,

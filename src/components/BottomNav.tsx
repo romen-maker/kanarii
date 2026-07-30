@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MoreHorizontal, LogOut, Compass, ShieldCheck, Scale, ChevronDown, MapPin } from 'lucide-react';
+import { MoreHorizontal, Compass, ShieldCheck, Scale, ChevronDown, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
 import { SyncIndicator } from './ui/SyncIndicator';
 import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
+import { UserAvatarMenu } from './layout/UserAvatarMenu';
 
 
 export function BottomNav() {
@@ -82,6 +83,15 @@ export function BottomNav() {
 
   return (
     <>
+      {/* Mobile TopBar Header con UserAvatarMenu */}
+      <div className="md:hidden sticky top-0 z-30 bg-[#FDFBF7]/90 backdrop-blur-md border-b border-[#EAE2D6] px-4 py-2 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2">
+          <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <span className="font-serif text-lg text-[#4A4E4D] font-bold tracking-tight">Kanarii</span>
+        </div>
+        <UserAvatarMenu />
+      </div>
+
       <div 
         className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FDFBF7] border-t border-[#EAE2D6] flex items-center justify-around"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '56px' }}
@@ -199,13 +209,6 @@ export function BottomNav() {
                   {item.label}
                 </button>
               ))}
-              <button
-                onClick={() => { setIsMoreMenuOpen(false); logout(); }}
-                className="w-full text-left px-5 py-4 rounded-2xl font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
-              >
-                <LogOut className="w-5 h-5" />
-                Cerrar sesión
-              </button>
               <button
                 onClick={() => setIsMoreMenuOpen(false)}
                 className="w-full text-center mt-2 px-5 py-4 rounded-2xl font-medium text-stone-500 hover:bg-stone-100 transition-colors"

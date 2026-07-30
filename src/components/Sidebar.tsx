@@ -9,7 +9,7 @@ import { SyncIndicator } from './ui/SyncIndicator';
 import { useNotificaciones } from '../hooks/useNotificaciones';
 import NotifBadge from './ui/NotifBadge';
 import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
-
+import { UserAvatarMenu } from './layout/UserAvatarMenu';
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -114,9 +114,12 @@ export function Sidebar() {
     <aside className="hidden md:flex flex-col w-[240px] h-screen sticky top-0 bg-[#FDFBF7] border-r border-[#EAE2D6] overflow-y-auto">
     {/* Header / Logo y Selector de Comunidad */}
     <div className="p-6 pb-4">
-      <div className="flex items-center gap-3 mb-6">
-        <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
-        <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
+      <div className="flex items-center justify-between gap-2 mb-6">
+        <div className="flex items-center gap-3">
+          <img src="/icono-palmera.svg" alt="Kanarii" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+          <h1 className="font-serif text-2xl text-[#4A4E4D] tracking-tight">Kanarii</h1>
+        </div>
+        <UserAvatarMenu />
       </div>
 
       {/* Selector de Comunidad Premium */}
@@ -256,34 +259,6 @@ export function Sidebar() {
           </div>
         )}
       </nav>
-
-      <div className="p-4 border-t border-stone-200/60 bg-stone-50/50">
-        <div className="flex items-center gap-3 px-2 py-3">
-          {appUser?.photoURL || user?.photoURL ? (
-            <img 
-              src={appUser?.photoURL || user?.photoURL || ''} 
-              alt={appUser?.displayName || user?.displayName || 'Avatar'} 
-              className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-[#EAE2D6] border-2 border-white shadow-sm flex items-center justify-center text-[#6B705C]">
-              <User className="w-5 h-5" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-[#4A4E4D] truncate">{appUser?.displayName || user?.displayName || 'Miembro'}</p>
-            <p className="text-[10px] text-stone-400 font-medium truncate">Sesión activa</p>
-          </div>
-        </div>
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium mt-2"
-        >
-          <LogOut className="w-4 h-4" />
-          Cerrar Sesión
-        </button>
-      </div>
     </aside>
   );
 }
