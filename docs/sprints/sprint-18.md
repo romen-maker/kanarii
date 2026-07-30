@@ -17,7 +17,7 @@ Implementar la capa de adaptadores conversacionales y de agentes (Bot de Telegra
 |---|---|---|---|---|
 | T-077 | Telegram Bot Adapter (`grammY`) con verificación de vínculo `/start bind_TOKEN` y botones InlineKeyboard | M | ✅ Completada | [task-077.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-077.md) |
 | T-078 | MCP Adapter Server: herramientas de alto level consumiendo `src/lib/services/` | M | ✅ Completada | [task-078.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-078.md) |
-| T-079 | API Router HTTP/JSON & middleware de autenticación por token | M | ⬜ Pendiente | — |
+| T-079 | API Router HTTP/JSON & middleware de autenticación por token | M | ✅ Completada | [task-079.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-079.md) |
 | T-080 | Documentación de Arquitectura de Agentes e instalación de ADR-024 | S | ⬜ Pendiente | — |
 
 ## Notas de Planning
