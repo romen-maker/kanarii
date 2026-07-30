@@ -91,3 +91,4 @@
 | Task-073: Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`) | T-073 | sprint-17 | src/lib/services/identities.ts |
 | Task-074: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`) | T-074 | sprint-17 | src/lib/services/audit.ts |
 | Task-075: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`) | T-075 | sprint-17 | src/lib/services/pendingActions.ts |
+| Task-077: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard | T-077 | sprint-18 | src/adapters/telegram/bot.ts,src/adapters/telegram/index.ts,src/adapters/telegram/middleware.ts |
