@@ -107,3 +107,4 @@
 | Task-090: GitHub Actions CI Workflow (.github/workflows/ci.yml) | T-090 | sprint-21 | — |
 | Task-091: Verificación de CI Pipeline y Cobertura de Tests | T-091 | sprint-21 | — |
 | Task File: — Confirmación Resiliente de Acciones Pendientes en Telegram | T-092 | sprint-22 | src/adapters/telegram/bot.ts,src/lib/services/contracts.ts,src/lib/services/pendingActions.ts |
+| Task File: — Inyección de Rol Real en Telegram & Comandos de Negocio | T-093 | sprint-22 | src/adapters/telegram/bot.ts,src/adapters/telegram/middleware.ts |
