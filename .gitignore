@@ -6,6 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+!.env.example.coolify
 scratch/
 .vite_cache/
 # external-inbox/ se trackea como carpeta vacía pero su contenido no se sube

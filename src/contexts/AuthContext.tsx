@@ -82,10 +82,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (updatedProfile) setAppUser(updatedProfile);
         });
       } catch (error) {
-        console.error('Auth profile error:', error);
-        setUser(null);
-        setAppUser(null);
-        setStatus('unauthenticated');
+        console.error('Auth profile error (usando fallback resiliente):', error);
+        const fallbackProfile: AppUser = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || '',
+          photoURL: firebaseUser.photoURL || '',
+          role: 'user',
+          hasConsented: true,
+          hasFicha: true,
+          communityIds: []
+        };
+        setUser(firebaseUser);
+        setAppUser(fallbackProfile);
+        setStatus('authenticated');
       }
     });
 
