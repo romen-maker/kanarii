@@ -1,7 +1,7 @@
 # Sprint 18 — 21/06/2026 → 25/06/2026: Integración Conversacional & Agentes (Telegram + MCP + API)
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Objetivo del Sprint
 Implementar la capa de adaptadores conversacionales y de agentes (Bot de Telegram con `grammY`, Servidor MCP para LLMs y API HTTP/JSON) consumiendo de forma directa la infraestructura fundacional de servicios (`identities.ts`, `audit.ts`, `pendingActions.ts`) creada en el Sprint 17.
@@ -15,11 +15,11 @@ Implementar la capa de adaptadores conversacionales y de agentes (Bot de Telegra
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-077 | Telegram Bot Adapter (`grammY`) con verificación de vínculo `/start bind_TOKEN` y botones InlineKeyboard | M | ✅ Completada | [task-077.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-077.md) |
-| T-078 | MCP Adapter Server: herramientas de alto level consumiendo `src/lib/services/` | M | ✅ Completada | [task-078.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-078.md) |
-| T-079 | API Router HTTP/JSON & middleware de autenticación por token | M | ✅ Completada | [task-079.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-079.md) |
-| T-080 | Documentación de Arquitectura de Agentes e instalación de ADR-024 | S | ⬜ Pendiente | — |
+| T-077 | Telegram Bot Adapter (`grammY`) con verificación de vínculo `/start bind_TOKEN` y botones InlineKeyboard | M | ✅ Completada | [task-077.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-077.md) |
+| T-078 | MCP Adapter Server: herramientas de alto level consumiendo `src/lib/services/` | M | ✅ Completada | [task-078.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-078.md) |
+| T-079 | API Router HTTP/JSON & middleware de autenticación por token | M | ✅ Completada | [task-079.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-079.md) |
+| T-080 | Documentación de Arquitectura de Agentes e instalación de ADR-024 | S | ✅ Completada | [task-080.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-080.md) |
 
 ## Notas de Planning
 - Sprint 17 se cerró con 100% de éxito en la capa fundacional (4/4 ✅).
-- Este sprint conecta los clientes externos (Telegram y MCP) con la base de datos sin tocar la UI web ni introducir sobre-ingeniería.
+- Sprint 18 cerrado con 100% de éxito en adaptadores de transporte (4/4 ✅). Instalado ADR-024.

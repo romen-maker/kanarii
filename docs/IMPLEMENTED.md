@@ -94,3 +94,4 @@
 | Task-077: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard | T-077 | sprint-18 | src/adapters/telegram/bot.ts,src/adapters/telegram/index.ts,src/adapters/telegram/middleware.ts |
 | Task-078: MCP Adapter Server (herramientas de alto nivel consumiendo `src/lib/services/`) | T-078 | sprint-18 | src/adapters/mcp/index.ts,src/adapters/mcp/server.ts |
 | Task-079: API Router HTTP/JSON & middleware de autenticación por token | T-079 | sprint-18 | src/adapters/http/auth.ts,src/adapters/http/index.ts,src/adapters/http/router.ts |
+| Task-080: Documentación de Arquitectura de Agentes e instalación de ADR-024 | T-080 | sprint-18 | — |
