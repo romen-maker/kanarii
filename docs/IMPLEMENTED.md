@@ -99,3 +99,4 @@
 | Task-082: Runner CLI de Simulación Interactiva Multicanal (`scripts/simulate-multichannel-flow.ts`) | T-082 | sprint-19 | — |
 | Task-083: Hardening y Ajustes de Integración Multicanal | T-083 | sprint-19 | src/lib/services/audit.ts,src/lib/services/identities.ts,src/lib/services/pendingActions.ts |
 | Task-084: Servidor Unificado Node.js (src/server.ts) | T-084 | sprint-20 | src/server.ts |
+| Task-085: Dockerización de Producción Multi-etapa (Dockerfile + .dockerignore) | T-085 | sprint-20 | — |
