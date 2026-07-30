@@ -80,3 +80,15 @@ export interface PendingAction {
   status: 'pending' | 'confirmed' | 'cancelled' | 'expired';
   confirmationToken: string;     // Token único para evitar confirmaciones no autorizadas
 }
+
+/**
+ * Resultado discriminado para el procesado de acciones pendientes (2 pasos).
+ */
+export type PendingActionResult =
+  | { ok: true; status: 'confirmed'; action: PendingAction }
+  | { ok: true; status: 'cancelled'; action: PendingAction }
+  | { ok: false; status: 'expired'; message: string }
+  | { ok: false; status: 'unauthorized'; message: string }
+  | { ok: false; status: 'invalid_token'; message: string }
+  | { ok: false; status: 'not_found'; message: string };
+
