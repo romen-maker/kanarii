@@ -160,10 +160,11 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 
 ## 🛡️ Consolidación Multicanal, Permisos y CSP (Sprint 22)
 - [x] [ALTO] **T-092**: Reparar confirmación en Telegram validando cuádruple restricción (telegramUserId, action.userId, token, estado/TTL) y feedback de expiración.
-- [ ] [ALTO] **T-093**: Inyectar rol real en ExecutionCtx de Telegram y añadir comandos de negocio (/comunidad, /tareas, /acuerdos).
+- [x] [ALTO] **T-093**: Inyectar rol real en ExecutionCtx de Telegram y añadir comandos de negocio (/comunidad, /tareas, /acuerdos).
 - [ ] [ALTO] **T-094**: Unificar servicios en MCP (reutilizar `src/lib/services/`) y validar pertenencia a comunidad.
 - [ ] [MEDIO] **T-095**: Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación.
 - [ ] [ALTO] **T-096**: Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo).
+- [ ] [ALTO] **T-097**: Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal.
 
 ---
 

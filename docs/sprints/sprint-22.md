@@ -11,6 +11,7 @@
 | T-094 | Unificar servicios en MCP (reutilizar `src/lib/services/`) y validar pertenencia a comunidad | M | ⬜ Pendiente | — |
 | T-095 | Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación | M | ⬜ Pendiente | — |
 | T-096 | Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo) | M | ⬜ Pendiente | — |
+| T-097 | Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal | M | ✅ Hecho | — |
 
 ## Notas de planning
 Sprint de verificación y consolidación multicanal.
