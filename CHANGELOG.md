@@ -2,6 +2,42 @@
 
 Todos los cambios notables en este proyecto serán documentados en este archivo. El formato está basado en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — sprint-18 — 2026-07-30
+
+### ✨ Features
+
+- feat: docs/T 080 adr 024 arquitectura agentes(T-080)
+- feat: api router http(T-079)
+- feat: mcp adapter server(T-078)
+- feat: telegram bot adapter(T-077)
+- feat: servicio acciones pendientes(T-075)
+- feat: servicio auditoria inmutable(T-074)
+- feat: servicio identidad telegram(T-073)
+- feat: contracts identidad auditoria(T-072)
+
+### 🐛 Bug Fixes
+
+- fix(telegram): fix AgentType literal to 'telegram-bot' in middleware.ts
+
+### 📚 Documentación
+
+- docs(sprint-planning): sprint-18 planning — conversational integration (Telegram bot + MCP server + HTTP API + ADR-024)
+- docs(sprint-17): sync ROADMAP.md and archived sprint-17.md status to 4/4 completed
+- docs(sprint-17): finalize foundational sprint-17 plan based on src/lib/services/ and defer Telegram/MCP to sprint-18
+- docs(sprint-17): finalize full sprint plan with identity resolution, audit middleware and pending action contracts
+- docs(sprint-17): add channel taxonomy ('web'|'telegram'|'mcp'|'api'), sourceAction audit granularity, and Telegram identity status lifecycle ('pending'|'linked'|'revoked')
+- docs(sprint-17): refine sprint planning focus on UX, linked Telegram identity, and multi-channel auditability
+- docs(sprint-planning): sprint-17 planning — agent integration, MCP server & Telegram bot architecture
+
+### 🔧 Mantenimiento
+
+- chore: archive sprint-17 [v0.5.0]
+- chore(sprint-16): update archived sprint status to 4/4 completed
+- chore: archive sprint-16 [v0.4.1]
+- chore(gitignore): add agent-os generated files and session lock exclusions
+- chore(agent-os): sync latest core modifications including detect-stack.sh
+- chore(agents): sync global rules and skills from agent-os core
+
 ## [0.5.0] — sprint-17 — 2026-07-30
 
 ### ✨ Features
