@@ -96,3 +96,4 @@
 | Task-079: API Router HTTP/JSON & middleware de autenticación por token | T-079 | sprint-18 | src/adapters/http/auth.ts,src/adapters/http/index.ts,src/adapters/http/router.ts |
 | Task-080: Documentación de Arquitectura de Agentes e instalación de ADR-024 | T-080 | sprint-18 | — |
 | Task-081: Integration Test Suite End-to-End Multicanal (`tests/e2e-multichannel.test.ts`) | T-081 | sprint-19 | — |
+| Task-082: Runner CLI de Simulación Interactiva Multicanal (`scripts/simulate-multichannel-flow.ts`) | T-082 | sprint-19 | — |
