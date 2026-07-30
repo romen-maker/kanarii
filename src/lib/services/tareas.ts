@@ -80,6 +80,17 @@ export const getTareaPrevState = (estado: Tarea['estado']): Tarea['estado'] => {
   return 'pendiente';
 };
 
+export async function getTareasByCommunity(communityId: string): Promise<Tarea[]> {
+  try {
+    const q = query(colTareas, where('communityId', '==', communityId));
+    const snap = await getDocs(q);
+    return snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Tarea));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.LIST, 'tareas');
+    return [];
+  }
+}
+
 export async function obtenerTareas(): Promise<Tarea[]> {
   try {
     const q = query(collection(db, 'tareas'), orderBy('createdAt', 'desc'));

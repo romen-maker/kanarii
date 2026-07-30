@@ -75,6 +75,17 @@ export async function getAcuerdosByUser(uid: string, role: 'provider' | 'solicit
   }
 }
 
+export async function getAcuerdosByCommunity(communityId: string): Promise<Acuerdo[]> {
+  try {
+    const q = query(colAcuerdos, where('communityId', '==', communityId));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, `acuerdos?communityId=${communityId}`);
+    return [];
+  }
+}
+
 export function listenAcuerdosPendientesAsProvider(
   communityId: string,
   providerId: string,
