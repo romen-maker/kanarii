@@ -129,6 +129,13 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] ~~Despliegue Kanarii en Coolify~~ — **Descartado por decisión de producto** (2026-06-05). Firebase Hosting es suficiente para la fase actual (Sprint 11 — T-042 lo resolvió).
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
+## 🤖 Agentes e Interfaces Conversacionales (Sprint 17)
+- [ ] [ALTO] **T-072**: Arquitectura Domain & Core Use-Cases desacoplados (Top 5 flujos).
+- [ ] [ALTO] **T-073**: MCP Adapter Server (Tools de alto nivel orientadas a resultados).
+- [ ] [ALTO] **T-074**: HTTP API Adapter & Autenticación/Auditoría/Idempotencia.
+- [ ] [MEDIO] **T-075**: Telegram Bot Adapter (Cliente ligero con confirmación de acciones).
+- [ ] [BAJO] **T-076**: Documentación de Integraciones y ADR-024.
+
 ---
 
 ## 🗄️ Backlog post-MVP

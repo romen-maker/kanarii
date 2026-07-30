@@ -109,3 +109,4 @@ Ejemplo: C3 pesa 25, va al 85% → aporta 21.25 puntos al total.
 | 2026-06-11 | sprint-16 | 88% | C2 80→90% (T-062/063/064), C3 85→90% (T-065/066). Sprint 15 cerrado 6/6 ✅. |
 | 2026-06-11 | sprint-16 | 91% | C4 80→90% (T-069/070), C6 80→90% (T-071). Implementado sistema unread y auditados listeners. |
 | 2026-06-11 | — | 91% | Actualizado automáticamente por update-mvp-tracker.sh |
+| 2026-07-30 | — | 91% | Actualizado automáticamente por update-mvp-tracker.sh |
