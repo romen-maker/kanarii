@@ -21,7 +21,7 @@ export function PageHeader({
   className = '',
 }: PageHeaderProps) {
   return (
-    <div className={`bg-[#4A4E4D] pt-12 pb-6 px-6 text-[#F9F7F1] shadow-md sticky top-0 z-20 ${className}`}>
+    <div className={`bg-[#4A4E4D] pt-6 md:pt-8 pb-6 px-6 text-[#F9F7F1] shadow-md relative md:sticky md:top-14 z-20 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 mb-2">
           {Icon && <Icon className="w-8 h-8 text-[#D4C3A3] shrink-0" />}
