@@ -38,36 +38,43 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 function initDb() {
-  const hasLocalStorage = (() => {
+  const canUsePersistence = (() => {
     try {
+      if (typeof window === 'undefined') return false;
       localStorage.setItem('_k', '1');
       localStorage.removeItem('_k');
-      return true;
+      return typeof indexedDB !== 'undefined' && indexedDB !== null;
     } catch { 
       return false; 
     }
   })();
 
-  const databaseId = getEnvVar('VITE_FIREBASE_DATABASE_ID');
+  const rawDbId = getEnvVar('VITE_FIREBASE_DATABASE_ID');
+  const databaseId = rawDbId && rawDbId.trim() !== '' ? rawDbId.trim() : undefined;
+
+  let localCache;
+  if (canUsePersistence) {
+    try {
+      localCache = persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+        cacheSizeBytes: 50 * 1024 * 1024 // 50MB
+      });
+    } catch (cacheErr) {
+      console.warn('[Firestore] Fallo al configurar caché persistente, usando caché en memoria:', cacheErr);
+      localCache = memoryLocalCache();
+    }
+  } else {
+    localCache = memoryLocalCache();
+  }
 
   try {
-    return initializeFirestore(
-      app,
-      {
-        localCache: hasLocalStorage
-          ? persistentLocalCache({
-              tabManager: persistentMultipleTabManager(),
-              cacheSizeBytes: 50 * 1024 * 1024 // 50MB
-            })
-          : memoryLocalCache()
-      },
-      databaseId
-    );
+    return databaseId
+      ? initializeFirestore(app, { localCache }, databaseId)
+      : initializeFirestore(app, { localCache });
   } catch (err: any) {
-    console.warn('[Firestore] Persistencia no disponible, usando fallback en memoria:', err.code);
-    return getFirestore(app, databaseId);
+    console.warn('[Firestore] Fallo al inicializar Firestore con configuración avanzada, usando fallback estándar:', err.code || err);
+    return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
   }
 }
 
 export const db = initDb();
-
