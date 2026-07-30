@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Send, Copy, Check, X, ShieldCheck, RefreshCw, Unlink } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateTelegramBindToken, getTelegramIdentityByUserId, revokeTelegramLink } from '../../lib/services/identities';
@@ -89,10 +90,10 @@ export function TelegramLinkModal({ isOpen, onClose }: TelegramLinkModalProps) {
 
   if (!isOpen) return null;
 
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'KanariiBot';
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'alisios_app_bot';
   const telegramBotUrl = `https://t.me/${botUsername.replace('@', '')}`;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="relative w-full max-w-md bg-[#FDFBF7] rounded-3xl border border-[#EAE2D6] shadow-2xl overflow-hidden p-6 text-[#4A4E4D]">
         {/* Botón cerrar */}
@@ -213,6 +214,7 @@ export function TelegramLinkModal({ isOpen, onClose }: TelegramLinkModalProps) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
