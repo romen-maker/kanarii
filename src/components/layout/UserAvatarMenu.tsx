@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { User, LogOut, Send, Globe, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useComunidad } from '../../contexts/ComunidadContext';
+import { TelegramLinkModal } from '../perfil/TelegramLinkModal';
 
 export function UserAvatarMenu() {
   const navigate = useNavigate();
   const { user, appUser, logout } = useAuth();
   const { comunidad } = useComunidad();
   const [isOpen, setIsOpen] = useState(false);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = appUser?.role === 'admin';
@@ -114,8 +116,11 @@ export function UserAvatarMenu() {
             )}
 
             <button
-              onClick={() => handleNavigate('/perfil')}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#CB997E] hover:bg-[#CB997E]/10 transition-colors"
+              onClick={() => {
+                setIsOpen(false);
+                setIsTelegramModalOpen(true);
+              }}
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#CB997E] hover:bg-[#CB997E]/10 transition-colors text-left"
             >
               <Send className="w-4 h-4 text-[#CB997E]" />
               <span>Vincular Telegram</span>
@@ -144,6 +149,12 @@ export function UserAvatarMenu() {
           </div>
         </div>
       )}
+
+      {/* Modal de Vinculación de Telegram */}
+      <TelegramLinkModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
+      />
     </div>
   );
 }

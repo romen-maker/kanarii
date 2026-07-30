@@ -101,9 +101,6 @@ export function AdminPanel() {
             <button onClick={() => navigate('/cruce')} className="px-4 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
               Cruce de Perfiles
             </button>
-            <button onClick={() => logout()} className="px-4 py-2 text-stone-500 hover:text-stone-800 text-sm font-medium">
-              Cerrar Sesión
-            </button>
           </div>
         </div>
 
