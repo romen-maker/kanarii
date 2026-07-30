@@ -90,7 +90,7 @@ export function CreateServicioModal({ servicioToEdit, isSubmitting, onClose, onS
             <label className="block text-sm font-medium text-stone-700 mb-1">Categoría</label>
             <select
               value={formData.categoria}
-              onChange={e => setFormData({ ...formData, categoria: e.target.value as Servicio['categoria'] })}
+              onChange={e => setFormData({ ...formData, categoria: e.target.value })}
               className="w-full rounded-xl border-[#EAE2D6] focus:border-[#CB997E] focus:ring-[#CB997E] transition-colors bg-white"
               disabled={isSubmitting}
             >
