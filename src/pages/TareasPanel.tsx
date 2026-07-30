@@ -25,6 +25,8 @@ import TareasUISimulation from '../components/help/TareasUISimulation';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
 
+import { useTopBarActions } from '../hooks/useTopBarActions';
+
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'pendiente', title: 'Pendientes', accentColor: 'var(--color-info)' },
   { id: 'en_progreso', title: 'En Progreso', accentColor: 'var(--color-warning)' },
@@ -46,15 +48,29 @@ export function TareasPanel() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tareaToEdit, setTareaToEdit] = useState<Tarea | null>(null);
 
+  const openCreateModal = (initialEstado?: Tarea['estado']) => {
+    setTareaToEdit(null);
+    setIsModalOpen(true);
+  };
+
+  // Registrar el boton de + Nueva Tarea en la TopBar unificada
+  useTopBarActions(
+    <button
+      onClick={() => openCreateModal()}
+      className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+      title="Nueva Tarea"
+    >
+      <Plus className="w-4 h-4 text-emerald-300" />
+      <span className="hidden sm:inline">Nueva Tarea</span>
+      <span className="sm:hidden">Nueva</span>
+    </button>,
+    []
+  );
+
   const loading = loadingTareas || loadingMembers || loadingProyectos;
 
   const openEditModal = (t: Tarea) => {
     setTareaToEdit(t);
-    setIsModalOpen(true);
-  };
-  
-  const openCreateModal = (initialEstado?: Tarea['estado']) => {
-    setTareaToEdit(null);
     setIsModalOpen(true);
   };
 
@@ -161,6 +177,7 @@ export function TareasPanel() {
         title="Tareas Comunitarias"
         subtitle="Organización y asignación del trabajo diario del espacio común"
         icon={CheckSquare}
+        hideRightActions={true}
         actions={
           <button
             onClick={() => openCreateModal()}
