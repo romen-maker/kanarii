@@ -14,7 +14,7 @@
 | T-097 | Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal | M | ✅ Hecho | — |
 | T-098 | Refactor de cabecera a TopBar unificada con slots para acciones de página + avatar | M | ✅ Hecho | — |
 | T-099 | Limpieza final de PageHeader/acciones solapadas y adaptación móvil | M | ✅ Hecho | — |
-| T-100 | Investigar y resolver mensaje 'no available server/service' en móvil (causa raíz y mitigación) | M | ⬜ Pendiente | — |
+| T-100 | Investigar y resolver mensaje 'no available server/service' en móvil (causa raíz y mitigación) | M | ✅ Hecho | — |
 | T-101 | Homogeneizar cabeceras de vistas (TopBar + useTopBarActions) y estandarizar PageContainer responsivo (DRY/SRP) | M | ✅ Hecho | — |
 
 
