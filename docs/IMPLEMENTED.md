@@ -89,3 +89,4 @@
 | Task-069: Sistema leído/no leído en acuerdos | T-069 | sprint-16 | src/App.tsx,src/components/BottomNav.tsx,src/components/Sidebar.tsx |
 | Task-072: Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`) | T-072 | sprint-17 | src/lib/services/_core.ts,src/lib/services/contracts.ts |
 | Task-073: Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`) | T-073 | sprint-17 | src/lib/services/identities.ts |
+| Task-074: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`) | T-074 | sprint-17 | src/lib/services/audit.ts |
