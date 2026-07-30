@@ -4,8 +4,6 @@ import { getAuth } from 'firebase/auth';
 import { 
   initializeFirestore, 
   getFirestore,
-  persistentLocalCache, 
-  persistentMultipleTabManager,
   memoryLocalCache
 } from 'firebase/firestore';
 
@@ -38,41 +36,15 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 function initDb() {
-  const canUsePersistence = (() => {
-    try {
-      if (typeof window === 'undefined') return false;
-      localStorage.setItem('_k', '1');
-      localStorage.removeItem('_k');
-      return typeof indexedDB !== 'undefined' && indexedDB !== null;
-    } catch { 
-      return false; 
-    }
-  })();
-
   const rawDbId = getEnvVar('VITE_FIREBASE_DATABASE_ID');
   const databaseId = rawDbId && rawDbId.trim() !== '' ? rawDbId.trim() : undefined;
 
-  let localCache;
-  if (canUsePersistence) {
-    try {
-      localCache = persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-        cacheSizeBytes: 50 * 1024 * 1024 // 50MB
-      });
-    } catch (cacheErr) {
-      console.warn('[Firestore] Fallo al configurar caché persistente, usando caché en memoria:', cacheErr);
-      localCache = memoryLocalCache();
-    }
-  } else {
-    localCache = memoryLocalCache();
-  }
-
   try {
     return databaseId
-      ? initializeFirestore(app, { localCache }, databaseId)
-      : initializeFirestore(app, { localCache });
+      ? initializeFirestore(app, { localCache: memoryLocalCache() }, databaseId)
+      : initializeFirestore(app, { localCache: memoryLocalCache() });
   } catch (err: any) {
-    console.warn('[Firestore] Fallo al inicializar Firestore con configuración avanzada, usando fallback estándar:', err.code || err);
+    console.warn('[Firestore] Fallo al inicializar con memoryLocalCache, usando fallback básico:', err);
     return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
   }
 }
