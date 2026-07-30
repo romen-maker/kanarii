@@ -28,7 +28,7 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
           communityId: identity.lastActiveCommunityId || '',
           userRole: 'member',
           channel: 'telegram',
-          agentId: 'telegram-bot-v1',
+          agentId: 'telegram-bot',
           sourceAction: ctx.callbackQuery ? 'telegram_button_click' : 'telegram_command',
           telegramChatId: ctx.chat?.id || telegramUserId
         };
