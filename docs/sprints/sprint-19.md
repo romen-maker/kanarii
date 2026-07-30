@@ -20,7 +20,7 @@ Validar funcionalmente el flujo real end-to-end de la arquitectura multicanal (S
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-081 | Integration Test Suite End-to-End Multicanal (`tests/e2e-multichannel.test.ts`) | M | ⬜ Pendiente | — |
+| T-081 | Integration Test Suite End-to-End Multicanal (`tests/e2e-multichannel.test.ts`) | M | ✅ Completada | [task-081.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-081.md) |
 | T-082 | Runner CLI de Simulación Interactiva Multicanal (`scripts/simulate-multichannel-flow.ts`) | M | ⬜ Pendiente | — |
 | T-083 | Hardening y Ajustes de Integración Multicanal | S | ⬜ Pendiente | — |
 
