@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 
 export interface TopBarState {
   title?: string;
@@ -18,16 +18,29 @@ const TopBarContext = createContext<TopBarContextType | undefined>(undefined);
 export function TopBarProvider({ children }: { children: ReactNode }) {
   const [topBarState, setTopBarState] = useState<TopBarState>({});
 
-  const setPageActions = (actions: ReactNode) => {
-    setTopBarState(prev => ({ ...prev, actions }));
-  };
+  const setPageActions = useCallback((actions: ReactNode) => {
+    setTopBarState(prev => {
+      if (prev.actions === actions) return prev;
+      return { ...prev, actions };
+    });
+  }, []);
 
-  const clearTopBarState = () => {
-    setTopBarState({});
-  };
+  const clearTopBarState = useCallback(() => {
+    setTopBarState(prev => {
+      if (!prev.title && !prev.subtitle && !prev.actions) return prev;
+      return {};
+    });
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    topBarState,
+    setTopBarState,
+    setPageActions,
+    clearTopBarState
+  }), [topBarState, setTopBarState, setPageActions, clearTopBarState]);
 
   return (
-    <TopBarContext.Provider value={{ topBarState, setTopBarState, setPageActions, clearTopBarState }}>
+    <TopBarContext.Provider value={contextValue}>
       {children}
     </TopBarContext.Provider>
   );

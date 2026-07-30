@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTareas } from '../hooks/useTareas';
 import { useProyectos } from '../hooks/useProyectos';
@@ -48,13 +48,12 @@ export function TareasPanel() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tareaToEdit, setTareaToEdit] = useState<Tarea | null>(null);
 
-  const openCreateModal = (initialEstado?: Tarea['estado']) => {
+  const openCreateModal = useCallback((initialEstado?: Tarea['estado']) => {
     setTareaToEdit(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // Registrar el boton de + Nueva Tarea en la TopBar unificada
-  useTopBarActions(
+  const topBarActionBtn = useMemo(() => (
     <button
       onClick={() => openCreateModal()}
       className="bg-[#2C4C3B] hover:bg-[#1E3529] text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
@@ -63,9 +62,11 @@ export function TareasPanel() {
       <Plus className="w-4 h-4 text-emerald-300" />
       <span className="hidden sm:inline">Nueva Tarea</span>
       <span className="sm:hidden">Nueva</span>
-    </button>,
-    []
-  );
+    </button>
+  ), [openCreateModal]);
+
+  // Registrar el boton de + Nueva Tarea en la TopBar unificada
+  useTopBarActions(topBarActionBtn, [topBarActionBtn]);
 
   const loading = loadingTareas || loadingMembers || loadingProyectos;
 

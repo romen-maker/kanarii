@@ -1,15 +1,17 @@
-import { useEffect, ReactNode } from 'react';
+import { useEffect, ReactNode, useRef } from 'react';
 import { useTopBar } from '../contexts/TopBarContext';
 
 /**
  * Hook de React para registrar las acciones dinámicas primarias de una página en la TopBar unificada.
- * Garantiza la auto-limpieza del estado al desmontar la vista para evitar persistencia cruzada entre rutas.
+ * Utiliza una referencia inmutable y auto-limpieza al desmontar para evitar re-renders infinitos.
  */
 export function useTopBarActions(actions: ReactNode, deps: any[] = []) {
   const { setPageActions, clearTopBarState } = useTopBar();
+  const actionsRef = useRef<ReactNode>(actions);
+  actionsRef.current = actions;
 
   useEffect(() => {
-    setPageActions(actions);
+    setPageActions(actionsRef.current);
     return () => {
       clearTopBarState();
     };
