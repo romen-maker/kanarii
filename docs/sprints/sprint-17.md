@@ -16,8 +16,8 @@ Construir la infraestructura fundacional de datos y servicios en `src/lib/servic
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-072 | Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`) | S | ✅ Completada | [task-072.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-072.md) |
-| T-073 | Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`) | M | ⬜ Pendiente | — |
+| T-072 | Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`) | S | ✅ Completada | [task-072.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-072.md) |
+| T-073 | Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`) | M | ✅ Completada | [task-073.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-073.md) |
 | T-074 | Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`) | M | ⬜ Pendiente | — |
 | T-075 | Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`) | M | ⬜ Pendiente | — |
 | T-076 | UI Web: Modal de Vinculación Telegram en Perfil de Usuario (`PerfilView.tsx`) | S | ⬜ Pendiente | — |
