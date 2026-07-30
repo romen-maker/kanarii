@@ -164,7 +164,9 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [ALTO] **T-094**: Unificar servicios en MCP (reutilizar `src/lib/services/`) y validar pertenencia a comunidad.
 - [ ] [MEDIO] **T-095**: Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación.
 - [ ] [ALTO] **T-096**: Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo).
-- [ ] [ALTO] **T-097**: Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal.
+- [x] [ALTO] **T-097**: Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal.
+- [ ] [ALTO] **T-098**: Refactor de cabecera a TopBar unificada con slots para acciones de página + avatar.
+- [ ] [ALTO] **T-099**: Limpieza final de PageHeader/acciones solapadas y adaptación móvil.
 
 ---
 
