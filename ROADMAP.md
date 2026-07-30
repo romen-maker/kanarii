@@ -130,11 +130,11 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
 ## 🤖 Agentes e Interfaces Conversacionales (Sprint 17)
-- [ ] [ALTO] **T-072**: Arquitectura Domain & Core Use-Cases desacoplados (Top 5 flujos).
-- [ ] [ALTO] **T-073**: MCP Adapter Server (Tools de alto nivel orientadas a resultados).
-- [ ] [ALTO] **T-074**: HTTP API Adapter & Autenticación/Auditoría/Idempotencia.
-- [ ] [MEDIO] **T-075**: Telegram Bot Adapter (Cliente ligero con confirmación de acciones).
-- [ ] [BAJO] **T-076**: Documentación de Integraciones y ADR-024.
+- [ ] [ALTO] **T-072**: Core Domain Use-Cases & Contrato de Identidad/Trazabilidad (`ExecutionCtx` + Audit).
+- [ ] [ALTO] **T-073**: Flujo de Vinculación de Identidad Telegram <-> Kanarii (Deep Link / Token Efímero).
+- [ ] [ALTO] **T-074**: Telegram Bot Adapter (Cliente ligero con UX conversacional y botones inline).
+- [ ] [MEDIO] **T-075**: MCP Adapter Server (Herramientas de alto nivel orientadas a resultados para LLMs).
+- [ ] [BAJO] **T-076**: Documentación de Integración, Trazabilidad por Canal y ADR-024.
 
 ---
 

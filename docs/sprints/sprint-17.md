@@ -6,14 +6,14 @@
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
-| T-072 | Arquitectura Domain & Core Use-Cases desacoplados (Top 5 flujos) | M | ⬜ Pendiente | — |
-| T-073 | MCP Adapter Server: herramientas de alto nivel orientadas a resultados | M | ⬜ Pendiente | — |
-| T-074 | HTTP API Adapter & autenticación, trazabilidad, auditoría e idempotencia | M | ⬜ Pendiente | — |
-| T-075 | Telegram Bot Adapter: cliente ligero con teclado de confirmación | M | ⬜ Pendiente | — |
-| T-076 | Documentación de arquitectura de agentes y borrador ADR-024 | S | ⬜ Pendiente | — |
+| T-072 | Core Domain Use-Cases & Contrato de Identidad/Trazabilidad (ExecutionCtx + Audit) | M | ⬜ Pendiente | — |
+| T-073 | Flujo de Vinculación de Identidad Telegram <-> Kanarii (Deep Link / Token Efímero) | M | ⬜ Pendiente | — |
+| T-074 | Telegram Bot Adapter: cliente ligero con UX conversacional y botones inline | M | ⬜ Pendiente | — |
+| T-075 | MCP Adapter Server: herramientas de alto nivel orientadas a resultados para LLMs | M | ⬜ Pendiente | — |
+| T-076 | Documentación de integración, trazabilidad por canal y borrador ADR-024 | S | ⬜ Pendiente | — |
 
 ## Notas de planning
 - Sprint 16 se cerró con 100% de completitud (4/4 ✅).
-- Foco del sprint: Arquitectura híbrida para integración con Agentes LLM y Bot de Telegram en Kanarii.
-- Garantiza la separación entre lógica de dominio (`src/core/domain/`) y los adaptadores de entrada (HTTP, MCP, Telegram).
-- Se establecen salvaguardas de seguridad, auditoría e idempotencia para escrituras sociocráticas.
+- Foco del sprint: Arquitectura Híbrida centrada en UX (Telegram + Web App + MCP) con trazabilidad absoluta por canal e identidad vinculada.
+- Telegram se diseña como una puerta de entrada directa y extremadamente sencilla para usuarios en fincas y comunidades rurales de Canarias.
+- La trazabilidad distingue de forma explícita: usuario humano (`userId`), canal de operación (`channel`), agente/bot de ejecución (`agentId`) y confirmación asíncrona.
