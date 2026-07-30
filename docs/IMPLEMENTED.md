@@ -90,3 +90,4 @@
 | Task-072: Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`) | T-072 | sprint-17 | src/lib/services/_core.ts,src/lib/services/contracts.ts |
 | Task-073: Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`) | T-073 | sprint-17 | src/lib/services/identities.ts |
 | Task-074: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`) | T-074 | sprint-17 | src/lib/services/audit.ts |
+| Task-075: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`) | T-075 | sprint-17 | src/lib/services/pendingActions.ts |
