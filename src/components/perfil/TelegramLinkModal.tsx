@@ -67,11 +67,41 @@ export function TelegramLinkModal({ isOpen, onClose }: TelegramLinkModalProps) {
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!token) return;
-    navigator.clipboard.writeText(`/start ${token}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const textToCopy = `/start ${token}`;
+    let success = false;
+
+    if (navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        success = true;
+      } catch (err) {
+        console.warn('navigator.clipboard.writeText falló, intentando fallback:', err);
+      }
+    }
+
+    if (!success) {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = textToCopy;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (fallbackErr) {
+        console.error('Fallback execCommand falló:', fallbackErr);
+      }
+    }
+
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleRevoke = async () => {
