@@ -1,7 +1,7 @@
 # Sprint 21 — 30/07/2026 → 03/08/2026: CI Pipeline & Suite Base de Tests Unitarios con Vitest
 
 ## Estado
-🟡 En curso
+✅ Completado
 
 ## Objetivo del Sprint
 Instalar y configurar Vitest como runner principal de unit tests (`vitest.config.ts`), construir la primera suite de pruebas unitarias aisladas para los servicios de negocio de Kanarii (`tests/unit/`), y crear la integración continua en GitHub Actions (`.github/workflows/ci.yml`) con validación de tipos, tests unitarios y cache de npm en un único job eficiente.
@@ -16,8 +16,8 @@ Instalar y configurar Vitest como runner principal de unit tests (`vitest.config
 |---|---|---|---|---|
 | T-088 | Configuración e Instalación de Vitest (`vitest.config.ts`) | M | ✅ Completada | [task-088.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-088.md) |
 | T-089 | Suite Base de Tests Unitarios para Servicios Core (`tests/unit/`) | M | ✅ Completada | [task-089.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-089.md) |
-| T-090 | GitHub Actions CI Workflow (`.github/workflows/ci.yml`) | S | ✅ Completada | [task-090.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-090.md) |
-| T-091 | Verificación de CI Pipeline y Cobertura de Tests | S | ⬜ Pendiente | — |
+| T-090 | GitHub Actions CI Workflow (`.github/workflows/ci.yml`) | S | ✅ Completada | [task-090.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-090.md) |
+| T-091 | Verificación de CI Pipeline y Cobertura de Tests | S | ✅ Completada | [task-091.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-091.md) |
 
 ## Lo que se deja Fuera Explícitamente
 - ❌ Tests visuales de UI o capturas E2E con navegador.
