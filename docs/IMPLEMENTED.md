@@ -111,3 +111,4 @@
 | Task File: — Navegación de Identidad: Ruta /perfil + UserAvatarMenu + Limpieza de Navegación | T-097 | sprint-22 | src/App.tsx,src/components/BottomNav.tsx,src/components/Sidebar.tsx |
 | Task File: — Refactor de Cabecera a TopBar Unificada con Slots de Acciones y Avatar | T-098 | sprint-22 | src/App.tsx,src/components/layout/Header.tsx,src/components/layout/TopBar.tsx |
 | Task File: — Unificar Servicios en MCP y Validar Pertenencia a Comunidad | T-094 | sprint-22 | src/adapters/mcp/server.ts,src/lib/services/acuerdos.ts,src/lib/services/tareas.ts |
+| Task File: — Suite de Tests de Integración Multicanal (HTTP, Telegram, MCP) y Checklist de Verificación | T-095 | sprint-22 | — |

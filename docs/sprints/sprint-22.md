@@ -9,7 +9,7 @@
 | T-092 | Reparar confirmación en Telegram validando cuádruple restricción (telegramUserId, action.userId, token, estado/TTL) y feedback de expiración | S | ✅ Hecho | — |
 | T-093 | Inyectar rol real en ExecutionCtx de Telegram y añadir comandos de negocio (/comunidad, /tareas, /acuerdos) | M | ✅ Hecho | — |
 | T-094 | Unificar servicios en MCP (reutilizar `src/lib/services/`) y validar pertenencia a comunidad | M | ✅ Hecho | — |
-| T-095 | Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación | M | ⬜ Pendiente | — |
+| T-095 | Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación | M | ✅ Hecho | — |
 | T-096 | Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo) | M | ⬜ Pendiente | — |
 | T-097 | Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal | M | ✅ Hecho | — |
 | T-098 | Refactor de cabecera a TopBar unificada con slots para acciones de página + avatar | M | ✅ Hecho | — |
