@@ -13,7 +13,7 @@
 | T-096 | Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo) | M | ⬜ Pendiente | — |
 | T-097 | Navegación de identidad: ruta `/perfil` + `UserAvatarMenu` + limpieza de navegación principal | M | ✅ Hecho | — |
 | T-098 | Refactor de cabecera a TopBar unificada con slots para acciones de página + avatar | M | ✅ Hecho | — |
-| T-099 | Limpieza final de PageHeader/acciones solapadas y adaptación móvil | M | ⬜ Pendiente | — |
+| T-099 | Limpieza final de PageHeader/acciones solapadas y adaptación móvil | M | ✅ Hecho | — |
 | T-100 | Investigar y resolver mensaje 'no available server/service' en móvil (causa raíz y mitigación) | M | ⬜ Pendiente | — |
 
 ## Notas de planning

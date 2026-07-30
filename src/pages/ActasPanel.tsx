@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useActas } from '../hooks/useActas';
 import { useTareas } from '../hooks/useTareas';
@@ -18,10 +18,29 @@ import SectionHelp from '../components/help/SectionHelp';
 import ActasUISimulation from '../components/help/ActasUISimulation';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBar } from '../contexts/TopBarContext';
 
 export function ActasPanel() {
   const { appUser } = useAuth();
   const { currentCommunityId } = useComunidad();
+  const { setTopBarState, clearTopBarState } = useTopBar();
+
+  useEffect(() => {
+    setTopBarState({
+      title: 'Actas',
+      actions: (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-3.5 py-1.5 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Crear Acta</span>
+        </button>
+      )
+    });
+
+    return () => clearTopBarState();
+  }, [setTopBarState, clearTopBarState]);
   const { items: actas, loading, reload } = useActas(currentCommunityId || 'arteara');
   const { items: tareas } = useTareas(currentCommunityId || 'arteara');
   const { members, loadingMembers, getMemberName } = useCommunityMembers(currentCommunityId || 'arteara');

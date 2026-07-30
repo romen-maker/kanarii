@@ -24,6 +24,7 @@ import SectionHelp from '../components/help/SectionHelp';
 import TareasUISimulation from '../components/help/TareasUISimulation';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBar } from '../contexts/TopBarContext';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'pendiente', title: 'Pendientes', accentColor: 'var(--color-info)' },
@@ -36,6 +37,7 @@ export function TareasPanel() {
   const { currentCommunityId } = useComunidad();
   const { startDelete, pendingId } = useUndoableDelete();
   const { addTarea, editTarea, removeTarea, updateEstado, isExecuting: isSubmitting } = useTareaActions();
+  const { setTopBarState, clearTopBarState } = useTopBar();
   
   // Hooks de Entidad
   const { items: tareas, loading: loadingTareas } = useTareas(currentCommunityId || 'arteara');
@@ -57,6 +59,23 @@ export function TareasPanel() {
     setTareaToEdit(null);
     setIsModalOpen(true);
   };
+
+  useEffect(() => {
+    setTopBarState({
+      title: 'Tareas',
+      actions: (
+        <button
+          onClick={() => openCreateModal()}
+          className="px-3.5 py-1.5 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Nueva Tarea</span>
+        </button>
+      )
+    });
+
+    return () => clearTopBarState();
+  }, [setTopBarState, clearTopBarState]);
 
   const closeModal = () => {
     setIsModalOpen(false);

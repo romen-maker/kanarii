@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useComunidad } from '../contexts/ComunidadContext';
 import { usePropuestas } from '../hooks/usePropuestas';
@@ -13,6 +13,7 @@ import { CreateProposalWizard } from '../components/CreateProposalWizard';
 import { Scale, Plus, LayoutGrid, List, AlertCircle } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBar } from '../contexts/TopBarContext';
 
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'abierta', title: 'Deliberación', accentColor: 'var(--color-info)' },
@@ -25,8 +26,9 @@ const COLUMNS: KanbanColumnDef[] = [
 export function PropuestasView() {
   const { appUser } = useAuth();
   const { currentCommunityId } = useComunidad();
+  const { setTopBarState, clearTopBarState } = useTopBar();
   const communityId = currentCommunityId || 'arteara';
-  
+
   const { items: propuestas, loading } = usePropuestas(communityId);
   const { members } = useCommunityMembers(communityId);
   const { removePropuesta } = usePropuestaActions();
@@ -34,6 +36,23 @@ export function PropuestasView() {
 
   const [selectedPropId, setSelectedPropId] = useState<string | null>(null);
   const [showCreateWizard, setShowCreateWizard] = useState(false);
+
+  useEffect(() => {
+    setTopBarState({
+      title: 'Gobernanza',
+      actions: (
+        <button
+          onClick={() => setShowCreateWizard(true)}
+          className="px-3.5 py-1.5 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Nueva Propuesta</span>
+        </button>
+      )
+    });
+
+    return () => clearTopBarState();
+  }, [setTopBarState, clearTopBarState]);
 
   // Estados de vista y filtros
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>(() => {

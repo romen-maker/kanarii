@@ -110,3 +110,4 @@
 | Task File: — Inyección de Rol Real en Telegram & Comandos de Negocio | T-093 | sprint-22 | src/adapters/telegram/bot.ts,src/adapters/telegram/middleware.ts |
 | Task File: — Navegación de Identidad: Ruta /perfil + UserAvatarMenu + Limpieza de Navegación | T-097 | sprint-22 | src/App.tsx,src/components/BottomNav.tsx,src/components/Sidebar.tsx |
 | Task File: — Refactor de Cabecera a TopBar Unificada con Slots de Acciones y Avatar | T-098 | sprint-22 | src/App.tsx,src/components/layout/Header.tsx,src/components/layout/TopBar.tsx |
+| Task File: — Limpieza Final de PageHeader / Acciones Solapadas y Adaptación Móvil | T-099 | sprint-22 | src/components/ui/PageHeader.tsx,src/pages/ActasPanel.tsx,src/pages/AdminPanel.tsx |

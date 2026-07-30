@@ -20,6 +20,7 @@ import SectionHelp from '../components/help/SectionHelp';
 import MarketplaceUISimulation from '../components/help/MarketplaceUISimulation';
 import { PageHeader } from '../components/ui/PageHeader';
 import { PageContainer } from '../components/ui/PageContainer';
+import { useTopBar } from '../contexts/TopBarContext';
 
 const CATEGORIAS_MARKET = [
   { id: 'artesanía', label: 'Artesanía' },
@@ -33,6 +34,26 @@ const CATEGORIAS_MARKET = [
 export default function MarketplaceView() {
   const { appUser } = useAuth();
   const { currentCommunityId } = useComunidad();
+  const { setTopBarState, clearTopBarState } = useTopBar();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    setTopBarState({
+      title: 'Marketplace',
+      actions: (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-3.5 py-1.5 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Publicar Oferta</span>
+        </button>
+      )
+    });
+
+    return () => clearTopBarState();
+  }, [setTopBarState, clearTopBarState]);
   const { servicios, loading: loadingServicios } = useServicios(currentCommunityId || '');
   const { acuerdos, loading: loadingAcuerdos } = useAcuerdos(currentCommunityId || '');
   const { members, getMemberName } = useCommunityMembers(currentCommunityId || '');

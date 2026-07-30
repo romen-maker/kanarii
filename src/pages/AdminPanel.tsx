@@ -22,10 +22,29 @@ import DashboardTab from '../components/AdminPanel/tabs/DashboardTab';
 import TareasProyectosTab from '../components/AdminPanel/tabs/TareasProyectosTab';
 import GobernanzaTab from '../components/AdminPanel/tabs/GobernanzaTab';
 
+import { useTopBar } from '../contexts/TopBarContext';
+
 export function AdminPanel() {
   const { appUser, logout } = useAuth();
   const { currentCommunityId, comunidad } = useComunidad();
+  const { setTopBarState, clearTopBarState } = useTopBar();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setTopBarState({
+      title: 'Panel Admin',
+      actions: (
+        <button
+          onClick={() => navigate('/cruce')}
+          className="px-3.5 py-1.5 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-xs font-semibold transition-colors shadow-xs"
+        >
+          Cruce de Perfiles
+        </button>
+      )
+    });
+
+    return () => clearTopBarState();
+  }, [navigate, setTopBarState, clearTopBarState]);
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Tab por defecto 'comunidad'. Respetamos ?tab= si ya existe en la URL.
@@ -92,17 +111,6 @@ export function AdminPanel() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-stone-800 p-6 flex flex-col items-center pb-20 md:pb-6">
       <div className="w-full max-w-5xl">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <Leaf className="text-[#6B705C] w-8 h-8" />
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Panel de Control Admin</h1>
-          </div>
-          <div className="hidden md:flex items-center gap-4">
-            <button onClick={() => navigate('/cruce')} className="px-4 py-2 bg-white border border-[#CB997E] hover:bg-[#F9F7F1] text-[#CB997E] rounded-xl text-sm font-medium transition-colors">
-              Cruce de Perfiles
-            </button>
-          </div>
-        </div>
 
         {/* Banner de bienvenida si la comunidad se acaba de crear */}
         {searchParams.get('nueva') === 'true' && (

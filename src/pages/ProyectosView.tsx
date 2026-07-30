@@ -18,6 +18,8 @@ import { CreateProjectModal } from '../components/CreateProjectModal';
 import SectionHelp from '../components/help/SectionHelp';
 import ProyectosUISimulation from '../components/help/ProyectosUISimulation';
 
+import { useTopBar } from '../contexts/TopBarContext';
+
 const COLUMNS: KanbanColumnDef[] = [
   { id: 'buscando_colaboradores', title: 'Buscando Ayuda', accentColor: 'var(--color-info)' },
   { id: 'en_marcha', title: 'En Marcha', accentColor: 'var(--color-success)' },
@@ -28,6 +30,27 @@ const COLUMNS: KanbanColumnDef[] = [
 export function ProyectosView() {
   const { appUser } = useAuth();
   const { currentCommunityId } = useComunidad();
+  const { setTopBarState, clearTopBarState } = useTopBar();
+
+  useEffect(() => {
+    setTopBarState({
+      title: 'Proyectos',
+      actions: (
+        <button
+          onClick={() => {
+            setInitialCreateStatus(undefined);
+            setShowCreateModal(true);
+          }}
+          className="px-3.5 py-1.5 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Nuevo Proyecto</span>
+        </button>
+      )
+    });
+
+    return () => clearTopBarState();
+  }, [setTopBarState, clearTopBarState]);
   const { items: proyectos, loading: loadingProyectos } = useProyectos(currentCommunityId || 'arteara');
   const { items: tareas, loading: loadingTareas } = useTareas(currentCommunityId || 'arteara');
   const { ficha: fichaUser, loadingFicha } = useFicha();
