@@ -9,6 +9,11 @@ import { confirmPendingAction, cancelPendingAction } from '../../lib/services/pe
 export function createTelegramBot(token: string) {
   const bot = new Bot<KanariiBotContext>(token);
 
+  // Manejador de errores interno para capturar fallos de sondeo o ejecución sin tumbar el proceso Node
+  bot.catch((err) => {
+    console.error('⚠️ [Telegram Bot] Error en la ejecución del bot:', err.error || err);
+  });
+
   // Inyectar middleware de resolución de identidad
   bot.use(attachExecutionCtx());
 

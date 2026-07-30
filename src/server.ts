@@ -71,6 +71,8 @@ export function startServer() {
         onStart: (info) => {
           console.log(`🤖 Bot de Telegram iniciado correctamente para @${info.username}`);
         }
+      }).catch((botErr) => {
+        console.error('⚠️ [Telegram Bot] Error en el sondeo del Bot de Telegram (ej. conflicto HTTP 409 de otra instancia en ejecución). El servidor web continuará funcionando:', botErr.message || botErr);
       });
     } catch (botErr) {
       console.error('🔴 Error al iniciar el Bot de Telegram:', botErr);
