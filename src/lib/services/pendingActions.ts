@@ -61,6 +61,27 @@ export async function createPendingAction(
 }
 
 /**
+ * Helper de conversión segura de expiraciones (Timestamp Firestore, Date, number o string) a ms.
+ */
+function parseTimestampToMs(expiresAt: any): number {
+  if (!expiresAt) return 0;
+  if (typeof expiresAt.toDate === 'function') {
+    return expiresAt.toDate().getTime();
+  }
+  if (expiresAt instanceof Date) {
+    return expiresAt.getTime();
+  }
+  if (typeof expiresAt === 'number') {
+    return expiresAt;
+  }
+  if (typeof expiresAt === 'string') {
+    const parsed = new Date(expiresAt).getTime();
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
+/**
  * Confirma una acción pendiente validando la existencia, token y TTL no expirado.
  * Marca la acción como 'confirmed' y registra la traza de auditoría 'success'.
  */
@@ -90,10 +111,8 @@ export async function confirmPendingAction(
     throw new Error('TOKEN_INVALID: El código o token de confirmación es incorrecto.');
   }
 
-  // Validar expiración (TTL)
-  const expiresAtMs = action.expiresAt?.toDate 
-    ? action.expiresAt.toDate().getTime() 
-    : new Date(action.expiresAt).getTime();
+  // Validar expiración (TTL) defensiva
+  const expiresAtMs = parseTimestampToMs(action.expiresAt);
 
   if (Date.now() > expiresAtMs) {
     await updateDoc(docRef, { status: 'expired' });
@@ -195,9 +214,7 @@ export async function getPendingActionsByUser(userId: string): Promise<PendingAc
 
   for (const docSnap of snap.docs) {
     const action = { id: docSnap.id, ...docSnap.data() } as PendingAction;
-    const expiresAtMs = action.expiresAt?.toDate 
-      ? action.expiresAt.toDate().getTime() 
-      : new Date(action.expiresAt).getTime();
+    const expiresAtMs = parseTimestampToMs(action.expiresAt);
 
     if (nowMs > expiresAtMs) {
       // Marcar como expirada de forma diferida

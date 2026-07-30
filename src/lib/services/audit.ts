@@ -12,6 +12,18 @@ import {
 import { AuditLogEntry } from './contracts';
 
 /**
+ * Helper de sanitización defensiva para evitar propiedades 'undefined' o no serializables en Firestore.
+ */
+function sanitizeDetails(details: any): Record<string, any> | undefined {
+  if (!details || typeof details !== 'object') return undefined;
+  try {
+    return JSON.parse(JSON.stringify(details));
+  } catch {
+    return { error: 'UNSERIALIZABLE_DETAILS' };
+  }
+}
+
+/**
  * Registra una nueva entrada de auditoría inmutable en Firestore (/audit_logs).
  * Retorna el ID generado para la traza.
  */
@@ -31,8 +43,11 @@ export async function logAuditEvent(
     throw new Error('AUDIT_ERROR: Se requiere especificar la acción ejecutada.');
   }
 
+  const sanitizedDetails = sanitizeDetails(entry.details);
+
   const payload: Omit<AuditLogEntry, 'id'> = {
     ...entry,
+    ...(sanitizedDetails ? { details: sanitizedDetails } : {}),
     timestamp: serverTimestamp()
   };
 

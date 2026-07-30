@@ -121,38 +121,54 @@ export async function verifyAndLinkTelegram(
  * Obtiene la identidad Telegram vinculada activa ('linked') de un usuario por su userId de Kanarii.
  */
 export async function getTelegramIdentityByUserId(userId: string): Promise<UserTelegramIdentity | null> {
-  if (!userId) return null;
+  if (!userId || typeof userId !== 'string') return null;
 
-  const q = query(
-    colUserTelegramIdentities, 
-    where('userId', '==', userId),
-    where('status', '==', 'linked')
-  );
-  
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
+  try {
+    const q = query(
+      colUserTelegramIdentities, 
+      where('userId', '==', userId),
+      where('status', '==', 'linked')
+    );
+    
+    const snap = await getDocs(q);
+    if (!snap || snap.empty || !snap.docs || !snap.docs[0]) return null;
 
-  const docSnap = snap.docs[0];
-  return { id: docSnap.id, ...docSnap.data() } as unknown as UserTelegramIdentity;
+    const docSnap = snap.docs[0];
+    const rawData = docSnap.data();
+    if (!rawData) return null;
+
+    return { id: docSnap.id, ...rawData } as unknown as UserTelegramIdentity;
+  } catch (err) {
+    console.error('[getTelegramIdentityByUserId] Error leyendo identidad:', err);
+    return null;
+  }
 }
 
 /**
  * Obtiene la identidad Telegram vinculada activa ('linked') por su telegramUserId.
  */
 export async function getTelegramIdentityByTelegramId(telegramUserId: number): Promise<UserTelegramIdentity | null> {
-  if (!telegramUserId) return null;
+  if (!telegramUserId || typeof telegramUserId !== 'number') return null;
 
-  const q = query(
-    colUserTelegramIdentities, 
-    where('telegramUserId', '==', telegramUserId),
-    where('status', '==', 'linked')
-  );
-  
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
+  try {
+    const q = query(
+      colUserTelegramIdentities, 
+      where('telegramUserId', '==', telegramUserId),
+      where('status', '==', 'linked')
+    );
+    
+    const snap = await getDocs(q);
+    if (!snap || snap.empty || !snap.docs || !snap.docs[0]) return null;
 
-  const docSnap = snap.docs[0];
-  return { id: docSnap.id, ...docSnap.data() } as unknown as UserTelegramIdentity;
+    const docSnap = snap.docs[0];
+    const rawData = docSnap.data();
+    if (!rawData) return null;
+
+    return { id: docSnap.id, ...rawData } as unknown as UserTelegramIdentity;
+  } catch (err) {
+    console.error('[getTelegramIdentityByTelegramId] Error leyendo identidad:', err);
+    return null;
+  }
 }
 
 /**
