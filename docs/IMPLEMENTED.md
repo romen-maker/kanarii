@@ -114,3 +114,4 @@
 | Task File: — Suite de Tests de Integración Multicanal (HTTP, Telegram, MCP) y Checklist de Verificación | T-095 | sprint-22 | — |
 | Task File: — Auditoría y Resolución de Warning CSP `unsafe-eval` | T-096 | sprint-22 | — |
 | Task File: — Limpieza de Acciones Solapadas y Adaptación Móvil de TopBar | T-099 | sprint-22 | src/components/layout/TopBar.tsx,src/components/ui/PageHeader.tsx,src/hooks/useTopBarActions.ts |
+| Task-100: Investigar y resolver mensaje no available server/service en móvil | T-100 | sprint-22 | — |

@@ -27,14 +27,6 @@ export default defineConfig(({mode}) => {
           cleanupOutdatedCaches: true,
           runtimeCaching: [
             {
-              urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'firestore-cache',
-                expiration: { maxEntries: 50, maxAgeSeconds: 300 },
-              },
-            },
-            {
               urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
