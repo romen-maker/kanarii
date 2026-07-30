@@ -26,8 +26,8 @@ describe('audit service (Unit Tests)', () => {
         userId: '',
         communityId: 'c1',
         channel: 'api',
-        agentId: 'a1',
-        sourceAction: 'test',
+        agentId: 'api-client',
+        sourceAction: 'api_request',
         action: 'create_proposal',
         status: 'success'
       })).rejects.toThrow('AUDIT_ERROR: Se requiere userId');
@@ -36,8 +36,8 @@ describe('audit service (Unit Tests)', () => {
         userId: 'u1',
         communityId: '',
         channel: 'api',
-        agentId: 'a1',
-        sourceAction: 'test',
+        agentId: 'api-client',
+        sourceAction: 'api_request',
         action: 'create_proposal',
         status: 'success'
       })).rejects.toThrow('AUDIT_ERROR: Se requiere communityId');
@@ -48,8 +48,8 @@ describe('audit service (Unit Tests)', () => {
         userId: 'u1',
         communityId: 'c1',
         channel: 'telegram',
-        agentId: 'bot',
-        sourceAction: 'command',
+        agentId: 'telegram-bot',
+        sourceAction: 'telegram_command',
         action: 'create_proposal',
         status: 'success',
         details: {
@@ -76,8 +76,8 @@ describe('audit service (Unit Tests)', () => {
         userId: 'u1',
         communityId: 'c1',
         channel: 'mcp',
-        agentId: 'mcp_server',
-        sourceAction: 'tool',
+        agentId: 'mcp-server',
+        sourceAction: 'mcp_tool_call',
         action: 'delete_proposal',
         status: 'failed',
         details: circular
