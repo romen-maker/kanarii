@@ -130,17 +130,16 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [POST-MVP] Operaciones IA en diferido (encolado de "Generar manual" sin conexión).
 
 ## 🤖 Identidad, Trazabilidad y Confirmaciones — Fundación (Sprint 17)
-- [ ] [ALTO] **T-072**: Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`).
-- [ ] [ALTO] **T-073**: Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`).
-- [ ] [ALTO] **T-074**: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`).
-- [ ] [ALTO] **T-075**: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`).
-- [ ] [BAJO] **T-076**: UI Web: Modal de Vinculación Telegram en Perfil de Usuario (`PerfilView.tsx`).
+- [x] [ALTO] **T-072**: Contratos e Interfaces de Identidad, Auditoría y Contexto (`contracts.ts`).
+- [x] [ALTO] **T-073**: Servicio de Identidad Vinculada Telegram & Token Efímero (`identities.ts`).
+- [x] [ALTO] **T-074**: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`).
+- [x] [ALTO] **T-075**: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`).
 
 ## 🤖 Agentes e Interfaces Conversacionales — Integración (Sprint 18)
 - [ ] [ALTO] **T-077**: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard.
 - [ ] [ALTO] **T-078**: MCP Adapter Server exponiendo herramientas orientadas a resultados.
 - [ ] [MEDIO] **T-079**: Endpoints HTTP API y middleware de autenticación por token.
-- [ ] [BAJO] **T-080**: Documentación de Arquitectura de Agentes e instalación de ADR-024.
+- [ ] [BAJO] **T-080**: Documentación de Arquitectura de Agentes, integración UI y ADR-024.
 
 ---
 
