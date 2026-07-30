@@ -100,3 +100,4 @@
 | Task-083: Hardening y Ajustes de Integración Multicanal | T-083 | sprint-19 | src/lib/services/audit.ts,src/lib/services/identities.ts,src/lib/services/pendingActions.ts |
 | Task-084: Servidor Unificado Node.js (src/server.ts) | T-084 | sprint-20 | src/server.ts |
 | Task-085: Dockerización de Producción Multi-etapa (Dockerfile + .dockerignore) | T-085 | sprint-20 | — |
+| Task-086: Configuración para Coolify (docker-compose.yml + .env.example.coolify) | T-086 | sprint-20 | — |

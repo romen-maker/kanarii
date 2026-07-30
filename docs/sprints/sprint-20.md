@@ -15,8 +15,8 @@ Construir un servidor ejecutable unificado en Node.js/Express (`src/server.ts`),
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-084 | Servidor Unificado Node.js (`src/server.ts`) | M | ✅ Completada | [task-084.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-084.md) |
-| T-085 | Dockerización de Producción Multi-etapa (`Dockerfile` + `.dockerignore`) | M | ✅ Completada | [task-085.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-085.md) |
-| T-086 | Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`) | S | ⬜ Pendiente | — |
+| T-085 | Dockerización de Producción Multi-etapa (`Dockerfile` + `.dockerignore`) | M | ✅ Completada | [task-085.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/_archived/task-085.md) |
+| T-086 | Configuración para Coolify (`docker-compose.yml` + `.env.example.coolify`) | S | ✅ Completada | [task-086.md](file:///home/romen/Proyectos/kanarii/.agents/tasks/task-086.md) |
 | T-087 | Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck) | S | ⬜ Pendiente | — |
 
 ## Lo que se deja Fuera Explícitamente
