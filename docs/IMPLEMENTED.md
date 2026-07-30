@@ -92,3 +92,4 @@
 | Task-074: Servicio de Auditoría Inmutable por Canal & Origen (`audit.ts`) | T-074 | sprint-17 | src/lib/services/audit.ts |
 | Task-075: Servicio de Acciones Pendientes y Confirmaciones (`pendingActions.ts`) | T-075 | sprint-17 | src/lib/services/pendingActions.ts |
 | Task-077: Telegram Bot Adapter (`grammY`) con verificación de vínculo y botones InlineKeyboard | T-077 | sprint-18 | src/adapters/telegram/bot.ts,src/adapters/telegram/index.ts,src/adapters/telegram/middleware.ts |
+| Task-078: MCP Adapter Server (herramientas de alto nivel consumiendo `src/lib/services/`) | T-078 | sprint-18 | src/adapters/mcp/index.ts,src/adapters/mcp/server.ts |
