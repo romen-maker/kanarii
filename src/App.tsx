@@ -49,10 +49,10 @@ function AppContent() {
 
   return (
     <div className="flex min-h-screen bg-[#F9F7F1]">
-      {showNav && <Header />}
       {showNav && <Sidebar />}
       
-      <main className={`flex-1 min-w-0 ${showNav ? 'pt-14 md:pt-0' : ''}`}>
+      <main className="flex-1 min-w-0 flex flex-col">
+        {showNav && <TopBar />}
         <React.Suspense fallback={<LoadingSpinner />}>
           <Routes>
           <Route path="/" element={
@@ -143,6 +143,8 @@ function ProtectedRoute({
 
 import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
 import { AcuerdosProvider } from './contexts/AcuerdosContext';
+import { TopBarProvider } from './contexts/TopBarContext';
+import { TopBar } from './components/layout/TopBar';
 
 export default function App() {
   return (
@@ -150,8 +152,10 @@ export default function App() {
       <ToastProvider>
         <BrowserRouter>
           <AcuerdosProvider>
-            <AppContent />
-            <PwaUpdatePrompt />
+            <TopBarProvider>
+              <AppContent />
+              <PwaUpdatePrompt />
+            </TopBarProvider>
           </AcuerdosProvider>
         </BrowserRouter>
       </ToastProvider>
