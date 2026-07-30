@@ -153,10 +153,17 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] [MEDIO] **T-087**: Verificación de Despliegue y Hardening (SPA Fallback & Healthcheck).
 
 ## ⚙️ CI Pipeline & Suite Base de Tests Unitarios con Vitest (Sprint 21)
-- [ ] [ALTO] **T-088**: Configuración e Instalación de Vitest (`vitest.config.ts`).
-- [ ] [ALTO] **T-089**: Suite Base de Tests Unitarios para Servicios Core (`tests/unit/`).
-- [ ] [ALTO] **T-090**: GitHub Actions CI Workflow (`.github/workflows/ci.yml`).
-- [ ] [MEDIO] **T-091**: Verificación de CI Pipeline y Cobertura de Tests.
+- [x] [ALTO] **T-088**: Configuración e Instalación de Vitest (`vitest.config.ts`).
+- [x] [ALTO] **T-089**: Suite Base de Tests Unitarios para Servicios Core (`tests/unit/`).
+- [x] [ALTO] **T-090**: GitHub Actions CI Workflow (`.github/workflows/ci.yml`).
+- [x] [MEDIO] **T-091**: Verificación de CI Pipeline y Cobertura de Tests.
+
+## 🛡️ Consolidación Multicanal, Permisos y CSP (Sprint 22)
+- [x] [ALTO] **T-092**: Reparar confirmación en Telegram validando cuádruple restricción (telegramUserId, action.userId, token, estado/TTL) y feedback de expiración.
+- [ ] [ALTO] **T-093**: Inyectar rol real en ExecutionCtx de Telegram y añadir comandos de negocio (/comunidad, /tareas, /acuerdos).
+- [ ] [ALTO] **T-094**: Unificar servicios en MCP (reutilizar `src/lib/services/`) y validar pertenencia a comunidad.
+- [ ] [MEDIO] **T-095**: Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación.
+- [ ] [ALTO] **T-096**: Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo).
 
 ---
 

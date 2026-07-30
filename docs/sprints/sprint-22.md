@@ -7,9 +7,10 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-092 | Reparar confirmación en Telegram validando cuádruple restricción (telegramUserId, action.userId, token, estado/TTL) y feedback de expiración | S | ✅ Hecho | — |
-| T-093 | Inyectar rol real en ExecutionCtx de Telegram y añadir comandos de negocio (/comunidad, /tareas, /acuerdos) | M | ⬜ Pendiente | — |
+| T-093 | Inyectar rol real en ExecutionCtx de Telegram y añadir comandos de negocio (/comunidad, /tareas, /acuerdos) | M | ✅ Hecho | — |
 | T-094 | Unificar servicios en MCP (reutilizar `src/lib/services/`) y validar pertenencia a comunidad | M | ⬜ Pendiente | — |
 | T-095 | Suite de tests de integración para canales (HTTP, Telegram, MCP) y checklist de verificación | M | ⬜ Pendiente | — |
+| T-096 | Investigar y resolver warning CSP relacionado con `unsafe-eval` (causa raíz dev/prod y fix mínimo) | M | ⬜ Pendiente | — |
 
 ## Notas de planning
 Sprint de verificación y consolidación multicanal.
