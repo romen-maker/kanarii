@@ -9,8 +9,9 @@ import {
   Timestamp, 
   colPendingActions 
 } from './_core';
-import { PendingAction } from './contracts';
+import { PendingAction, PendingActionResult } from './contracts';
 import { logAuditEvent } from './audit';
+import { getTelegramIdentityByTelegramId } from './identities';
 
 const DEFAULT_TTL_MINUTES = 15;
 
@@ -226,3 +227,129 @@ export async function getPendingActionsByUser(userId: string): Promise<PendingAc
 
   return validActions;
 }
+
+/**
+ * Procesa la confirmación o cancelación de una acción pendiente originada desde un botón interactivo de Telegram.
+ * Valida de forma defensiva las 4 capas de seguridad:
+ * 1. Identidad vinculada (telegramUserId en /user_telegram_identities)
+ * 2. Existencia de la acción
+ * 3. Coincidencia de propietario (action.userId === identity.userId)
+ * 4. Estado activo ('pending') y expiración (TTL 15 min)
+ */
+export async function processPendingActionFromTelegram(params: {
+  actionId: string;
+  telegramUserId: number;
+  op: 'confirm' | 'cancel';
+}): Promise<PendingActionResult> {
+  const { actionId, telegramUserId, op } = params;
+
+  if (!actionId || !telegramUserId) {
+    return {
+      ok: false,
+      status: 'invalid_token',
+      message: 'Identificador de acción o usuario de Telegram no válido.'
+    };
+  }
+
+  // 1. Validar identidad vinculada de Telegram
+  const identity = await getTelegramIdentityByTelegramId(telegramUserId);
+  if (!identity || identity.status !== 'linked' || !identity.userId) {
+    return {
+      ok: false,
+      status: 'unauthorized',
+      message: 'Tu cuenta de Telegram no se encuentra vinculada con Kanarii. Usa /start bind_TOKEN.'
+    };
+  }
+
+  // 2. Obtener documento de la acción pendiente
+  const docRef = doc(colPendingActions, actionId);
+  const snap = await getDoc(docRef);
+
+  if (!snap.exists()) {
+    return {
+      ok: false,
+      status: 'not_found',
+      message: 'No se encontró la acción pendiente especificada.'
+    };
+  }
+
+  const action = { id: snap.id, ...snap.data() } as PendingAction;
+
+  // 3. Validar coincidencia de propietario (action.userId === identity.userId)
+  if (action.userId !== identity.userId) {
+    await logAuditEvent({
+      userId: identity.userId,
+      communityId: action.communityId,
+      channel: 'telegram',
+      agentId: 'telegram-bot',
+      sourceAction: 'telegram_button_click',
+      action: action.actionType,
+      status: 'failed',
+      confirmationId: actionId,
+      details: { reason: 'UNAUTHORIZED_USER_MISMATCH', expectedUser: action.userId, actualUser: identity.userId }
+    });
+
+    return {
+      ok: false,
+      status: 'unauthorized',
+      message: 'No tienes permiso para procesar esta acción pendiente (no eres el creador).'
+    };
+  }
+
+  // 4. Validar estado y expiración (TTL)
+  if (action.status !== 'pending') {
+    return {
+      ok: false,
+      status: 'invalid_token',
+      message: `La acción ya fue procesada anteriormente (estado actual: ${action.status}).`
+    };
+  }
+
+  const expiresAtMs = parseTimestampToMs(action.expiresAt);
+  if (Date.now() > expiresAtMs) {
+    await updateDoc(docRef, { status: 'expired' });
+
+    await logAuditEvent({
+      userId: action.userId,
+      communityId: action.communityId,
+      channel: 'telegram',
+      agentId: 'telegram-bot',
+      sourceAction: 'telegram_button_click',
+      action: action.actionType,
+      status: 'failed',
+      confirmationId: actionId,
+      details: { reason: 'ACTION_EXPIRED' }
+    });
+
+    return {
+      ok: false,
+      status: 'expired',
+      message: 'La acción ha expirado (límite de 15 minutos). Por favor, solicita una nueva desde la app.'
+    };
+  }
+
+  // Procesar operación
+  const newStatus = op === 'confirm' ? 'confirmed' : 'cancelled';
+  await updateDoc(docRef, { status: newStatus });
+
+  await logAuditEvent({
+    userId: action.userId,
+    communityId: action.communityId,
+    channel: 'telegram',
+    agentId: 'telegram-bot',
+    sourceAction: 'telegram_button_click',
+    action: action.actionType,
+    status: op === 'confirm' ? 'success' : 'failed',
+    confirmationId: actionId,
+    details: { payload: action.payload, operation: op }
+  });
+
+  const updatedAction: PendingAction = { ...action, status: newStatus };
+
+  if (op === 'confirm') {
+    return { ok: true, status: 'confirmed', action: updatedAction };
+  } else {
+    return { ok: true, status: 'cancelled', action: updatedAction };
+  }
+}
+

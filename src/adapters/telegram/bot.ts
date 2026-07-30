@@ -1,7 +1,7 @@
 import { Bot, InlineKeyboard } from 'grammy';
 import { KanariiBotContext, attachExecutionCtx } from './middleware';
 import { verifyAndLinkTelegram } from '../../lib/services/identities';
-import { confirmPendingAction, cancelPendingAction } from '../../lib/services/pendingActions';
+import { processPendingActionFromTelegram } from '../../lib/services/pendingActions';
 
 /**
  * Crea e inicializa el Bot de Telegram de Kanarii utilizando grammY.
@@ -67,29 +67,50 @@ export function createTelegramBot(token: string) {
     const match = ctx.match;
     if (!match) return;
 
-    const [, action, actionId] = match;
+    const [, op, actionId] = match;
+    const telegramUserId = ctx.from?.id;
 
-    if (!actionId) {
-      await ctx.editMessageText('⚠️ Identificador de acción no válido.');
+    if (!actionId || !telegramUserId) {
+      await ctx.editMessageText('⚠️ Identificador de acción o usuario no válido.');
       return;
     }
 
     try {
-      if (action === 'confirm') {
-        // En confirmPendingAction se pasa el actionId. Para confirmaciones desde InlineKeyboard de Telegram,
-        // pasamos el token de confirmación o actionId según el contrato.
-        await confirmPendingAction(actionId, 'TELEGRAM_CONFIRM');
+      const result = await processPendingActionFromTelegram({
+        actionId,
+        telegramUserId,
+        op: op === 'confirm' ? 'confirm' : 'cancel'
+      });
+
+      if (!result.ok) {
+        const errorDetail = 'message' in result ? result.message : 'Error al procesar la acción.';
+        if (result.status === 'expired') {
+          await ctx.editMessageText('⚠️ **La acción ha expirado** (límite de 15 min).\nPor favor, solicita una nueva confirmación desde la Web App.', {
+            parse_mode: 'Markdown'
+          });
+        } else if (result.status === 'unauthorized') {
+          await ctx.editMessageText(`⛔ **Acceso Denegado**:\n${errorDetail}`, {
+            parse_mode: 'Markdown'
+          });
+        } else {
+          await ctx.editMessageText(`⚠️ **No se pudo procesar la acción**:\n${errorDetail}`, {
+            parse_mode: 'Markdown'
+          });
+        }
+        return;
+      }
+
+      if (result.status === 'confirmed') {
         await ctx.editMessageText('✅ **Acción confirmada y procesada con éxito.**', {
           parse_mode: 'Markdown'
         });
-      } else if (action === 'cancel') {
-        await cancelPendingAction(actionId);
+      } else {
         await ctx.editMessageText('❌ **Acción cancelada.**', {
           parse_mode: 'Markdown'
         });
       }
     } catch (error: any) {
-      const errorMsg = error.message || 'La acción expiró o no se pudo procesar.';
+      const errorMsg = error.message || 'Error al procesar el botón interactivo.';
       await ctx.editMessageText(`⚠️ **Error**:\n${errorMsg}`, {
         parse_mode: 'Markdown'
       });

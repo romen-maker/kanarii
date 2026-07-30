@@ -3,10 +3,12 @@ import {
   createPendingAction, 
   confirmPendingAction, 
   cancelPendingAction,
+  processPendingActionFromTelegram,
   getPendingActionsByUser
 } from '../../src/lib/services/pendingActions';
 import * as core from '../../src/lib/services/_core';
 import * as audit from '../../src/lib/services/audit';
+import * as identities from '../../src/lib/services/identities';
 
 vi.mock('../../src/lib/services/_core', () => ({
   doc: vi.fn((_col, id) => ({ path: `pending_actions/${id}`, id })),
@@ -24,6 +26,10 @@ vi.mock('../../src/lib/services/_core', () => ({
 
 vi.mock('../../src/lib/services/audit', () => ({
   logAuditEvent: vi.fn().mockResolvedValue('audit_log_123')
+}));
+
+vi.mock('../../src/lib/services/identities', () => ({
+  getTelegramIdentityByTelegramId: vi.fn()
 }));
 
 describe('pendingActions service (Unit Tests)', () => {
@@ -167,6 +173,140 @@ describe('pendingActions service (Unit Tests)', () => {
       const cancelled = await cancelPendingAction('action_123');
       expect(cancelled.status).toBe('cancelled');
       expect(core.updateDoc).toHaveBeenCalledWith(expect.anything(), { status: 'cancelled' });
+    });
+  });
+
+  describe('processPendingActionFromTelegram', () => {
+    it('debe devolver unauthorized si la cuenta de Telegram no está vinculada', async () => {
+      vi.mocked(identities.getTelegramIdentityByTelegramId).mockResolvedValueOnce(null);
+
+      const res = await processPendingActionFromTelegram({
+        actionId: 'act_1',
+        telegramUserId: 12345,
+        op: 'confirm'
+      });
+
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe('unauthorized');
+    });
+
+    it('debe devolver not_found si la acción pendiente no existe en Firestore', async () => {
+      vi.mocked(identities.getTelegramIdentityByTelegramId).mockResolvedValueOnce({
+        telegramUserId: 12345,
+        userId: 'usr_1',
+        status: 'linked',
+        lastActiveCommunityId: 'com_1'
+      } as any);
+
+      vi.mocked(core.getDoc).mockResolvedValueOnce({
+        exists: () => false
+      } as any);
+
+      const res = await processPendingActionFromTelegram({
+        actionId: 'invalid_id',
+        telegramUserId: 12345,
+        op: 'confirm'
+      });
+
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe('not_found');
+    });
+
+    it('debe devolver unauthorized si el telegramUserId pertenece a un usuario distinto de action.userId', async () => {
+      vi.mocked(identities.getTelegramIdentityByTelegramId).mockResolvedValueOnce({
+        telegramUserId: 12345,
+        userId: 'usr_impostor',
+        status: 'linked',
+        lastActiveCommunityId: 'com_1'
+      } as any);
+
+      vi.mocked(core.getDoc).mockResolvedValueOnce({
+        exists: () => true,
+        id: 'act_1',
+        data: () => ({
+          userId: 'usr_dueno_real',
+          communityId: 'com_1',
+          status: 'pending',
+          expiresAt: { toDate: () => new Date(Date.now() + 60000) }
+        })
+      } as any);
+
+      const res = await processPendingActionFromTelegram({
+        actionId: 'act_1',
+        telegramUserId: 12345,
+        op: 'confirm'
+      });
+
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe('unauthorized');
+    });
+
+    it('debe devolver expired y actualizar a expired si la acción superó los 15 min TTL', async () => {
+      vi.mocked(identities.getTelegramIdentityByTelegramId).mockResolvedValueOnce({
+        telegramUserId: 12345,
+        userId: 'usr_1',
+        status: 'linked',
+        lastActiveCommunityId: 'com_1'
+      } as any);
+
+      vi.mocked(core.getDoc).mockResolvedValueOnce({
+        exists: () => true,
+        id: 'act_1',
+        data: () => ({
+          userId: 'usr_1',
+          communityId: 'com_1',
+          channel: 'telegram',
+          agentId: 'telegram-bot',
+          sourceAction: 'telegram_button_click',
+          actionType: 'create_proposal',
+          status: 'pending',
+          expiresAt: { toDate: () => new Date(Date.now() - 5000) }
+        })
+      } as any);
+
+      const res = await processPendingActionFromTelegram({
+        actionId: 'act_1',
+        telegramUserId: 12345,
+        op: 'confirm'
+      });
+
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe('expired');
+      expect(core.updateDoc).toHaveBeenCalledWith(expect.anything(), { status: 'expired' });
+    });
+
+    it('debe confirmar exitosamente la acción si pasa las 4 validaciones', async () => {
+      vi.mocked(identities.getTelegramIdentityByTelegramId).mockResolvedValueOnce({
+        telegramUserId: 12345,
+        userId: 'usr_1',
+        status: 'linked',
+        lastActiveCommunityId: 'com_1'
+      } as any);
+
+      vi.mocked(core.getDoc).mockResolvedValueOnce({
+        exists: () => true,
+        id: 'act_1',
+        data: () => ({
+          userId: 'usr_1',
+          communityId: 'com_1',
+          channel: 'telegram',
+          agentId: 'telegram-bot',
+          sourceAction: 'telegram_button_click',
+          actionType: 'create_proposal',
+          status: 'pending',
+          expiresAt: { toDate: () => new Date(Date.now() + 60000) }
+        })
+      } as any);
+
+      const res = await processPendingActionFromTelegram({
+        actionId: 'act_1',
+        telegramUserId: 12345,
+        op: 'confirm'
+      });
+
+      expect(res.ok).toBe(true);
+      expect(res.status).toBe('confirmed');
+      expect(core.updateDoc).toHaveBeenCalledWith(expect.anything(), { status: 'confirmed' });
     });
   });
 });
