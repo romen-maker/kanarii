@@ -141,6 +141,11 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] [MEDIO] **T-079**: Endpoints HTTP API y middleware de autenticación por token.
 - [x] [BAJO] **T-080**: Documentación de Arquitectura de Agentes, integración UI y ADR-024.
 
+## 🧪 Verificación End-to-End & Validación Multicanal (Sprint 19)
+- [ ] [ALTO] **T-081**: Integration Test Suite End-to-End Multicanal (`tests/e2e-multichannel.test.ts`).
+- [ ] [ALTO] **T-082**: Runner CLI de Simulación Interactiva Multicanal (`scripts/simulate-multichannel-flow.ts`).
+- [ ] [MEDIO] **T-083**: Hardening y Ajustes de Integración Multicanal.
+
 ---
 
 ## 🗄️ Backlog post-MVP
