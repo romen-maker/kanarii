@@ -2,6 +2,14 @@
 
 Todos los cambios notables en este proyecto serán documentados en este archivo. El formato está basado en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] — sprint-16 — 2026-07-30
+
+### 🔧 Mantenimiento
+
+- chore(gitignore): add agent-os generated files and session lock exclusions
+- chore(agent-os): sync latest core modifications including detect-stack.sh
+- chore(agents): sync global rules and skills from agent-os core
+
 ## [0.4.0] — sprint-15 — 2026-06-11
 
 ### ✨ Features
