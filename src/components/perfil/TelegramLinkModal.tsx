@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Copy, Check, X, ShieldCheck, RefreshCw, Unlink } from 'lucide-react';
+import { Send, Copy, Check, X, ShieldCheck, RefreshCw, Unlink, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateTelegramBindToken, getTelegramIdentityByUserId, revokeTelegramLink } from '../../lib/services/identities';
 import { UserTelegramIdentity } from '../../lib/services/contracts';
@@ -18,6 +18,7 @@ export function TelegramLinkModal({ isOpen, onClose }: TelegramLinkModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [identity, setIdentity] = useState<UserTelegramIdentity | null>(null);
   const [revoking, setRevoking] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Cargar estado de vinculación o generar token al abrir modal
   useEffect(() => {
@@ -142,7 +143,7 @@ export function TelegramLinkModal({ isOpen, onClose }: TelegramLinkModalProps) {
           </div>
           <div>
             <h3 className="text-xl font-serif font-bold text-[#4A4E4D]">Vincular con Telegram</h3>
-            <p className="text-xs text-stone-500 font-medium">Gestiona tu identidad y notificaciones por Telegram</p>
+            <p className="text-xs text-stone-500 font-medium">Notificaciones y gestión rápida desde tu chat</p>
           </div>
         </div>
 
@@ -193,53 +194,68 @@ export function TelegramLinkModal({ isOpen, onClose }: TelegramLinkModalProps) {
             </div>
           </div>
         ) : (
-          /* Estado: Generar token de vinculación */
-          <div className="space-y-4 py-2">
-            <p className="text-xs text-stone-600 leading-relaxed">
-              Sigue estos 3 pasos simples para conectar tu usuario con Kanarii Bot:
-            </p>
+          /* Estado: Generar token de vinculación (Flujo Simplificado) */
+          <div className="space-y-4 py-1">
+            {/* CTA Principal - Deep Link Directo */}
+            <div className="p-4 bg-[#F9F7F1] border border-[#CB997E]/30 rounded-2xl space-y-3 text-center">
+              <a
+                href={`${telegramBotUrl}?start=${token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-4 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-sm font-bold transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <Send className="w-5 h-5" />
+                <span>Abrir Telegram Bot</span>
+              </a>
+              <p className="text-[11px] text-stone-500 font-medium leading-snug">
+                El código de vinculación se aplicará automáticamente al pulsar <strong>Iniciar</strong> en Telegram.
+              </p>
+            </div>
 
-            {/* Paso 1: Token */}
-            <div className="p-4 bg-[#F9F7F1] border border-[#EAE2D6] rounded-2xl space-y-2">
-              <p className="text-[10px] uppercase tracking-wider font-bold text-stone-400">1. Tu código de vinculación (Válido 5 min)</p>
-              <div className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-[#EAE2D6]">
-                <code className="text-lg font-mono font-bold text-[#CB997E] tracking-wider">{token}</code>
+            {/* Código visible con fallback manual */}
+            <div className="p-3 bg-white border border-[#EAE2D6] rounded-2xl flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[11px] text-stone-400 font-medium">Código:</span>
+                <code className="text-base font-mono font-bold text-[#CB997E] tracking-wider">{token}</code>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleGenerateNewToken}
+                  className="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 transition-colors"
+                  title="Generar nuevo código"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-lg text-xs font-bold transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-[#EAE2D6] hover:bg-[#D4C3A3] text-[#4A4E4D] rounded-lg text-xs font-bold transition-colors"
                 >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-[#6B705C]" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? '¡Copiado!' : 'Copiar'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Pasos 2 y 3 */}
-            <div className="space-y-2 text-xs text-stone-600">
-              <p><strong>2.</strong> Abre Telegram y busca el bot <strong>@{botUsername.replace('@', '')}</strong>.</p>
-              <p><strong>3.</strong> Envía el comando: <code className="bg-stone-100 px-1.5 py-0.5 rounded font-mono text-[11px] text-stone-700">/start {token}</code></p>
-            </div>
-
-            {/* Botones de acción */}
-            <div className="pt-2 flex items-center justify-between gap-3">
+            {/* Desplegable de Ayuda contextual */}
+            <div className="border-t border-[#EAE2D6] pt-3">
               <button
-                onClick={handleGenerateNewToken}
-                className="p-2 text-stone-400 hover:text-stone-600 text-xs font-medium flex items-center gap-1"
-                title="Generar nuevo código"
+                onClick={() => setShowHelp(!showHelp)}
+                className="w-full flex items-center justify-between text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors py-1"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Nuevo código</span>
+                <div className="flex items-center gap-1.5">
+                  <HelpCircle className="w-4 h-4 text-[#CB997E]" />
+                  <span>¿Cómo funciona la vinculación?</span>
+                </div>
+                {showHelp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
-              <a
-                href={`${telegramBotUrl}?start=${token}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 px-4 bg-[#CB997E] hover:bg-[#B58368] text-white rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-2 shadow-sm"
-              >
-                <Send className="w-4 h-4" />
-                <span>Abrir Telegram Bot</span>
-              </a>
+              {showHelp && (
+                <div className="mt-2.5 p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-2 text-xs text-stone-600 leading-relaxed animate-in fade-in duration-150">
+                  <p><strong>1.</strong> Pulsa <strong>Abrir Telegram Bot</strong> para ir directo con tu código asignado.</p>
+                  <p><strong>2.</strong> Toca en <strong>Iniciar</strong> (o envía <code className="bg-stone-200 px-1 py-0.5 rounded font-mono text-[11px]">/start {token}</code>).</p>
+                  <p><strong>3.</strong> ¡Listo! Tu cuenta de Kanarii quedará conectada inmediatamente.</p>
+                </div>
+              )}
             </div>
           </div>
         )}

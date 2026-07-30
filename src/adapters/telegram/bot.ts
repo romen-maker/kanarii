@@ -49,9 +49,19 @@ export function createTelegramBot(token: string) {
 
       try {
         await verifyAndLinkTelegram(tokenMatch, telegramUserId, username);
-        await ctx.reply('✅ **¡Cuenta vinculada con éxito!**\nYa puedes operar en Kanarii desde Telegram.', {
-          parse_mode: 'Markdown'
-        });
+        await ctx.reply(
+          '✅ **¡Cuenta vinculada con éxito!**\n\n' +
+          'Ya puedes operar en Kanarii desde Telegram.\n\n' +
+          '**Comandos útiles:**\n' +
+          '• `/comunidad` → ver tu comunidad y rol\n' +
+          '• `/tareas` → ver tareas\n' +
+          '• `/acuerdos` → ver acuerdos\n\n' +
+          '**Ejemplo:**\n' +
+          '• `/tareas` \n' +
+          '• `/acuerdos` \n\n' +
+          'Si quieres ayuda, escribe `/help` o `/comunidad`.',
+          { parse_mode: 'Markdown' }
+        );
         return;
       } catch (error: any) {
         const msg = error.message || 'Error al procesar la vinculación.';
