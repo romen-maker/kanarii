@@ -1,4 +1,5 @@
 import { 
+  db,
   doc, 
   setDoc, 
   updateDoc, 
@@ -97,10 +98,24 @@ export async function verifyAndLinkTelegram(
   }
 
   const now = serverTimestamp();
+
+  // Obtener comunidad primaria del usuario desde /users/{userId} como caché inicial
+  let resolvedCommunityId = '';
+  try {
+    const userSnap = await getDoc(doc(db, 'users', data.userId));
+    if (userSnap && typeof userSnap.exists === 'function' && userSnap.exists()) {
+      const uData = userSnap.data();
+      resolvedCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
+    }
+  } catch (err) {
+    console.warn('[verifyAndLinkTelegram] No se pudo leer la comunidad inicial del usuario:', err);
+  }
+
   const updatePayload: Partial<UserTelegramIdentity> & Record<string, any> = {
     telegramUserId,
     telegramUsername: telegramUsername || null,
     status: 'linked',
+    lastActiveCommunityId: resolvedCommunityId,
     linkedAt: now,
     verificationToken: null,
     verificationExpiresAt: null
@@ -113,6 +128,7 @@ export async function verifyAndLinkTelegram(
     telegramUserId,
     telegramUsername,
     status: 'linked',
+    lastActiveCommunityId: resolvedCommunityId,
     linkedAt: new Date()
   };
 }

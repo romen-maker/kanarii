@@ -23,29 +23,50 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
       return next();
     }
 
+    const sourceAction = ctx.callbackQuery ? 'telegram_button_click' : 'telegram_command';
+    const telegramChatId = ctx.chat?.id || telegramUserId;
+
     try {
       const identity = await getTelegramIdentityByTelegramId(telegramUserId);
 
       if (identity && identity.status === 'linked' && identity.userId) {
-        const communityId = identity.lastActiveCommunityId || '';
+        let candidateCommunityId = identity.lastActiveCommunityId || '';
+
+        // Fallback a /users/{userId} si la caché lastActiveCommunityId no está poblada
+        if (!candidateCommunityId) {
+          try {
+            const memberInfo = await getMemberInfo(identity.userId);
+            if (memberInfo && !memberInfo.isFallback) {
+              candidateCommunityId = memberInfo.communityId || '';
+            }
+          } catch (e) {
+            console.warn('[attachExecutionCtx] Error al resolver comunidad fallback:', e);
+          }
+        }
+
         let resolvedRole: 'admin' | 'member' | 'visitante' = 'visitante';
 
-        if (communityId) {
-          const memberInfo = await getMemberInfo(identity.userId, communityId);
-          if (memberInfo && !memberInfo.isFallback) {
-            const rawRole = (memberInfo.rolComunitario || memberInfo.rol || memberInfo.role || '').toLowerCase();
-            resolvedRole = rawRole === 'admin' ? 'admin' : 'member';
+        // Validar la membresía activa real contra community_members
+        if (candidateCommunityId) {
+          try {
+            const memberInfo = await getMemberInfo(identity.userId, candidateCommunityId);
+            if (memberInfo && !memberInfo.isFallback && memberInfo.estado !== 'inactivo') {
+              const rawRole = (memberInfo.rolComunitario || memberInfo.rol_comunidad || memberInfo.rol || memberInfo.role || '').toLowerCase();
+              resolvedRole = rawRole === 'admin' ? 'admin' : 'member';
+            }
+          } catch (e) {
+            console.warn('[attachExecutionCtx] Error al verificar membresía activa:', e);
           }
         }
 
         ctx.exec = {
-          userId: identity.userId,
-          communityId,
+          userId: identity.userId, // Conserva el UID real en Firebase Auth
+          communityId: candidateCommunityId, // Conserva la comunidad candidata/resuelta sin colapsar a ''
           userRole: resolvedRole,
           channel: 'telegram',
           agentId: 'telegram-bot',
-          sourceAction: ctx.callbackQuery ? 'telegram_button_click' : 'telegram_command',
-          telegramChatId: ctx.chat?.id || telegramUserId
+          sourceAction,
+          telegramChatId
         };
       } else {
         // Fallback explícito para cuentas no vinculadas
@@ -55,8 +76,8 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
           userRole: 'visitante',
           channel: 'telegram',
           agentId: 'telegram-bot',
-          sourceAction: ctx.callbackQuery ? 'telegram_button_click' : 'telegram_command',
-          telegramChatId: ctx.chat?.id || telegramUserId
+          sourceAction,
+          telegramChatId
         };
       }
     } catch (error) {
@@ -67,8 +88,8 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
         userRole: 'visitante',
         channel: 'telegram',
         agentId: 'telegram-bot',
-        sourceAction: ctx.callbackQuery ? 'telegram_button_click' : 'telegram_command',
-        telegramChatId: ctx.chat?.id || telegramUserId
+        sourceAction,
+        telegramChatId
       };
     }
 

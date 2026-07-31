@@ -9,7 +9,8 @@ import {
 import * as core from '../../src/lib/services/_core';
 
 vi.mock('../../src/lib/services/_core', () => ({
-  doc: vi.fn((_col, id) => ({ path: `col/${id}`, id })),
+  db: { path: 'mock_db' },
+  doc: vi.fn((_col, ...parts) => ({ path: parts.join('/'), id: parts[parts.length - 1] })),
   setDoc: vi.fn(),
   updateDoc: vi.fn(),
   getDoc: vi.fn(),

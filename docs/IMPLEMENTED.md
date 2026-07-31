@@ -115,3 +115,4 @@
 | Task File: — Auditoría y Resolución de Warning CSP `unsafe-eval` | T-096 | sprint-22 | — |
 | Task File: — Limpieza de Acciones Solapadas y Adaptación Móvil de TopBar | T-099 | sprint-22 | src/components/layout/TopBar.tsx,src/components/ui/PageHeader.tsx,src/hooks/useTopBarActions.ts |
 | Task-100: Investigar y resolver mensaje no available server/service en móvil | T-100 | sprint-22 | — |
+| Task-102: Resolución de Comunidad en Vinculación Telegram (`verifyAndLinkTelegram` + `attachExecutionCtx`) | T-102 | sprint-23 | src/adapters/telegram/middleware.ts,src/lib/services/identities.ts |
