@@ -116,3 +116,4 @@
 | Task File: — Limpieza de Acciones Solapadas y Adaptación Móvil de TopBar | T-099 | sprint-22 | src/components/layout/TopBar.tsx,src/components/ui/PageHeader.tsx,src/hooks/useTopBarActions.ts |
 | Task-100: Investigar y resolver mensaje no available server/service en móvil | T-100 | sprint-22 | — |
 | Task-102: Resolución de Comunidad en Vinculación Telegram (`verifyAndLinkTelegram` + `attachExecutionCtx`) | T-102 | sprint-23 | src/adapters/telegram/middleware.ts,src/lib/services/identities.ts |
+| Task-103: Mensajes de Estado y Onboarding Simplificado en Telegram Bot (`UNLINKED` / `TOKEN_EXPIRED` / `LINKED`) | T-103 | sprint-23 | src/adapters/telegram/bot.ts |

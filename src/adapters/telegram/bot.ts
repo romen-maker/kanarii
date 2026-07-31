@@ -5,12 +5,35 @@ import { processPendingActionFromTelegram } from '../../lib/services/pendingActi
 import { colTareas, colAcuerdos, getDocs, query, where, limit } from '../../lib/services/_core';
 import { Tarea, Acuerdo } from '../../lib/services/_types';
 
-const LINKING_HELP_TEXT =
-  '⚠️ **Cuenta no vinculada o sin membresía activa**\n\n' +
-  'Para acceder a la información y comandos de tu comunidad:\n' +
-  '1. Entra a Kanarii en la Web App.\n' +
-  '2. Ve a tu **Perfil** y presiona **"Vincular Telegram"**.\n' +
-  '3. Copia el token de 6 caracteres y envíamelo aquí escribiendo: `/start TOKEN`';
+const MSG_UNLINKED =
+  '🌿 **¡Bienvenido a Kanarii!**\n\n' +
+  'Para acceder a la información, tareas y gobernanza de tu comunidad desde Telegram, primero debes vincular tu cuenta.\n\n' +
+  '**¿Cómo vincularte?**\n' +
+  '1. Entra a tu cuenta en la Web App: https://kanarii.app\n' +
+  '2. Ve a tu **Perfil** (haciendo clic en tu Avatar).\n' +
+  '3. Selecciona **"Vincular Telegram"** y pulsa **"Abrir Telegram Bot"**.\n\n' +
+  '¡El código se aplicará automáticamente y podrás usar el bot de inmediato! 🚀';
+
+const MSG_TOKEN_EXPIRED =
+  '⚠️ **El código de vinculación ha caducado**\n\n' +
+  'Por razones de seguridad, los códigos de vinculación expiran a los 5 minutos.\n\n' +
+  '**Para generar uno nuevo:**\n' +
+  '1. Vuelve a la Web App: https://kanarii.app\n' +
+  '2. Abre el modal de **"Vincular Telegram"** en tu perfil.\n' +
+  '3. Presiona **"Abrir Telegram Bot"** nuevamente.';
+
+const MSG_NO_COMMUNITY =
+  '⚠️ **Cuenta vinculada sin comunidad activa**\n\n' +
+  'Tu cuenta de Telegram está enlazada a Kanarii, pero **aún no perteneces a ninguna comunidad activa**.\n\n' +
+  '**Siguiente paso:**\n' +
+  '1. Entra a la Web App: https://kanarii.app\n' +
+  '2. Explora las comunidades disponibles o únete a un espacio.\n' +
+  '3. Una vez dentro de un espacio, vuelve aquí y escribe `/comunidad`.';
+
+const MSG_LINKED_NO_ACCESS =
+  '🔒 **Sin membresía activa en el espacio resuelto**\n\n' +
+  'Tu cuenta está vinculada a Kanarii, pero no tienes membresía activa en la comunidad indicada.\n\n' +
+  'Por favor, comprueba tu estado de membresía o solicita acceso desde la Web App: https://kanarii.app';
 
 /**
  * Crea e inicializa el Bot de Telegram de Kanarii utilizando grammY.
@@ -26,9 +49,19 @@ export function createTelegramBot(token: string) {
   // Inyectar middleware de resolución de identidad
   bot.use(attachExecutionCtx());
 
-  // Helper para verificar rol y vinculación
-  const isVisitor = (ctx: KanariiBotContext) => {
-    return !ctx.exec || ctx.exec.userRole === 'visitante' || !ctx.exec.communityId;
+  // Helper para evaluar el acceso operativo consumiendo ctx.exec ya normalizado
+  const evaluateAccess = (ctx: KanariiBotContext): { canOperate: boolean; replyMessage?: string } => {
+    const exec = ctx.exec;
+    if (!exec || exec.userId.startsWith('telegram:')) {
+      return { canOperate: false, replyMessage: MSG_UNLINKED };
+    }
+    if (!exec.communityId) {
+      return { canOperate: false, replyMessage: MSG_NO_COMMUNITY };
+    }
+    if (exec.userRole === 'visitante') {
+      return { canOperate: false, replyMessage: MSG_LINKED_NO_ACCESS };
+    }
+    return { canOperate: true };
   };
 
   // Handler para comando /start (soporta /start bind_TOKEN)
@@ -56,37 +89,46 @@ export function createTelegramBot(token: string) {
           '• `/comunidad` → ver tu comunidad y rol\n' +
           '• `/tareas` → ver tareas\n' +
           '• `/acuerdos` → ver acuerdos\n\n' +
-          '**Ejemplo:**\n' +
-          '• `/tareas` \n' +
-          '• `/acuerdos` \n\n' +
           'Si quieres ayuda, escribe `/help` o `/comunidad`.',
           { parse_mode: 'Markdown' }
         );
         return;
       } catch (error: any) {
-        const msg = error.message || 'Error al procesar la vinculación.';
-        await ctx.reply(`⚠️ **Error de vinculación**:\n${msg}`, {
-          parse_mode: 'Markdown'
-        });
+        const msg = error.message || '';
+        if (msg.includes('TOKEN_EXPIRED')) {
+          await ctx.reply(MSG_TOKEN_EXPIRED, { parse_mode: 'Markdown' });
+        } else {
+          await ctx.reply(`⚠️ **Error de vinculación**:\n${msg || 'Token no válido o ya utilizado.'}`, {
+            parse_mode: 'Markdown'
+          });
+        }
         return;
       }
     }
 
-    // Mensaje de bienvenida estándar si no hay token
+    // Mensaje de bienvenida / guía si no hay token o ya está vinculado
+    const access = evaluateAccess(ctx);
+    if (!access.canOperate) {
+      await ctx.reply(access.replyMessage!, { parse_mode: 'Markdown' });
+      return;
+    }
+
     await ctx.reply(
       '🌿 **Kanarii Bot**\n\n' +
-      '¡Hola! Para vincular tu cuenta de Telegram con Kanarii:\n' +
-      '1. Entra a Kanarii en la Web App.\n' +
-      '2. Ve a tu Perfil y presiona **"Vincular Telegram"**.\n' +
-      '3. Haz clic en el enlace generado para activar la conexión.',
+      '¡Hola! Tu cuenta ya está vinculada y activa.\n\n' +
+      '**Comandos disponibles:**\n' +
+      '• `/comunidad` → Estado de tu comunidad y rol\n' +
+      '• `/tareas` → Ver tareas del espacio\n' +
+      '• `/acuerdos` → Ver acuerdos registrados',
       { parse_mode: 'Markdown' }
     );
   });
 
   // Comando /comunidad
   bot.command('comunidad', async (ctx) => {
-    if (isVisitor(ctx)) {
-      await ctx.reply(LINKING_HELP_TEXT, { parse_mode: 'Markdown' });
+    const access = evaluateAccess(ctx);
+    if (!access.canOperate) {
+      await ctx.reply(access.replyMessage!, { parse_mode: 'Markdown' });
       return;
     }
 
@@ -101,8 +143,9 @@ export function createTelegramBot(token: string) {
 
   // Comando /tareas
   bot.command('tareas', async (ctx) => {
-    if (isVisitor(ctx)) {
-      await ctx.reply(LINKING_HELP_TEXT, { parse_mode: 'Markdown' });
+    const access = evaluateAccess(ctx);
+    if (!access.canOperate) {
+      await ctx.reply(access.replyMessage!, { parse_mode: 'Markdown' });
       return;
     }
 
@@ -140,8 +183,9 @@ export function createTelegramBot(token: string) {
 
   // Comando /acuerdos
   bot.command('acuerdos', async (ctx) => {
-    if (isVisitor(ctx)) {
-      await ctx.reply(LINKING_HELP_TEXT, { parse_mode: 'Markdown' });
+    const access = evaluateAccess(ctx);
+    if (!access.canOperate) {
+      await ctx.reply(access.replyMessage!, { parse_mode: 'Markdown' });
       return;
     }
 

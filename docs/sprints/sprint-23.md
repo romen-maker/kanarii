@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-102 | Resolución de Comunidad en Vinculación Telegram (`verifyAndLinkTelegram` + `attachExecutionCtx`) | M | ✅ Hecho | — |
-| T-103 | Mensajes de Estado y Onboarding Simplificado en Telegram Bot (`UNLINKED` / `TOKEN_EXPIRED` / `LINKED`) | S | ⬜ Pendiente | — |
+| T-103 | Mensajes de Estado y Onboarding Simplificado en Telegram Bot (`UNLINKED` / `TOKEN_EXPIRED` / `LINKED`) | S | ✅ Hecho | — |
 | T-104 | Integración del contexto `ExecutionCtx` en Servidores MCP | M | ⬜ Pendiente | — |
 | T-105 | Suite de Tests de Integración Telegram (End-to-End `/start TOKEN` -> `/comunidad`) | M | ⬜ Pendiente | — |
 
