@@ -42,3 +42,9 @@ No cargar, no activar. Ver inventario: `.agents/context/skills-inventory.md`.
 - Roadmap: `.agents/context/roadmap.md`
 - Sprint activo: `docs/sprints/sprint-XX.md`
 - Ideas en vuelo: `docs/idea-inbox/`
+
+## Fronteras de Sustitución (ADR-025)
+- **IA**: Toda llamada a LLM debe estar encapsulada en `src/lib/gemini.ts`. Ningún componente/hook importa directamente de `@google/genai`.
+- **Datos**: Todo acceso a Firestore reside en `src/lib/services/`. Los componentes UI consumen hooks de servicio.
+- **Auth**: El estado de sesión vive en `AuthContext.tsx`.
+
