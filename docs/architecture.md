@@ -106,7 +106,7 @@
 
 **Por qué:**
 - Cumple regla DRY: ninguna page importa `firebase/firestore` directamente
-- Facilita auditoría de seguridad y migraciones
+- Facilita auditoría de seguridad y migraciones (ver [ADR-025](adrs/ADR-025-migration-readiness-strategy.md) para la estrategia de portabilidad y fronteras de sustitución)
 - Punto único para manejo de errores (vía `handleFirestoreError`)
 - Interfaces TypeScript reflejan exactamente el modelo de Firestore
 

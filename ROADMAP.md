@@ -185,7 +185,7 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [ ] [POST-MVP] Sistema de roles y estructura administrativa ampliada: `superadmin` (global) + admins por consentimiento de círculo, panel `/superadmin` con DAU/MAU y gestión de admins.
 
 ### Arquitectura y soberanía
-- [ ] [POST-MVP] Abstraer llamadas a Gemini detrás de `ai-adapter.ts` con interfaz genérica (`generateText`, `generateEmbedding`, `streamText`). Documentar alternativas soberanas en `/docs/architecture.md` (Firestore→Supabase, Auth→Keycloak, Gemini→Ollama, Vector→pgvector).
+- [ ] [POST-MVP] Abstraer llamadas a Gemini detrás de `ai-adapter.ts` con interfaz genérica (`generateText`, `generateEmbedding`, `streamText`). Ver estrategia completa y triggers de sustitución en [ADR-025](docs/adrs/ADR-025-migration-readiness-strategy.md) (Firestore→Supabase, Auth→Keycloak, Gemini→Ollama, Vector→pgvector).
 - [ ] [POST-MVP] Callbacks memoizados en subscribers de hooks Firebase (audit FIX-005).
 - [ ] [POST-MVP] Mecanismo de recuperación de errores de escritura (retry/queue para operaciones Firestore críticas).
 
