@@ -118,3 +118,4 @@
 | Task-102: Resolución de Comunidad en Vinculación Telegram (`verifyAndLinkTelegram` + `attachExecutionCtx`) | T-102 | sprint-23 | src/adapters/telegram/middleware.ts,src/lib/services/identities.ts |
 | Task-103: Mensajes de Estado y Onboarding Simplificado en Telegram Bot (`UNLINKED` / `TOKEN_EXPIRED` / `LINKED`) | T-103 | sprint-23 | src/adapters/telegram/bot.ts |
 | Task-104: Integración del contexto `ExecutionCtx` en Servidores MCP | T-104 | sprint-23 | src/adapters/mcp/server.ts |
+| Task-105: Suite de Tests de Integración Telegram + ExecutionCtx (End-to-End Onboarding -> Vinculación -> Contexto -> Acceso) | T-105 | sprint-23 | — |
