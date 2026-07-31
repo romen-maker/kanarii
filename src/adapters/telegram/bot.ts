@@ -1,8 +1,9 @@
 import { Bot, InlineKeyboard } from 'grammy';
 import { KanariiBotContext, attachExecutionCtx } from './middleware';
-import { verifyAndLinkTelegram } from '../../lib/services/identities';
+import { verifyAndLinkTelegram, updateTelegramLastActiveCommunity } from '../../lib/services/identities';
+import { getMemberInfo } from '../../lib/services/members';
 import { processPendingActionFromTelegram } from '../../lib/services/pendingActions';
-import { colTareas, colAcuerdos, getDocs, query, where, limit } from '../../lib/services/_core';
+import { db, doc, getDoc, colTareas, colAcuerdos, colCommunityMembers, getDocs, query, where, limit } from '../../lib/services/_core';
 import { Tarea, Acuerdo } from '../../lib/services/_types';
 
 const APP_URL = (
@@ -130,7 +131,34 @@ export function createTelegramBot(token: string) {
     );
   });
 
-  // Comando /comunidad
+  // Helper para obtener las comunidades de un usuario de forma canónica
+  const getUserCommunityIds = async (userId: string, defaultCommunityId?: string): Promise<string[]> => {
+    try {
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
+        if (Array.isArray(ids) && ids.length > 0) return ids;
+      }
+    } catch (e) {
+      console.warn('[getUserCommunityIds] Error leyendo /users:', e);
+    }
+
+    try {
+      const q = query(colCommunityMembers, where('userId', '==', userId));
+      const snap = await getDocs(q);
+      const idsFromMembers = snap.docs
+        .map(d => d.data().communityId)
+        .filter((id): id is string => Boolean(id));
+      if (idsFromMembers.length > 0) return Array.from(new Set(idsFromMembers));
+    } catch (e) {
+      console.warn('[getUserCommunityIds] Error leyendo /community_members:', e);
+    }
+
+    return defaultCommunityId ? [defaultCommunityId] : [];
+  };
+
+  // Comando /comunidad con Selector Inline
   bot.command('comunidad', async (ctx) => {
     const access = evaluateAccess(ctx);
     if (!access.canOperate) {
@@ -139,12 +167,101 @@ export function createTelegramBot(token: string) {
     }
 
     const exec = ctx.exec!;
+    const userCommunityIds = await getUserCommunityIds(exec.userId, exec.communityId);
+
+    const keyboard = new InlineKeyboard();
+    userCommunityIds.forEach((cId, index) => {
+      const isActive = cId === exec.communityId;
+      const label = isActive ? `✅ ${cId} (Activa)` : `🏡 ${cId}`;
+      keyboard.text(label, `select_community:${cId}`);
+      if ((index + 1) % 2 === 0) keyboard.row();
+    });
+
+    const linksText = userCommunityIds
+      .map(cId => `• ${cId}: ${APP_URL}/c/${cId}`)
+      .join('\n');
+
+    const activeDisplay = exec.communityId || (userCommunityIds[0] ?? 'Sin asignar');
+
     await ctx.reply(
-      `🌿 **Comunidad Activa**: \`${exec.communityId}\`\n` +
-      `👤 **Tu Rol**: \`${exec.userRole}\`\n` +
-      `🆔 **UID Usuario**: \`${exec.userId}\``,
-      { parse_mode: 'Markdown' }
+      `🌿 **Comunidad Activa Actual:** \`${activeDisplay}\`\n` +
+      `👤 **Tu Rol:** \`${exec.userRole}\`\n` +
+      `🆔 **UID Usuario:** \`${exec.userId}\`\n\n` +
+      `👇 **Tus comunidades disponibles:**\n(Toca una opción para cambiar la comunidad activa del bot)\n\n` +
+      `🔗 **Enlaces directos a la Web App:**\n${linksText}`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
+      }
     );
+  });
+
+  // Listener de Callback Queries para seleccion de comunidad inline
+  bot.callbackQuery(/^select_community:(.+)$/, async (ctx) => {
+    const targetCommunityId = ctx.match[1];
+    const telegramUserId = ctx.from?.id;
+
+    if (!telegramUserId || !ctx.exec || ctx.exec.userId.startsWith('telegram:')) {
+      await ctx.answerCallbackQuery({ text: '⚠️ Debes estar vinculado para cambiar de comunidad.', show_alert: true });
+      return;
+    }
+
+    if (targetCommunityId === ctx.exec.communityId) {
+      await ctx.answerCallbackQuery({ text: `📍 '${targetCommunityId}' ya es tu comunidad activa.` });
+      return;
+    }
+
+    try {
+      // 1. Validar membresia activa (Fail-Closed)
+      const memberInfo = await getMemberInfo(ctx.exec.userId, targetCommunityId);
+      if (!memberInfo || memberInfo.isFallback || memberInfo.estado === 'inactivo') {
+        await ctx.answerCallbackQuery({
+          text: `❌ No posees membresía activa en '${targetCommunityId}'.`,
+          show_alert: true
+        });
+        return;
+      }
+
+      // 2. Persistir en /user_telegram_identities/{telegramUserId} con merge seguro
+      await updateTelegramLastActiveCommunity(telegramUserId, targetCommunityId);
+
+      // 3. Notificación rapida efímera
+      await ctx.answerCallbackQuery({ text: `✨ Comunidad activa cambiada a: ${targetCommunityId}` });
+
+      // 4. Actualizar context local
+      ctx.exec.communityId = targetCommunityId;
+      const rawRole = (memberInfo.rolComunitario || memberInfo.rol_comunidad || memberInfo.rol || '').toLowerCase();
+      ctx.exec.userRole = rawRole === 'admin' ? 'admin' : 'member';
+
+      // 5. Refrescar el mensaje y los botones inline
+      const userCommunityIds = await getUserCommunityIds(ctx.exec.userId, targetCommunityId);
+      const keyboard = new InlineKeyboard();
+      userCommunityIds.forEach((cId, index) => {
+        const isActive = cId === targetCommunityId;
+        const label = isActive ? `✅ ${cId} (Activa)` : `🏡 ${cId}`;
+        keyboard.text(label, `select_community:${cId}`);
+        if ((index + 1) % 2 === 0) keyboard.row();
+      });
+
+      const linksText = userCommunityIds
+        .map(cId => `• ${cId}: ${APP_URL}/c/${cId}`)
+        .join('\n');
+
+      await ctx.editMessageText(
+        `🌿 **Comunidad Activa Actual:** \`${targetCommunityId}\`\n` +
+        `👤 **Tu Rol:** \`${ctx.exec.userRole}\`\n` +
+        `🆔 **UID Usuario:** \`${ctx.exec.userId}\`\n\n` +
+        `👇 **Tus comunidades disponibles:**\n(Toca una opción para cambiar la comunidad activa del bot)\n\n` +
+        `🔗 **Enlaces directos a la Web App:**\n${linksText}`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: keyboard
+        }
+      );
+    } catch (error: any) {
+      console.error('[callbackQuery select_community] Error:', error);
+      await ctx.answerCallbackQuery({ text: '⚠️ No se pudo cambiar la comunidad activa.', show_alert: true });
+    }
   });
 
   // Comando /tareas

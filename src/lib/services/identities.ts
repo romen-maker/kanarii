@@ -134,6 +134,25 @@ export async function verifyAndLinkTelegram(
 }
 
 /**
+ * Actualiza la comunidad activa preferida de un usuario de Telegram de forma segura (setDoc merge).
+ */
+export async function updateTelegramLastActiveCommunity(
+  telegramUserId: number,
+  communityId: string
+): Promise<void> {
+  const docRef = doc(colUserTelegramIdentities, String(telegramUserId));
+  await setDoc(
+    docRef,
+    {
+      telegramUserId,
+      lastActiveCommunityId: communityId,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+}
+
+/**
  * Obtiene la identidad Telegram vinculada activa ('linked') de un usuario por su userId de Kanarii.
  */
 export async function getTelegramIdentityByUserId(userId: string): Promise<UserTelegramIdentity | null> {
