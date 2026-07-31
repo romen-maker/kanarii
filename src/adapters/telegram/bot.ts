@@ -5,11 +5,17 @@ import { processPendingActionFromTelegram } from '../../lib/services/pendingActi
 import { colTareas, colAcuerdos, getDocs, query, where, limit } from '../../lib/services/_core';
 import { Tarea, Acuerdo } from '../../lib/services/_types';
 
+const APP_URL = (
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_APP_URL) ||
+  (typeof process !== 'undefined' && process.env?.VITE_APP_URL) ||
+  'https://kanarii.app'
+).replace(/\/$/, '');
+
 const MSG_UNLINKED =
   '🌿 **¡Bienvenido a Kanarii!**\n\n' +
   'Para acceder a la información, tareas y gobernanza de tu comunidad desde Telegram, primero debes vincular tu cuenta.\n\n' +
   '**¿Cómo vincularte?**\n' +
-  '1. Entra a tu cuenta en la Web App: https://kanarii.app\n' +
+  `1. Entra a tu cuenta en la Web App: ${APP_URL}\n` +
   '2. Ve a tu **Perfil** (haciendo clic en tu Avatar).\n' +
   '3. Selecciona **"Vincular Telegram"** y pulsa **"Abrir Telegram Bot"**.\n\n' +
   '¡El código se aplicará automáticamente y podrás usar el bot de inmediato! 🚀';
@@ -18,7 +24,7 @@ const MSG_TOKEN_EXPIRED =
   '⚠️ **El código de vinculación ha caducado**\n\n' +
   'Por razones de seguridad, los códigos de vinculación expiran a los 5 minutos.\n\n' +
   '**Para generar uno nuevo:**\n' +
-  '1. Vuelve a la Web App: https://kanarii.app\n' +
+  `1. Vuelve a la Web App: ${APP_URL}\n` +
   '2. Abre el modal de **"Vincular Telegram"** en tu perfil.\n' +
   '3. Presiona **"Abrir Telegram Bot"** nuevamente.';
 
@@ -26,14 +32,14 @@ const MSG_NO_COMMUNITY =
   '⚠️ **Cuenta vinculada sin comunidad activa**\n\n' +
   'Tu cuenta de Telegram está enlazada a Kanarii, pero **aún no perteneces a ninguna comunidad activa**.\n\n' +
   '**Siguiente paso:**\n' +
-  '1. Entra a la Web App: https://kanarii.app\n' +
+  `1. Entra a la Web App: ${APP_URL}\n` +
   '2. Explora las comunidades disponibles o únete a un espacio.\n' +
   '3. Una vez dentro de un espacio, vuelve aquí y escribe `/comunidad`.';
 
 const MSG_LINKED_NO_ACCESS =
   '🔒 **Sin membresía activa en el espacio resuelto**\n\n' +
   'Tu cuenta está vinculada a Kanarii, pero no tienes membresía activa en la comunidad indicada.\n\n' +
-  'Por favor, comprueba tu estado de membresía o solicita acceso desde la Web App: https://kanarii.app';
+  `Por favor, comprueba tu estado de membresía o solicita acceso desde la Web App: ${APP_URL}`;
 
 /**
  * Crea e inicializa el Bot de Telegram de Kanarii utilizando grammY.

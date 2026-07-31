@@ -184,16 +184,7 @@ export function ComunidadesView() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-[#8A817C]">
-        <Loader2 className="w-10 h-10 animate-spin mb-4" />
-        <p className="font-medium">Buscando espacios para ti...</p>
-      </div>
-    );
-  }
-
-  // --- Botón de TopBar ---
+  // --- Botón de TopBar (Hook incondicional al inicio del componente) ---
   const goToNuevaComunidad = useCallback(() => navigate('/nueva-comunidad'), [navigate]);
 
   const topBarActionBtn = useMemo(() => (
@@ -211,6 +202,15 @@ export function ComunidadesView() {
   ), [appUser, goToNuevaComunidad]);
 
   useTopBarActions(topBarActionBtn, [topBarActionBtn]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-[#8A817C]">
+        <Loader2 className="w-10 h-10 animate-spin mb-4" />
+        <p className="font-medium">Buscando espacios para ti...</p>
+      </div>
+    );
+  }
 
   return (
     <PageContainer>

@@ -32,12 +32,21 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
       if (identity && identity.status === 'linked' && identity.userId) {
         let candidateCommunityId = identity.lastActiveCommunityId || '';
 
-        // Fallback a /users/{userId} si la caché lastActiveCommunityId no está poblada
+        // Fallback robusto si la caché lastActiveCommunityId no está poblada
         if (!candidateCommunityId) {
           try {
+            // 1. Probar desde /users/{userId}
             const memberInfo = await getMemberInfo(identity.userId);
             if (memberInfo && !memberInfo.isFallback) {
               candidateCommunityId = memberInfo.communityId || '';
+            } else {
+              // 2. Si getMemberInfo fue fallback, consultar el documento /users/{userId} directamente
+              const { db, doc, getDoc } = await import('../../lib/services/_core');
+              const userSnap = await getDoc(doc(db, 'users', identity.userId));
+              if (userSnap.exists()) {
+                const uData = userSnap.data();
+                candidateCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
+              }
             }
           } catch (e) {
             console.warn('[attachExecutionCtx] Error al resolver comunidad fallback:', e);
