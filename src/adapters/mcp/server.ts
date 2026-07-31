@@ -7,10 +7,12 @@ import { getAcuerdosByCommunity } from '../../lib/services/acuerdos';
 import { ExecutionCtx } from '../../lib/services/contracts';
 
 export type McpAccessErrorCode = 
+  | 'no_vinculado'
   | 'visitante' 
   | 'sin_comunidad_activa' 
   | 'no_pertenece_a_comunidad' 
-  | 'recurso_no_encontrado';
+  | 'recurso_no_encontrado'
+  | 'error_interno';
 
 export interface McpAccessResult {
   allowed: boolean;
@@ -20,10 +22,20 @@ export interface McpAccessResult {
 }
 
 /**
- * Valida el acceso del usuario a la comunidad en la capa MCP reutilizando getMemberInfo.
+ * Valida de forma estricta (fail-closed) el acceso del sujeto en el servidor MCP:
+ * Transporte (args) ➔ Identidad ➔ Comunidad ➔ Autorización (community_members) ➔ ExecutionCtx.
  */
-export async function validateMcpAccess(userId: string, communityId: string): Promise<McpAccessResult> {
-  if (!userId || userId.startsWith('visitante') || userId === 'guest') {
+export async function validateMcpAccess(rawUserId: string, rawCommunityId?: string): Promise<McpAccessResult> {
+  // 1. Transporte & Identidad inicial
+  if (!rawUserId || rawUserId.trim() === '' || rawUserId === 'guest') {
+    return {
+      allowed: false,
+      errorCode: 'no_vinculado',
+      errorMessage: 'ERROR_NO_VINCULADO: Se requiere una identidad de usuario válida para acceder a herramientas MCP.'
+    };
+  }
+
+  if (rawUserId.startsWith('visitante')) {
     return {
       allowed: false,
       errorCode: 'visitante',
@@ -31,32 +43,76 @@ export async function validateMcpAccess(userId: string, communityId: string): Pr
     };
   }
 
-  if (!communityId) {
+  let resolvedUserId = rawUserId.trim();
+  let candidateCommunityId = rawCommunityId?.trim() || '';
+
+  // Si la identidad viene de Telegram (ej: telegram:123456789 o id numérico en string)
+  if (resolvedUserId.startsWith('telegram:') || /^\d+$/.test(resolvedUserId)) {
+    const numericTelegramId = parseInt(resolvedUserId.replace('telegram:', ''), 10);
+    if (!isNaN(numericTelegramId)) {
+      try {
+        const { getTelegramIdentityByTelegramId } = await import('../../lib/services/identities');
+        const identity = await getTelegramIdentityByTelegramId(numericTelegramId);
+        if (!identity || identity.status !== 'linked' || !identity.userId) {
+          return {
+            allowed: false,
+            errorCode: 'no_vinculado',
+            errorMessage: `ERROR_NO_VINCULADO: El usuario de Telegram '${numericTelegramId}' no está vinculado a una cuenta activa de Kanarii.`
+          };
+        }
+        resolvedUserId = identity.userId;
+        if (!candidateCommunityId) {
+          candidateCommunityId = identity.lastActiveCommunityId || '';
+        }
+      } catch (e: any) {
+        return {
+          allowed: false,
+          errorCode: 'error_interno',
+          errorMessage: `ERROR_RESOLUCION_IDENTIDAD: Error al verificar la identidad de Telegram: ${e.message}`
+        };
+      }
+    }
+  }
+
+  // Fallback a /users/{userId} si la comunidad no se especificó en el transporte ni en la identidad
+  if (!candidateCommunityId) {
+    try {
+      const memberInfo = await getMemberInfo(resolvedUserId);
+      if (memberInfo && !memberInfo.isFallback) {
+        candidateCommunityId = memberInfo.communityId || '';
+      }
+    } catch (e) {
+      console.warn('[validateMcpAccess] No se pudo resolver comunidad primaria:', e);
+    }
+  }
+
+  if (!candidateCommunityId) {
     return {
       allowed: false,
       errorCode: 'sin_comunidad_activa',
-      errorMessage: 'ERROR_SIN_COMUNIDAD_ACTIVA: Se requiere indicar un ID de comunidad activa válido.'
+      errorMessage: `ERROR_SIN_COMUNIDAD_ACTIVA: No se pudo determinar una comunidad activa válida para el usuario '${resolvedUserId}'.`
     };
   }
 
+  // 2. Autorización estricta contra community_members (Request-time authorization)
   try {
-    const memberInfo = await getMemberInfo(userId, communityId);
-    if (!memberInfo || memberInfo.isFallback) {
+    const memberInfo = await getMemberInfo(resolvedUserId, candidateCommunityId);
+    if (!memberInfo || memberInfo.isFallback || memberInfo.estado === 'inactivo') {
       return {
         allowed: false,
         errorCode: 'no_pertenece_a_comunidad',
-        errorMessage: `ERROR_NO_PERTENECE_A_COMUNIDAD: El usuario '${userId}' no es miembro activo de la comunidad '${communityId}'.`
+        errorMessage: `ERROR_NO_PERTENECE_A_COMUNIDAD: El usuario '${resolvedUserId}' no posee membresía activa en la comunidad '${candidateCommunityId}'.`
       };
     }
 
-    const rawRole = (memberInfo.rolComunitario || memberInfo.rol || memberInfo.role || '').toLowerCase();
+    const rawRole = (memberInfo.rolComunitario || memberInfo.rol_comunidad || memberInfo.rol || memberInfo.role || '').toLowerCase();
     const userRole: 'admin' | 'member' = rawRole === 'admin' ? 'admin' : 'member';
 
     return {
       allowed: true,
       exec: {
-        userId,
-        communityId,
+        userId: resolvedUserId,
+        communityId: candidateCommunityId,
         userRole,
         channel: 'mcp',
         agentId: 'mcp-server',
@@ -66,8 +122,8 @@ export async function validateMcpAccess(userId: string, communityId: string): Pr
   } catch (error: any) {
     return {
       allowed: false,
-      errorCode: 'no_pertenece_a_comunidad',
-      errorMessage: `ERROR_PERMISO: No se pudo verificar la pertenencia a la comunidad: ${error?.message || 'Fallo de autenticación'}`
+      errorCode: 'error_interno',
+      errorMessage: `ERROR_PERMISO: No se pudo verificar la autorización del usuario en la comunidad: ${error?.message || 'Error de Firestore'}`
     };
   }
 }

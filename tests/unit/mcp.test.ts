@@ -59,6 +59,12 @@ describe('Servidor MCP & Diferenciación de Errores de Acceso (T-094)', () => {
     expect(res.exec?.communityId).toBe('com_arteara');
   });
 
+  it('debe fallar cerrado con errorCode "no_vinculado" si el sujeto es vacio o invalido', async () => {
+    const res = await validateMcpAccess('', 'com_arteara');
+    expect(res.allowed).toBe(false);
+    expect(res.errorCode).toBe('no_vinculado');
+  });
+
   it('debe instanciar el servidor MCP con el nombre y version correctos', () => {
     const server = createMcpServer();
     expect(server).toBeDefined();
