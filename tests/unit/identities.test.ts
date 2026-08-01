@@ -21,7 +21,8 @@ vi.mock('../../src/lib/services/_core', () => ({
   Timestamp: {
     fromDate: vi.fn((d) => ({ toDate: () => d }))
   },
-  colUserTelegramIdentities: { path: 'user_telegram_identities' }
+  colUserTelegramIdentities: { path: 'user_telegram_identities' },
+  colCommunityMembers: { path: 'community_members' }
 }));
 
 describe('identities service (Unit Tests)', () => {

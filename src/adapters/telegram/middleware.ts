@@ -35,7 +35,7 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
         // Fallback robusto si la caché lastActiveCommunityId no está poblada
         if (!candidateCommunityId) {
           try {
-            // 1. Probar desde /users/{userId}
+            // 1. Probar desde getMemberInfo
             const memberInfo = await getMemberInfo(identity.userId);
             if (memberInfo && !memberInfo.isFallback) {
               candidateCommunityId = memberInfo.communityId || '';
@@ -47,6 +47,12 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
                 const uData = userSnap.data();
                 candidateCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
               }
+            }
+
+            // Auto-healing: reparar y persistir la caché de Telegram si se resolvió una comunidad activa
+            if (candidateCommunityId) {
+              const { updateTelegramLastActiveCommunity } = await import('../../lib/services/identities');
+              await updateTelegramLastActiveCommunity(telegramUserId, candidateCommunityId);
             }
           } catch (e) {
             console.warn('[attachExecutionCtx] Error al resolver comunidad fallback:', e);

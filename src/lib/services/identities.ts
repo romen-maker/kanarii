@@ -9,7 +9,8 @@ import {
   where, 
   serverTimestamp, 
   Timestamp,
-  colUserTelegramIdentities 
+  colUserTelegramIdentities,
+  colCommunityMembers
 } from './_core';
 import { UserTelegramIdentity } from './contracts';
 
@@ -99,13 +100,21 @@ export async function verifyAndLinkTelegram(
 
   const now = serverTimestamp();
 
-  // Obtener comunidad primaria del usuario desde /users/{userId} como caché inicial
+  // Obtener comunidad primaria del usuario desde /users/{userId} o community_members como caché inicial
   let resolvedCommunityId = '';
   try {
     const userSnap = await getDoc(doc(db, 'users', data.userId));
     if (userSnap && typeof userSnap.exists === 'function' && userSnap.exists()) {
       const uData = userSnap.data();
       resolvedCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
+    }
+    if (!resolvedCommunityId) {
+      const qCM = query(colCommunityMembers, where('userId', '==', data.userId));
+      const snapCM = await getDocs(qCM);
+      if (snapCM && !snapCM.empty && snapCM.docs && snapCM.docs[0]) {
+        const cmData = snapCM.docs[0].data() as any;
+        resolvedCommunityId = cmData?.communityId || '';
+      }
     }
   } catch (err) {
     console.warn('[verifyAndLinkTelegram] No se pudo leer la comunidad inicial del usuario:', err);

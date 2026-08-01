@@ -158,21 +158,28 @@ export function createTelegramBot(token: string) {
     return defaultCommunityId ? [defaultCommunityId] : [];
   };
 
-  // Comando /comunidad con Selector Inline
+  // Comando /comunidad con Selector Inline y soporte para cuentas vinculadas sin selección activa
   bot.command('comunidad', async (ctx) => {
-    const access = evaluateAccess(ctx);
-    if (!access.canOperate) {
-      await ctx.reply(access.replyMessage!, { parse_mode: 'Markdown' });
+    const exec = ctx.exec;
+    if (!exec || exec.userId.startsWith('telegram:')) {
+      await ctx.reply(MSG_UNLINKED, { parse_mode: 'Markdown' });
       return;
     }
 
-    const exec = ctx.exec!;
     const userCommunityIds = await getUserCommunityIds(exec.userId, exec.communityId);
+
+    if (userCommunityIds.length === 0) {
+      await ctx.reply(MSG_NO_COMMUNITY, { parse_mode: 'Markdown' });
+      return;
+    }
+
+    const hasActive = Boolean(exec.communityId);
+    const activeDisplay = exec.communityId || 'Sin seleccionar';
 
     const keyboard = new InlineKeyboard();
     userCommunityIds.forEach((cId, index) => {
       const isActive = cId === exec.communityId;
-      const label = isActive ? `✅ ${cId} (Activa)` : `🏡 ${cId}`;
+      const label = isActive ? `✅ ${cId} (Activa)` : `📍 Activar ${cId}`;
       keyboard.text(label, `select_community:${cId}`);
       if ((index + 1) % 2 === 0) keyboard.row();
     });
@@ -181,13 +188,13 @@ export function createTelegramBot(token: string) {
       .map(cId => `• ${cId}: ${APP_URL}/c/${cId}`)
       .join('\n');
 
-    const activeDisplay = exec.communityId || (userCommunityIds[0] ?? 'Sin asignar');
+    const headerText = hasActive
+      ? `🌿 **Comunidad Activa Actual:** \`${activeDisplay}\`\n👤 **Tu Rol:** \`${exec.userRole}\`\n🆔 **UID Usuario:** \`${exec.userId}\``
+      : `🌿 **Estado de tu Cuenta Kanarii:**\n✅ Cuenta vinculada (\`${exec.userId}\`)\n⚠️ **No tienes ninguna comunidad seleccionada como activa.**`;
 
     await ctx.reply(
-      `🌿 **Comunidad Activa Actual:** \`${activeDisplay}\`\n` +
-      `👤 **Tu Rol:** \`${exec.userRole}\`\n` +
-      `🆔 **UID Usuario:** \`${exec.userId}\`\n\n` +
-      `👇 **Tus comunidades disponibles:**\n(Toca una opción para cambiar la comunidad activa del bot)\n\n` +
+      `${headerText}\n\n` +
+      `👇 **Tus comunidades disponibles:**\n(Toca una opción para activar tu contexto de bot)\n\n` +
       `🔗 **Enlaces directos a la Web App:**\n${linksText}`,
       {
         parse_mode: 'Markdown',
@@ -247,11 +254,11 @@ export function createTelegramBot(token: string) {
         .map(cId => `• ${cId}: ${APP_URL}/c/${cId}`)
         .join('\n');
 
+      const headerText = `🌿 **Comunidad Activa Actual:** \`${targetCommunityId}\`\n👤 **Tu Rol:** \`${ctx.exec.userRole}\`\n🆔 **UID Usuario:** \`${ctx.exec.userId}\``;
+
       await ctx.editMessageText(
-        `🌿 **Comunidad Activa Actual:** \`${targetCommunityId}\`\n` +
-        `👤 **Tu Rol:** \`${ctx.exec.userRole}\`\n` +
-        `🆔 **UID Usuario:** \`${ctx.exec.userId}\`\n\n` +
-        `👇 **Tus comunidades disponibles:**\n(Toca una opción para cambiar la comunidad activa del bot)\n\n` +
+        `${headerText}\n\n` +
+        `👇 **Tus comunidades disponibles:**\n(Toca una opción para activar tu contexto de bot)\n\n` +
         `🔗 **Enlaces directos a la Web App:**\n${linksText}`,
         {
           parse_mode: 'Markdown',
