@@ -123,15 +123,16 @@ export async function verifyAndLinkTelegram(
   // Fallback Omnipotente con Firebase Admin SDK en Servidor
   if (!resolvedCommunityId && typeof window === 'undefined') {
     try {
-      const { adminDb } = await import('../firebaseAdmin');
-      if (adminDb) {
-        const userAdminDoc = await adminDb.collection('users').doc(data.userId).get();
+      const { getAdminDb } = await import('../firebaseAdmin');
+      const dbAdmin = await getAdminDb();
+      if (dbAdmin) {
+        const userAdminDoc = await dbAdmin.collection('users').doc(data.userId).get();
         if (userAdminDoc.exists) {
           const uData = userAdminDoc.data()!;
           resolvedCommunityId = uData.communityId || (Array.isArray(uData.communityIds) ? uData.communityIds[0] : '') || '';
         }
         if (!resolvedCommunityId) {
-          const cmSnap = await adminDb.collection('community_members').where('userId', '==', data.userId).limit(1).get();
+          const cmSnap = await dbAdmin.collection('community_members').where('userId', '==', data.userId).limit(1).get();
           if (!cmSnap.empty) {
             resolvedCommunityId = cmSnap.docs[0].data().communityId || '';
           }

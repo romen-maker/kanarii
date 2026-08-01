@@ -76,6 +76,11 @@ export default defineConfig(({mode}) => {
     },
     build: {
       rollupOptions: {
+        external: [
+          'firebase-admin',
+          'firebase-admin/app',
+          'firebase-admin/firestore'
+        ],
         output: {
           manualChunks: {
             'vendor-react':    ['react', 'react-dom', 'react-router-dom'],

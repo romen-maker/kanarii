@@ -54,19 +54,20 @@ export async function getMemberInfo(uid: string, communityId?: string): Promise<
     // Si falla por permisos en backend, consultar vía Firebase Admin SDK omnipotente
     if (typeof window === 'undefined') {
       try {
-        const { adminDb } = await import('../firebaseAdmin');
-        if (adminDb) {
+        const { getAdminDb } = await import('../firebaseAdmin');
+        const dbAdmin = await getAdminDb();
+        if (dbAdmin) {
           if (communityId) {
-            const adminDoc = await adminDb.collection('community_members').doc(`${communityId}_${uid}`).get();
+            const adminDoc = await dbAdmin.collection('community_members').doc(`${communityId}_${uid}`).get();
             if (adminDoc.exists) return { id: adminDoc.id, ...adminDoc.data() };
           } else {
-            const adminSnap = await adminDb.collection('community_members').where('userId', '==', uid).limit(1).get();
+            const adminSnap = await dbAdmin.collection('community_members').where('userId', '==', uid).limit(1).get();
             if (!adminSnap.empty) {
               const d = adminSnap.docs[0];
               return { id: d.id, ...d.data() };
             }
           }
-          const userAdminDoc = await adminDb.collection('users').doc(uid).get();
+          const userAdminDoc = await dbAdmin.collection('users').doc(uid).get();
           if (userAdminDoc.exists) {
             const uData = userAdminDoc.data()!;
             return {

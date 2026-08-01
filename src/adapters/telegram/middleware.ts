@@ -55,9 +55,10 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
           // Fallback Omnipotente con Firebase Admin SDK en Servidor
           if (!candidateCommunityId && typeof window === 'undefined') {
             try {
-              const { adminDb } = await import('../../lib/firebaseAdmin');
-              if (adminDb) {
-                const userAdminDoc = await adminDb.collection('users').doc(identity.userId).get();
+              const { getAdminDb } = await import('../../lib/firebaseAdmin');
+              const dbAdmin = await getAdminDb();
+              if (dbAdmin) {
+                const userAdminDoc = await dbAdmin.collection('users').doc(identity.userId).get();
                 if (userAdminDoc.exists) {
                   const uData = userAdminDoc.data()!;
                   candidateCommunityId = uData.communityId || (Array.isArray(uData.communityIds) ? uData.communityIds[0] : '') || '';

@@ -160,15 +160,16 @@ export function createTelegramBot(token: string) {
     // Consulta Omnipotente con Firebase Admin SDK en Servidor
     if (typeof window === 'undefined') {
       try {
-        const { adminDb } = await import('../../lib/firebaseAdmin');
-        if (adminDb) {
-          const userAdminDoc = await adminDb.collection('users').doc(userId).get();
+        const { getAdminDb } = await import('../../lib/firebaseAdmin');
+        const dbAdmin = await getAdminDb();
+        if (dbAdmin) {
+          const userAdminDoc = await dbAdmin.collection('users').doc(userId).get();
           if (userAdminDoc.exists) {
             const uData = userAdminDoc.data()!;
             const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
             if (Array.isArray(ids) && ids.length > 0) return ids;
           }
-          const membersSnap = await adminDb.collection('community_members').where('userId', '==', userId).get();
+          const membersSnap = await dbAdmin.collection('community_members').where('userId', '==', userId).get();
           if (!membersSnap.empty) {
             const ids = membersSnap.docs
               .map(d => d.data().communityId)
