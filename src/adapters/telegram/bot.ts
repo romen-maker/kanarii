@@ -306,7 +306,7 @@ export function createTelegramBot(token: string) {
     }
   });
 
-  // Comando /tareas
+  // Comando /tareas con lectura omnipotente via Admin SDK en servidor
   bot.command('tareas', async (ctx) => {
     const access = evaluateAccess(ctx);
     if (!access.canOperate) {
@@ -315,22 +315,38 @@ export function createTelegramBot(token: string) {
     }
 
     const exec = ctx.exec!;
-    try {
-      const q = query(
-        colTareas,
-        where('communityId', '==', exec.communityId),
-        limit(10)
-      );
-      const snap = await getDocs(q);
+    console.log(`[Bot /tareas] Consultando tareas. UID: "${exec.userId}", Community: "${exec.communityId}"`);
 
-      if (snap.empty) {
+    try {
+      let items: Tarea[] = [];
+
+      if (typeof window === 'undefined') {
+        const { getAdminDb } = await import('../../lib/firebaseAdmin');
+        const dbAdmin = await getAdminDb();
+        if (dbAdmin) {
+          console.log(`[Bot /tareas] Ejecutando query en Admin SDK para communityId: "${exec.communityId}"`);
+          const snap = await dbAdmin
+            .collection('tareas')
+            .where('communityId', '==', exec.communityId)
+            .limit(10)
+            .get();
+
+          items = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Tarea));
+        }
+      } else {
+        console.log(`[Bot /tareas] Ejecutando query en Client SDK para communityId: "${exec.communityId}"`);
+        const q = query(colTareas, where('communityId', '==', exec.communityId), limit(10));
+        const snap = await getDocs(q);
+        items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tarea));
+      }
+
+      if (items.length === 0) {
         await ctx.reply(`📋 No hay tareas registradas en la comunidad \`${exec.communityId}\`.`, {
           parse_mode: 'Markdown'
         });
         return;
       }
 
-      const items = snap.docs.map(doc => doc.data() as Tarea);
       const textList = items.map((t, idx) => {
         const estadoBadge = t.estado === 'completada' ? '✅' : t.estado === 'en_progreso' ? '🔄' : '📌';
         return `${idx + 1}. ${estadoBadge} **${t.titulo || 'Tarea sin título'}** (\`${t.estado || 'pendiente'}\`)`;
@@ -340,13 +356,14 @@ export function createTelegramBot(token: string) {
         parse_mode: 'Markdown'
       });
     } catch (error: any) {
+      console.error(`[Bot /tareas Error] UID: "${exec.userId}", Community: "${exec.communityId}", Error:`, error);
       await ctx.reply(`⚠️ Error al obtener las tareas: ${error.message || 'Error de lectura'}`, {
         parse_mode: 'Markdown'
       });
     }
   });
 
-  // Comando /acuerdos
+  // Comando /acuerdos con lectura omnipotente via Admin SDK en servidor
   bot.command('acuerdos', async (ctx) => {
     const access = evaluateAccess(ctx);
     if (!access.canOperate) {
@@ -355,22 +372,38 @@ export function createTelegramBot(token: string) {
     }
 
     const exec = ctx.exec!;
-    try {
-      const q = query(
-        colAcuerdos,
-        where('communityId', '==', exec.communityId),
-        limit(10)
-      );
-      const snap = await getDocs(q);
+    console.log(`[Bot /acuerdos] Consultando acuerdos. UID: "${exec.userId}", Community: "${exec.communityId}"`);
 
-      if (snap.empty) {
+    try {
+      let items: Acuerdo[] = [];
+
+      if (typeof window === 'undefined') {
+        const { getAdminDb } = await import('../../lib/firebaseAdmin');
+        const dbAdmin = await getAdminDb();
+        if (dbAdmin) {
+          console.log(`[Bot /acuerdos] Ejecutando query en Admin SDK para communityId: "${exec.communityId}"`);
+          const snap = await dbAdmin
+            .collection('acuerdos')
+            .where('communityId', '==', exec.communityId)
+            .limit(10)
+            .get();
+
+          items = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Acuerdo));
+        }
+      } else {
+        console.log(`[Bot /acuerdos] Ejecutando query en Client SDK para communityId: "${exec.communityId}"`);
+        const q = query(colAcuerdos, where('communityId', '==', exec.communityId), limit(10));
+        const snap = await getDocs(q);
+        items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));
+      }
+
+      if (items.length === 0) {
         await ctx.reply(`🤝 No hay acuerdos registrados en la comunidad \`${exec.communityId}\`.`, {
           parse_mode: 'Markdown'
         });
         return;
       }
 
-      const items = snap.docs.map(doc => doc.data() as Acuerdo);
       const textList = items.map((a, idx) => {
         const statusBadge = a.status === 'completada' ? '✅' : a.status === 'en_curso' ? '🤝' : '⏳';
         return `${idx + 1}. ${statusBadge} **${a.terms || 'Acuerdo de intercambio'}** (\`${a.status || 'pendiente'}\`)`;
@@ -380,6 +413,7 @@ export function createTelegramBot(token: string) {
         parse_mode: 'Markdown'
       });
     } catch (error: any) {
+      console.error(`[Bot /acuerdos Error] UID: "${exec.userId}", Community: "${exec.communityId}", Error:`, error);
       await ctx.reply(`⚠️ Error al obtener los acuerdos: ${error.message || 'Error de lectura'}`, {
         parse_mode: 'Markdown'
       });
