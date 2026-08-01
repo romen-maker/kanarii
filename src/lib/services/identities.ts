@@ -102,26 +102,8 @@ export async function verifyAndLinkTelegram(
 
   // Obtener comunidad primaria del usuario desde /users/{userId} o community_members como caché inicial
   let resolvedCommunityId = '';
-  try {
-    const userSnap = await getDoc(doc(db, 'users', data.userId));
-    if (userSnap && typeof userSnap.exists === 'function' && userSnap.exists()) {
-      const uData = userSnap.data();
-      resolvedCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
-    }
-    if (!resolvedCommunityId) {
-      const qCM = query(colCommunityMembers, where('userId', '==', data.userId));
-      const snapCM = await getDocs(qCM);
-      if (snapCM && !snapCM.empty && snapCM.docs && snapCM.docs[0]) {
-        const cmData = snapCM.docs[0].data() as any;
-        resolvedCommunityId = cmData?.communityId || '';
-      }
-    }
-  } catch (err) {
-    console.warn('[verifyAndLinkTelegram] Client SDK fallback a Admin SDK...');
-  }
 
-  // Fallback Omnipotente con Firebase Admin SDK en Servidor
-  if (!resolvedCommunityId && typeof window === 'undefined') {
+  if (typeof window === 'undefined') {
     try {
       const { getAdminDb } = await import('../firebaseAdmin');
       const dbAdmin = await getAdminDb();
@@ -140,6 +122,24 @@ export async function verifyAndLinkTelegram(
       }
     } catch (adminErr) {
       console.warn('[verifyAndLinkTelegram Admin SDK Error]:', adminErr);
+    }
+  } else {
+    try {
+      const userSnap = await getDoc(doc(db, 'users', data.userId));
+      if (userSnap && typeof userSnap.exists === 'function' && userSnap.exists()) {
+        const uData = userSnap.data();
+        resolvedCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
+      }
+      if (!resolvedCommunityId) {
+        const qCM = query(colCommunityMembers, where('userId', '==', data.userId));
+        const snapCM = await getDocs(qCM);
+        if (snapCM && !snapCM.empty && snapCM.docs && snapCM.docs[0]) {
+          const cmData = snapCM.docs[0].data() as any;
+          resolvedCommunityId = cmData?.communityId || '';
+        }
+      }
+    } catch (err) {
+      console.warn('[verifyAndLinkTelegram Client SDK Error]:', err);
     }
   }
 

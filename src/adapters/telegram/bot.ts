@@ -131,54 +131,62 @@ export function createTelegramBot(token: string) {
     );
   });
 
-  // Helper para obtener las comunidades de un usuario de forma canónica con soporte Admin SDK en servidor
+  // Helper para obtener las comunidades de un usuario de forma canónica desde Firebase Admin SDK
   const getUserCommunityIds = async (userId: string, defaultCommunityId?: string): Promise<string[]> => {
-    try {
-      const userSnap = await getDoc(doc(db, 'users', userId));
-      if (userSnap && userSnap.exists()) {
-        const uData = userSnap.data();
-        const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
-        if (Array.isArray(ids) && ids.length > 0) return ids;
-      }
-    } catch (e) {
-      console.warn('[getUserCommunityIds] Client SDK fallback a Admin SDK...');
-    }
+    const idsSet = new Set<string>();
 
-    try {
-      const q = query(colCommunityMembers, where('userId', '==', userId));
-      const snap = await getDocs(q);
-      if (snap && !snap.empty) {
-        const idsFromMembers = snap.docs
-          .map(d => d.data().communityId)
-          .filter((id): id is string => Boolean(id));
-        if (idsFromMembers.length > 0) return Array.from(new Set(idsFromMembers));
-      }
-    } catch (e) {
-      console.warn('[getUserCommunityIds] Client SDK error leyendo /community_members:', e);
-    }
-
-    // Consulta Omnipotente con Firebase Admin SDK en Servidor
     if (typeof window === 'undefined') {
       try {
         const { getAdminDb } = await import('../../lib/firebaseAdmin');
         const dbAdmin = await getAdminDb();
         if (dbAdmin) {
+          // 1. Añadir comunidades de /users/{userId}
           const userAdminDoc = await dbAdmin.collection('users').doc(userId).get();
           if (userAdminDoc.exists) {
             const uData = userAdminDoc.data()!;
-            const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
-            if (Array.isArray(ids) && ids.length > 0) return ids;
+            if (Array.isArray(uData.communityIds)) {
+              uData.communityIds.forEach((id: string) => id && idsSet.add(id));
+            }
+            if (uData.communityId) idsSet.add(uData.communityId);
           }
+
+          // 2. Añadir todas las comunidades activas de /community_members
           const membersSnap = await dbAdmin.collection('community_members').where('userId', '==', userId).get();
           if (!membersSnap.empty) {
-            const ids = membersSnap.docs
-              .map(d => d.data().communityId)
-              .filter((id): id is string => Boolean(id));
-            if (ids.length > 0) return Array.from(new Set(ids));
+            membersSnap.docs.forEach(docSnap => {
+              const data = docSnap.data();
+              if (data.communityId && data.estado !== 'inactivo') {
+                idsSet.add(data.communityId);
+              }
+            });
           }
+
+          const result = Array.from(idsSet);
+          if (result.length > 0) return result;
         }
       } catch (adminErr) {
         console.warn('[getUserCommunityIds Admin SDK Error]:', adminErr);
+      }
+    } else {
+      try {
+        const userSnap = await getDoc(doc(db, 'users', userId));
+        if (userSnap && userSnap.exists()) {
+          const uData = userSnap.data();
+          const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
+          if (Array.isArray(ids)) ids.forEach((id: string) => id && idsSet.add(id));
+        }
+        const q = query(colCommunityMembers, where('userId', '==', userId));
+        const snap = await getDocs(q);
+        if (snap && !snap.empty) {
+          snap.docs.forEach(d => {
+            const cId = d.data().communityId;
+            if (cId) idsSet.add(cId);
+          });
+        }
+        const result = Array.from(idsSet);
+        if (result.length > 0) return result;
+      } catch (e) {
+        console.warn('[getUserCommunityIds Client Error]:', e);
       }
     }
 
@@ -216,12 +224,12 @@ export function createTelegramBot(token: string) {
       .join('\n');
 
     const headerText = hasActive
-      ? `🌿 **Comunidad Activa Actual:** \`${activeDisplay}\`\n👤 **Tu Rol:** \`${exec.userRole}\`\n🆔 **UID Usuario:** \`${exec.userId}\``
-      : `🌿 **Estado de tu Cuenta Kanarii:**\n✅ Cuenta vinculada (\`${exec.userId}\`)\n⚠️ **No tienes ninguna comunidad seleccionada como activa.**`;
+      ? `🌿 **Comunidad activa:** \`${activeDisplay}\`\n👤 **Rol:** \`${exec.userRole}\`\n🆔 **UID:** \`${exec.userId}\``
+      : `🌿 **Estado de tu cuenta Kanarii:**\n✅ Cuenta vinculada (\`${exec.userId}\`)\n⚠️ **No tienes ninguna comunidad seleccionada como activa.**`;
 
     await ctx.reply(
       `${headerText}\n\n` +
-      `👇 **Tus comunidades disponibles:**\n(Toca una opción para activar tu contexto de bot)\n\n` +
+      `👇 **Tus comunidades disponibles:**\n(Toca una opción para cambiar la comunidad activa)\n\n` +
       `🔗 **Enlaces directos a la Web App:**\n${linksText}`,
       {
         parse_mode: 'Markdown',
@@ -272,7 +280,7 @@ export function createTelegramBot(token: string) {
       const keyboard = new InlineKeyboard();
       userCommunityIds.forEach((cId, index) => {
         const isActive = cId === targetCommunityId;
-        const label = isActive ? `✅ ${cId} (Activa)` : `🏡 ${cId}`;
+        const label = isActive ? `✅ ${cId} (Activa)` : `📍 Activar ${cId}`;
         keyboard.text(label, `select_community:${cId}`);
         if ((index + 1) % 2 === 0) keyboard.row();
       });
@@ -281,11 +289,11 @@ export function createTelegramBot(token: string) {
         .map(cId => `• ${cId}: ${APP_URL}/c/${cId}`)
         .join('\n');
 
-      const headerText = `🌿 **Comunidad Activa Actual:** \`${targetCommunityId}\`\n👤 **Tu Rol:** \`${ctx.exec.userRole}\`\n🆔 **UID Usuario:** \`${ctx.exec.userId}\``;
+      const headerText = `🌿 **Comunidad activa:** \`${targetCommunityId}\`\n👤 **Rol:** \`${ctx.exec.userRole}\`\n🆔 **UID:** \`${ctx.exec.userId}\``;
 
       await ctx.editMessageText(
         `${headerText}\n\n` +
-        `👇 **Tus comunidades disponibles:**\n(Toca una opción para activar tu contexto de bot)\n\n` +
+        `👇 **Tus comunidades disponibles:**\n(Toca una opción para cambiar la comunidad activa)\n\n` +
         `🔗 **Enlaces directos a la Web App:**\n${linksText}`,
         {
           parse_mode: 'Markdown',

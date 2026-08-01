@@ -32,40 +32,41 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
       if (identity && identity.status === 'linked' && identity.userId) {
         let candidateCommunityId = identity.lastActiveCommunityId || '';
 
-        // Fallback robusto si la caché lastActiveCommunityId no está poblada
+        // Resolver comunidad fallback en servidor usando directamente Firebase Admin SDK
         if (!candidateCommunityId) {
-          try {
-            // 1. Probar desde getMemberInfo (que ya cuenta con Admin SDK fallback)
-            const memberInfo = await getMemberInfo(identity.userId);
-            if (memberInfo && !memberInfo.isFallback) {
-              candidateCommunityId = memberInfo.communityId || '';
-            } else {
-              // 2. Si getMemberInfo fue fallback, consultar el documento /users/{userId} directamente
-              const { db, doc, getDoc } = await import('../../lib/services/_core');
-              const userSnap = await getDoc(doc(db, 'users', identity.userId));
-              if (userSnap && userSnap.exists()) {
-                const uData = userSnap.data();
-                candidateCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
-              }
-            }
-          } catch (e) {
-            console.warn('[attachExecutionCtx] Client SDK fallback a Admin SDK...');
-          }
-
-          // Fallback Omnipotente con Firebase Admin SDK en Servidor
-          if (!candidateCommunityId && typeof window === 'undefined') {
+          if (typeof window === 'undefined') {
             try {
               const { getAdminDb } = await import('../../lib/firebaseAdmin');
               const dbAdmin = await getAdminDb();
               if (dbAdmin) {
-                const userAdminDoc = await dbAdmin.collection('users').doc(identity.userId).get();
-                if (userAdminDoc.exists) {
-                  const uData = userAdminDoc.data()!;
-                  candidateCommunityId = uData.communityId || (Array.isArray(uData.communityIds) ? uData.communityIds[0] : '') || '';
+                // 1. Probar desde /community_members
+                const cmSnap = await dbAdmin.collection('community_members').where('userId', '==', identity.userId).limit(1).get();
+                if (!cmSnap.empty) {
+                  const cmData = cmSnap.docs[0].data();
+                  if (cmData.communityId && cmData.estado !== 'inactivo') {
+                    candidateCommunityId = cmData.communityId;
+                  }
+                }
+                // 2. Fallback a /users/{userId}
+                if (!candidateCommunityId) {
+                  const userAdminDoc = await dbAdmin.collection('users').doc(identity.userId).get();
+                  if (userAdminDoc.exists) {
+                    const uData = userAdminDoc.data()!;
+                    candidateCommunityId = uData.communityId || (Array.isArray(uData.communityIds) ? uData.communityIds[0] : '') || '';
+                  }
                 }
               }
             } catch (adminErr) {
               console.warn('[attachExecutionCtx Admin SDK Error]:', adminErr);
+            }
+          } else {
+            try {
+              const memberInfo = await getMemberInfo(identity.userId);
+              if (memberInfo && !memberInfo.isFallback) {
+                candidateCommunityId = memberInfo.communityId || '';
+              }
+            } catch (e) {
+              console.warn('[attachExecutionCtx Client Error]:', e);
             }
           }
 
