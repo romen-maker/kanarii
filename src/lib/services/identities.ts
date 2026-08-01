@@ -143,12 +143,35 @@ export async function verifyAndLinkTelegram(
     }
   }
 
+  // Desvincular cualquier otra cuenta de Kanarii previamente vinculada a este mismo telegramUserId
+  try {
+    const qOld = query(
+      colUserTelegramIdentities,
+      where('telegramUserId', '==', telegramUserId),
+      where('status', '==', 'linked')
+    );
+    const snapOld = await getDocs(qOld);
+    if (snapOld && !snapOld.empty) {
+      for (const oldDoc of snapOld.docs) {
+        if (oldDoc.id !== docSnap.id) {
+          await updateDoc(oldDoc.ref, {
+            status: 'revoked',
+            updatedAt: now
+          });
+        }
+      }
+    }
+  } catch (errOld) {
+    console.warn('[verifyAndLinkTelegram] Aviso al revocar vinculaciones antiguas:', errOld);
+  }
+
   const updatePayload: Partial<UserTelegramIdentity> & Record<string, any> = {
     telegramUserId,
     telegramUsername: telegramUsername || null,
     status: 'linked',
     lastActiveCommunityId: resolvedCommunityId,
     linkedAt: now,
+    updatedAt: now,
     verificationToken: null,
     verificationExpiresAt: null
   };
@@ -213,9 +236,37 @@ export async function getTelegramIdentityByUserId(userId: string): Promise<UserT
 
 /**
  * Obtiene la identidad Telegram vinculada activa ('linked') por su telegramUserId.
+ * En caso de múltiples registros, retorna siempre el más reciente (mayor linkedAt / updatedAt).
  */
 export async function getTelegramIdentityByTelegramId(telegramUserId: number): Promise<UserTelegramIdentity | null> {
   if (!telegramUserId || typeof telegramUserId !== 'number') return null;
+
+  // Servidor (Node.js): Consulta Omnipotente vía Admin SDK para garantizar la identidad más reciente
+  if (typeof window === 'undefined') {
+    try {
+      const { getAdminDb } = await import('../firebaseAdmin');
+      const dbAdmin = await getAdminDb();
+      if (dbAdmin) {
+        const snap = await dbAdmin.collection('user_telegram_identities')
+          .where('telegramUserId', '==', telegramUserId)
+          .where('status', '==', 'linked')
+          .get();
+
+        if (!snap.empty) {
+          // Ordenar en memoria por linkedAt / updatedAt descendente
+          const sorted = snap.docs.sort((a: any, b: any) => {
+            const tA = a.data().updatedAt?.toMillis?.() || a.data().linkedAt?.toMillis?.() || 0;
+            const tB = b.data().updatedAt?.toMillis?.() || b.data().linkedAt?.toMillis?.() || 0;
+            return tB - tA;
+          });
+          const best = sorted[0];
+          return { id: best.id, ...best.data() } as unknown as UserTelegramIdentity;
+        }
+      }
+    } catch (adminErr) {
+      console.warn('[getTelegramIdentityByTelegramId Admin SDK Error]:', adminErr);
+    }
+  }
 
   try {
     const q = query(
@@ -227,7 +278,14 @@ export async function getTelegramIdentityByTelegramId(telegramUserId: number): P
     const snap = await getDocs(q);
     if (!snap || snap.empty || !snap.docs || !snap.docs[0]) return null;
 
-    const docSnap = snap.docs[0];
+    // Si existen varios, tomar el que tenga el userId coincidente o la fecha más reciente
+    const sorted = snap.docs.sort((a, b) => {
+      const tA = a.data().updatedAt?.toDate?.()?.getTime() || a.data().linkedAt?.toDate?.()?.getTime() || 0;
+      const tB = b.data().updatedAt?.toDate?.()?.getTime() || b.data().linkedAt?.toDate?.()?.getTime() || 0;
+      return tB - tA;
+    });
+
+    const docSnap = sorted[0];
     const rawData = docSnap.data();
     if (!rawData) return null;
 
