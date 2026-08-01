@@ -3,7 +3,7 @@ import { KanariiBotContext, attachExecutionCtx } from './middleware';
 import { verifyAndLinkTelegram, updateTelegramLastActiveCommunity } from '../../lib/services/identities';
 import { getMemberInfo } from '../../lib/services/members';
 import { processPendingActionFromTelegram } from '../../lib/services/pendingActions';
-import { db, doc, getDoc, colTareas, colAcuerdos, colCommunityMembers, getDocs, query, where, limit } from '../../lib/services/_core';
+import { getAdminDb } from '../../lib/firebaseAdmin';
 import { Tarea, Acuerdo } from '../../lib/services/_types';
 
 const APP_URL = (
@@ -135,59 +135,35 @@ export function createTelegramBot(token: string) {
   const getUserCommunityIds = async (userId: string, defaultCommunityId?: string): Promise<string[]> => {
     const idsSet = new Set<string>();
 
-    if (typeof window === 'undefined') {
-      try {
-        const { getAdminDb } = await import('../../lib/firebaseAdmin');
-        const dbAdmin = await getAdminDb();
-        if (dbAdmin) {
-          // 1. Añadir comunidades de /users/{userId}
-          const userAdminDoc = await dbAdmin.collection('users').doc(userId).get();
-          if (userAdminDoc.exists) {
-            const uData = userAdminDoc.data()!;
-            if (Array.isArray(uData.communityIds)) {
-              uData.communityIds.forEach((id: string) => id && idsSet.add(id));
+    try {
+      const dbAdmin = await getAdminDb();
+      if (dbAdmin) {
+        // 1. Añadir comunidades de /users/{userId}
+        const userAdminDoc = await dbAdmin.collection('users').doc(userId).get();
+        if (userAdminDoc.exists) {
+          const uData = userAdminDoc.data()!;
+          if (Array.isArray(uData.communityIds)) {
+            uData.communityIds.forEach((id: string) => id && idsSet.add(id));
+          }
+          if (uData.communityId) idsSet.add(uData.communityId);
+        }
+
+        // 2. Añadir todas las comunidades activas de /community_members
+        const membersSnap = await dbAdmin.collection('community_members').where('userId', '==', userId).get();
+        if (!membersSnap.empty) {
+          membersSnap.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.communityId && data.estado !== 'inactivo') {
+              idsSet.add(data.communityId);
             }
-            if (uData.communityId) idsSet.add(uData.communityId);
-          }
-
-          // 2. Añadir todas las comunidades activas de /community_members
-          const membersSnap = await dbAdmin.collection('community_members').where('userId', '==', userId).get();
-          if (!membersSnap.empty) {
-            membersSnap.docs.forEach(docSnap => {
-              const data = docSnap.data();
-              if (data.communityId && data.estado !== 'inactivo') {
-                idsSet.add(data.communityId);
-              }
-            });
-          }
-
-          const result = Array.from(idsSet);
-          if (result.length > 0) return result;
-        }
-      } catch (adminErr) {
-        console.warn('[getUserCommunityIds Admin SDK Error]:', adminErr);
-      }
-    } else {
-      try {
-        const userSnap = await getDoc(doc(db, 'users', userId));
-        if (userSnap && userSnap.exists()) {
-          const uData = userSnap.data();
-          const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
-          if (Array.isArray(ids)) ids.forEach((id: string) => id && idsSet.add(id));
-        }
-        const q = query(colCommunityMembers, where('userId', '==', userId));
-        const snap = await getDocs(q);
-        if (snap && !snap.empty) {
-          snap.docs.forEach(d => {
-            const cId = d.data().communityId;
-            if (cId) idsSet.add(cId);
           });
         }
+
         const result = Array.from(idsSet);
         if (result.length > 0) return result;
-      } catch (e) {
-        console.warn('[getUserCommunityIds Client Error]:', e);
       }
+    } catch (adminErr) {
+      console.warn('[getUserCommunityIds Admin SDK Error]:', adminErr);
     }
 
     return defaultCommunityId ? [defaultCommunityId] : [];
@@ -315,29 +291,19 @@ export function createTelegramBot(token: string) {
     }
 
     const exec = ctx.exec!;
-    console.log(`[Bot /tareas] Consultando tareas. UID: "${exec.userId}", Community: "${exec.communityId}"`);
+    console.log(`[Telegram Backend] [Admin SDK] Colección: "tareas", Community: "${exec.communityId}", UID: "${exec.userId}"`);
 
     try {
       let items: Tarea[] = [];
+      const dbAdmin = await getAdminDb();
+      if (dbAdmin) {
+        const snap = await dbAdmin
+          .collection('tareas')
+          .where('communityId', '==', exec.communityId)
+          .limit(10)
+          .get();
 
-      if (typeof window === 'undefined') {
-        const { getAdminDb } = await import('../../lib/firebaseAdmin');
-        const dbAdmin = await getAdminDb();
-        if (dbAdmin) {
-          console.log(`[Bot /tareas] Ejecutando query en Admin SDK para communityId: "${exec.communityId}"`);
-          const snap = await dbAdmin
-            .collection('tareas')
-            .where('communityId', '==', exec.communityId)
-            .limit(10)
-            .get();
-
-          items = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Tarea));
-        }
-      } else {
-        console.log(`[Bot /tareas] Ejecutando query en Client SDK para communityId: "${exec.communityId}"`);
-        const q = query(colTareas, where('communityId', '==', exec.communityId), limit(10));
-        const snap = await getDocs(q);
-        items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tarea));
+        items = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Tarea));
       }
 
       if (items.length === 0) {
@@ -356,7 +322,7 @@ export function createTelegramBot(token: string) {
         parse_mode: 'Markdown'
       });
     } catch (error: any) {
-      console.error(`[Bot /tareas Error] UID: "${exec.userId}", Community: "${exec.communityId}", Error:`, error);
+      console.error(`[Telegram Backend Error] Colección: "tareas", Community: "${exec.communityId}", UID: "${exec.userId}", Error:`, error);
       await ctx.reply(`⚠️ Error al obtener las tareas: ${error.message || 'Error de lectura'}`, {
         parse_mode: 'Markdown'
       });
@@ -372,29 +338,19 @@ export function createTelegramBot(token: string) {
     }
 
     const exec = ctx.exec!;
-    console.log(`[Bot /acuerdos] Consultando acuerdos. UID: "${exec.userId}", Community: "${exec.communityId}"`);
+    console.log(`[Telegram Backend] [Admin SDK] Colección: "acuerdos", Community: "${exec.communityId}", UID: "${exec.userId}"`);
 
     try {
       let items: Acuerdo[] = [];
+      const dbAdmin = await getAdminDb();
+      if (dbAdmin) {
+        const snap = await dbAdmin
+          .collection('acuerdos')
+          .where('communityId', '==', exec.communityId)
+          .limit(10)
+          .get();
 
-      if (typeof window === 'undefined') {
-        const { getAdminDb } = await import('../../lib/firebaseAdmin');
-        const dbAdmin = await getAdminDb();
-        if (dbAdmin) {
-          console.log(`[Bot /acuerdos] Ejecutando query en Admin SDK para communityId: "${exec.communityId}"`);
-          const snap = await dbAdmin
-            .collection('acuerdos')
-            .where('communityId', '==', exec.communityId)
-            .limit(10)
-            .get();
-
-          items = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Acuerdo));
-        }
-      } else {
-        console.log(`[Bot /acuerdos] Ejecutando query en Client SDK para communityId: "${exec.communityId}"`);
-        const q = query(colAcuerdos, where('communityId', '==', exec.communityId), limit(10));
-        const snap = await getDocs(q);
-        items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Acuerdo));
+        items = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Acuerdo));
       }
 
       if (items.length === 0) {
@@ -413,7 +369,7 @@ export function createTelegramBot(token: string) {
         parse_mode: 'Markdown'
       });
     } catch (error: any) {
-      console.error(`[Bot /acuerdos Error] UID: "${exec.userId}", Community: "${exec.communityId}", Error:`, error);
+      console.error(`[Telegram Backend Error] Colección: "acuerdos", Community: "${exec.communityId}", UID: "${exec.userId}", Error:`, error);
       await ctx.reply(`⚠️ Error al obtener los acuerdos: ${error.message || 'Error de lectura'}`, {
         parse_mode: 'Markdown'
       });
