@@ -1,7 +1,43 @@
 /**
- * Inicialización segura de Firebase Admin SDK para entornos Node.js / Backend (Telegram Bot, MCP, Express).
- * Bypass de Security Rules de cliente para lecturas/escrituras autorizadas de servidor.
+ * Normaliza y sanitiza la clave privada RSA PKCS#8 para ser compatible con OpenSSL 3.x / Node.js
+ * soporta formatos multilínea, escapados de Coolify (\\n), comillas y CRLF (\r\n).
  */
+export function formatPrivateKey(rawKey: string): string {
+  if (!rawKey) return '';
+  let key = rawKey.trim();
+
+  // Quitar comillas simples o dobles que puedan haber sido introducidas por la UI/entorno
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1);
+  }
+
+  // Reemplazar comillas escapadas internas \" -> "
+  key = key.replace(/\\"/g, '"');
+
+  // Convertir \\n literales a saltos de línea reales \n
+  key = key.replace(/\\n/g, '\n');
+
+  // Normalizar CRLF (\r\n) a LF (\n) y eliminar caracteres \r
+  key = key.replace(/\r/g, '');
+
+  key = key.trim();
+
+  // Si la clave viene en una sola línea continua sin saltos de línea entre cabecera, cuerpo y pie:
+  if (key.includes('-----BEGIN PRIVATE KEY-----') && !key.substring(27).includes('\n')) {
+    const header = '-----BEGIN PRIVATE KEY-----';
+    const footer = '-----END PRIVATE KEY-----';
+    const body = key
+      .replace(header, '')
+      .replace(footer, '')
+      .replace(/\s+/g, '');
+
+    const chunks = body.match(/.{1,64}/g) || [body];
+    key = `${header}\n${chunks.join('\n')}\n${footer}`;
+  }
+
+  return key;
+}
+
 let cachedAdminDb: any = null;
 
 export async function getAdminDb() {
@@ -22,15 +58,8 @@ export async function getAdminDb() {
       ).trim();
 
       const clientEmail = (process.env.FIREBASE_ADMIN_CLIENT_EMAIL || '').trim();
-      
-      let rawPrivateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || '';
-      
-      // Normalizar la clave privada: quitar comillas envolventes de entorno y convertir \n a saltos reales
-      rawPrivateKey = rawPrivateKey.trim();
-      if ((rawPrivateKey.startsWith('"') && rawPrivateKey.endsWith('"')) || (rawPrivateKey.startsWith("'") && rawPrivateKey.endsWith("'"))) {
-        rawPrivateKey = rawPrivateKey.slice(1, -1);
-      }
-      const privateKey = rawPrivateKey.replace(/\\n/g, '\n').trim();
+      const rawPrivateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || '';
+      const privateKey = formatPrivateKey(rawPrivateKey);
 
       const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
@@ -38,7 +67,7 @@ export async function getAdminDb() {
         try {
           const parsedKey = JSON.parse(serviceAccountKey);
           if (parsedKey.private_key) {
-            parsedKey.private_key = parsedKey.private_key.replace(/\\n/g, '\n').trim();
+            parsedKey.private_key = formatPrivateKey(parsedKey.private_key);
           }
           initializeApp({
             credential: cert(parsedKey),
@@ -53,12 +82,12 @@ export async function getAdminDb() {
 
       // Validar presencia de las 3 credenciales obligatorias
       if (!projectId || !clientEmail || !privateKey) {
-        console.warn('[FirebaseAdmin] Faltan credenciales de Service Account en entorno (PROJECT_ID, CLIENT_EMAIL o PRIVATE_KEY). No se inicializa Admin SDK.');
+        console.warn('[FirebaseAdmin] Faltan credenciales de Service Account en entorno (PROJECT_ID, CLIENT_EMAIL o PRIVATE_KEY).');
         return null;
       }
 
-      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-        console.warn('[FirebaseAdmin] Formato de FIREBASE_ADMIN_PRIVATE_KEY no válido. Debe contener "-----BEGIN PRIVATE KEY-----".');
+      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----') || !privateKey.includes('-----END PRIVATE KEY-----')) {
+        console.warn('[FirebaseAdmin] Formato de FIREBASE_ADMIN_PRIVATE_KEY no válido. Debe incluir cabecera y pie PEM completos.');
         return null;
       }
 

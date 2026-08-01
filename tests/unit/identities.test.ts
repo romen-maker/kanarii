@@ -167,4 +167,16 @@ describe('identities service (Unit Tests)', () => {
       }));
     });
   });
+
+  describe('formatPrivateKey', () => {
+    it('debe convertir \\n escapados y CRLF a saltos de línea reales \\n', async () => {
+      const { formatPrivateKey } = await import('../../src/lib/firebaseAdmin');
+      const raw = '"-----BEGIN PRIVATE KEY-----\\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...\\n-----END PRIVATE KEY-----\\n"';
+      const formatted = formatPrivateKey(raw);
+      expect(formatted).toContain('-----BEGIN PRIVATE KEY-----\n');
+      expect(formatted).toContain('\n-----END PRIVATE KEY-----');
+      expect(formatted).not.toContain('\\n');
+      expect(formatted.startsWith('"')).toBe(false);
+    });
+  });
 });
