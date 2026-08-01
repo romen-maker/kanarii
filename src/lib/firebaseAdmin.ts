@@ -50,6 +50,13 @@ export async function getAdminDb() {
     const { initializeApp, getApps, cert } = await import('firebase-admin/app');
     const { getFirestore } = await import('firebase-admin/firestore');
 
+    const rawDbId = 
+      process.env.FIREBASE_ADMIN_DATABASE_ID || 
+      process.env.VITE_FIREBASE_DATABASE_ID || 
+      process.env.FIREBASE_DATABASE_ID || 
+      '';
+    const databaseId = rawDbId.trim();
+
     if (getApps().length === 0) {
       const projectId = (
         process.env.FIREBASE_ADMIN_PROJECT_ID || 
@@ -69,11 +76,13 @@ export async function getAdminDb() {
           if (parsedKey.private_key) {
             parsedKey.private_key = formatPrivateKey(parsedKey.private_key);
           }
-          initializeApp({
+          const app = initializeApp({
             credential: cert(parsedKey),
             projectId: parsedKey.project_id || projectId
           });
-          cachedAdminDb = getFirestore();
+          cachedAdminDb = databaseId && databaseId !== '(default)'
+            ? getFirestore(app, databaseId)
+            : getFirestore(app);
           return cachedAdminDb;
         } catch (jsonErr) {
           console.warn('[FirebaseAdmin] Error al parsear FIREBASE_SERVICE_ACCOUNT_KEY:', jsonErr);
@@ -101,7 +110,11 @@ export async function getAdminDb() {
       });
     }
 
-    cachedAdminDb = getFirestore();
+    const app = getApps()[0];
+    cachedAdminDb = databaseId && databaseId !== '(default)'
+      ? getFirestore(app, databaseId)
+      : getFirestore(app);
+      
     return cachedAdminDb;
   } catch (err) {
     console.warn('[FirebaseAdmin] Error al inicializar Firebase Admin SDK:', err);
