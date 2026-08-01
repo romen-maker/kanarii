@@ -117,7 +117,29 @@ export async function verifyAndLinkTelegram(
       }
     }
   } catch (err) {
-    console.warn('[verifyAndLinkTelegram] No se pudo leer la comunidad inicial del usuario:', err);
+    console.warn('[verifyAndLinkTelegram] Client SDK fallback a Admin SDK...');
+  }
+
+  // Fallback Omnipotente con Firebase Admin SDK en Servidor
+  if (!resolvedCommunityId && typeof window === 'undefined') {
+    try {
+      const { adminDb } = await import('../firebaseAdmin');
+      if (adminDb) {
+        const userAdminDoc = await adminDb.collection('users').doc(data.userId).get();
+        if (userAdminDoc.exists) {
+          const uData = userAdminDoc.data()!;
+          resolvedCommunityId = uData.communityId || (Array.isArray(uData.communityIds) ? uData.communityIds[0] : '') || '';
+        }
+        if (!resolvedCommunityId) {
+          const cmSnap = await adminDb.collection('community_members').where('userId', '==', data.userId).limit(1).get();
+          if (!cmSnap.empty) {
+            resolvedCommunityId = cmSnap.docs[0].data().communityId || '';
+          }
+        }
+      }
+    } catch (adminErr) {
+      console.warn('[verifyAndLinkTelegram Admin SDK Error]:', adminErr);
+    }
   }
 
   const updatePayload: Partial<UserTelegramIdentity> & Record<string, any> = {

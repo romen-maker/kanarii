@@ -32,7 +32,7 @@ export async function getMemberInfo(uid: string, communityId?: string): Promise<
     } else {
       const q = query(collection(db, 'community_members'), where('userId', '==', uid));
       const querySnap = await getDocs(q);
-      if (!querySnap.empty) {
+      if (querySnap && !querySnap.empty) {
         snap = querySnap.docs[0];
       }
     }
@@ -42,7 +42,7 @@ export async function getMemberInfo(uid: string, communityId?: string): Promise<
     // Fallback to users collection
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
-    if (userSnap.exists()) {
+    if (userSnap && userSnap.exists()) {
       const userData = userSnap.data();
       return { 
         id: userSnap.id, 
@@ -50,12 +50,39 @@ export async function getMemberInfo(uid: string, communityId?: string): Promise<
         isFallback: true 
       };
     }
-    
-    return null;
   } catch (err) {
+    // Si falla por permisos en backend, consultar vía Firebase Admin SDK omnipotente
+    if (typeof window === 'undefined') {
+      try {
+        const { adminDb } = await import('../firebaseAdmin');
+        if (adminDb) {
+          if (communityId) {
+            const adminDoc = await adminDb.collection('community_members').doc(`${communityId}_${uid}`).get();
+            if (adminDoc.exists) return { id: adminDoc.id, ...adminDoc.data() };
+          } else {
+            const adminSnap = await adminDb.collection('community_members').where('userId', '==', uid).limit(1).get();
+            if (!adminSnap.empty) {
+              const d = adminSnap.docs[0];
+              return { id: d.id, ...d.data() };
+            }
+          }
+          const userAdminDoc = await adminDb.collection('users').doc(uid).get();
+          if (userAdminDoc.exists) {
+            const uData = userAdminDoc.data()!;
+            return {
+              id: userAdminDoc.id,
+              nombre: uData.displayName || uData.email || 'Miembro nuevo',
+              isFallback: true
+            };
+          }
+        }
+      } catch (adminErr) {
+        console.warn('[getMemberInfo Admin SDK Fallback Error]:', adminErr);
+      }
+    }
     handleFirestoreError(err, OperationType.GET, 'community_members');
-    return null;
   }
+  return null;
 }
 
 /**

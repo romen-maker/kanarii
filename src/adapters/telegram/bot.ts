@@ -131,28 +131,54 @@ export function createTelegramBot(token: string) {
     );
   });
 
-  // Helper para obtener las comunidades de un usuario de forma canónica
+  // Helper para obtener las comunidades de un usuario de forma canónica con soporte Admin SDK en servidor
   const getUserCommunityIds = async (userId: string, defaultCommunityId?: string): Promise<string[]> => {
     try {
       const userSnap = await getDoc(doc(db, 'users', userId));
-      if (userSnap.exists()) {
+      if (userSnap && userSnap.exists()) {
         const uData = userSnap.data();
         const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
         if (Array.isArray(ids) && ids.length > 0) return ids;
       }
     } catch (e) {
-      console.warn('[getUserCommunityIds] Error leyendo /users:', e);
+      console.warn('[getUserCommunityIds] Client SDK fallback a Admin SDK...');
     }
 
     try {
       const q = query(colCommunityMembers, where('userId', '==', userId));
       const snap = await getDocs(q);
-      const idsFromMembers = snap.docs
-        .map(d => d.data().communityId)
-        .filter((id): id is string => Boolean(id));
-      if (idsFromMembers.length > 0) return Array.from(new Set(idsFromMembers));
+      if (snap && !snap.empty) {
+        const idsFromMembers = snap.docs
+          .map(d => d.data().communityId)
+          .filter((id): id is string => Boolean(id));
+        if (idsFromMembers.length > 0) return Array.from(new Set(idsFromMembers));
+      }
     } catch (e) {
-      console.warn('[getUserCommunityIds] Error leyendo /community_members:', e);
+      console.warn('[getUserCommunityIds] Client SDK error leyendo /community_members:', e);
+    }
+
+    // Consulta Omnipotente con Firebase Admin SDK en Servidor
+    if (typeof window === 'undefined') {
+      try {
+        const { adminDb } = await import('../../lib/firebaseAdmin');
+        if (adminDb) {
+          const userAdminDoc = await adminDb.collection('users').doc(userId).get();
+          if (userAdminDoc.exists) {
+            const uData = userAdminDoc.data()!;
+            const ids = uData.communityIds || (uData.communityId ? [uData.communityId] : []);
+            if (Array.isArray(ids) && ids.length > 0) return ids;
+          }
+          const membersSnap = await adminDb.collection('community_members').where('userId', '==', userId).get();
+          if (!membersSnap.empty) {
+            const ids = membersSnap.docs
+              .map(d => d.data().communityId)
+              .filter((id): id is string => Boolean(id));
+            if (ids.length > 0) return Array.from(new Set(ids));
+          }
+        }
+      } catch (adminErr) {
+        console.warn('[getUserCommunityIds Admin SDK Error]:', adminErr);
+      }
     }
 
     return defaultCommunityId ? [defaultCommunityId] : [];

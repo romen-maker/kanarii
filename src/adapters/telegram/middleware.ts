@@ -35,7 +35,7 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
         // Fallback robusto si la caché lastActiveCommunityId no está poblada
         if (!candidateCommunityId) {
           try {
-            // 1. Probar desde getMemberInfo
+            // 1. Probar desde getMemberInfo (que ya cuenta con Admin SDK fallback)
             const memberInfo = await getMemberInfo(identity.userId);
             if (memberInfo && !memberInfo.isFallback) {
               candidateCommunityId = memberInfo.communityId || '';
@@ -43,19 +43,35 @@ export function attachExecutionCtx(): MiddlewareFn<KanariiBotContext> {
               // 2. Si getMemberInfo fue fallback, consultar el documento /users/{userId} directamente
               const { db, doc, getDoc } = await import('../../lib/services/_core');
               const userSnap = await getDoc(doc(db, 'users', identity.userId));
-              if (userSnap.exists()) {
+              if (userSnap && userSnap.exists()) {
                 const uData = userSnap.data();
                 candidateCommunityId = uData?.communityId || (Array.isArray(uData?.communityIds) ? uData.communityIds[0] : '') || '';
               }
             }
-
-            // Auto-healing: reparar y persistir la caché de Telegram si se resolvió una comunidad activa
-            if (candidateCommunityId) {
-              const { updateTelegramLastActiveCommunity } = await import('../../lib/services/identities');
-              await updateTelegramLastActiveCommunity(telegramUserId, candidateCommunityId);
-            }
           } catch (e) {
-            console.warn('[attachExecutionCtx] Error al resolver comunidad fallback:', e);
+            console.warn('[attachExecutionCtx] Client SDK fallback a Admin SDK...');
+          }
+
+          // Fallback Omnipotente con Firebase Admin SDK en Servidor
+          if (!candidateCommunityId && typeof window === 'undefined') {
+            try {
+              const { adminDb } = await import('../../lib/firebaseAdmin');
+              if (adminDb) {
+                const userAdminDoc = await adminDb.collection('users').doc(identity.userId).get();
+                if (userAdminDoc.exists) {
+                  const uData = userAdminDoc.data()!;
+                  candidateCommunityId = uData.communityId || (Array.isArray(uData.communityIds) ? uData.communityIds[0] : '') || '';
+                }
+              }
+            } catch (adminErr) {
+              console.warn('[attachExecutionCtx Admin SDK Error]:', adminErr);
+            }
+          }
+
+          // Auto-healing: reparar y persistir la caché de Telegram si se resolvió una comunidad activa
+          if (candidateCommunityId) {
+            const { updateTelegramLastActiveCommunity } = await import('../../lib/services/identities');
+            await updateTelegramLastActiveCommunity(telegramUserId, candidateCommunityId);
           }
         }
 
