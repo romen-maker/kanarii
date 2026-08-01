@@ -75,6 +75,12 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor (Sprint 10 — T-038).
 - [x] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding (Sprint 13 — T-055).
 - [x] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas (Sprint 11 — T-044).
+- [ ] [ALTO] **Sprint 24 — Navegación Unificada**:
+  - [ ] **T-106**: Extender `src/config/navigation.ts` con interface `AppRoute` declarativa y mapear las 24 rutas reales de la app.
+  - [ ] **T-107**: Crear hook unificado `src/hooks/useNavItems.ts` para filtrado reactivo de items de nav por contexto y permisos.
+  - [ ] **T-108**: Refactorizar `Sidebar.tsx` y `BottomNav.tsx` para consumir `useNavItems` eliminando la duplicación de código.
+  - [ ] **T-109**: Generar rutas dinámicas en `App.tsx` consumiendo `appRoutes` desde `navigation.ts`.
+  - [ ] **T-110**: Actualizar `docs/pages-map.md` con las 24 rutas reales del sistema y su estado actual.
 - [ ] [MEDIO] Auditar listeners, queries y lógica duplicada en Sidebar/BottomNav.
 - [ ] [MEDIO] Revisar consistencia de toasts vs validación inline.
 - [x] Fix botón "Cancelar" en CreateTareaModal deshabilitado offline (Sprint 12 — T-053).
