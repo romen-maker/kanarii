@@ -12,20 +12,25 @@ import * as z from 'zod';
 import { ManualViewer } from '../components/ManualViewer';
 import { geocodeLugar } from '../lib/geocoding';
 import { AuthGateModal } from '../components/AuthGateModal';
+import { TagArrayEditor } from '../components/ui/TagArrayEditor';
+import { useTagArray } from '../hooks/useTagArray';
 import { FieldError } from '../components/ui/FieldError';
 
 const fichaSchema = z.object({
   nombre: z.string().min(1, 'Requerido'),
-  fechaNacimiento: z.string().min(1, 'Requerido'),
-  hora: z.string().min(1, 'Requerido'),
-  lugar: z.string().min(1, 'Requerido'),
-  genero: z.string().min(1, 'Requerido'),
-  saberes: z.string().min(1, 'Requerido'),
-  rol_comunidad: z.string().min(1, 'Requerido'),
-  antiguedad_anos: z.preprocess((val) => Number(val), z.number()),
-  tension: z.string().min(1, 'Requerido'),
-  latitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
-  longitud: z.preprocess((val) => val === undefined ? undefined : Number(val), z.number().optional()),
+  fechaNacimiento: z.string().optional(),
+  hora: z.string().optional(),
+  lugar: z.string().optional(),
+  genero: z.string().optional(),
+  saberes: z.any().optional(),
+  necesidades: z.any().optional(),
+  ofrendas: z.any().optional(),
+  bio: z.string().optional(),
+  rol_comunidad: z.string().optional(),
+  antiguedad_anos: z.preprocess((val) => val === undefined || val === '' ? undefined : Number(val), z.number().optional()),
+  tension: z.string().optional(),
+  latitud: z.preprocess((val) => val === undefined || val === '' ? undefined : Number(val), z.number().optional()),
+  longitud: z.preprocess((val) => val === undefined || val === '' ? undefined : Number(val), z.number().optional()),
   timezone: z.string().optional(),
   rol: z.string().optional(),
   fechaLlegada: z.string().optional(),
@@ -62,9 +67,30 @@ export function FichaPreview() {
 
   const watchRol = watch("rol");
 
+  const parseTags = (field: any): string[] => {
+    if (Array.isArray(field)) return field;
+    if (typeof field === 'string' && field.trim()) return field.split(',').map(s => s.trim()).filter(Boolean);
+    return [];
+  };
+
+  const ofrendasState = useTagArray(parseTags(pendingFicha?.ofrendas || pendingFicha?.triada?.ofrendas));
+  const saberesState = useTagArray(parseTags(pendingFicha?.saberes || pendingFicha?.triada?.saberes));
+  const necesidadesState = useTagArray(parseTags(pendingFicha?.necesidades || pendingFicha?.triada?.necesidades));
+
   const onEditSubmit = (data: FichaFormData) => {
-    setPendingFicha(data);
-    localStorage.setItem('kanarii_pendingFicha', JSON.stringify(data));
+    const updatedData = {
+      ...data,
+      ofrendas: ofrendasState.tags,
+      saberes: saberesState.tags,
+      necesidades: necesidadesState.tags,
+      triada: {
+        ofrendas: ofrendasState.tags,
+        saberes: saberesState.tags,
+        necesidades: necesidadesState.tags
+      }
+    };
+    setPendingFicha(updatedData);
+    localStorage.setItem('kanarii_pendingFicha', JSON.stringify(updatedData));
     setIsEditing(false);
   };
 
@@ -212,10 +238,25 @@ export function FichaPreview() {
     }
   }, [appUser, pendingAction, generatedManual, updateConsent, navigate]);
 
-  if (!pendingFicha) {
+  // Si no hay borrador previo, inicializar perfil básico limpio en modo edición
+  useEffect(() => {
+    if (!pendingFicha) {
+      setIsEditing(true);
+    }
+  }, [pendingFicha]);
+
+  if (!pendingFicha && !isEditing) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6">
-        <div className="text-center text-stone-500">No hay ficha pendiente. Vuelve al inicio.</div>
+      <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6 space-y-4">
+        <div className="text-center text-stone-600 font-serif text-lg">
+          No hay un borrador de perfil pendiente.
+        </div>
+        <button
+          onClick={() => navigate('/orientacion')}
+          className="px-6 py-2.5 bg-[#6B705C] text-white rounded-2xl text-sm font-medium hover:bg-[#5A5A40] transition-colors"
+        >
+          Volver a Orientación
+        </button>
       </div>
     );
   }
@@ -319,10 +360,42 @@ export function FichaPreview() {
                     <FieldError error={errors.antiguedad_anos} />
                   </div>
 
+                  {/* TRÍADA ESTRUCTURADA CON CHIPS */}
+                  <div className="space-y-4 md:col-span-2 pt-2 border-t border-[#FAF9F6]">
+                    <h3 className="font-serif font-bold text-base text-[#3E2723]">Tríada Comunitaria (Chips & Topics)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <TagArrayEditor
+                        value={ofrendasState.tags}
+                        onChange={ofrendasState.setTags}
+                        label="Ofrendas (Lo que aportas)"
+                        placeholder="Ej: diseño web, carpintería..."
+                        colorScheme="green"
+                      />
+                      
+                      <TagArrayEditor
+                        value={saberesState.tags}
+                        onChange={saberesState.setTags}
+                        label="Saberes y Habilidades"
+                        placeholder="Ej: agroecología, facilitación..."
+                        colorScheme="blue"
+                        helperText="Habilidades o saberes específicos."
+                      />
+                      
+                      <TagArrayEditor
+                        value={necesidadesState.tags}
+                        onChange={necesidadesState.setTags}
+                        label="Necesidades (Lo que requieres)"
+                        placeholder="Ej: transporte, herramientas..."
+                        colorScheme="orange"
+                      />
+                    </div>
+                  </div>
+
+                  {/* CAMPO LIBRE SOBRE MÍ / BIOGRAFÍA */}
                   <div className="space-y-1 md:col-span-2">
-                    <label className="text-sm font-medium text-stone-600">Saberes y recorrido vital</label>
-                    <textarea {...register("saberes")} rows={4} placeholder="Tu formación, experiencias, oficios, proyectos... todo cuenta" className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
-                    <FieldError error={errors.saberes} />
+                    <label className="text-sm font-medium text-stone-600">Sobre mí / Biografía o trayectoria libre</label>
+                    <textarea {...register("bio")} rows={4} placeholder="Cuenta algo sobre tu historia, valores o proyectos..." className="w-full bg-[#F9F7F1] border border-[#EAE2D6] rounded-xl py-3 px-4 text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#A5A58D]" />
+                    <FieldError error={errors.bio} />
                   </div>
 
                   <div className="space-y-1 md:col-span-2">
