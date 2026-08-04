@@ -31,4 +31,4 @@ Unificar la experiencia de entrada para nuevos miembros en `Welcome.tsx`, ofreci
 - [x] APROBADO recibido — fecha/hora: 2026-08-02T10:49:32+01:00
 - [x] Rama creada: `feat/T-111-orientacion-welcome`
 - [x] Lock activo: `.agent-session.lock`
-- [ ] Sesión cerrada correctamente
+- [x] Sesión cerrada correctamente

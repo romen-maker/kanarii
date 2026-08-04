@@ -1,7 +1,7 @@
 # Sprint 24 — 2026-08-03 → 2026-08-07
 
 ## Estado
-🟡 En curso
+🔴 Cerrado con pendientes (Re-priorizado a favor de Sprint 25 de Onboarding y Utilidad Real)
 
 ## Tareas
 | ID | Descripción | Tamaño | Estado | Task file |
