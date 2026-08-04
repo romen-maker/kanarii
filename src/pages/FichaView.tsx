@@ -358,6 +358,24 @@ export function FichaView() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-[#EAE2D6] p-8 relative overflow-hidden mb-8">
+          {!datos?.fechaNacimiento && (
+            <div className="mb-6 p-5 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center md:text-left">
+                <h3 className="font-serif font-bold text-base text-[#3E2723]">
+                  ¿Quieres descubrir tu Manual Galáctico Completo? 🔮
+                </h3>
+                <p className="text-xs text-[#5D4037]/80">
+                  Tienes tu Perfil Básico en 1 minuto activo. Rellena tu fecha y lugar de nacimiento al editar para activar tu Kin Maya, Carta Astral y Diseño Humano.
+                </p>
+              </div>
+              <button
+                onClick={() => setEditing(true)}
+                className="px-4 py-2 bg-[#6B705C] hover:bg-[#5A5A40] text-white text-xs font-bold rounded-xl transition-all whitespace-nowrap shrink-0"
+              >
+                Completar Manual Galáctico
+              </button>
+            </div>
+          )}
           <div className="absolute top-0 left-0 w-2 h-full bg-[#CB997E]"></div>
           
           {!editing ? (

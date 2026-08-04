@@ -7,7 +7,7 @@
 | ID | Descripción | Tamaño | Estado | Task file |
 |---|---|---|---|---|
 | T-111 | Rediseñar la pantalla de entrada (`Welcome.tsx`) como Panel de Orientación ("Quién soy, quién está y qué nodos existen") | M | ✅ Completada | `.agents/tasks/task-111.md` |
-| T-112 | Dividir Onboarding: Paso 1 Exprés (Nombre, 1 Saber, 1 Necesidad) vs Ampliación Opcional de Perfil (Formulario largo de `FichaView.tsx`) | M | ⬜ Pendiente | — |
+| T-112 | Dividir Onboarding: Paso 1 Exprés (Nombre, 1 Saber, 1 Necesidad) vs Ampliación Opcional de Perfil (Formulario largo de `FichaView.tsx`) | M | ✅ Completada | `.agents/tasks/task-112.md` |
 | T-113 | Enriquecer `<PasaporteVisual />` con Enlaces Clickables a Redes Sociales (Instagram/LinkedIn/Web) y Contacto Rápido (Teléfono/Email) | S | ⬜ Pendiente | — |
 | T-114 | Enriquecer Tarjetas de Nodos en `ComunidadesView.tsx` exponiendo Propósito, Cuidadores (`adminUids`) y Necesidades del Espacio | S | ⬜ Pendiente | — |
 | T-115 | Actualizar `docs/pages-map.md` con la nueva secuencia de entrada y estado de completitud de perfil | S | ⬜ Pendiente | — |

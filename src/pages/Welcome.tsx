@@ -255,7 +255,13 @@ export function Welcome() {
           onExplorePedagogy={(id) => navigate('/tour')}
           onGoToProfiles={() => navigate('/comunidades')}
           onGoToCommunities={() => navigate('/comunidades')}
-          onStartBasicProfile={() => navigate('/ficha')}
+          onStartBasicProfile={() => {
+            if (appUser) {
+              navigate('/ficha');
+            } else {
+              navigate('/ficha-preview');
+            }
+          }}
         />
       </div>
     );

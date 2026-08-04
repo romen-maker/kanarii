@@ -120,3 +120,4 @@
 | Task-104: Integración del contexto `ExecutionCtx` en Servidores MCP | T-104 | sprint-23 | src/adapters/mcp/server.ts |
 | Task-105: Suite de Tests de Integración Telegram + ExecutionCtx (End-to-End Onboarding -> Vinculación -> Contexto -> Acceso) | T-105 | sprint-23 | — |
 | Task-111: Rediseñar la pantalla de entrada (Welcome.tsx) como Panel de Orientación | T-111 | sprint-25 | — |
+| Task-112: Dividir Onboarding: Registro Exprés (Perfil Básico) vs Ampliación Opcional de Perfil | T-112 | sprint-25 | src/pages/FichaView.tsx,src/pages/Welcome.tsx |
