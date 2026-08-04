@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { User } from 'lucide-react';
@@ -24,26 +24,12 @@ export function Welcome() {
 
   useEffect(() => {
     if (appUser) {
-      // 0. Si no ha visto el onboarding, forzar recorrido pedagógico
-      if (!appUser.hasSeenOnboarding) {
-        navigate('/tour');
-        return;
-      }
-
-      // 1. Prioridad: Ficha pendiente de onboarding
+      // Prioridad: Ficha pendiente de borrador local
       const pendingFicha = localStorage.getItem('kanarii_pendingFicha');
       if (pendingFicha) {
         navigate('/ficha-preview');
         return;
       }
-
-      // 2. Si no tiene comunidades, forzar descubrimiento
-      if (!appUser.communityIds || appUser.communityIds.length === 0) {
-        navigate('/comunidades');
-        return;
-      }
-
-      // 3. Si ya tiene comunidades, mantenemos al usuario en esta raíz que actúa como Dashboard
     }
   }, [appUser, navigate]);
 
@@ -61,8 +47,11 @@ export function Welcome() {
     );
   }
 
-  // Si el usuario está autenticado y tiene comunidades, renderizamos el Dashboard
-  if (appUser && appUser.communityIds && appUser.communityIds.length > 0) {
+  const location = useLocation();
+  const isOrientacionRoute = location.pathname === '/orientacion';
+
+  // Si el usuario está autenticado O viene por /orientacion, renderizamos el Panel de Orientación
+  if (appUser || isOrientacionRoute) {
     const safePropuestas = propuestas || [];
     const safeTareas = tareas || [];
     const safeMembers = members || [];
@@ -214,6 +203,14 @@ export function Welcome() {
       .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime())
       .slice(0, 5);
 
+    const featuredMembersList = safeMembers.slice(0, 3).map((m: any) => ({
+      id: m.id || m.userId || m.uid || Math.random().toString(),
+      name: m.displayName || m.nombre || 'Miembro',
+      photoUrl: m.photoURL || m.foto,
+      saberes: Array.isArray(m.saberes) ? m.saberes : (m.triada?.saberes || []),
+      necesidades: Array.isArray(m.necesidades) ? m.necesidades : (m.triada?.necesidades || [])
+    }));
+
     return (
       <div className="min-h-screen bg-[#FDFBF7] text-[#5D4037] p-6 font-sans">
         <div className="max-w-4xl mx-auto flex justify-between items-center pb-6 border-b border-[#EAE2D6] mb-8">
@@ -225,10 +222,10 @@ export function Welcome() {
             onClick={() => navigate('/ficha')}
             className="flex items-center gap-2 border border-[#EAE2D6] bg-white hover:bg-[#F9F7F1] transition-all px-4 py-2 rounded-2xl shadow-sm text-sm font-medium"
           >
-            {appUser.photoURL || user?.photoURL ? (
+            {appUser?.photoURL || user?.photoURL ? (
               <img 
-                src={appUser.photoURL || user?.photoURL || ''} 
-                alt={appUser.displayName || user?.displayName || 'Avatar'} 
+                src={appUser?.photoURL || user?.photoURL || ''} 
+                alt={appUser?.displayName || user?.displayName || 'Avatar'} 
                 className="w-6 h-6 rounded-full object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -240,7 +237,7 @@ export function Welcome() {
         </div>
         
         <WelcomeHeroSections
-          userName={appUser.displayName || appUser.email?.split('@')[0] || 'Miembro'}
+          userName={appUser?.displayName || appUser?.email?.split('@')[0] || 'Tribu'}
           communityStatus={communityStatus}
           propuestasObjecionesCount={propuestasObjecionesCount}
           propuestasObjecionesPercent={propuestasObjecionesPercent}
@@ -250,10 +247,15 @@ export function Welcome() {
           tareasAsignadasCount={tareasAsignadasCount}
           tareasAsignadasPercent={tareasAsignadasPercent}
           recentActivities={recentActivities}
+          featuredMembers={featuredMembersList}
+          hasIncompleteProfile={!appUser || !appUser.hasFicha}
           onNewProposal={() => navigate('/gobernanza')}
           onViewMinutes={() => navigate('/actas')}
           onGoToBoard={() => navigate('/tablon')}
           onExplorePedagogy={(id) => navigate('/tour')}
+          onGoToProfiles={() => navigate('/comunidades')}
+          onGoToCommunities={() => navigate('/comunidades')}
+          onStartBasicProfile={() => navigate('/ficha')}
         />
       </div>
     );

@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Sparkles, FilePlus2, Scroll, Landmark, ArrowRight, Activity, Heart } from 'lucide-react';
+import { Sparkles, FilePlus2, Scroll, Landmark, ArrowRight, Activity, Heart, Users, MapPin, CheckCircle2, Compass } from 'lucide-react';
 
 interface WelcomeHeroSectionsProps {
   userName?: string;
@@ -19,10 +19,30 @@ interface WelcomeHeroSectionsProps {
     target: string;
     circle: string;
   }>;
+  featuredMembers?: Array<{
+    id: string;
+    name: string;
+    photoUrl?: string;
+    saberes?: string[];
+    necesidades?: string[];
+  }>;
+  featuredNodes?: Array<{
+    id: string;
+    nombre: string;
+    slug: string;
+    descripcion: string;
+    tipo?: string;
+    miembrosCount?: number;
+    adminUids?: string[];
+  }>;
   onNewProposal?: () => void;
   onViewMinutes?: () => void;
   onGoToBoard?: () => void;
   onExplorePedagogy?: (id: string) => void;
+  onGoToProfiles?: () => void;
+  onGoToCommunities?: () => void;
+  onStartBasicProfile?: () => void;
+  hasIncompleteProfile?: boolean;
 }
 
 export default function WelcomeHeroSections({
@@ -36,10 +56,16 @@ export default function WelcomeHeroSections({
   tareasAsignadasCount = 7,
   tareasAsignadasPercent = 70,
   recentActivities = [],
+  featuredMembers = [],
+  featuredNodes = [],
   onNewProposal,
   onViewMinutes,
   onGoToBoard,
   onExplorePedagogy,
+  onGoToProfiles,
+  onGoToCommunities,
+  onStartBasicProfile,
+  hasIncompleteProfile = false,
 }: WelcomeHeroSectionsProps) {
 
   const quickActions = [
@@ -126,7 +152,7 @@ export default function WelcomeHeroSections({
   return (
     <div className="w-full max-w-4xl mx-auto space-y-12 py-8 px-4 font-sans text-[#5D4037] bg-[#FDFBF7]">
       
-      {/* 1. SECTION: Welcome Hero */}
+      {/* 1. SECTION: Welcome Hero & Orientación */}
       <motion.section 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -144,6 +170,195 @@ export default function WelcomeHeroSections({
           {communityStatus}
         </p>
       </motion.section>
+
+      {/* BIFURCACIÓN DE REGISTRO / PERFIL: 2 Caminos */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">
+          Elige tu forma de empezar en Kanarii
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Opción A: Perfil básico en 1 minuto */}
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-emerald-50/60 border border-emerald-200/60 rounded-[28px] p-6 flex flex-col justify-between space-y-4 shadow-sm"
+          >
+            <div className="space-y-2">
+              <span className="inline-block text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Fricción Cero • 1 minuto
+              </span>
+              <h3 className="font-serif font-bold text-lg text-[#3E2723]">
+                Perfil básico en 1 minuto 🌱
+              </h3>
+              <p className="text-xs text-[#5D4037]/80 leading-relaxed">
+                Rellena solo tu nombre, 1 saber que ofreces y 1 necesidad. Aparecerás de inmediato en el directorio comunitario y podrás explorar los nodos sin demoras.
+              </p>
+            </div>
+            <button
+              onClick={onStartBasicProfile}
+              className="w-full py-3 bg-[#6B705C] hover:bg-[#5A5A40] text-white font-medium text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2"
+            >
+              <span>Empieza tu perfil básico</span>
+              <ArrowRight size={16} />
+            </button>
+          </motion.div>
+
+          {/* Opción B: Manual Galáctico Completo */}
+          <motion.div
+            whileHover={{ y: -2 }}
+            className="bg-amber-50/60 border border-amber-200/60 rounded-[28px] p-6 flex flex-col justify-between space-y-4 shadow-sm"
+          >
+            <div className="space-y-2">
+              <span className="inline-block text-[10px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Experiencia Profunda
+              </span>
+              <h3 className="font-serif font-bold text-lg text-[#3E2723]">
+                Manual Galáctico Completo 🔮
+              </h3>
+              <p className="text-xs text-[#5D4037]/80 leading-relaxed">
+                Recorrido guiado que calcula tu Carta Astral, Diseño Humano y sello de Kin Maya a partir de tu fecha y hora de nacimiento para mapear tu energía cósmica.
+              </p>
+            </div>
+            <button
+              onClick={() => onExplorePedagogy?.('ficha')}
+              className="w-full py-3 bg-white border border-[#D2B48C]/40 text-[#5D4037] hover:bg-[#FAF9F6] font-medium text-sm rounded-2xl transition-all flex items-center justify-center gap-2"
+            >
+              <span>Ver Manual Galáctico</span>
+              <ArrowRight size={16} />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* BLOQUE DE ORIENTACIÓN: Miembros destacados (Tríada) */}
+      {featuredMembers && featuredMembers.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users size={18} className="text-[#6B705C]" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-[#3E2723]">
+                Quiénes están en la tribu
+              </h2>
+            </div>
+            <button
+              onClick={onGoToProfiles}
+              className="text-xs font-medium text-[#6B705C] hover:underline flex items-center gap-1"
+            >
+              Ver todos ({featuredMembers.length}+) <ArrowRight size={12} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {featuredMembers.slice(0, 3).map((member) => (
+              <div
+                key={member.id}
+                className="bg-white p-5 rounded-[24px] border border-[#D2B48C]/15 shadow-sm space-y-3 flex flex-col justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  {member.photoUrl ? (
+                    <img
+                      src={member.photoUrl}
+                      alt={member.name}
+                      className="w-10 h-10 rounded-full object-cover border border-[#EAE2D6]"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-emerald-50 text-[#6B705C] flex items-center justify-center font-bold font-serif text-sm">
+                      {member.name.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="font-serif font-bold text-sm text-[#3E2723]">{member.name}</h4>
+                    <span className="text-[10px] text-[#A5A58D] font-mono">Miembro activo</span>
+                  </div>
+                </div>
+
+                {/* Tríada reducida */}
+                <div className="space-y-2 text-xs pt-1 border-t border-[#FAF9F6]">
+                  {member.saberes && member.saberes.length > 0 && (
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[#6B705C] block">Ofrece / Saberes:</span>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {member.saberes.slice(0, 2).map((s, idx) => (
+                          <span key={idx} className="bg-emerald-50 text-[#6B705C] px-2 py-0.5 rounded-full text-[10px]">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {member.necesidades && member.necesidades.length > 0 && (
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-[#CB997E] block">Necesita:</span>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {member.necesidades.slice(0, 2).map((n, idx) => (
+                          <span key={idx} className="bg-amber-50 text-[#CB997E] px-2 py-0.5 rounded-full text-[10px]">
+                            {n}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* BLOQUE DE ORIENTACIÓN: Espacios / Nodos destacados */}
+      {featuredNodes && featuredNodes.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={18} className="text-[#6B705C]" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-[#3E2723]">
+                Espacios y Nodos Disponibles
+              </h2>
+            </div>
+            <button
+              onClick={onGoToCommunities}
+              className="text-xs font-medium text-[#6B705C] hover:underline flex items-center gap-1"
+            >
+              Explorar todos <ArrowRight size={12} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {featuredNodes.slice(0, 2).map((node) => (
+              <div
+                key={node.id}
+                className="bg-white p-6 rounded-[28px] border border-[#D2B48C]/15 shadow-sm space-y-3 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-bold uppercase text-[#6B705C] bg-emerald-50 px-2 py-0.5 rounded">
+                      {node.tipo || 'Comunidad'}
+                    </span>
+                    {node.miembrosCount && (
+                      <span className="text-xs text-[#A5A58D] font-mono">
+                        {node.miembrosCount} miembros
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-serif font-bold text-lg text-[#3E2723]">{node.nombre}</h3>
+                  <p className="text-xs text-[#5D4037]/70 line-clamp-2 mt-1">{node.descripcion}</p>
+                </div>
+
+                <div className="pt-3 border-t border-[#FAF9F6] flex justify-between items-center">
+                  <span className="text-[11px] text-[#A5A58D]">
+                    {node.adminUids && node.adminUids.length > 0 ? `Cuidadores: ${node.adminUids.length}` : 'Espacio activo'}
+                  </span>
+                  <button
+                    onClick={onGoToCommunities}
+                    className="text-xs font-bold text-[#6B705C] hover:underline flex items-center gap-1"
+                  >
+                    Ver Nodo <ArrowRight size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 2. SECTION: Quick Actions */}
       <section className="space-y-4">

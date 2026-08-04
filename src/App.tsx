@@ -80,11 +80,12 @@ function AppContent() {
             </>
           } />
           <Route path="/contexto" element={<ContextConsent />} />
+          <Route path="/orientacion" element={<Welcome />} />
           <Route path="/onboarding" element={<OnboardingChat />} />
           <Route path="/ficha-preview" element={<FichaPreview />} />
           <Route path="/ficha" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
           <Route path="/perfil" element={<ProtectedRoute><FichaView /></ProtectedRoute>} />
-          <Route path="/welcome" element={<ProtectedRoute><Welcome /></ProtectedRoute>} />
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
           <Route path="/cruce" element={<ProtectedRoute requireAdmin><CruceView /></ProtectedRoute>} />
           <Route path="/tareas" element={<ProtectedRoute><TareasPanel /></ProtectedRoute>} />

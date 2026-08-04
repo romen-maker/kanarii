@@ -5,7 +5,7 @@ export function ContextConsent() {
   const navigate = useNavigate();
 
   const handleAccept = () => {
-    navigate('/onboarding');
+    navigate('/orientacion');
   };
 
   return (
