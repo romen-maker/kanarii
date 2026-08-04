@@ -35,6 +35,16 @@ const LoadingSpinner = () => (
   </div>
 );
 
+function NotFoundRedirect() {
+  const { info } = useToast();
+
+  useEffect(() => {
+    info("La ruta que buscabas no existe. Te hemos orientado al inicio de la tribu 🍃");
+  }, [info]);
+
+  return <Navigate to="/orientacion" replace />;
+}
+
 function AppContent() {
   const { appUser } = useAuth();
   const { success } = useToast();
@@ -103,6 +113,7 @@ function AppContent() {
           <Route path="/p/:uid" element={<PasaporteUniversalView />} />
           <Route path="/tour" element={<KanariiTourPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="*" element={<NotFoundRedirect />} />
         </Routes>
       </React.Suspense>
         
