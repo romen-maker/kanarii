@@ -24,9 +24,9 @@ export function Welcome() {
 
   useEffect(() => {
     if (appUser) {
-      // Prioridad: Ficha pendiente de borrador local
+      // Prioridad: Borrador local pendiente SOLO si el perfil aún no está guardado en Firestore
       const pendingFicha = localStorage.getItem('kanarii_pendingFicha');
-      if (pendingFicha) {
+      if (pendingFicha && !appUser.hasFicha) {
         navigate('/ficha-preview');
         return;
       }

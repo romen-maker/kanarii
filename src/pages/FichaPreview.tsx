@@ -104,8 +104,6 @@ export function FichaPreview() {
               userId: appUser.uid
             };
             setPendingFicha(mappedData);
-            // Opcional: sincronizar localStorage para futuras recargas
-            localStorage.setItem('kanarii_pendingFicha', JSON.stringify(mappedData));
           }
         } catch (e) {
           console.log("No hay ficha previa en la nube, usando local.");
