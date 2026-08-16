@@ -1,0 +1,15 @@
+{
+  "title": "Bienvenido a Kanarii",
+  "subtitle": "Plataforma de soberanía y coordinación comunitaria",
+  "orientation": {
+    "title": "Panel de Orientación",
+    "whoAmI": "Quién soy",
+    "whoIsHere": "Quién está",
+    "nodes": "Nodos existentes"
+  },
+  "cta": {
+    "explore": "Explorar comunidades",
+    "completeProfile": "Completar Ficha",
+    "startTour": "Ver Tour explicativo"
+  }
+}

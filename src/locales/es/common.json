@@ -1,0 +1,32 @@
+{
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "back": "Volver",
+    "continue": "Continuar",
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar sesión"
+  },
+  "nav": {
+    "orientation": "Orientación",
+    "communities": "Comunidades",
+    "projects": "Proyectos",
+    "tasks": "Tareas",
+    "governance": "Gobernanza",
+    "marketplace": "Soberanía",
+    "passport": "Pasaporte",
+    "profile": "Perfil"
+  },
+  "language": {
+    "selector": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "status": {
+    "loading": "Cargando...",
+    "error": "Ha ocurrido un error",
+    "success": "Operación realizada con éxito"
+  }
+}

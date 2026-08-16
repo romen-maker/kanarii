@@ -75,6 +75,14 @@ Solo contiene trabajo pendiente REAL. Lo marcado ✅ ya está implementado.
 - [x] Bug: Tríada Comunitaria — ofrendas y necesidades no persisten via TagArrayEditor (Sprint 10 — T-038).
 - [x] Migración datos Triada: script de migración de campo legacy saberes: string a arrays, actualizar UI onboarding (Sprint 13 — T-055).
 - [x] Reducir usos de `any`: priorizar `datosBrutos`, `perfilVisual` y `configuracion` con interfaces específicas (Sprint 11 — T-044).
+- [ ] [ALTO] **Sprint 26 — Internacionalización ES/EN para campaña de fundraising**:
+  - [ ] **T-116**: Auditar textos hardcodeados y definir alcance exacto ES/EN por rutas y componentes.
+  - [ ] **T-117**: Instalar y configurar `i18next` + `react-i18next`, proveedor global, detección y persistencia de idioma.
+  - [ ] **T-118**: Crear selector ES/EN accesible en cabecera/menú y aplicar el idioma al documento HTML.
+  - [ ] **T-119**: Internacionalizar Welcome, Orientación, navegación, CTAs, login/registro y estados de acceso.
+  - [ ] **T-120**: Internacionalizar páginas públicas de comunidades/nodos y pasaporte público.
+  - [ ] **T-121**: Añadir tests/checklist de claves faltantes y fallback controlado.
+  - [ ] **T-122**: Actualizar `docs/pages-map.md` y guía de copy.
 - [ ] [ALTO] **Sprint 24 — Navegación Unificada**:
   - [ ] **T-106**: Extender `src/config/navigation.ts` con interface `AppRoute` declarativa y mapear las 24 rutas reales de la app.
   - [ ] **T-107**: Crear hook unificado `src/hooks/useNavItems.ts` para filtrado reactivo de items de nav por contexto y permisos.

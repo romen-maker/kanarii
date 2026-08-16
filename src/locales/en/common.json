@@ -1,0 +1,32 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "continue": "Continue",
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out"
+  },
+  "nav": {
+    "orientation": "Orientation",
+    "communities": "Communities",
+    "projects": "Projects",
+    "tasks": "Tasks",
+    "governance": "Governance",
+    "marketplace": "Sovereignty",
+    "passport": "Passport",
+    "profile": "Profile"
+  },
+  "language": {
+    "selector": "Language",
+    "es": "Español",
+    "en": "English"
+  },
+  "status": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Operation successful"
+  }
+}

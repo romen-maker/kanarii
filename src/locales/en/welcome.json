@@ -1,0 +1,15 @@
+{
+  "title": "Welcome to Kanarii",
+  "subtitle": "Community sovereignty and coordination platform",
+  "orientation": {
+    "title": "Orientation Hub",
+    "whoAmI": "Who I am",
+    "whoIsHere": "Who is here",
+    "nodes": "Active nodes"
+  },
+  "cta": {
+    "explore": "Explore communities",
+    "completeProfile": "Complete Profile",
+    "startTour": "Take Guided Tour"
+  }
+}
