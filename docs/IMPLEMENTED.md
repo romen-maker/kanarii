@@ -125,3 +125,4 @@
 | Task-117: Instalar y configurar i18next + react-i18next, proveedor global, detección y persistencia de idioma en localStorage | T-117 | sprint-26 | src/i18n/index.ts,src/main.tsx,src/types/i18next.d.ts |
 | Task-118: Crear selector ES/EN accesible en cabecera/menú y aplicar el atributo lang dinámico al documento HTML | T-118 | sprint-26 | src/components/language/LanguageSelector.tsx,src/components/layout/TopBar.tsx,src/i18n/index.ts |
 | Task-121: Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual EN de fundraising | T-121 | sprint-26 | src/i18n/index.ts,src/locales/en/welcome.json |
+| Task-122: Actualizar docs/pages-map.md, guía de copy y documentación del sprint | T-122 | sprint-26 | — |

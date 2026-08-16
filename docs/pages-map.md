@@ -192,6 +192,37 @@
 
 ---
 
+## Arquitectura de Internacionalización (i18n ES/EN)
+
+> Implementada en el Sprint 26 para soportar la campaña internacional de fundraising.
+
+### 1. Selector de Idioma (`LanguageSelector.tsx`)
+- **Ubicación y comportamiento:** Componente accesible montado en la barra superior / cabecera principal (`TopBar.tsx` / `Header`).
+- **Visibilidad:** Disponible globalmente tanto en vistas públicas (Welcome, `/c/:slug`, `/p/:uid`) como en rutas autenticadas.
+- **Persistencia y HTML:** Persiste la preferencia en `localStorage` (`kanarii.language`) y sincroniza dinámicamente `<html lang="es">` / `<html lang="en">` y el evento `languageChanged`.
+
+### 2. Regla de Fallback y Resiliencia (`i18n/index.ts`)
+- **Estrategia:** `fallbackLng: 'es'`.
+- **Modo Debug:** Habilitado solo en desarrollo (`debug: import.meta.env.DEV`).
+- **Manejador de Claves Faltantes:** `parseMissingKeyHandler` intercepta cualquier clave ausente o en desarrollo y la humaniza limpiamente (ej: `"presentation"` -> `"Presentation"`) impidiendo la exposición de IDs técnicos en la UI (`namespace.key`).
+
+### 3. Namespaces Críticos para Fundraising
+- **`passport`**: Ficha de miembro pública (`/p/:uid`), firma galáctica determinista y roles comunitarios.
+- **`welcome`**: Landing / Hero, orientación de entrada, CTAs de fundraising y tarjetas de miembros destacados.
+- **`communities`**: Vistas públicas de espacios comunitarios (`/c/:slug`).
+- **`auth`**: Modales de login/registro y estados de acceso.
+- **`common`**: Navegación (Sidebar, BottomNav), botones compartidos y estados globales.
+
+### 4. Frontera Estricta: UI Fija vs. Contenido Dinámico de Usuario
+- **UI Fija Traducible:** Botones, pestañas, cabeceras de widgets, firmas galácticas deterministas (`Kin {{kin}} · {{tone}} {{seal}} {{color}}`) y estados de acceso se traducen vía `useTranslation()`.
+- **Contenido Dinámico de Miembros NO Traducido:** Se preserva intacto en el idioma de registro del usuario:
+  - Títulos de propuestas, actas, tareas y proyectos.
+  - Bios y presentaciones escritas por los miembros.
+  - Saberes, necesidades y ofrendas.
+  - Interpretaciones y arquetipos generados por Gemini (cuya regeneración multi-idioma se difiere a la tarea de backlog `T-124`).
+
+---
+
 ## Flujo de Navegación Principal
 
 ```
@@ -204,7 +235,8 @@
 
 /comunidades
 ├── /nueva-comunidad (crear)
-└── /c/:slug (ver ficha pública)
+├── /c/:slug (ver ficha pública)
+└── /p/:uid (ver pasaporte comunitario público)
 
 Menú principal (Sidebar/BottomNav):
 ├── /tareas
@@ -220,4 +252,4 @@ Menú principal (Sidebar/BottomNav):
 
 ---
 
-*Documento vivo. Última actualización: mayo 2026.*
+*Documento vivo. Última actualización: 2026-08-16.*
