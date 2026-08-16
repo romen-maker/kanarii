@@ -128,3 +128,4 @@
 | Task-122: Actualizar docs/pages-map.md, guía de copy y documentación del sprint | T-122 | sprint-26 | — |
 | Task-123: Internacionalización completa del motor astrológico (Carta Astral y Diseño Humano) | T-123 | sprint-26 | src/i18n/index.ts,src/lib/kinMaya.ts,src/locales/en/astrology.json |
 | Task File: — Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | T-124 | sprint-26 | src/lib/gemini.ts,src/lib/services/_types.ts,src/lib/services/fichas.ts |
+| Task-125: Completar internacionalización de Welcome/Home y corregir composición de actividad | T-125 | sprint-26 | src/components/onboarding/WelcomeHeroSections.tsx,src/locales/en/welcome.json,src/locales/es/welcome.json |

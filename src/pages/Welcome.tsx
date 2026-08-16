@@ -120,7 +120,7 @@ export function Welcome() {
     }> = [];
 
     const formatRelativeTime = (timestamp: any): string => {
-      if (!timestamp) return 'Recientemente';
+      if (!timestamp) return t('activity.justNow');
       
       let date: Date;
       if (timestamp.toDate && typeof timestamp.toDate === 'function') {
@@ -132,7 +132,7 @@ export function Welcome() {
       }
       
       if (isNaN(date.getTime())) {
-        return 'Recientemente';
+        return t('activity.justNow');
       }
       
       const now = new Date();
@@ -142,58 +142,62 @@ export function Welcome() {
       const diffDays = Math.floor(diffHours / 24);
       
       if (diffMins < 60) {
-        if (diffMins <= 1) return 'Hace un momento';
-        return `Hace ${diffMins} min`;
+        if (diffMins <= 1) return t('activity.justNow');
+        return t('activity.minsAgo', { count: diffMins });
       }
       if (diffHours < 24) {
-        if (diffHours === 1) return 'Hace 1 hora';
-        return `Hace ${diffHours} horas`;
+        if (diffHours === 1) return t('activity.oneHourAgo');
+        return t('activity.hoursAgo', { count: diffHours });
       }
-      if (diffDays === 1) return 'Ayer';
-      if (diffDays < 7) return `Hace ${diffDays} días`;
+      if (diffDays === 1) return t('activity.yesterday');
+      if (diffDays < 7) return t('activity.daysAgo', { count: diffDays });
       
-      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+      return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     };
 
     try {
       safePropuestas.forEach(p => {
         const rawDate = p.updatedAt?.toDate?.() || p.createdAt?.toDate?.() || new Date();
-        let actionStr = 'actualizó la propuesta';
-        if (p.status === 'borrador') actionStr = 'creó el borrador de';
-        else if (p.status === 'abierta') actionStr = 'abrió a opinión';
-        else if (p.status === 'en_objeciones') actionStr = 'inició objeciones de';
-        else if (p.status === 'integrando') actionStr = 'integra objeciones de';
-        else if (p.status === 'acordada') actionStr = 'consensuó';
-        else if (p.status === 'descartada') actionStr = 'descartó';
+        const userName = getMemberName(p.authorId);
+        const circleName = 'Círculo General';
+        let fullText = t('activity.updatedProposal', { user: userName, proposal: p.title, circle: circleName });
+        
+        if (p.status === 'borrador') fullText = t('activity.createdDraft', { user: userName, proposal: p.title, circle: circleName });
+        else if (p.status === 'abierta') fullText = t('activity.openedOpinion', { user: userName, proposal: p.title, circle: circleName });
+        else if (p.status === 'en_objeciones') fullText = t('activity.startedObjections', { user: userName, proposal: p.title, circle: circleName });
+        else if (p.status === 'integrando') fullText = t('activity.integratingObjections', { user: userName, proposal: p.title, circle: circleName });
+        else if (p.status === 'acordada') fullText = t('activity.reachedConsent', { user: userName, proposal: p.title, circle: circleName });
+        else if (p.status === 'descartada') fullText = t('activity.discardedProposal', { user: userName, proposal: p.title, circle: circleName });
 
         activitiesList.push({
           id: `p-${p.id}`,
           time: formatRelativeTime(p.updatedAt || p.createdAt),
-          user: getMemberName(p.authorId),
-          action: actionStr,
+          user: userName,
+          action: fullText,
           target: p.title,
-          circle: 'Círculo General',
+          circle: circleName,
           rawDate
         });
       });
 
-      safeTareas.forEach(t => {
-        const rawDate = t.updatedAt?.toDate?.() || t.createdAt?.toDate?.() || new Date();
-        let actionStr = 'modificó la tarea';
-        if (t.estado === 'pendiente') actionStr = 'creó la tarea';
-        else if (t.estado === 'en_progreso') actionStr = 'inició la tarea';
-        else if (t.estado === 'completada') actionStr = 'completó la tarea';
-        else if (t.estado === 'archivada') actionStr = 'archivó la tarea';
-
-        const proj = safeProyectos.find(pr => pr.id === t.proyectoId);
+      safeTareas.forEach(task => {
+        const rawDate = task.updatedAt?.toDate?.() || task.createdAt?.toDate?.() || new Date();
+        const userName = getMemberName(task.creadaPor);
+        const proj = safeProyectos.find(pr => pr.id === task.proyectoId);
         const circleName = proj ? `Círculo ${proj.titulo}` : 'Círculo General';
+        
+        let fullText = t('activity.modifiedTask', { user: userName, task: task.titulo, circle: circleName });
+        if (task.estado === 'pendiente') fullText = t('activity.createdTask', { user: userName, task: task.titulo, circle: circleName });
+        else if (task.estado === 'en_progreso') fullText = t('activity.startedTask', { user: userName, task: task.titulo, circle: circleName });
+        else if (task.estado === 'completada') fullText = t('activity.completedTask', { user: userName, task: task.titulo, circle: circleName });
+        else if (task.estado === 'archivada') fullText = t('activity.archivedTask', { user: userName, task: task.titulo, circle: circleName });
 
         activitiesList.push({
-          id: `t-${t.id}`,
-          time: formatRelativeTime(t.updatedAt || t.createdAt),
-          user: getMemberName(t.creadaPor),
-          action: actionStr,
-          target: t.titulo,
+          id: `t-${task.id}`,
+          time: formatRelativeTime(task.updatedAt || task.createdAt),
+          user: userName,
+          action: fullText,
+          target: task.titulo,
           circle: circleName,
           rawDate
         });
@@ -235,7 +239,7 @@ export function Welcome() {
             ) : (
               <User className="w-4 h-4 text-[#6B705C]" />
             )}
-            <span>Mi Ficha</span>
+            <span>{t('hero.myFicha')}</span>
           </button>
         </div>
         

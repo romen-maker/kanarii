@@ -75,24 +75,24 @@ export default function WelcomeHeroSections({
 
   const quickActions = [
     {
-      title: 'Nueva Propuesta',
-      desc: 'Sugerir iniciativa al círculo',
+      title: t('quickActions.newProposalTitle'),
+      desc: t('quickActions.newProposalDesc'),
       icon: FilePlus2,
       color: 'bg-emerald-50 text-[#6B705C]',
       hoverColor: 'hover:bg-emerald-100/60',
       action: onNewProposal,
     },
     {
-      title: 'Ver Actas',
-      desc: 'Revisar decisiones tomadas',
+      title: t('quickActions.viewMinutesTitle'),
+      desc: t('quickActions.viewMinutesDesc'),
       icon: Scroll,
       color: 'bg-amber-50 text-[#A5A58D]',
       hoverColor: 'hover:bg-amber-100/60',
       action: onViewMinutes,
     },
     {
-      title: 'Ir al Tablón',
-      desc: 'Tablón de anuncios y ofrendas',
+      title: t('quickActions.goToBoardTitle'),
+      desc: t('quickActions.goToBoardDesc'),
       icon: Landmark,
       color: 'bg-[#FAF9F6] border border-[#D2B48C]/20 text-[#5D4037]',
       hoverColor: 'hover:bg-[#FAF9F6]/80',
@@ -100,57 +100,32 @@ export default function WelcomeHeroSections({
     },
   ];
 
-  const recentActivity = recentActivities && recentActivities.length > 0 ? recentActivities : [
-    {
-      id: '1',
-      time: 'Hace 2 horas',
-      user: 'Santiago M.',
-      action: 'propuso un driver para el proyecto',
-      target: 'Sistema de Riego Pasivo',
-      circle: 'Círculo de Ecología',
-    },
-    {
-      id: '2',
-      time: 'Ayer',
-      user: 'Lucía G.',
-      action: 'registró el acta consensuada de',
-      target: 'Gestión de Residuos Orgánicos',
-      circle: 'Círculo General',
-    },
-    {
-      id: '3',
-      time: 'Hace 3 días',
-      user: 'Martín P.',
-      action: 'creó una tarea pendiente:',
-      target: 'Reparación de la barda norte',
-      circle: 'Círculo de Infraestructura',
-    },
-  ];
+  const recentActivity = recentActivities && recentActivities.length > 0 ? recentActivities : [];
 
   const pedagogyCards = [
     {
       id: 'gobernanza',
-      title: 'Toma de Decisiones',
-      desc: 'Consenso dinámico y objeciones integradas para decidir en común.',
-      tag: 'Gobernanza',
+      title: t('pedagogy.decisionTitle'),
+      desc: t('pedagogy.decisionDesc'),
+      tag: t('pedagogy.decisionTag'),
     },
     {
       id: 'cruce',
-      title: 'El Cruce',
-      desc: 'Resolución armónica de tensiones y alineación del propósito comunitario.',
-      tag: 'Resolución',
+      title: t('pedagogy.cruceTitle'),
+      desc: t('pedagogy.cruceDesc'),
+      tag: t('pedagogy.cruceTag'),
     },
     {
       id: 'ficha',
-      title: 'Pasaporte & Roles',
-      desc: 'Encuentra tu lugar partiendo de tus ofrendas, saberes y necesidades.',
-      tag: 'Identidad',
+      title: t('pedagogy.passportTitle'),
+      desc: t('pedagogy.passportDesc'),
+      tag: t('pedagogy.passportTag'),
     },
     {
       id: 'estructura',
-      title: 'Estructura S3',
-      desc: 'Círculos interconectados y enlaces dobles para un flujo transparente.',
-      tag: 'Organización',
+      title: t('pedagogy.s3Title'),
+      desc: t('pedagogy.s3Desc'),
+      tag: t('pedagogy.s3Tag'),
     },
   ];
 
@@ -330,14 +305,14 @@ export default function WelcomeHeroSections({
             <div className="flex items-center gap-2">
               <MapPin size={18} className="text-[#6B705C]" />
               <h2 className="text-sm font-bold uppercase tracking-widest text-[#3E2723]">
-                Espacios y Nodos Disponibles
+                {t('nodes.title')}
               </h2>
             </div>
             <button
               onClick={onGoToCommunities}
               className="text-xs font-medium text-[#6B705C] hover:underline flex items-center gap-1"
             >
-              Explorar todos <ArrowRight size={12} />
+              {t('nodes.exploreAll')} <ArrowRight size={12} />
             </button>
           </div>
 
@@ -364,13 +339,15 @@ export default function WelcomeHeroSections({
 
                 <div className="pt-3 border-t border-[#FAF9F6] flex justify-between items-center">
                   <span className="text-[11px] text-[#A5A58D]">
-                    {node.adminUids && node.adminUids.length > 0 ? `Cuidadores: ${node.adminUids.length}` : 'Espacio activo'}
+                    {node.adminUids && node.adminUids.length > 0 
+                      ? (node.adminUids.length === 1 ? t('nodes.caretakers_one') : t('nodes.caretakers_other', { count: node.adminUids.length }))
+                      : t('nodes.activeSpace')}
                   </span>
                   <button
                     onClick={onGoToCommunities}
                     className="text-xs font-bold text-[#6B705C] hover:underline flex items-center gap-1"
                   >
-                    Ver Nodo <ArrowRight size={12} />
+                    {t('nodes.viewNode')} <ArrowRight size={12} />
                   </button>
                 </div>
               </div>
@@ -382,7 +359,7 @@ export default function WelcomeHeroSections({
       {/* 2. SECTION: Quick Actions */}
       <section className="space-y-4">
         <h2 className="text-xs font-bold uppercase tracking-widest text-[#A5A58D] mb-4">
-          Acciones Recomendadas
+          {t('quickActions.title')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {quickActions.map((act, index) => {
@@ -415,57 +392,52 @@ export default function WelcomeHeroSections({
       </section>
 
       {/* 3. SECTION: Recent Activity Feed */}
-      <section className="bg-white rounded-[32px] p-8 border border-[#D2B48C]/10 shadow-sm space-y-6">
-        <div className="flex items-center gap-2">
-          <Activity size={18} className="text-[#6B705C]" />
-          <h2 className="text-sm font-bold uppercase tracking-widest text-[#3E2723] tracking-wider">
-            Pulso Comunitario Reciente
-          </h2>
-        </div>
+      {recentActivity.length > 0 && (
+        <section className="bg-white rounded-[32px] p-8 border border-[#D2B48C]/10 shadow-sm space-y-6">
+          <div className="flex items-center gap-2">
+            <Activity size={18} className="text-[#6B705C]" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-[#3E2723] tracking-wider">
+              {t('activity.title')}
+            </h2>
+          </div>
 
-        <div className="space-y-4">
-          {recentActivity.map((act, index) => (
-            <motion.div
-              key={act.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.08 }}
-              className="flex items-start gap-4 pb-4 border-b border-[#FAF9F6] last:border-0 last:pb-0 font-sans"
-            >
-              <div className="w-2.5 h-2.5 rounded-full bg-[#A5A58D] mt-2 shrink-0" />
-              <div className="flex-1 text-sm text-[#5D4037]/80">
-                <span className="font-bold text-[#3E2723]">{act.user}</span>{' '}
-                <span className="text-[#5D4037]/60">{act.action}</span>{' '}
-                <span className="font-medium text-[#6B705C] bg-emerald-50/50 px-2 py-0.5 rounded-full text-xs">
-                  {act.target}
+          <div className="space-y-4">
+            {recentActivity.map((act, index) => (
+              <motion.div
+                key={act.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.08 }}
+                className="flex items-start gap-4 pb-4 border-b border-[#FAF9F6] last:border-0 last:pb-0 font-sans"
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-[#A5A58D] mt-2 shrink-0" />
+                <div className="flex-1 text-sm text-[#5D4037]/80 leading-relaxed">
+                  {act.action}
+                </div>
+                <span className="text-xs font-mono text-[#A5A58D]/70 shrink-0">
+                  {act.time}
                 </span>
-                <span className="text-xs text-[#A5A58D] block mt-1 font-serif">
-                  en {act.circle}
-                </span>
-              </div>
-              <span className="text-xs font-mono text-[#A5A58D]/70 shrink-0">
-                {act.time}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 4. SECTION: Health Widget */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Card 1: Propuestas */}
         <div className="bg-white rounded-[32px] p-6 border border-[#D2B48C]/10 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">Gobernanza</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">{t('health.governanceTag')}</span>
             <Heart size={16} className="text-[#10B981]" />
           </div>
-          <h3 className="font-serif font-bold text-xl text-[#3E2723]">Propuestas Activas</h3>
+          <h3 className="font-serif font-bold text-xl text-[#3E2723]">{t('health.activeProposals')}</h3>
           
           <div className="space-y-3 pt-2">
             <div>
               <div className="flex justify-between text-xs text-[#5D4037]/60 mb-1">
-                <span>En periodo de objeción ({propuestasObjecionesCount})</span>
-                <span>{propuestasObjecionesPercent}% participación</span>
+                <span>{t('health.objectionPeriod', { count: propuestasObjecionesCount })}</span>
+                <span>{t('health.participation', { percent: propuestasObjecionesPercent })}</span>
               </div>
               <div className="h-2 w-full bg-[#FAF9F6] rounded-full overflow-hidden">
                 <motion.div 
@@ -479,8 +451,8 @@ export default function WelcomeHeroSections({
 
             <div>
               <div className="flex justify-between text-xs text-[#5D4037]/60 mb-1">
-                <span>En deliberación ({propuestasRevisionCount})</span>
-                <span>{propuestasRevisionPercent}% participación</span>
+                <span>{t('health.deliberationPeriod', { count: propuestasRevisionCount })}</span>
+                <span>{t('health.participation', { percent: propuestasRevisionPercent })}</span>
               </div>
               <div className="h-2 w-full bg-[#FAF9F6] rounded-full overflow-hidden">
                 <motion.div 
@@ -497,16 +469,16 @@ export default function WelcomeHeroSections({
         {/* Card 2: Trabajo */}
         <div className="bg-white rounded-[32px] p-6 border border-[#D2B48C]/10 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">Impacto</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">{t('health.impactTag')}</span>
             <Activity size={16} className="text-amber-600" />
           </div>
-          <h3 className="font-serif font-bold text-xl text-[#3E2723]">Tareas de Círculos</h3>
+          <h3 className="font-serif font-bold text-xl text-[#3E2723]">{t('health.circleTasks')}</h3>
 
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between text-xs text-[#5D4037]/70 font-sans">
-              <span className="font-medium">Asignación de tareas</span>
+              <span className="font-medium">{t('health.taskAssignment')}</span>
               <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">
-                {tareasAsignadasPercent >= 80 ? 'Óptima' : tareasAsignadasPercent >= 50 ? 'Media' : 'Baja'}
+                {tareasAsignadasPercent >= 80 ? t('health.optimal') : tareasAsignadasPercent >= 50 ? t('health.medium') : t('health.low')}
               </span>
             </div>
             
@@ -526,8 +498,10 @@ export default function WelcomeHeroSections({
             </div>
             <p className="text-[11px] text-[#A5A58D] leading-tight font-sans">
               {tareasActivasCount > 0 
-                ? `${tareasAsignadasCount} de ${tareasActivasCount} tareas tienen un facilitador asignado activamente cuidando el flujo.`
-                : 'No hay tareas activas en los círculos en este momento.'}
+                ? (tareasAsignadasCount === 1 
+                    ? t('health.tasksAssignedDesc_one', { total: tareasActivasCount }) 
+                    : t('health.tasksAssignedDesc_other', { count: tareasAsignadasCount, total: tareasActivasCount }))
+                : t('health.noActiveTasks')}
             </p>
           </div>
         </div>
@@ -537,10 +511,10 @@ export default function WelcomeHeroSections({
       <section className="space-y-4">
         <div className="flex items-center gap-2 justify-between">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">
-            Explora la Gobernanza Viva
+            {t('pedagogy.title')}
           </h2>
           <span className="text-xs text-[#6B705C] bg-white border border-[#D2B48C]/20 px-3 py-1 rounded-full font-serif italic">
-            Animaciones Pedagógicas
+            {t('pedagogy.tag')}
           </span>
         </div>
 
@@ -567,7 +541,7 @@ export default function WelcomeHeroSections({
 
               <div className="flex justify-end mt-4 pt-3 border-t border-[#FAF9F6]">
                 <span className="text-xs font-medium text-[#6B705C] flex items-center gap-1 group-hover:underline">
-                  Abrir Animación
+                  {t('pedagogy.openAnimation')}
                   <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                 </span>
               </div>
