@@ -72,8 +72,8 @@ export function Welcome() {
     const propuestasPendientesCount = propuestasPendientes.length;
 
     const communityStatus = propuestasPendientesCount > 0
-      ? `Tu comunidad tiene ${propuestasPendientesCount} propuesta${propuestasPendientesCount > 1 ? 's' : ''} esperando tu voz 🌱`
-      : 'Tu comunidad está al día. ¡Gracias por participar! ☀️';
+      ? t('orientation.statusPending', { count: propuestasPendientesCount })
+      : t('orientation.statusUpToDate');
 
     // Propuestas en periodo de objeción
     const propuestasObjecion = safePropuestas.filter(p => p.status === 'en_objeciones');

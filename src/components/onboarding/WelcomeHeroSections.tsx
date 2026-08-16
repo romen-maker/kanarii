@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Sparkles, FilePlus2, Scroll, Landmark, ArrowRight, Activity, Heart, Users, MapPin, CheckCircle2, Compass } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WelcomeHeroSectionsProps {
   userName?: string;
@@ -47,7 +48,7 @@ interface WelcomeHeroSectionsProps {
 
 export default function WelcomeHeroSections({
   userName = 'Inés',
-  communityStatus = 'Tu comunidad tiene 2 propuestas esperando tu voz 🌱',
+  communityStatus,
   propuestasObjecionesCount = 2,
   propuestasObjecionesPercent = 80,
   propuestasRevisionCount = 3,
@@ -67,6 +68,8 @@ export default function WelcomeHeroSections({
   onStartBasicProfile,
   hasIncompleteProfile = false,
 }: WelcomeHeroSectionsProps) {
+  const { t } = useTranslation('welcome');
+  const displayStatus = communityStatus || t('subtitle');
 
   const quickActions = [
     {
@@ -161,20 +164,20 @@ export default function WelcomeHeroSections({
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-[#6B705C] rounded-full border border-emerald-100">
           <Sparkles size={14} className="text-emerald-700 animate-pulse" />
-          <span className="text-xs font-semibold tracking-wide uppercase">Ecosistema Vivo</span>
+          <span className="text-xs font-semibold tracking-wide uppercase">{t('hero.liveEcosystem')}</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#3E2723] tracking-tight">
-          Hola, {userName}
+          {t('hero.hello', { name: userName })}
         </h1>
         <p className="text-lg md:text-xl text-[#6B705C] max-w-2xl font-serif italic font-medium">
-          {communityStatus}
+          {displayStatus}
         </p>
       </motion.section>
 
       {/* BIFURCACIÓN DE REGISTRO / PERFIL: 2 Caminos */}
       <section className="space-y-4">
         <h2 className="text-xs font-bold uppercase tracking-widest text-[#A5A58D]">
-          Elige tu forma de empezar en Kanarii
+          {t('hero.chooseWay')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Opción A: Perfil básico en 1 minuto */}
@@ -184,20 +187,20 @@ export default function WelcomeHeroSections({
           >
             <div className="space-y-2">
               <span className="inline-block text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Fricción Cero • 1 minuto
+                {t('hero.basicProfileTag')}
               </span>
               <h3 className="font-serif font-bold text-lg text-[#3E2723]">
-                Perfil básico en 1 minuto 🌱
+                {t('hero.basicProfileTitle')}
               </h3>
               <p className="text-xs text-[#5D4037]/80 leading-relaxed">
-                Rellena solo tu nombre, 1 saber que ofreces y 1 necesidad. Aparecerás de inmediato en el directorio comunitario y podrás explorar los nodos sin demoras.
+                {t('hero.basicProfileDesc')}
               </p>
             </div>
             <button
               onClick={onStartBasicProfile}
               className="w-full py-3 bg-[#6B705C] hover:bg-[#5A5A40] text-white font-medium text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2"
             >
-              <span>Empieza tu perfil básico</span>
+              <span>{t('hero.basicProfileCta')}</span>
               <ArrowRight size={16} />
             </button>
           </motion.div>
@@ -209,20 +212,20 @@ export default function WelcomeHeroSections({
           >
             <div className="space-y-2">
               <span className="inline-block text-[10px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Experiencia Profunda
+                {t('hero.deepExpTag')}
               </span>
               <h3 className="font-serif font-bold text-lg text-[#3E2723]">
-                Manual Galáctico Completo 🔮
+                {t('hero.galacticManualTitle')}
               </h3>
               <p className="text-xs text-[#5D4037]/80 leading-relaxed">
-                Recorrido guiado que calcula tu Carta Astral, Diseño Humano y sello de Kin Maya a partir de tu fecha y hora de nacimiento para mapear tu energía cósmica.
+                {t('hero.galacticManualDesc')}
               </p>
             </div>
             <button
               onClick={() => onExplorePedagogy?.('ficha')}
               className="w-full py-3 bg-white border border-[#D2B48C]/40 text-[#5D4037] hover:bg-[#FAF9F6] font-medium text-sm rounded-2xl transition-all flex items-center justify-center gap-2"
             >
-              <span>Ver Manual Galáctico</span>
+              <span>{t('hero.galacticManualCta')}</span>
               <ArrowRight size={16} />
             </button>
           </motion.div>
@@ -236,14 +239,14 @@ export default function WelcomeHeroSections({
             <div className="flex items-center gap-2">
               <Users size={18} className="text-[#6B705C]" />
               <h2 className="text-sm font-bold uppercase tracking-widest text-[#3E2723]">
-                Quiénes están en la tribu
+                {t('hero.whoIsHere')}
               </h2>
             </div>
             <button
               onClick={onGoToProfiles}
               className="text-xs font-medium text-[#6B705C] hover:underline flex items-center gap-1"
             >
-              Ver todos ({featuredMembers.length}+) <ArrowRight size={12} />
+              {t('hero.viewAll', { count: featuredMembers.length })} <ArrowRight size={12} />
             </button>
           </div>
 

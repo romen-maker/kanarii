@@ -8,7 +8,10 @@
     "title": "Orientation Hub",
     "whoAmI": "Who I am",
     "whoIsHere": "Who is here",
-    "nodes": "Active nodes"
+    "nodes": "Active nodes",
+    "statusPending_one": "Your community has 1 proposal awaiting your voice 🌱",
+    "statusPending_other": "Your community has {{count}} proposals awaiting your voice 🌱",
+    "statusUpToDate": "Your community is up to date. Thank you for taking part! ☀️"
   },
   "cta": {
     "joinTribe": "Join the community",
@@ -17,5 +20,20 @@
     "explore": "Explore communities",
     "completeProfile": "Complete Profile",
     "startTour": "Take Guided Tour"
+  },
+  "hero": {
+    "liveEcosystem": "Living Ecosystem",
+    "hello": "Hello, {{name}}",
+    "chooseWay": "Choose how to start in Kanarii",
+    "basicProfileTag": "Zero Friction • 1 minute",
+    "basicProfileTitle": "Quick Profile in 1 minute 🌱",
+    "basicProfileDesc": "Just fill in your name, 1 skill you offer, and 1 need. You will immediately appear in the community directory and explore nodes right away.",
+    "basicProfileCta": "Start your quick profile",
+    "deepExpTag": "Deep Experience",
+    "galacticManualTitle": "Full Galactic Blueprint 🔮",
+    "galacticManualDesc": "A guided journey calculating your Astral Chart, Human Design, and Kin Maya seal from your birth details to map your cosmic energy.",
+    "galacticManualCta": "View Galactic Blueprint",
+    "whoIsHere": "Who is in the tribe",
+    "viewAll": "View all ({{count}}+)"
   }
 }

@@ -8,7 +8,10 @@
     "title": "Panel de Orientación",
     "whoAmI": "Quién soy",
     "whoIsHere": "Quién está",
-    "nodes": "Nodos existentes"
+    "nodes": "Nodos existentes",
+    "statusPending_one": "Tu comunidad tiene 1 propuesta esperando tu voz 🌱",
+    "statusPending_other": "Tu comunidad tiene {{count}} propuestas esperando tu voz 🌱",
+    "statusUpToDate": "Tu comunidad está al día. ¡Gracias por participar! ☀️"
   },
   "cta": {
     "joinTribe": "Unirse a la tribu",
@@ -17,5 +20,20 @@
     "explore": "Explorar comunidades",
     "completeProfile": "Completar Ficha",
     "startTour": "Ver Tour explicativo"
+  },
+  "hero": {
+    "liveEcosystem": "Ecosistema Vivo",
+    "hello": "Hola, {{name}}",
+    "chooseWay": "Elige tu forma de empezar en Kanarii",
+    "basicProfileTag": "Fricción Cero • 1 minuto",
+    "basicProfileTitle": "Perfil básico en 1 minuto 🌱",
+    "basicProfileDesc": "Rellena solo tu nombre, 1 saber que ofreces y 1 necesidad. Aparecerás de inmediato en el directorio comunitario y podrás explorar los nodos sin demoras.",
+    "basicProfileCta": "Empieza tu perfil básico",
+    "deepExpTag": "Experiencia Profunda",
+    "galacticManualTitle": "Manual Galáctico Completo 🔮",
+    "galacticManualDesc": "Recorrido guiado que calcula tu Carta Astral, Diseño Humano y sello de Kin Maya a partir de tu fecha y hora de nacimiento para mapear tu energía cósmica.",
+    "galacticManualCta": "Ver Manual Galáctico",
+    "whoIsHere": "Quiénes están en la tribu",
+    "viewAll": "Ver todos ({{count}}+)"
   }
 }
