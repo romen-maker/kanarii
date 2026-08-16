@@ -22,3 +22,7 @@ Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (
 - Los sprints 24 y 25 quedan pausados temporalmente manteniendo sus tareas pendientes intactas para retomar tras el fundraising.
 - No traduce contenido generado por miembros ni la operativa interna (Gobernanza S3, tareas, actas, Telegram).
 - Utiliza la arquitectura canónica `react-i18next` con namespaces de traducción (`common`, `welcome`, `auth`, `communities`, `passport`).
+
+## Observaciones para T-120 / T-121 (derivadas del cierre de T-119)
+- **Separación de UI vs Contenido de Usuario**: En los bloques inferiores de Orientación/Welcome (feed de actividades, títulos/bios de miembros destacados) distinguir claramente la UI fija (que se debe traducir) de los títulos/propuestas/bios de los usuarios (que conservan su idioma original).
+- **Refinamiento de Copy EN**: Revisar en T-121 la adecuación de términos como *"Full Galactic Blueprint"* para asegurar la máxima claridad ante una audiencia internacional.
