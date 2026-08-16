@@ -34,5 +34,44 @@
     "sunSign": "Signo Solar",
     "kin": "Kin Maya",
     "humanDesign": "Diseño Humano"
+  },
+  "kin": {
+    "format": "Kin {{kin}} · {{tone}} {{seal}} {{color}}",
+    "seals": [
+      "Dragón", "Viento", "Noche", "Semilla", "Serpiente",
+      "Enlazador de Mundos", "Mano", "Estrella", "Luna", "Perro",
+      "Mono", "Humano", "Caminante del Cielo", "Mago", "Águila",
+      "Guerrero", "Tierra", "Espejo", "Tormenta", "Sol"
+    ],
+    "tones": [
+      "Magnético", "Lunar", "Eléctrico", "Autoexistente", "Armónico",
+      "Rítmico", "Resonante", "Galáctico", "Solar", "Planetario",
+      "Espectral", "Cristal", "Cósmico"
+    ],
+    "colors": [
+      "Rojo", "Blanco", "Azul", "Amarillo"
+    ],
+    "roles": [
+      "Nutre y sostiene el origen. Cuida el hogar y los recursos compartidos.",
+      "Oxigena los procesos. Comunica, conecta y transmite el espíritu del grupo.",
+      "Guarda la abundancia interior. Sueña y planifica desde la profundidad.",
+      "Siembra intención. Activa el potencial latente de cada proyecto colectivo.",
+      "Encarna la fuerza vital. Mueve la energía cuando el grupo se estanca.",
+      "Facilita los cambios y transiciones. Ayuda a soltar lo que ya cumplió su ciclo.",
+      "Ejecuta y sana. Convierte visiones colectivas en acciones concretas.",
+      "Aporta belleza y armonía. Inspira la estética y el cuidado del espacio compartido.",
+      "Sostiene el flujo emocional del grupo. Purifica y reorienta la energía colectiva.",
+      "Teje fidelidad y amor incondicional. Sostiene los vínculos de la comunidad.",
+      "Activa el juego y la creatividad. Disuelve la seriedad con humor y arte.",
+      "Porta la sabiduría acumulada. Guía desde la experiencia vivida.",
+      "Explora nuevos horizontes. Trae perspectivas externas que enriquecen al grupo.",
+      "Trabaja con el tiempo y la intención. Alinea propósito con acción sin esfuerzo.",
+      "Ve el panorama completo. Aporta visión estratégica y perspectiva de largo plazo.",
+      "Cuestiona con valentía. Defiende la integridad de los acuerdos comunitarios.",
+      "Navega y sincroniza. Conecta la comunidad con los ciclos de la naturaleza.",
+      "Refleja la verdad sin juicio. Aporta claridad y orden cuando hay confusión.",
+      "Cataliza la transformación. Mueve con potencia lo que necesita cambiar.",
+      "Ilumina y eleva. Celebra la conciencia compartida y el florecimiento del grupo."
+    ]
   }
 }

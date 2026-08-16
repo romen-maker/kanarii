@@ -114,18 +114,37 @@ export default function PasaporteVisual({
             </div>
 
             {/* Firma Galáctica (Kin Maya) */}
-            {user.kinMaya && showKinMaya && (
-              <div className="mt-4">
-                <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left transition-all hover:border-[#D2B48C]/40">
-                  <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{user.kinMaya.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">{t('astral.galacticSignature')}</h4>
-                    <p className="text-[#3E2723] font-serif font-bold text-base">{user.kinMaya.descripcionCorta}</p>
-                    <p className="text-[#5D4037]/75 text-sm mt-1 leading-relaxed">{user.kinMaya.rolComunitario}</p>
+            {user.kinMaya && showKinMaya && (() => {
+              const kinIndex = (user.kinMaya.kin - 1) % 260;
+              const tonoIdx = (user.kinMaya.tono - 1) % 13;
+              const selloIdx = kinIndex % 20;
+              const colorIdx = selloIdx % 4;
+
+              const toneName = t(`kin.tones.${tonoIdx}`, { defaultValue: user.kinMaya.nombreTono });
+              const sealName = t(`kin.seals.${selloIdx}`, { defaultValue: user.kinMaya.sello });
+              const colorName = t(`kin.colors.${colorIdx}`, { defaultValue: user.kinMaya.color });
+              const roleText = t(`kin.roles.${selloIdx}`, { defaultValue: user.kinMaya.rolComunitario });
+              const formattedDesc = t('kin.format', {
+                kin: user.kinMaya.kin,
+                tone: toneName,
+                seal: sealName,
+                color: colorName,
+                defaultValue: `Kin ${user.kinMaya.kin} · ${toneName} ${sealName} ${colorName}`
+              });
+
+              return (
+                <div className="mt-4">
+                  <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left transition-all hover:border-[#D2B48C]/40">
+                    <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{user.kinMaya.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">{t('astral.galacticSignature')}</h4>
+                      <p className="text-[#3E2723] font-serif font-bold text-base">{formattedDesc}</p>
+                      <p className="text-[#5D4037]/75 text-sm mt-1 leading-relaxed">{roleText}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Arquetipo Comunitario */}
             {user.arquetipo && showArquetipo && (

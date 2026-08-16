@@ -34,5 +34,44 @@
     "sunSign": "Sun Sign",
     "kin": "Maya Kin",
     "humanDesign": "Human Design"
+  },
+  "kin": {
+    "format": "Kin {{kin}} · {{tone}} {{seal}} {{color}}",
+    "seals": [
+      "Dragon", "Wind", "Night", "Seed", "Serpent",
+      "Worldbridger", "Hand", "Star", "Moon", "Dog",
+      "Monkey", "Human", "Skywalker", "Wizard", "Eagle",
+      "Warrior", "Earth", "Mirror", "Storm", "Sun"
+    ],
+    "tones": [
+      "Magnetic", "Lunar", "Electric", "Self-Existing", "Overtone",
+      "Rhythmic", "Resonant", "Galactic", "Solar", "Planetary",
+      "Spectral", "Crystal", "Cosmic"
+    ],
+    "colors": [
+      "Red", "White", "Blue", "Yellow"
+    ],
+    "roles": [
+      "Nurtures and sustains origin. Cares for home and shared resources.",
+      "Oxygenates processes. Communicates, connects and transmits group spirit.",
+      "Guards inner abundance. Dreams and plans from depth.",
+      "Sows intention. Activates latent potential in collective projects.",
+      "Embodies vital force. Moves energy when the group stagnates.",
+      "Facilitates transitions and changes. Helps release what completed its cycle.",
+      "Executes and heals. Converts collective visions into concrete action.",
+      "Brings beauty and harmony. Inspires aesthetics and care for shared spaces.",
+      "Sustains group emotional flow. Purifies and reorients collective energy.",
+      "Weaves loyalty and unconditional love. Holds community bonds together.",
+      "Activates playfulness and creativity. Dissolves seriousness with humor and art.",
+      "Carries accumulated wisdom. Guides from lived experience.",
+      "Explores new horizons. Brings external perspectives that enrich the group.",
+      "Works with time and intention. Aligns purpose with effortless action.",
+      "Sees the complete picture. Brings strategic vision and long-term perspective.",
+      "Questions courageously. Defends the integrity of community agreements.",
+      "Navigates and synchronizes. Connects community with natural cycles.",
+      "Reflects truth without judgment. Brings clarity and order amid confusion.",
+      "Catalyzes transformation. Powerfully shifts what needs to change.",
+      "Illuminates and elevates. Celebrates shared consciousness and group flourishing."
+    ]
   }
 }
