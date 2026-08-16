@@ -35,6 +35,7 @@ i18n
     },
     supportedLngs: ['es', 'en'],
     fallbackLng: 'es',
+    debug: import.meta.env.DEV,
     ns: ['common', 'welcome', 'auth', 'communities', 'passport'],
     defaultNS: 'common',
     detection: {
@@ -47,6 +48,17 @@ i18n
     },
     returnNull: false,
     returnEmptyString: false,
+    parseMissingKeyHandler: (key: string, defaultValue?: string) => {
+      if (defaultValue) return defaultValue;
+      // Extraer la subclave limpia si viene con namespace (ej: "tabs.presentation" -> "Presentation")
+      const parts = key.split('.');
+      const rawKey = parts[parts.length - 1];
+      // Si la clave tiene formato en camello/snake/kebab, humanizar
+      return rawKey
+        .replace(/[-_]/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/^./, (str) => str.toUpperCase());
+    },
   });
 
 const syncHtmlLang = (lng: string) => {

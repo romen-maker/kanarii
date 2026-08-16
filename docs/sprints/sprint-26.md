@@ -14,7 +14,7 @@ Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (
 | T-118 | Crear selector ES/EN accesible en cabecera/menú y aplicar el atributo `lang` dinámico al documento HTML | S | ✅ Completada | `.agents/tasks/task-118.md` |
 | T-119 | Internacionalizar Welcome, Orientación, navegación, CTAs, login/registro y estados de acceso | M | ✅ Completada | `.agents/tasks/task-119.md` |
 | T-120 | Internacionalizar páginas públicas de comunidades/nodos y pasaporte público; mantener contenido de usuario en su idioma original | M | ✅ Completada | `.agents/tasks/task-120.md` |
-| T-121 | Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual del recorrido EN de fundraising | S | ⬜ Pendiente | — |
+| T-121 | Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual del recorrido EN de fundraising | S | ✅ Completada | `.agents/tasks/task-121.md` |
 | T-122 | Actualizar `docs/pages-map.md`, guía de copy y documentación del sprint | S | ⬜ Pendiente | — |
 | T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ⬜ Pendiente (Backlog) | `.agents/tasks/task-124.md` |
 
