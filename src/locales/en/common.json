@@ -35,5 +35,11 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "success": "Operation successful"
+  },
+  "sync": {
+    "offline": "Offline mode",
+    "syncing_one": "Syncing ({{count}} change)",
+    "syncing_other": "Syncing ({{count}} changes)",
+    "online": "Connected & up to date"
   }
 }
