@@ -297,14 +297,25 @@ function parsearRespuestaIA(text: string): any {
   }
 }
 
-export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, dimensiones: any, comunidadNombre: string = 'la comunidad'): Promise<any> {
+export async function generarPerfilVisual(
+  datosBrutos: any, 
+  datosPersona: any, 
+  dimensiones: any, 
+  comunidadNombre: string = 'la comunidad',
+  locale: 'es' | 'en' = 'es'
+): Promise<any> {
     // Calculamos el Kin Maya personal si hay fecha de nacimiento
     const kinMaya = datosPersona?.fechaNacimiento
       ? calcularKin(datosPersona.fechaNacimiento)
       : null;
 
+    const languageInstruction = locale === 'en'
+      ? 'CRITICAL: Respond COMPLETELY in English.'
+      : 'Responde COMPLETAMENTE en español.';
+
     const prompt = `
    Eres un experto en Astrología Psicológica, Diseño Humano y Calendario Maya Dreamspell aplicados a comunidades de convivencia.
+   ${languageInstruction}
    Responde SOLO con JSON válido, sin markdown ni backticks ni texto extra.
    Schema de salida:
    {
@@ -323,9 +334,17 @@ export async function generarPerfilVisual(datosBrutos: any, datosPersona: any, d
    ${JSON.stringify({ datosBrutos, datosPersona, dimensiones, kinMaya }, null, 2)}
    `;
 
-  console.log("🤖 Gemini: Iniciando generación de Perfil Visual...");
+  console.log(`🤖 Gemini: Iniciando generación de Perfil Visual en idioma [${locale}]...`);
   const textResponse = await callGeminiWithFallback(prompt);
-  return parsearRespuestaIA(textResponse);
+  const resultado = parsearRespuestaIA(textResponse);
+  
+  return {
+    ...resultado,
+    locale,
+    model: 'gemini-2.5-flash',
+    promptVersion: 'v1.2',
+    generatedAt: new Date().toISOString()
+  };
 }
 
 /**

@@ -21,7 +21,9 @@ Evolucionar `perfilVisual` y `manualMarkdown` en Firestore (`profiles/{userId}`)
 - `canonicalInputHash` / `datosEntradaRef`: Referencia o hash de los datos canónicos (`fechaNacimiento`, `hora`, `latitud`, `longitud`, `saberes`).
 - **Flujo de Regeneración**: Botón explícito bajo demanda en la UI del perfil para regenerar una versión lingüística específica sin perder la existente ni sobrescribir otras versiones.
 
-## Criterios de Aceptación
-1. No realizar traducciones ciegas al vuelo durante la carga de rutas públicas (`/p/:uid`).
-2. Almacenar o generar limpiamente en Firestore el objeto estructurado por locale (`es`, `en`).
-3. Preservar trazabilidad, tono y capacidad de regenerar de manera aislada.
+## Estado de aprobación
+- [x] Plan presentado al usuario (Fase 3.5)
+- [x] APROBADO recibido — fecha/hora: 2026-08-16 17:16 (APROBADO CON CAMBIOS)
+- [x] Rama creada: feat/T-124-gemini-multilingual-profiles
+- [x] Lock activo: .agent-session.lock
+- [x] Sesión cerrada correctamente

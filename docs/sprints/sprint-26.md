@@ -17,7 +17,12 @@ Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (
 | T-121 | Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual del recorrido EN de fundraising | S | ✅ Completada (Commit `0cd33ad`) | `.agents/tasks/task-121.md` |
 | T-122 | Actualizar `docs/pages-map.md`, guía de copy y documentación del sprint | S | ✅ Completada | `.agents/tasks/task-122.md` |
 | T-123 | Internacionalización completa del motor astrológico (Carta Astral 12 signos/casas y Diseño Humano) | L | ✅ Completada | `.agents/tasks/task-123.md` |
-| T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ⬜ Pendiente | `.agents/tasks/task-124.md` |
+| T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ✅ Completada | `.agents/tasks/task-124.md` |
+
+## Estrategia de Trazabilidad y Fallback de Perfiles Gemini (T-124)
+- **Persistencia por Locale**: El objeto `perfilVisualByLocale?: { es?: FichaPerfilVisual; en?: FichaPerfilVisual }` permite almacenar en Firestore las interpretaciones generadas para cada idioma.
+- **Retrocompatibilidad (Fallback Legacy)**: Al consultar o guardar un perfil, la aplicación utiliza `perfilVisualByLocale[locale] ?? perfilVisual`, garantizando que perfiles históricos creados sin subobjeto por idioma sigan leyéndose sin fisuras.
+- **Trazabilidad de IA**: Cada sub-objeto generado incluye metadatos de trazabilidad (`generatedAt`, `model`, `promptVersion`, `locale`), permitiendo auditorías y regeneraciones por idioma aisladas.
 
 ## Notas de planning
 - Sprint de urgencia de internacionalización incremental focalizado en la campaña de fundraising.

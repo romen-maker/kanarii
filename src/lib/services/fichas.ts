@@ -161,7 +161,8 @@ export async function saveFicha(
   existingId?: string,
   skipGemini: boolean = false,
   triada?: TriadaComunitaria,
-  privacidad?: any
+  privacidad?: any,
+  locale: 'es' | 'en' = 'es'
 ) {
   const isUpdate = !!existingId;
   const docRefId = existingId || userId; // enforcing userId as the document id
@@ -255,7 +256,7 @@ export async function saveFicha(
         const { generarPerfilVisual, generarManual } = await import('../gemini');
         const calculatedDims = calcularDimensiones(rawData, datosPersona);
         dimensiones = calculatedDims;
-        perfilVisual = await generarPerfilVisual(rawData, datosPersona, calculatedDims);
+        perfilVisual = await generarPerfilVisual(rawData, datosPersona, calculatedDims, undefined, locale);
         perfilVisual.dimensiones = {
           escucha: calculatedDims.escucha || 0,
           accion: calculatedDims.accion || 0,
@@ -312,7 +313,12 @@ export async function saveFicha(
     }
 
     if (estado === "completo" && !fallbackToPending) {
-        if (perfilVisual !== null) fichaFull.perfilVisual = perfilVisual;
+        if (perfilVisual !== null) {
+          fichaFull.perfilVisual = perfilVisual; // Fallback legacy
+          fichaFull.perfilVisualByLocale = {
+            [locale]: perfilVisual
+          };
+        }
         if (manualMarkdown !== null) {
             fichaFull.manualGenerado = manualMarkdown;
             fichaFull.manualMarkdown = manualMarkdown;

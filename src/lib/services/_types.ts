@@ -204,6 +204,11 @@ export interface FichaPerfilVisual {
     estructura: number;
     cuidado: number;
   };
+  // Metadatos de trazabilidad i18n
+  generatedAt?: any;
+  model?: string;
+  promptVersion?: string;
+  locale?: 'es' | 'en';
 }
 
 export interface FichaConfiguracion {
@@ -245,7 +250,12 @@ export interface Ficha {
   estado?: string;
   datosBrutos?: FichaDatosBrutos;
   datosPersona?: FichaDatosPersona;
+  /** @deprecated Usar perfilVisualByLocale para soporte multilingüe estructurado con fallback a legacy */
   perfilVisual?: FichaPerfilVisual;
+  perfilVisualByLocale?: {
+    es?: FichaPerfilVisual;
+    en?: FichaPerfilVisual;
+  };
   configuracion?: FichaConfiguracion;
   communityId?: string | null;
   nombre?: string;

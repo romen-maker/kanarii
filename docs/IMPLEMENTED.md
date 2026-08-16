@@ -127,3 +127,4 @@
 | Task-121: Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual EN de fundraising | T-121 | sprint-26 | src/i18n/index.ts,src/locales/en/welcome.json |
 | Task-122: Actualizar docs/pages-map.md, guía de copy y documentación del sprint | T-122 | sprint-26 | — |
 | Task-123: Internacionalización completa del motor astrológico (Carta Astral y Diseño Humano) | T-123 | sprint-26 | src/i18n/index.ts,src/lib/kinMaya.ts,src/locales/en/astrology.json |
+| Task File: — Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | T-124 | sprint-26 | src/lib/gemini.ts,src/lib/services/_types.ts,src/lib/services/fichas.ts |
