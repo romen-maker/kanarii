@@ -9,6 +9,7 @@ import { usePropuestas } from '../hooks/usePropuestas';
 import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useProyectos } from '../hooks/useProyectos';
+import { LanguageSelector } from '../components/language/LanguageSelector';
 
 export function Welcome() {
   const { user, appUser } = useAuth();
@@ -268,7 +269,10 @@ export function Welcome() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 flex flex-col items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-[#FDFBF7] text-stone-800 flex flex-col items-center justify-center p-6 font-sans relative">
+      <div className="absolute top-6 right-6">
+        <LanguageSelector />
+      </div>
       <div className="max-w-xl w-full text-center space-y-8">
         <div className="flex justify-center mb-4">
           <img src="/kanarii-logo.svg" alt="Kanarii" style={{ width: '140px', height: '140px', objectFit: 'contain' }} />

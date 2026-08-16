@@ -49,4 +49,17 @@ i18n
     returnEmptyString: false,
   });
 
+const syncHtmlLang = (lng: string) => {
+  if (typeof document !== 'undefined') {
+    const langCode = lng ? lng.split('-')[0] : 'es';
+    document.documentElement.lang = langCode;
+  }
+};
+
+syncHtmlLang(i18n.language || i18n.options.fallbackLng as string || 'es');
+
+i18n.on('languageChanged', (lng) => {
+  syncHtmlLang(lng);
+});
+
 export default i18n;

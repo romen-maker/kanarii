@@ -1,5 +1,6 @@
 import { useTopBar } from '../../contexts/TopBarContext';
 import { UserAvatarMenu } from './UserAvatarMenu';
+import { LanguageSelector } from '../language/LanguageSelector';
 
 export function TopBar() {
   const { topBarState } = useTopBar();
@@ -33,6 +34,7 @@ export function TopBar() {
           <div className="h-5 w-px bg-border mx-2 sm:mx-3 shrink-0" />
         )}
 
+        <LanguageSelector />
         <UserAvatarMenu />
       </div>
     </header>
