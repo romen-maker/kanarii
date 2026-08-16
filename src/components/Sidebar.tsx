@@ -9,8 +9,10 @@ import { SyncIndicator } from './ui/SyncIndicator';
 import { useNotificaciones } from '../hooks/useNotificaciones';
 import NotifBadge from './ui/NotifBadge';
 import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
+import { useTranslation } from 'react-i18next';
 
 export function Sidebar() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
   const { user, appUser, logout } = useAuth();
@@ -123,7 +125,7 @@ export function Sidebar() {
         <div className="bg-[#F9F7F1] border border-[#EAE2D6] rounded-2xl p-3 shadow-sm mb-2">
           <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1 flex items-center gap-1">
             <MapPin size={10} className="text-[#CB997E]" />
-            Espacio Activo
+            {t('nav.activeSpace')}
           </p>
           {userComunidades.length > 1 ? (
             <div className="relative flex items-center group/sel">
@@ -158,6 +160,7 @@ export function Sidebar() {
           const isActive = item.href === '/' 
             ? location.pathname === '/' 
             : location.pathname.startsWith(item.href);
+          const navLabel = item.labelKey ? t(item.labelKey as any) : item.label;
           return (
             <button
               key={idx}
@@ -179,7 +182,7 @@ export function Sidebar() {
               }`}
             >
               <item.icon className={`w-5 h-5 ${isActive ? 'text-[#6B705C]' : 'text-stone-400 group-hover:text-stone-600'}`} />
-              <span className="text-sm">{item.label}</span>
+              <span className="text-sm">{navLabel}</span>
               {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && !isActive && (
                 <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
                   {acuerdosPendingCount + acuerdosSolicitanteCount}
@@ -215,7 +218,7 @@ export function Sidebar() {
             }`}
           >
             <Compass className={`w-5 h-5 ${location.pathname === '/comunidades' ? 'text-[#CB997E]' : 'text-[#CB997E] group-hover:text-[#B58368]'}`} />
-            <span className="text-sm font-medium">Explorar comunidades</span>
+            <span className="text-sm font-medium">{t('nav.exploreCommunities')}</span>
           </button>
         )}
         {/* Solicitudes de acceso (Solo admins de la comunidad) */}
@@ -229,7 +232,7 @@ export function Sidebar() {
             }`}
           >
             <ShieldCheck className={`w-5 h-5 ${location.pathname === '/admin/solicitudes' ? 'text-[#6B705C]' : 'text-stone-400 group-hover:text-stone-600'}`} />
-            <span className="text-sm">Solicitudes</span>
+            <span className="text-sm">{t('nav.requests')}</span>
             {pendingCount > 0 && (
               <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
                 {pendingCount}
@@ -240,7 +243,7 @@ export function Sidebar() {
 
         {isAdmin && adminNavItem && (
           <div className="pt-6 mt-6 border-t border-stone-200/60">
-            <h4 className="px-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Administración</h4>
+            <h4 className="px-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">{t('nav.admin')}</h4>
             <button
               onClick={() => navigate(adminNavItem.href)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
@@ -250,7 +253,7 @@ export function Sidebar() {
               }`}
             >
               <adminNavItem.icon className={`w-5 h-5 ${location.pathname === adminNavItem.href ? 'text-[#6B705C]' : 'text-stone-400 group-hover:text-stone-600'}`} />
-              <span className="text-sm">{adminNavItem.label}</span>
+              <span className="text-sm">{adminNavItem.labelKey ? t(adminNavItem.labelKey as any) : adminNavItem.label}</span>
             </button>
           </div>
         )}

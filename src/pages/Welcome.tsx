@@ -10,6 +10,7 @@ import { useTareas } from '../hooks/useTareas';
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useProyectos } from '../hooks/useProyectos';
 import { LanguageSelector } from '../components/language/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 export function Welcome() {
   const { user, appUser } = useAuth();
@@ -22,6 +23,7 @@ export function Welcome() {
   const { tareas, loading: loadingTareas } = useTareas(currentCommunityId);
   const { members, getMemberName, loading: loadingMembers } = useCommunityMembers(currentCommunityId);
   const { items: proyectos, loading: loadingProyectos } = useProyectos(currentCommunityId);
+  const { t } = useTranslation('welcome');
 
   useEffect(() => {
     if (appUser) {
@@ -282,37 +284,36 @@ export function Welcome() {
         
         <div className="text-lg text-stone-600 leading-relaxed mt-6 space-y-4">
           <p className="font-medium text-[#6B705C]">
-            Esto no es un evento, es una forma de vida.
+            {t('heroMessage')}
           </p>
           <p>
-            Un espacio que congrega a nuestra tribu. Una red que sostiene, cuida
-            y hace crecer nuestra revolución interna para expandirla de adentro hacia afuera.
+            {t('heroDescription')}
           </p>
         </div>
 
-        <div className="pt-8 space-y-4">
+        <div className="pt-6 space-y-4 max-w-md mx-auto">
           <button
             onClick={() => navigate('/contexto')}
             className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white transition-colors duration-300 py-4 px-6 rounded-2xl text-lg font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-3"
           >
-            Unirse a la tribu
+            {t('cta.joinTribe')}
           </button>
           
           <button
             onClick={() => setIsLoginModalOpen(true)}
             className="w-full py-4 px-6 text-[#A5A58D] hover:text-[#6B705C] transition-colors rounded-2xl text-lg font-medium"
           >
-            Ya soy parte (Iniciar sesión)
+            {t('cta.alreadyMember')}
           </button>
 
           <button
             onClick={() => navigate('/tour')}
             className="w-full py-3 px-6 text-[#8A817C] hover:text-[#6B705C] transition-colors rounded-2xl text-sm font-medium"
           >
-            Conocer la filosofía →
+            {t('cta.knowPhilosophy')}
           </button>
           <p className="text-[#CB997E] font-medium font-serif text-xl pt-6">
-            Las personas solas pueden llegar a ser poderosas, pero juntas somos invencibles.
+            {t('heroQuote')}
           </p>
         </div>
       </div>

@@ -1,6 +1,9 @@
 {
   "title": "Bienvenido a Kanarii",
   "subtitle": "Plataforma de soberanía y coordinación comunitaria",
+  "heroMessage": "Esto no es un evento, es una forma de vida.",
+  "heroDescription": "Un espacio que congrega a nuestra tribu. Una red que sostiene, cuida y hace crecer nuestra revolución interna para expandirla de adentro hacia afuera.",
+  "heroQuote": "Las personas solas pueden llegar a ser poderosas, pero juntas somos invencibles.",
   "orientation": {
     "title": "Panel de Orientación",
     "whoAmI": "Quién soy",
@@ -8,6 +11,9 @@
     "nodes": "Nodos existentes"
   },
   "cta": {
+    "joinTribe": "Unirse a la tribu",
+    "alreadyMember": "Ya soy parte (Iniciar sesión)",
+    "knowPhilosophy": "Conocer la filosofía →",
     "explore": "Explorar comunidades",
     "completeProfile": "Completar Ficha",
     "startTour": "Ver Tour explicativo"

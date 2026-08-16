@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Loader2, Leaf, Chrome, ArrowRight, CheckCircle2, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FieldError } from './ui/FieldError';
+import { useTranslation } from 'react-i18next';
 
 interface AuthGateModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AuthGateModalProps {
 }
 
 export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', onClose }: AuthGateModalProps) {
+  const { t } = useTranslation('auth');
   const { login, sendMagicLink } = useAuth();
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -83,10 +85,10 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
           </div>
           
           <h2 className="text-2xl font-serif text-[#4A4E4D] mb-2">
-            {title || (mode === 'login' ? 'Inicia sesión' : 'Guarda tu ficha')}
+            {title || (mode === 'login' ? t('loginTitle') : t('onboardingTitle'))}
           </h2>
           <p className="text-stone-600 mb-8 px-4">
-            {subtitle || (mode === 'login' ? 'Bienvenido de nuevo a la tribu.' : 'Crea tu cuenta para no perder tu conversación de acogida y formar parte de la tribu.')}
+            {subtitle || (mode === 'login' ? t('loginSubtitle') : t('onboardingSubtitle'))}
           </p>
 
           <AnimatePresence mode="wait">
@@ -104,20 +106,20 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
                   className="w-full flex items-center justify-center gap-3 bg-white border border-[#EAE2D6] hover:bg-stone-50 text-stone-700 py-4 px-6 rounded-2xl font-bold transition-all shadow-sm group"
                 >
                   <Chrome className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
-                  Continuar con Google
+                  {t('googleLogin')}
                 </button>
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#EAE2D6]"></div></div>
                   <div className="relative flex justify-center text-xs uppercase tracking-widest text-stone-400">
-                    <span className="bg-[#FDFBF7] px-4 italic font-serif">o</span>
+                    <span className="bg-[#FDFBF7] px-4 italic font-serif">{t('orDivider')}</span>
                   </div>
                 </div>
 
                 {/* Email Form */}
                 <form onSubmit={handleEmailSubmit} className="space-y-4">
                   <div className="text-left space-y-1.5">
-                    <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-4">Continuar con email</label>
+                    <label className="text-xs font-bold text-stone-400 uppercase tracking-wider ml-4">{t('continueWithEmail')}</label>
                     <div className="relative">
                       <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                       <input
@@ -125,7 +127,7 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="tu@email.com"
+                        placeholder={t('emailPlaceholder')}
                         className="w-full bg-white border border-[#EAE2D6] rounded-2xl py-4 pl-14 pr-6 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-[#A5A58D] transition-all"
                       />
                     </div>
@@ -141,7 +143,7 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                       <>
-                        Enviar enlace mágico
+                        {t('sendMagicLink')}
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
@@ -160,18 +162,17 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-serif text-[#4A4E4D]">Revisa tu bandeja de entrada</h3>
+                  <h3 className="text-xl font-serif text-[#4A4E4D]">{t('checkEmailTitle')}</h3>
                   <p className="text-stone-500 text-sm leading-relaxed px-4">
-                    Te enviamos un enlace a <span className="font-bold text-stone-700">{sentTo}</span>. 
-                    Haz clic en él para guardar tu ficha y entrar.
+                    {t('checkEmailMessage', { email: sentTo })}
                   </p>
                 </div>
 
                 <div className="bg-[#F9F7F1] p-4 rounded-2xl flex items-start gap-3 text-left border border-[#EAE2D6]">
                   <AlertCircle className="w-5 h-5 text-[#CB997E] flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-stone-600">
-                    <span className="font-semibold block mb-1 text-[#4A4E4D]">¿No lo ves?</span>
-                    Revisa también la carpeta de spam o correo no deseado. A veces los enlaces mágicos se pierden por ahí.
+                    <span className="font-semibold block mb-1 text-[#4A4E4D]">{t('notSeeingItTitle')}</span>
+                    {t('notSeeingItMessage')}
                   </p>
                 </div>
 
@@ -179,14 +180,14 @@ export function AuthGateModal({ isOpen, title, subtitle, mode = 'onboarding', on
                   onClick={() => setSentTo(null)}
                   className="text-[#CB997E] text-sm font-bold hover:underline"
                 >
-                  Cambiar email
+                  {t('changeEmail')}
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
 
           <p className="mt-10 text-xs text-stone-400 px-6">
-            Al continuar, aceptas nuestras pautas de convivencia y el tratamiento de tus datos para el bien común de la tribu.
+            {t('termsDisclaimer')}
           </p>
         </div>
       </motion.div>

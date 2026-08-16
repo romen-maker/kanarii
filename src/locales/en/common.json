@@ -14,10 +14,17 @@
     "communities": "Communities",
     "projects": "Projects",
     "tasks": "Tasks",
+    "calendar": "Calendar",
+    "board": "Noticeboard",
+    "minutes": "Minutes",
     "governance": "Governance",
     "marketplace": "Sovereignty",
     "passport": "Passport",
-    "profile": "Profile"
+    "profile": "Profile",
+    "admin": "Admin Panel",
+    "requests": "Access Requests",
+    "activeSpace": "Active Space",
+    "exploreCommunities": "Explore Communities"
   },
   "language": {
     "selector": "Language",

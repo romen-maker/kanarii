@@ -6,9 +6,11 @@ import { useComunidad } from '../contexts/ComunidadContext';
 import { navigationConfig } from '../config/navigation';
 import { SyncIndicator } from './ui/SyncIndicator';
 import { useAcuerdosBadge } from '../hooks/useAcuerdosBadge';
+import { useTranslation } from 'react-i18next';
 
 
 export function BottomNav() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
   const { appUser, logout } = useAuth();
@@ -90,6 +92,7 @@ export function BottomNav() {
           const isReallyActive = item.href === '/' 
             ? location.pathname === '/' 
             : location.pathname.startsWith(item.href);
+          const navLabel = item.labelKey ? t(item.labelKey as any) : item.label;
           
           return (
             <button
@@ -105,7 +108,7 @@ export function BottomNav() {
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </div>
-              <span className="text-[10px] uppercase tracking-wide">{item.label}</span>
+              <span className="text-[10px] uppercase tracking-wide">{navLabel}</span>
               {isReallyActive && <div className="w-1 h-1 rounded-full bg-[#6B705C] absolute bottom-1" />}
             </button>
           );
@@ -123,7 +126,7 @@ export function BottomNav() {
               <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
             )}
           </div>
-          <span className="text-[10px] uppercase tracking-wide">Más</span>
+          <span className="text-[10px] uppercase tracking-wide">{t('actions.more' as any) || 'Más'}</span>
         </button>
       </div>
 
@@ -141,7 +144,7 @@ export function BottomNav() {
               <div className="bg-[#F9F7F1] border border-[#EAE2D6] rounded-2xl p-3 shadow-sm mb-4">
                 <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                   <MapPin size={10} className="text-[#CB997E]" />
-                  Espacio Activo
+                  {t('nav.activeSpace')}
                 </p>
                 {userComunidades.length > 1 ? (
                   <div className="relative flex items-center group/sel">
@@ -173,37 +176,40 @@ export function BottomNav() {
             </div>
 
             <div className="flex flex-col space-y-2">
-              {moreNavItems.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => { 
-                    setIsMoreMenuOpen(false); 
-                    if (item.label === 'Marketplace') {
-                      navigate(item.href, { 
-                        state: (acuerdosPendingCount > 0 || acuerdosSolicitanteCount > 0)
-                          ? { initialTab: 'mis_acuerdos' } 
-                          : undefined 
-                      });
-                    } else {
-                      navigate(item.href);
-                    }
-                  }}
-                  className="w-full text-left px-5 py-4 rounded-2xl font-medium text-[#4A4E4D] hover:bg-[#EAE2D6] transition-colors flex items-center gap-3"
-                >
-                  <div className="relative">
-                    <item.icon className={`w-5 h-5 ${(item as any).color ? '' : 'text-stone-400'}`} style={{ color: (item as any).color }} />
-                    {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && location.pathname !== '/soberania' && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
-                    )}
-                  </div>
-                  {item.label}
-                </button>
-              ))}
+              {moreNavItems.map((item, idx) => {
+                const navLabel = (item as any).labelKey ? t((item as any).labelKey) : item.label;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => { 
+                      setIsMoreMenuOpen(false); 
+                      if (item.label === 'Marketplace') {
+                        navigate(item.href, { 
+                          state: (acuerdosPendingCount > 0 || acuerdosSolicitanteCount > 0)
+                            ? { initialTab: 'mis_acuerdos' } 
+                            : undefined 
+                        });
+                      } else {
+                        navigate(item.href);
+                      }
+                    }}
+                    className="w-full text-left px-5 py-4 rounded-2xl font-medium text-[#4A4E4D] hover:bg-[#EAE2D6] transition-colors flex items-center gap-3"
+                  >
+                    <div className="relative">
+                      <item.icon className={`w-5 h-5 ${(item as any).color ? '' : 'text-stone-400'}`} style={{ color: (item as any).color }} />
+                      {item.label === 'Marketplace' && (acuerdosPendingCount + acuerdosSolicitanteCount) > 0 && location.pathname !== '/soberania' && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                      )}
+                    </div>
+                    {navLabel}
+                  </button>
+                );
+              })}
               <button
                 onClick={() => setIsMoreMenuOpen(false)}
                 className="w-full text-center mt-2 px-5 py-4 rounded-2xl font-medium text-stone-500 hover:bg-stone-100 transition-colors"
               >
-                Cancelar
+                {t('actions.cancel')}
               </button>
             </div>
           </div>

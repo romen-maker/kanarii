@@ -1,6 +1,9 @@
 {
   "title": "Welcome to Kanarii",
   "subtitle": "Community sovereignty and coordination platform",
+  "heroMessage": "This is not an event, it's a way of living.",
+  "heroDescription": "A home for our network. A space designed to support, care for, and foster local collaboration from the inside out.",
+  "heroQuote": "Alone we can achieve great things, but together we are invincible.",
   "orientation": {
     "title": "Orientation Hub",
     "whoAmI": "Who I am",
@@ -8,6 +11,9 @@
     "nodes": "Active nodes"
   },
   "cta": {
+    "joinTribe": "Join the community",
+    "alreadyMember": "Already a member? (Log in)",
+    "knowPhilosophy": "Discover our vision →",
     "explore": "Explore communities",
     "completeProfile": "Complete Profile",
     "startTour": "Take Guided Tour"
