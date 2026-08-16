@@ -16,6 +16,7 @@ Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (
 | T-120 | Internacionalizar páginas públicas de comunidades/nodos y pasaporte público; mantener contenido de usuario en su idioma original | M | ✅ Completada | `.agents/tasks/task-120.md` |
 | T-121 | Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual del recorrido EN de fundraising | S | ⬜ Pendiente | — |
 | T-122 | Actualizar `docs/pages-map.md`, guía de copy y documentación del sprint | S | ⬜ Pendiente | — |
+| T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ⬜ Pendiente (Backlog) | `.agents/tasks/task-124.md` |
 
 ## Notas de planning
 - Sprint de urgencia de internacionalización incremental focalizado en la campaña de fundraising.
