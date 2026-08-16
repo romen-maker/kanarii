@@ -7,8 +7,10 @@ import PasaporteVisual from '../components/perfil/PasaporteVisual';
 import { calcularKin } from '../lib/kinMaya';
 import { useMemberConnection } from '../hooks/useMemberConnection';
 import { useToast } from '../hooks/useToast';
+import { useTranslation } from 'react-i18next';
 
 export function PasaporteComunitarioView() {
+  const { t } = useTranslation('passport');
   const { slug, userId } = useParams<{ slug: string; userId: string }>();
   const navigate = useNavigate();
   const { setCommunityId } = useComunidad();
@@ -92,7 +94,7 @@ export function PasaporteComunitarioView() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-[#8A817C] p-4">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#A5A58D]" />
-        <p className="font-medium font-serif">Cargando pasaporte comunitario...</p>
+        <p className="font-medium font-serif">{t('title')}</p>
       </div>
     );
   }
@@ -104,9 +106,9 @@ export function PasaporteComunitarioView() {
           <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto text-rose-500 border border-rose-100 shadow-inner">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-serif font-bold text-[#3E2723]">Pasaporte no disponible</h1>
+          <h1 className="text-2xl font-serif font-bold text-[#3E2723]">{t('notFoundTitle')}</h1>
           <p className="text-stone-600 text-sm">
-            {error || 'El pasaporte solicitado no existe o no tienes permisos para visualizarlo en este momento.'}
+            {error || t('notFoundDesc')}
           </p>
           <div className="pt-4">
             <Link
@@ -114,7 +116,7 @@ export function PasaporteComunitarioView() {
               className="inline-flex items-center gap-2 bg-[#5A5A40] hover:bg-[#4A4A35] text-white py-3.5 px-8 rounded-2xl font-bold text-sm transition-all shadow-md active:scale-95"
             >
               <ArrowLeft className="w-4 h-4" />
-              {slug ? 'Volver a la comunidad' : 'Ir al inicio'}
+              {slug ? t('backToMembers') : t('backToHome')}
             </Link>
           </div>
         </div>
@@ -162,8 +164,6 @@ export function PasaporteComunitarioView() {
     }
   }
 
-  // TODO T-064: ruta /p/:uid — pasaporte universal sin contexto de comunidad. Ver docs/adrs/ADR-020 y sprint-15-research.md
-
   const shareUrl = `${window.location.origin}/p/${userId}`;
   const shareText = `Conoce a ${mappedUser.name}, miembro de ${comunidadInfo?.nombre || slug} en Kanarii: ${shareUrl}`;
 
@@ -178,11 +178,11 @@ export function PasaporteComunitarioView() {
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#6B705C] hover:text-[#5A5A40] transition-colors"
         >
           <ArrowLeft size={14} />
-          Volver a la comunidad
+          {t('backToMembers')}
         </Link>
         <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#A5A58D]">
           <Sparkles size={12} />
-          Vista Pública
+          {t('title')}
         </div>
       </div>
 

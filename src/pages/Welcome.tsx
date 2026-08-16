@@ -207,7 +207,7 @@ export function Welcome() {
       .slice(0, 5);
 
     const featuredMembersList = safeMembers.slice(0, 3).map((m: any) => ({
-      id: m.id || m.userId || m.uid || Math.random().toString(),
+      id: m.uid || m.userId || m.id || '',
       name: m.displayName || m.nombre || 'Miembro',
       photoUrl: m.photoURL || m.foto,
       saberes: Array.isArray(m.saberes) ? m.saberes : (m.triada?.saberes || []),
@@ -258,6 +258,7 @@ export function Welcome() {
           onExplorePedagogy={(id) => navigate('/tour')}
           onGoToProfiles={() => navigate('/comunidades')}
           onGoToCommunities={() => navigate('/comunidades')}
+          onSelectMember={(uid) => navigate(`/p/${uid}`)}
           onStartBasicProfile={() => {
             if (appUser) {
               navigate('/ficha');

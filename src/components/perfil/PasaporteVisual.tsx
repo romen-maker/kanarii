@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { KinData } from '../../lib/kinMaya';
 import { ConfigPrivacidad, Comunidad } from '../../lib/appService';
 import { useComunidad } from '../../contexts/ComunidadContext';
+import { useTranslation } from 'react-i18next';
 
 interface UserPassport {
   name: string;
@@ -44,6 +45,7 @@ export default function PasaporteVisual({
   isSender = false,
   onAccept,
 }: PasaporteVisualProps) {
+  const { t } = useTranslation('passport');
   const { comunidades } = useComunidad();
 
   const showKinMaya = privacidad ? privacidad.kinMaya !== false : true;
@@ -153,7 +155,7 @@ export default function PasaporteVisual({
                 <Heart size={12} strokeWidth={2.5} />
               </div>
               <h3 className="text-xs font-black uppercase tracking-widest text-[#6B705C]">
-                Ofrendas <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— Lo que doy</span>
+                {t('triad.offers')}
               </h3>
             </div>
             
@@ -167,7 +169,6 @@ export default function PasaporteVisual({
                   className="bg-emerald-50/40 hover:bg-emerald-50/60 border border-emerald-100/45 px-4 py-3 rounded-2xl text-xs font-medium text-[#5D4037]/90 leading-relaxed transition-colors flex items-center justify-between"
                 >
                   <span>{offering}</span>
-                  <span className="text-[10px] font-mono text-emerald-700/60 font-semibold px-2 py-0.5 bg-white rounded-full">Recurso libre</span>
                 </motion.div>
               ))}
             </div>
@@ -180,7 +181,7 @@ export default function PasaporteVisual({
                 <Award size={12} strokeWidth={2.5} />
               </div>
               <h3 className="text-xs font-black uppercase tracking-widest text-[#5A5A40]">
-                Saberes <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— Lo que sé</span>
+                {t('triad.skills')}
               </h3>
             </div>
 
@@ -206,7 +207,7 @@ export default function PasaporteVisual({
                 <MessageCircle size={12} strokeWidth={2.5} />
               </div>
               <h3 className="text-xs font-black uppercase tracking-widest text-amber-800">
-                Necesidades <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— Lo que busco</span>
+                {t('triad.needs')}
               </h3>
             </div>
 
@@ -220,7 +221,6 @@ export default function PasaporteVisual({
                   className="bg-amber-50/30 hover:bg-amber-50/50 border border-amber-100/40 px-4 py-3 rounded-2xl text-xs font-medium text-[#5D4037]/90 leading-relaxed transition-colors flex items-center justify-between"
                 >
                   <span>{need}</span>
-                  <span className="text-[10px] font-mono text-amber-800/80 font-bold px-2 py-0.5 bg-amber-100/40 rounded-full">Solidario</span>
                 </motion.div>
               ))}
             </div>

@@ -43,6 +43,7 @@ interface WelcomeHeroSectionsProps {
   onGoToProfiles?: () => void;
   onGoToCommunities?: () => void;
   onStartBasicProfile?: () => void;
+  onSelectMember?: (uid: string) => void;
   hasIncompleteProfile?: boolean;
 }
 
@@ -66,6 +67,7 @@ export default function WelcomeHeroSections({
   onGoToProfiles,
   onGoToCommunities,
   onStartBasicProfile,
+  onSelectMember,
   hasIncompleteProfile = false,
 }: WelcomeHeroSectionsProps) {
   const { t } = useTranslation('welcome');
@@ -254,7 +256,16 @@ export default function WelcomeHeroSections({
             {featuredMembers.slice(0, 3).map((member) => (
               <div
                 key={member.id}
-                className="bg-white p-5 rounded-[24px] border border-[#D2B48C]/15 shadow-sm space-y-3 flex flex-col justify-between"
+                onClick={() => member.id && onSelectMember?.(member.id)}
+                className="bg-white p-5 rounded-[24px] border border-[#D2B48C]/15 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between cursor-pointer group"
+                tabIndex={0}
+                role="button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    member.id && onSelectMember?.(member.id);
+                  }
+                }}
               >
                 <div className="flex items-center gap-3">
                   {member.photoUrl ? (
@@ -269,7 +280,7 @@ export default function WelcomeHeroSections({
                     </div>
                   )}
                   <div>
-                    <h4 className="font-serif font-bold text-sm text-[#3E2723]">{member.name}</h4>
+                    <h4 className="font-serif font-bold text-sm text-[#3E2723] group-hover:text-[#6B705C] transition-colors">{member.name}</h4>
                     <span className="text-[10px] text-[#A5A58D] font-mono">Miembro activo</span>
                   </div>
                 </div>
@@ -300,6 +311,11 @@ export default function WelcomeHeroSections({
                       </div>
                     </div>
                   )}
+                </div>
+
+                <div className="pt-2 border-t border-[#EAE2D6]/40 flex items-center justify-end text-xs font-semibold text-[#6B705C] group-hover:underline gap-1">
+                  <span>{t('hero.viewProfile')}</span>
+                  <ArrowRight size={12} />
                 </div>
               </div>
             ))}

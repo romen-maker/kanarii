@@ -7,8 +7,10 @@ import { useToast } from '../hooks/useToast';
 import { getUserFicha, getTriadaFromFicha, Ficha, getAppUserDoc } from '../lib/appService';
 import PasaporteVisual from '../components/perfil/PasaporteVisual';
 import { calcularKin } from '../lib/kinMaya';
+import { useTranslation } from 'react-i18next';
 
 export function PasaporteUniversalView() {
+  const { t } = useTranslation('passport');
   const { uid } = useParams<{ uid: string }>();
   const navigate = useNavigate();
   const { appUser: currentUser } = useAuth();
@@ -144,7 +146,7 @@ export function PasaporteUniversalView() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-[#8A817C] p-4">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#A5A58D]" />
-        <p className="font-medium font-serif">Cargando pasaporte galáctico...</p>
+        <p className="font-medium font-serif">{t('universalTitle')}</p>
       </div>
     );
   }
@@ -156,9 +158,9 @@ export function PasaporteUniversalView() {
           <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto text-rose-500 border border-rose-100 shadow-inner">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-serif font-bold text-[#3E2723]">Este pasaporte no está disponible</h1>
+          <h1 className="text-2xl font-serif font-bold text-[#3E2723]">{t('notFoundTitle')}</h1>
           <p className="text-stone-600 text-sm">
-            {error || 'El pasaporte solicitado no existe o no se puede cargar en este momento.'}
+            {error || t('notFoundDesc')}
           </p>
           <div className="pt-4">
             <button
@@ -166,7 +168,7 @@ export function PasaporteUniversalView() {
               className="inline-flex items-center gap-2 bg-[#5A5A40] hover:bg-[#4A4A35] text-white py-3.5 px-8 rounded-2xl font-bold text-sm transition-all shadow-md active:scale-95"
             >
               <ArrowLeft className="w-4 h-4" />
-              Ir al inicio
+              {t('backToHome')}
             </button>
           </div>
         </div>
@@ -187,11 +189,11 @@ export function PasaporteUniversalView() {
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#6B705C] hover:text-[#5A5A40] transition-colors"
         >
           <ArrowLeft size={14} />
-          Atrás
+          {t('backToMembers')}
         </button>
         <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#A5A58D]">
           <Sparkles size={12} />
-          Pasaporte Universal
+          {t('universalTitle')}
         </div>
       </div>
 

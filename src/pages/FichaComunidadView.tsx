@@ -12,8 +12,10 @@ import { ConfiguracionComunidadPanel } from '../components/ConfiguracionComunida
 import { useCommunityMembers } from '../hooks/useCommunityMembers';
 import { useTareas } from '../hooks/useTareas';
 import { useProyectos } from '../hooks/useProyectos';
+import { useTranslation } from 'react-i18next';
 
 export function FichaComunidadView() {
+  const { t } = useTranslation('communities');
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { appUser } = useAuth();
@@ -105,7 +107,7 @@ export function FichaComunidadView() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-[#8A817C]">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#A5A58D]" />
-        <p className="font-medium font-serif">Cargando detalles del espacio...</p>
+        <p className="font-medium font-serif">{t('loadingDetails')}</p>
       </div>
     );
   }
@@ -117,9 +119,9 @@ export function FichaComunidadView() {
           <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto text-rose-500 border border-rose-100 shadow-inner">
             <AlertTriangle className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-serif text-[#4A4E4D]">Espacio no encontrado</h1>
+          <h1 className="text-3xl font-serif text-[#4A4E4D]">{t('notFoundTitle')}</h1>
           <p className="text-stone-600">
-            La comunidad con el identificador <span className="font-mono bg-stone-100 px-1.5 py-0.5 rounded text-rose-700">/c/{slug}</span> no existe o ha sido eliminada.
+            {t('notFoundDesc', { slug })}
           </p>
           <div className="pt-4">
             <Link
@@ -127,7 +129,7 @@ export function FichaComunidadView() {
               className="inline-flex items-center gap-2 bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3 px-6 rounded-2xl font-bold transition-all shadow-md"
             >
               <ArrowLeft className="w-5 h-5" />
-              Volver al inicio
+              {t('backToHome')}
             </Link>
           </div>
         </div>
@@ -144,22 +146,22 @@ export function FichaComunidadView() {
           <div className="w-20 h-20 bg-[#F9F7F1] rounded-full flex items-center justify-center mx-auto text-[#6B705C] border border-[#EAE2D6]">
             <Lock className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-serif text-[#4A4E4D]">Comunidad Privada</h1>
+          <h1 className="text-3xl font-serif text-[#4A4E4D]">{t('privateTitle')}</h1>
           <p className="text-stone-600 leading-relaxed">
-            Este espacio es privado. Para acceder a su contenido, ver su manifiesto o unirte, debes recibir una invitación directa de un miembro de la comunidad.
+            {t('privateDesc')}
           </p>
           <div className="pt-4 flex flex-col gap-3">
             <Link
               to="/comunidades"
               className="inline-flex items-center justify-center gap-2 bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3 px-6 rounded-2xl font-bold transition-all shadow-md"
             >
-              Explorar otras comunidades
+              {t('exploreOtherCommunities')}
             </Link>
             <Link
               to="/"
               className="text-[#CB997E] hover:underline font-bold text-sm"
             >
-              Ir a la página de bienvenida
+              {t('goToWelcome')}
             </Link>
           </div>
         </div>
@@ -181,7 +183,7 @@ export function FichaComunidadView() {
             className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-800 transition-colors font-bold text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            {appUser ? 'Volver a Comunidades' : 'Volver al Inicio'}
+            {appUser ? t('backToCommunities') : t('backToHome')}
           </Link>
         </div>
 
@@ -210,12 +212,12 @@ export function FichaComunidadView() {
               {isEditingMode ? (
                 <>
                   <Eye className="w-4 h-4 text-[#A5A58D]" />
-                  Ver Ficha Pública
+                  {t('viewPublicCard')}
                 </>
               ) : (
                 <>
                   <Settings className="w-4 h-4 text-[#CB997E]" />
-                  Configuración
+                  {t('settings')}
                 </>
               )}
             </button>
@@ -264,7 +266,7 @@ export function FichaComunidadView() {
                         {comunidad.nombre}
                       </h1>
                       <span className="px-3 py-1 bg-[#F9F7F1] text-[#6B705C] text-xs font-bold rounded-full border border-[#EAE2D6] uppercase tracking-wider">
-                        {comunidad.tipo ? comunidad.tipo.charAt(0).toUpperCase() + comunidad.tipo.slice(1) : 'Otro'}
+                        {comunidad.tipo ? comunidad.tipo.charAt(0).toUpperCase() + comunidad.tipo.slice(1) : t('node')}
                       </span>
                     </div>
 
@@ -283,10 +285,10 @@ export function FichaComunidadView() {
                     <div className="flex items-center justify-between text-xs font-bold text-[#8A817C] uppercase tracking-wider">
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4 text-[#A5A58D]" />
-                        {members.length} {members.length === 1 ? 'miembro' : 'miembros'}
+                        {members.length} {t(members.length === 1 ? 'member_one' : 'member_other')}
                       </span>
                       {comunidad.capacidad && comunidad.capacidad > 0 ? (
-                        <span>Límite: {comunidad.capacidad}</span>
+                        <span>{t('occupationLimit', { limit: comunidad.capacidad })}</span>
                       ) : null}
                     </div>
                     
@@ -299,7 +301,7 @@ export function FichaComunidadView() {
                           />
                         </div>
                         <p className="text-[10px] text-right text-stone-400 font-medium">
-                          {Math.round((members.length / comunidad.capacidad) * 100)}% de ocupación
+                          {t('occupationPercent', { percent: Math.round((members.length / comunidad.capacidad) * 100) })}
                         </p>
                       </div>
                     ) : null}
@@ -325,7 +327,7 @@ export function FichaComunidadView() {
                             : 'border-transparent text-stone-400 hover:text-stone-700'
                         }`}
                       >
-                        {tab === 'presentacion' ? 'Presentación' : tab === 'miembros' ? 'Miembros' : 'Actividad'}
+                        {t(`tabs.${tab}` as any)}
                       </button>
                     ))}
                   </div>
@@ -359,7 +361,7 @@ export function FichaComunidadView() {
                           <div className="space-y-3 pt-6 border-t border-stone-100">
                             <h3 className="text-lg md:text-xl font-serif text-[#4A4E4D] font-bold flex items-center gap-2">
                               <BookOpen className="w-5 h-5 text-[#A5A58D]" />
-                              Manifiesto de Convivencia
+                              {t('manifesto')}
                             </h3>
                             <div className="bg-[#FDFBF7] border border-[#EAE2D6] rounded-3xl p-6 md:p-8 text-stone-700 prose prose-stone max-w-none prose-p:text-stone-600 prose-headings:font-serif prose-headings:text-[#4A4E4D]">
                               <ReactMarkdown>{comunidad.manifiesto}</ReactMarkdown>
@@ -518,11 +520,11 @@ export function FichaComunidadView() {
                 <div className="space-y-6">
                   <div className="bg-[#F9F7F1]/50 border border-[#EAE2D6] rounded-3xl p-6 shadow-md space-y-6 sticky top-6">
                     <div>
-                      <h3 className="text-lg font-serif font-bold text-[#4A4E4D] mb-2">Participar en este espacio</h3>
+                      <h3 className="text-lg font-serif font-bold text-[#4A4E4D] mb-2">{t('join')}</h3>
                       <p className="text-sm text-[#8A817C] leading-relaxed">
                         {comunidad.esPublica
-                          ? 'Esta es una comunidad abierta. Puedes unirte para compartir recursos, tareas y coordinar acuerdos comunitarios.'
-                          : 'Este es un espacio privado y requiere solicitud de aprobación previa por parte de los administradores.'}
+                          ? t('accessState.requestDirect')
+                          : t('privateDesc')}
                       </p>
                     </div>
 
@@ -531,13 +533,13 @@ export function FichaComunidadView() {
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 text-green-700 font-bold text-sm bg-green-50 border border-green-200 rounded-2xl p-4">
                             <CheckCircle2 className="w-5 h-5 shrink-0" />
-                            <span>¡Ya eres miembro de este espacio!</span>
+                            <span>{t('accessState.alreadyMember')}</span>
                           </div>
                           <button
                             onClick={() => navigate('/admin')}
                             className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
                           >
-                            Ir al panel de control
+                            {t('accessState.goToAdmin')}
                             <ChevronRight className="w-4 h-4" />
                           </button>
                         </div>
@@ -547,15 +549,13 @@ export function FichaComunidadView() {
                             onClick={() => openLoginModal('login')}
                             className="w-full bg-[#A5A58D] hover:bg-[#6B705C] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md text-center"
                           >
-                            {comunidad.requiereAprobacion
-                              ? 'Iniciar sesión para solicitar acceso'
-                              : 'Iniciar sesión para unirte'}
+                            {t('accessState.loginToJoin')}
                           </button>
                           <button
                             onClick={() => openLoginModal('onboarding')}
                             className="w-full border border-[#A5A58D] text-[#A5A58D] hover:bg-white py-3.5 px-6 rounded-2xl font-bold transition-all text-center"
                           >
-                            Crear una cuenta nueva
+                            {t('accessState.registerToJoin')}
                           </button>
                         </div>
                       ) : comunidad.requiereAprobacion ? (
@@ -564,11 +564,8 @@ export function FichaComunidadView() {
                             <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-5 flex flex-col gap-3 text-[#1E3A8A]">
                               <div className="flex items-center gap-2">
                                 <Loader2 className="w-5 h-5 text-blue-600 animate-spin shrink-0" />
-                                <span className="font-bold text-sm">Solicitud en revisión</span>
+                                <span className="font-bold text-sm">{t('accessState.pending')}</span>
                               </div>
-                              <p className="text-xs text-blue-800">
-                                Tu solicitud está siendo evaluada por el equipo de administración.
-                              </p>
                               {latestRequest?.mensaje && (
                                 <div className="bg-white/80 border border-blue-100 rounded-xl p-3 text-stone-700 text-xs italic">
                                   "{latestRequest.mensaje}"
@@ -579,25 +576,19 @@ export function FichaComunidadView() {
                             <div className="space-y-4">
                               {hasRejected && (
                                 <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 text-rose-900 text-xs">
-                                  <p className="font-bold mb-1">Tu solicitud anterior fue rechazada:</p>
-                                  {latestRequest?.motivoRechazo && (
-                                    <p className="font-semibold text-stone-700">{latestRequest.motivoRechazo}</p>
-                                  )}
-                                  {latestRequest?.detalleRechazo && (
-                                    <p className="text-stone-500 italic mt-0.5">"{latestRequest.detalleRechazo}"</p>
-                                  )}
+                                  <p className="font-bold mb-1">{t('accessState.rejected')}</p>
                                 </div>
                               )}
 
                               <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block">
-                                  Mensaje de motivación (mínimo 20 caracteres)
+                                  {t('accessState.charCount', { count: solicitudMsg.trim().length })}
                                 </label>
                                 <textarea
                                   rows={4}
                                   value={solicitudMsg}
                                   onChange={(e) => setSolicitudMsg(e.target.value)}
-                                  placeholder="Hola tribu, me gustaría unirme porque..."
+                                  placeholder={t('accessState.placeholderMessage')}
                                   className="w-full bg-white border border-[#EAE2D6] rounded-2xl p-3 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-[#A5A58D] transition-all text-sm outline-none"
                                 />
                               </div>
@@ -608,7 +599,7 @@ export function FichaComunidadView() {
                                 className="w-full bg-[#CB997E] hover:bg-[#B58368] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                               >
                                 <MessageSquare className="w-5 h-5" />
-                                Enviar Solicitud
+                                {t('accessState.sendRequest')}
                               </button>
                             </div>
                           )}
@@ -619,7 +610,7 @@ export function FichaComunidadView() {
                           disabled={isExecuting}
                           className="w-full bg-[#CB997E] hover:bg-[#B58368] text-white py-3.5 px-6 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2"
                         >
-                          Unirse a la comunidad
+                          {t('accessState.joinDirect')}
                         </button>
                       )}
                     </div>

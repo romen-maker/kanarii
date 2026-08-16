@@ -1,12 +1,25 @@
 {
   "title": "Community Passport",
   "universalTitle": "Universal Passport",
+  "memberProfile": "Member Profile",
   "triad": {
-    "offers": "Offers",
-    "skills": "Skills",
+    "title": "Community & Cosmic Triad",
+    "offers": "Offerings",
+    "skills": "Skills & Knowledge",
     "needs": "Needs"
   },
   "contact": "Quick Contact",
   "socials": "Social Networks",
-  "bio": "Bio / About"
+  "bio": "Bio / About",
+  "notFoundTitle": "Profile not found",
+  "notFoundDesc": "The requested passport does not exist or is not publicly available.",
+  "backToMembers": "Back to Members",
+  "backToHome": "Back to Home",
+  "roles": "Community Roles",
+  "astral": {
+    "title": "Astral Design & Maya Kin",
+    "sunSign": "Sun Sign",
+    "kin": "Maya Kin",
+    "humanDesign": "Human Design"
+  }
 }

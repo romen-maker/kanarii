@@ -34,6 +34,7 @@
     "galacticManualDesc": "Recorrido guiado que calcula tu Carta Astral, Diseño Humano y sello de Kin Maya a partir de tu fecha y hora de nacimiento para mapear tu energía cósmica.",
     "galacticManualCta": "Ver Manual Galáctico",
     "whoIsHere": "Quiénes están en la tribu",
-    "viewAll": "Ver todos ({{count}}+)"
+    "viewAll": "Ver todos ({{count}}+)",
+    "viewProfile": "Ver pasaporte"
   }
 }

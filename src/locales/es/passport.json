@@ -1,12 +1,25 @@
 {
   "title": "Pasaporte Comunitario",
   "universalTitle": "Pasaporte Universal",
+  "memberProfile": "Ficha de Miembro",
   "triad": {
+    "title": "Tríada Comunitario-Galáctica",
     "offers": "Ofrendas",
-    "skills": "Saberes",
+    "skills": "Saberes y Conocimientos",
     "needs": "Necesidades"
   },
   "contact": "Contacto rápido",
   "socials": "Redes sociales",
-  "bio": "Bio / Presentación"
+  "bio": "Bio / Presentación",
+  "notFoundTitle": "Ficha no encontrada",
+  "notFoundDesc": "El pasaporte solicitado no existe o no está disponible públicamente.",
+  "backToMembers": "Volver a Miembros",
+  "backToHome": "Volver al Inicio",
+  "roles": "Roles Comunitarios",
+  "astral": {
+    "title": "Diseño Astral & Kin Maya",
+    "sunSign": "Signo Solar",
+    "kin": "Kin Maya",
+    "humanDesign": "Diseño Humano"
+  }
 }

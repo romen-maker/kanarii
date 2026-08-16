@@ -34,6 +34,7 @@
     "galacticManualDesc": "A guided journey calculating your Astral Chart, Human Design, and Kin Maya seal from your birth details to map your cosmic energy.",
     "galacticManualCta": "View Galactic Blueprint",
     "whoIsHere": "Who is in the tribe",
-    "viewAll": "View all ({{count}}+)"
+    "viewAll": "View all ({{count}}+)",
+    "viewProfile": "View passport"
   }
 }
