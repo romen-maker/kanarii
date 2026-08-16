@@ -1,7 +1,7 @@
 # Sprint 26 — 2026-08-17 → 2026-08-21
 
 ## Estado
-🟡 En curso
+🟢 Completado (2026-08-16)
 
 ## Objetivo
 Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (ES/EN) para soportar la campaña de fundraising sin traducir la operativa profunda de miembros.
