@@ -232,7 +232,7 @@ export default function PasaporteVisual({
         {memberComunidades.length > 0 && (
           <div className="space-y-3 pt-6 font-sans border-t border-[#D2B48C]/10">
             <h3 className="text-xs font-black uppercase tracking-widest text-[#6B705C]">
-              {t('communities', { defaultValue: 'Comunidades' })} <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— {t('whereParticipates')}</span>
+              {t('communitiesHeader')} <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— {t('whereParticipates')}</span>
             </h3>
             <div className="flex flex-wrap gap-2">
               {memberComunidades.map((comm) => (
