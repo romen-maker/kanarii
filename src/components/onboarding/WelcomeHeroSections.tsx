@@ -256,7 +256,7 @@ export default function WelcomeHeroSections({
                   )}
                   <div>
                     <h4 className="font-serif font-bold text-sm text-[#3E2723] group-hover:text-[#6B705C] transition-colors">{member.name}</h4>
-                    <span className="text-[10px] text-[#A5A58D] font-mono">Miembro activo</span>
+                    <span className="text-[10px] text-[#A5A58D] font-mono">{t('members.activeMember')}</span>
                   </div>
                 </div>
 
@@ -264,7 +264,7 @@ export default function WelcomeHeroSections({
                 <div className="space-y-2 text-xs pt-1 border-t border-[#FAF9F6]">
                   {member.saberes && member.saberes.length > 0 && (
                     <div>
-                      <span className="text-[10px] font-bold uppercase text-[#6B705C] block">Ofrece / Saberes:</span>
+                      <span className="text-[10px] font-bold uppercase text-[#6B705C] block">{t('members.offersSkills')}</span>
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         {member.saberes.slice(0, 2).map((s, idx) => (
                           <span key={idx} className="bg-emerald-50 text-[#6B705C] px-2 py-0.5 rounded-full text-[10px]">
@@ -276,7 +276,7 @@ export default function WelcomeHeroSections({
                   )}
                   {member.necesidades && member.necesidades.length > 0 && (
                     <div>
-                      <span className="text-[10px] font-bold uppercase text-[#CB997E] block">Necesita:</span>
+                      <span className="text-[10px] font-bold uppercase text-[#CB997E] block">{t('members.needs')}</span>
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         {member.necesidades.slice(0, 2).map((n, idx) => (
                           <span key={idx} className="bg-amber-50 text-[#CB997E] px-2 py-0.5 rounded-full text-[10px]">

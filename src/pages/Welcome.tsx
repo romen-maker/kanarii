@@ -44,7 +44,7 @@ export function Welcome() {
       <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#A5A58D] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[#8A817C] font-serif italic">Sintonizando con el pulso de tu tribu...</p>
+          <p className="text-[#8A817C] font-serif italic">{t('loading.pulse')}</p>
         </div>
       </div>
     );

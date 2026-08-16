@@ -92,6 +92,14 @@
     "tasksAssignedDesc_other": "{{count}} de {{total}} tareas tienen un facilitador asignado activamente cuidando el flujo.",
     "noActiveTasks": "No hay tareas activas en los círculos en este momento."
   },
+  "members": {
+    "activeMember": "Miembro activo",
+    "offersSkills": "Ofrece / Saberes:",
+    "needs": "Necesita:"
+  },
+  "loading": {
+    "pulse": "Sintonizando con el pulso de tu tribu..."
+  },
   "pedagogy": {
     "title": "Explora la Gobernanza Viva",
     "tag": "Animaciones Pedagógicas",

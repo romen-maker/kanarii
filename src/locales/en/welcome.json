@@ -92,6 +92,14 @@
     "tasksAssignedDesc_other": "{{count}} of {{total}} tasks have a facilitator actively caring for flow.",
     "noActiveTasks": "No active tasks in circles at the moment."
   },
+  "members": {
+    "activeMember": "Active member",
+    "offersSkills": "Offers / Skills:",
+    "needs": "Needs:"
+  },
+  "loading": {
+    "pulse": "Tuning into your tribe's pulse..."
+  },
   "pedagogy": {
     "title": "Explore Living Governance",
     "tag": "Interactive Demos",
