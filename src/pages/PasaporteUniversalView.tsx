@@ -207,8 +207,8 @@ export function PasaporteUniversalView() {
       {/* Compartir Pasaporte Section */}
       <div className="w-full max-w-xl mt-6 bg-white border border-[#D2B48C]/15 rounded-[24px] p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-center sm:text-left">
-          <h4 className="text-sm font-serif font-bold text-[#3E2723]">Compartir Pasaporte</h4>
-          <p className="text-xs text-[#5D4037]/60 mt-1">Invita a otros a conocer el perfil comunitario</p>
+          <h4 className="text-sm font-serif font-bold text-[#3E2723]">{t('shareTitle')}</h4>
+          <p className="text-xs text-[#5D4037]/60 mt-1">{t('shareDesc')}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <a

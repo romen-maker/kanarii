@@ -119,7 +119,7 @@ export default function PasaporteVisual({
                 <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left transition-all hover:border-[#D2B48C]/40">
                   <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{user.kinMaya.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">Firma Galáctica</h4>
+                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">{t('astral.galacticSignature')}</h4>
                     <p className="text-[#3E2723] font-serif font-bold text-base">{user.kinMaya.descripcionCorta}</p>
                     <p className="text-[#5D4037]/75 text-sm mt-1 leading-relaxed">{user.kinMaya.rolComunitario}</p>
                   </div>
@@ -133,7 +133,7 @@ export default function PasaporteVisual({
                 <div className="flex items-start gap-4 bg-[#FAF9F6] rounded-2xl px-5 py-4 border border-[#EAE2D6] text-left transition-all hover:border-[#D2B48C]/40">
                   <span className="text-3xl leading-none mt-0.5" aria-hidden="true">🎯</span>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">Arquetipo Comunitario</h4>
+                    <h4 className="text-xs font-semibold text-[#A5A58D] uppercase tracking-wider mb-1">{t('astral.archetypeTitle')}</h4>
                     <p className="text-[#3E2723] font-serif font-bold text-base">{user.arquetipo}</p>
                     {user.descripcionArquetipo && (
                       <p className="text-[#5D4037]/75 text-sm mt-1 leading-relaxed">{user.descripcionArquetipo}</p>
@@ -232,7 +232,7 @@ export default function PasaporteVisual({
         {memberComunidades.length > 0 && (
           <div className="space-y-3 pt-6 font-sans border-t border-[#D2B48C]/10">
             <h3 className="text-xs font-black uppercase tracking-widest text-[#6B705C]">
-              Comunidades <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— Dónde participa</span>
+              {t('communities', { defaultValue: 'Comunidades' })} <span className="font-serif capitalize text-xs tracking-normal font-medium text-[#5D4037]/60">— {t('whereParticipates')}</span>
             </h3>
             <div className="flex flex-wrap gap-2">
               {memberComunidades.map((comm) => (
@@ -264,7 +264,7 @@ export default function PasaporteVisual({
         <div className="pt-4 font-sans">
           {connectionStatus === 'self' ? (
             <div className="w-full bg-[#FAF9F6] text-[#A5A58D] py-4 px-6 rounded-[24px] font-bold text-center border border-[#D2B48C]/20 text-sm cursor-default">
-              Tu Pasaporte Comunitario
+              {t('myPassport')}
             </div>
           ) : connectionStatus === 'connected' ? (
             <motion.button
@@ -274,7 +274,7 @@ export default function PasaporteVisual({
               className="w-full bg-[#E8F5E9] text-[#2E7D32] py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 border border-[#C8E6C9] shadow-sm hover:bg-[#C8E6C9] transition-all cursor-pointer text-sm"
             >
               <UserCheck size={18} />
-              Conectados en Tribu
+              {t('connected')}
             </motion.button>
           ) : connectionStatus === 'pending' ? (
             isSender ? (
@@ -285,7 +285,7 @@ export default function PasaporteVisual({
                 className="w-full bg-[#FFF3E0] text-[#E65100] py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 border border-[#FFE0B2] shadow-sm hover:bg-[#FFE0B2] transition-all cursor-pointer text-sm"
               >
                 <Clock size={18} className="animate-pulse" />
-                Conexión Pendiente (Enviada)
+                {t('pending')}
               </motion.button>
             ) : (
               <motion.button
@@ -295,7 +295,7 @@ export default function PasaporteVisual({
                 className="w-full bg-[#CB997E] text-white py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-[#CB997E]/10 hover:bg-[#B58368] transition-all cursor-pointer text-sm"
               >
                 <UserPlus size={18} />
-                Aceptar Conexión
+                {t('accept')}
               </motion.button>
             )
           ) : (
@@ -305,13 +305,13 @@ export default function PasaporteVisual({
               onClick={onConnect}
               className="w-full bg-[#5A5A40] text-white py-4 px-6 rounded-[24px] font-bold text-center flex items-center justify-center gap-2 shadow-lg shadow-[#5A5A40]/10 hover:bg-[#4A4A35] transition-all cursor-pointer text-sm"
             >
-              Conectar vía Tablón
+              {t('connect')}
               <ArrowUpRight size={18} />
             </motion.button>
           )}
           
           <p className="text-center text-[10px] text-[#A5A58D] mt-3 font-mono uppercase tracking-wider">
-            La comunicación cooperativa fomenta la confianza mutua
+            {t('disclaimer')}
           </p>
         </div>
 
