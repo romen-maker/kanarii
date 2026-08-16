@@ -16,8 +16,8 @@ Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (
 | T-120 | Internacionalizar páginas públicas de comunidades/nodos y pasaporte público; mantener contenido de usuario en su idioma original | M | ✅ Completada (Commit `6b2aa07`) | `.agents/tasks/task-120.md` |
 | T-121 | Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual del recorrido EN de fundraising | S | ✅ Completada (Commit `0cd33ad`) | `.agents/tasks/task-121.md` |
 | T-122 | Actualizar `docs/pages-map.md`, guía de copy y documentación del sprint | S | ✅ Completada | `.agents/tasks/task-122.md` |
-| T-123 | Internacionalización completa del motor astrológico (Carta Astral 12 signos/casas y Diseño Humano) | L | ⬜ Pendiente (Backlog futuro) | — |
-| T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ⬜ Pendiente (Backlog futuro) | `.agents/tasks/task-124.md` |
+| T-123 | Internacionalización completa del motor astrológico (Carta Astral 12 signos/casas y Diseño Humano) | L | ✅ Completada | `.agents/tasks/task-123.md` |
+| T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ⬜ Pendiente | `.agents/tasks/task-124.md` |
 
 ## Notas de planning
 - Sprint de urgencia de internacionalización incremental focalizado en la campaña de fundraising.

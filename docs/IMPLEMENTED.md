@@ -126,3 +126,4 @@
 | Task-118: Crear selector ES/EN accesible en cabecera/menú y aplicar el atributo lang dinámico al documento HTML | T-118 | sprint-26 | src/components/language/LanguageSelector.tsx,src/components/layout/TopBar.tsx,src/i18n/index.ts |
 | Task-121: Añadir tests/checklist de claves faltantes, fallback controlado y verificación manual EN de fundraising | T-121 | sprint-26 | src/i18n/index.ts,src/locales/en/welcome.json |
 | Task-122: Actualizar docs/pages-map.md, guía de copy y documentación del sprint | T-122 | sprint-26 | — |
+| Task-123: Internacionalización completa del motor astrológico (Carta Astral y Diseño Humano) | T-123 | sprint-26 | src/i18n/index.ts,src/lib/kinMaya.ts,src/locales/en/astrology.json |

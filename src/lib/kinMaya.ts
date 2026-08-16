@@ -242,6 +242,8 @@ export const SIGNIFICADO_RELACIONES: Record<string, string> = {
   tonosDesafiantes: 'Tonos en tensión (diferencia impar alta): estilos de acción distintos que requieren conciencia.',
 };
 
+import i18n from '../i18n';
+
 // Función exportable que calcula la relación entre dos KinData
 export function calcularRelacionKines(kin1: KinData, kin2: KinData): {
   tipo: string;
@@ -253,18 +255,28 @@ export function calcularRelacionKines(kin1: KinData, kin2: KinData): {
   const s2 = SELLOS.indexOf(kin2.sello);
   const relaciones1 = RELACIONES_SELLOS[s1];
 
-  if (s1 === s2) return { tipo: 'mismoSello', descripcion: SIGNIFICADO_RELACIONES['mismoSello'], selloA: kin1.sello, selloB: kin2.sello };
-  if (kin1.color === kin2.color) return { tipo: 'mismoColor', descripcion: SIGNIFICADO_RELACIONES['mismoColor'], selloA: kin1.sello, selloB: kin2.sello };
-  if (relaciones1 && relaciones1.analogo === s2) return { tipo: 'analogo', descripcion: SIGNIFICADO_RELACIONES['analogo'], selloA: kin1.sello, selloB: kin2.sello };
-  if (relaciones1 && relaciones1.antipoda === s2) return { tipo: 'antipoda', descripcion: SIGNIFICADO_RELACIONES['antipoda'], selloA: kin1.sello, selloB: kin2.sello };
-  if (relaciones1 && relaciones1.oculto === s2) return { tipo: 'oculto', descripcion: SIGNIFICADO_RELACIONES['oculto'], selloA: kin1.sello, selloB: kin2.sello };
+  let tipo = 'tonosDesafiantes';
+  if (s1 === s2) tipo = 'mismoSello';
+  else if (kin1.color === kin2.color) tipo = 'mismoColor';
+  else if (relaciones1 && relaciones1.analogo === s2) tipo = 'analogo';
+  else if (relaciones1 && relaciones1.antipoda === s2) tipo = 'antipoda';
+  else if (relaciones1 && relaciones1.oculto === s2) tipo = 'oculto';
+  else {
+    const ondaA = Math.ceil(kin1.kin / 13);
+    const ondaB = Math.ceil(kin2.kin / 13);
+    if (ondaA === ondaB) tipo = 'mismaTreceOndas';
+    else {
+      const sumaTonos = kin1.tono + kin2.tono;
+      if (sumaTonos === 14) tipo = 'tonosComplementarios';
+    }
+  }
 
-  const ondaA = Math.ceil(kin1.kin / 13);
-  const ondaB = Math.ceil(kin2.kin / 13);
-  if (ondaA === ondaB) return { tipo: 'mismaTreceOndas', descripcion: SIGNIFICADO_RELACIONES['mismaTreceOndas'], selloA: kin1.sello, selloB: kin2.sello };
+  const descripcion = i18n.t(`astrology:relations.${tipo}`, { defaultValue: SIGNIFICADO_RELACIONES[tipo] });
 
-  const sumaTonos = kin1.tono + kin2.tono;
-  if (sumaTonos === 14) return { tipo: 'tonosComplementarios', descripcion: SIGNIFICADO_RELACIONES['tonosComplementarios'], selloA: kin1.sello, selloB: kin2.sello };
-
-  return { tipo: 'tonosDesafiantes', descripcion: SIGNIFICADO_RELACIONES['tonosDesafiantes'], selloA: kin1.sello, selloB: kin2.sello };
+  return {
+    tipo,
+    descripcion,
+    selloA: kin1.sello,
+    selloB: kin2.sello
+  };
 }

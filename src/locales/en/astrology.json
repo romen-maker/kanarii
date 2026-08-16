@@ -1,0 +1,96 @@
+{
+  "_comment": "This namespace is exclusively for the presentation layer (UI) and does not alter deterministic algorithms or Firestore schemas.",
+  "signs": {
+    "Aries": "Aries",
+    "Tauro": "Taurus",
+    "Taurus": "Taurus",
+    "Géminis": "Gemini",
+    "Gemini": "Gemini",
+    "Cáncer": "Cancer",
+    "Cancer": "Cancer",
+    "Leo": "Leo",
+    "Virgo": "Virgo",
+    "Libra": "Libra",
+    "Escorpio": "Scorpio",
+    "Scorpio": "Scorpio",
+    "Sagitario": "Sagittarius",
+    "Sagittarius": "Sagittarius",
+    "Capricornio": "Capricorn",
+    "Capricorn": "Capricorn",
+    "Acuario": "Aquarius",
+    "Aquarius": "Aquarius",
+    "Piscis": "Pisces",
+    "Pisces": "Pisces"
+  },
+  "planets": {
+    "Sun": "Sun",
+    "Moon": "Moon",
+    "Mercury": "Mercury",
+    "Venus": "Venus",
+    "Mars": "Mars",
+    "Jupiter": "Jupiter",
+    "Saturn": "Saturn",
+    "Uranus": "Uranus",
+    "Neptune": "Neptune",
+    "Pluto": "Pluto"
+  },
+  "elements": {
+    "Fuego": "Fire",
+    "Tierra": "Earth",
+    "Aire": "Air",
+    "Agua": "Water"
+  },
+  "modalities": {
+    "Cardinal": "Cardinal",
+    "Fija": "Fixed",
+    "Fixed": "Fixed",
+    "Mutable": "Mutable"
+  },
+  "humanDesign": {
+    "types": {
+      "Generator": "Generator",
+      "Manifesting Generator": "Manifesting Generator",
+      "Generador Manifestante": "Manifesting Generator",
+      "Projector": "Projector",
+      "Proyector": "Projector",
+      "Manifestor": "Manifestor",
+      "Manifestador": "Manifestor",
+      "Reflector": "Reflector"
+    },
+    "authorities": {
+      "Sacral": "Sacral",
+      "Emotional": "Emotional",
+      "Emocional": "Emotional",
+      "Splenic": "Splenic",
+      "Esplénica": "Splenic",
+      "Ego": "Ego",
+      "Self": "G-Center / Self",
+      "Mental": "Mental",
+      "Lunar": "Lunar"
+    }
+  },
+  "houses": {
+    "1": "House 1 (Ascendant / Identity)",
+    "2": "House 2 (Resources / Values)",
+    "3": "House 3 (Communication / Environment)",
+    "4": "House 4 (Home / Roots)",
+    "5": "House 5 (Creativity / Joy)",
+    "6": "House 6 (Service / Health)",
+    "7": "House 7 (Relationships / Peers)",
+    "8": "House 8 (Transformation / Shadows)",
+    "9": "House 9 (Philosophy / Expansion)",
+    "10": "House 10 (Vocation / Visibility)",
+    "11": "House 11 (Community / Tribe)",
+    "12": "House 12 (Transcendence / Unconscious)"
+  },
+  "relations": {
+    "mismoSello": "Direct mirror: share the same archetype. High resonance with potential shared blind spots.",
+    "mismoColor": "Same chromatic family: share purpose and energetic direction. Flow in parallel.",
+    "analogo": "Natural ally: energies complement and boost each other without friction.",
+    "antipoda": "Opposite pole: challenging energies. Creative tension with high transformative potential.",
+    "oculto": "Hidden power: one carries what the other needs to develop. Deep growth relationship.",
+    "mismaTreceOndas": "Share wavespell: travel with the same 13-day purpose. High mission alignment.",
+    "tonosComplementarios": "Complementary tones (add up to 14): balance between action and receptivity.",
+    "tonosDesafiantes": "Tension tones (high odd difference): distinct action styles requiring awareness."
+  }
+}

@@ -206,15 +206,16 @@
 - **Modo Debug:** Habilitado solo en desarrollo (`debug: import.meta.env.DEV`).
 - **Manejador de Claves Faltantes:** `parseMissingKeyHandler` intercepta cualquier clave ausente o en desarrollo y la humaniza limpiamente (ej: `"presentation"` -> `"Presentation"`) impidiendo la exposición de IDs técnicos en la UI (`namespace.key`).
 
-### 3. Namespaces Críticos para Fundraising
+### 3. Namespaces Críticos para Fundraising y Presentación
 - **`passport`**: Ficha de miembro pública (`/p/:uid`), firma galáctica determinista y roles comunitarios.
 - **`welcome`**: Landing / Hero, orientación de entrada, CTAs de fundraising y tarjetas de miembros destacados.
 - **`communities`**: Vistas públicas de espacios comunitarios (`/c/:slug`).
 - **`auth`**: Modales de login/registro y estados de acceso.
 - **`common`**: Navegación (Sidebar, BottomNav), botones compartidos y estados globales.
+- **`astrology`**: Capa de presentación para signos, planetas, elementos, modalidades, casas y relaciones kímicas (exclusivo para UI; no altera algoritmos ni Firestore).
 
 ### 4. Frontera Estricta: UI Fija vs. Contenido Dinámico de Usuario
-- **UI Fija Traducible:** Botones, pestañas, cabeceras de widgets, firmas galácticas deterministas (`Kin {{kin}} · {{tone}} {{seal}} {{color}}`) y estados de acceso se traducen vía `useTranslation()`.
+- **UI Fija Traducible:** Botones, pestañas, cabeceras de widgets, firmas galácticas deterministas (`Kin {{kin}} · {{tone}} {{seal}} {{color}}`), términos astronómicos/HD y estados de acceso se traducen vía `useTranslation()`.
 - **Contenido Dinámico de Miembros NO Traducido:** Se preserva intacto en el idioma de registro del usuario:
   - Títulos de propuestas, actas, tareas y proyectos.
   - Bios y presentaciones escritas por los miembros.
