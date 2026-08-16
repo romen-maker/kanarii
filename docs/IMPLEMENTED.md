@@ -122,3 +122,4 @@
 | Task-111: Rediseñar la pantalla de entrada (Welcome.tsx) como Panel de Orientación | T-111 | sprint-25 | — |
 | Task-112: Dividir Onboarding: Registro Exprés (Perfil Básico) vs Ampliación Opcional de Perfil | T-112 | sprint-25 | src/pages/FichaView.tsx,src/pages/Welcome.tsx |
 | Task-116: Auditar textos hardcodeados y definir alcance exacto ES/EN por rutas y componentes | T-116 | sprint-26 | src/locales/en/auth.json,src/locales/en/common.json,src/locales/en/communities.json |
+| Task-117: Instalar y configurar i18next + react-i18next, proveedor global, detección y persistencia de idioma en localStorage | T-117 | sprint-26 | src/i18n/index.ts,src/main.tsx,src/types/i18next.d.ts |
