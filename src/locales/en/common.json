@@ -41,5 +41,18 @@
     "syncing_one": "Syncing ({{count}} change)",
     "syncing_other": "Syncing ({{count}} changes)",
     "online": "Connected & up to date"
+  },
+  "userMenu": {
+    "title": "User Menu",
+    "myProfile": "My Profile",
+    "universalPassport": "Universal Passport",
+    "linkTelegram": "Link Telegram",
+    "adminPanel": "Admin Panel",
+    "logout": "Log Out",
+    "roles": {
+      "superAdmin": "Super Admin",
+      "communityAdmin": "Community Admin",
+      "member": "Member"
+    }
   }
 }

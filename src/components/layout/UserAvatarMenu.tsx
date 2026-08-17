@@ -4,8 +4,10 @@ import { User, LogOut, Send, Globe, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useComunidad } from '../../contexts/ComunidadContext';
 import { TelegramLinkModal } from '../perfil/TelegramLinkModal';
+import { useTranslation } from 'react-i18next';
 
 export function UserAvatarMenu() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { user, appUser, logout } = useAuth();
   const { comunidad } = useComunidad();
@@ -40,7 +42,7 @@ export function UserAvatarMenu() {
   const avatarUrl = appUser?.photoURL || user?.photoURL;
   const displayName = appUser?.displayName || user?.displayName || 'Miembro Kanarii';
   const email = appUser?.email || user?.email || '';
-  const roleLabel = isAdmin ? 'Super Admin' : isCommunityAdmin ? 'Admin Comunidad' : 'Miembro';
+  const roleLabel = isAdmin ? t('userMenu.roles.superAdmin') : isCommunityAdmin ? t('userMenu.roles.communityAdmin') : t('userMenu.roles.member');
 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
@@ -50,7 +52,7 @@ export function UserAvatarMenu() {
         className="flex items-center gap-2 p-1.5 rounded-full hover:bg-[#EAE2D6]/40 transition-colors focus:outline-none focus:ring-2 focus:ring-[#CB997E]/50"
         aria-expanded={isOpen}
         aria-haspopup="true"
-        title="Menú de Usuario"
+        title={t('userMenu.title')}
       >
         {avatarUrl ? (
           <img
@@ -102,7 +104,7 @@ export function UserAvatarMenu() {
               className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#4A4E4D] hover:bg-[#EAE2D6]/60 transition-colors"
             >
               <User className="w-4 h-4 text-[#6B705C]" />
-              <span>Mi Perfil</span>
+              <span>{t('userMenu.myProfile')}</span>
             </button>
 
             {appUser?.uid && (
@@ -111,7 +113,7 @@ export function UserAvatarMenu() {
                 className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#4A4E4D] hover:bg-[#EAE2D6]/60 transition-colors"
               >
                 <Globe className="w-4 h-4 text-[#6B705C]" />
-                <span>Pasaporte Universal</span>
+                <span>{t('userMenu.universalPassport')}</span>
               </button>
             )}
 
@@ -123,7 +125,7 @@ export function UserAvatarMenu() {
               className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#CB997E] hover:bg-[#CB997E]/10 transition-colors text-left"
             >
               <Send className="w-4 h-4 text-[#CB997E]" />
-              <span>Vincular Telegram</span>
+              <span>{t('userMenu.linkTelegram')}</span>
             </button>
 
             {isAdmin && (
@@ -132,7 +134,7 @@ export function UserAvatarMenu() {
                 className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#4A4E4D] hover:bg-[#EAE2D6]/60 transition-colors"
               >
                 <Settings className="w-4 h-4 text-[#6B705C]" />
-                <span>Panel de Administración</span>
+                <span>{t('userMenu.adminPanel')}</span>
               </button>
             )}
           </div>
@@ -144,7 +146,7 @@ export function UserAvatarMenu() {
               className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              <span>Cerrar Sesión</span>
+              <span>{t('userMenu.logout')}</span>
             </button>
           </div>
         </div>
