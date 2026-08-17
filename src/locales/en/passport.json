@@ -2,11 +2,49 @@
   "title": "Community Passport",
   "universalTitle": "Universal Passport",
   "memberProfile": "Member Profile",
+  "myPassportTitle": "Your Community Passport",
+  "galacticBanner": {
+    "title": "Want to discover your Full Galactic Blueprint? 🔮",
+    "desc": "Your 1-minute Basic Profile is active. Fill in your birth date and location when editing to activate your Maya Kin, Astral Chart, and Human Design.",
+    "button": "Complete Galactic Blueprint"
+  },
+  "sections": {
+    "baseIdentity": "Base Identity",
+    "triad": "Community Triad",
+    "roleAndCoexistence": "Role and Coexistence",
+    "tension": "Tension and Care Status"
+  },
+  "labels": {
+    "birth": "Birth",
+    "atTime": "at",
+    "place": "Location",
+    "gender": "Gender",
+    "kanariiRole": "Role in Kanarii",
+    "antiquity": "Time in Community",
+    "membershipDuration_one": "{{count}} year",
+    "membershipDuration_other": "{{count}} years",
+    "updatedAt": "Passport updated on {{date}}"
+  },
+  "buttons": {
+    "edit": "Edit",
+    "leaveCommunity": "Leave Community"
+  },
+  "roleLabels": {
+    "owner": "Owner",
+    "member": "Member",
+    "volunteer": "Volunteer",
+    "departed": "already departed",
+    "until": "until {{date}}"
+  },
   "triad": {
     "title": "Community & Cosmic Triad",
     "offers": "Offerings",
+    "offersFull": "Offerings (What I contribute)",
     "skills": "Skills & Knowledge",
-    "needs": "Needs"
+    "skillsFull": "Skills & Knowledge",
+    "needs": "Needs",
+    "needsFull": "Needs (What I require)",
+    "empty": "Not defined yet."
   },
   "contact": "Quick Contact",
   "socials": "Social Networks",

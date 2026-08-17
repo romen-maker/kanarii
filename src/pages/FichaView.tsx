@@ -18,6 +18,7 @@ import { FieldError } from '../components/ui/FieldError';
 import { calcularKin } from '../lib/kinMaya';
 import { useToast } from '../hooks/useToast';
 import { generateManualPdf, convertMarkdownToHtml, PdfSection } from '../lib/utils/generatePdf';
+import { useTranslation } from 'react-i18next';
 
 const SECCIONES_MANUAL = [
   { id: 'adn_astral', label: 'ADN Astral', icon: '✨' },
@@ -51,6 +52,8 @@ type FichaFormData = z.infer<typeof fichaSchema>;
 export function FichaView() {
   const { appUser, logout } = useAuth();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('passport');
+  const currentLocale = i18n.language === 'en' ? 'en' : 'es';
   const { 
     ficha, 
     loadingFicha, 
@@ -353,7 +356,7 @@ export function FichaView() {
         <div className="flex justify-between items-center mb-10">
           <div className="flex items-center gap-3">
             <User className="text-[#6B705C] w-8 h-8" />
-            <h1 className="text-3xl font-serif text-[#4A4E4D]">Tu Ficha Comunitaria</h1>
+            <h1 className="text-3xl font-serif text-[#4A4E4D]">{t('myPassportTitle')}</h1>
           </div>
         </div>
 
@@ -362,17 +365,17 @@ export function FichaView() {
             <div className="mb-6 p-5 bg-amber-50/70 border border-amber-200/60 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="space-y-1 text-center md:text-left">
                 <h3 className="font-serif font-bold text-base text-[#3E2723]">
-                  ¿Quieres descubrir tu Manual Galáctico Completo? 🔮
+                  {t('galacticBanner.title')}
                 </h3>
                 <p className="text-xs text-[#5D4037]/80">
-                  Tienes tu Perfil Básico en 1 minuto activo. Rellena tu fecha y lugar de nacimiento al editar para activar tu Kin Maya, Carta Astral y Diseño Humano.
+                  {t('galacticBanner.desc')}
                 </p>
               </div>
               <button
                 onClick={() => setEditing(true)}
                 className="px-4 py-2 bg-[#6B705C] hover:bg-[#5A5A40] text-white text-xs font-bold rounded-xl transition-all whitespace-nowrap shrink-0"
               >
-                Completar Manual Galáctico
+                {t('galacticBanner.button')}
               </button>
             </div>
           )}
@@ -411,18 +414,18 @@ export function FichaView() {
                     )}
                     {datos?.rol && (
                       <div className="flex">
-                        {datos.rol === 'propietario' && <span className="px-3 py-1 bg-green-800 text-white rounded-full text-xs font-medium">Propietario/a</span>}
-                        {datos.rol === 'miembro' && <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium">Miembro</span>}
+                        {datos.rol === 'propietario' && <span className="px-3 py-1 bg-green-800 text-white rounded-full text-xs font-medium">{t('roleLabels.owner')}</span>}
+                        {datos.rol === 'miembro' && <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium">{t('roleLabels.member')}</span>}
                         {datos.rol === 'voluntario' && (
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             datos.fechaSalida && new Date(datos.fechaSalida) < new Date() 
                               ? 'bg-teal-50 text-teal-700 border border-teal-200 opacity-80'
                               : 'bg-teal-600 text-white'
                           }`}>
-                            Voluntario/a {datos.fechaSalida ? (
+                            {t('roleLabels.volunteer')} {datos.fechaSalida ? (
                               new Date(datos.fechaSalida) < new Date()
-                                ? '· ya partió'
-                                : `· hasta ${new Date(datos.fechaSalida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                                ? `· ${t('roleLabels.departed')}`
+                                : `· ${t('roleLabels.until', { date: new Date(datos.fechaSalida).toLocaleDateString(currentLocale === 'en' ? 'en-US' : 'es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) })}`
                             ) : ''}
                           </span>
                         )}
@@ -436,7 +439,7 @@ export function FichaView() {
                     className="flex items-center gap-2 px-4 py-2 bg-[#F9F7F1] text-stone-700 rounded-full hover:bg-[#EAE2D6] transition-colors shadow-sm"
                   >
                     <Edit2 className="w-4 h-4" />
-                    <span className="text-sm font-medium">Editar</span>
+                    <span className="text-sm font-medium">{t('buttons.edit')}</span>
                   </button>
                   {appUser?.communityIds && appUser.communityIds.length > 0 && (
                     <button
@@ -444,7 +447,7 @@ export function FichaView() {
                       className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-200"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span className="text-sm font-medium">Salir de la Comunidad</span>
+                      <span className="text-sm font-medium">{t('buttons.leaveCommunity')}</span>
                     </button>
                   )}
                 </div>
@@ -456,49 +459,57 @@ export function FichaView() {
                 <div className="space-y-4 md:col-span-2">
                   <div className="flex items-center gap-2 text-[#CB997E] border-b border-[#EAE2D6] pb-2">
                     <Fingerprint className="w-5 h-5" />
-                    <h3 className="text-lg font-serif">Identidad base</h3>
+                    <h3 className="text-lg font-serif">{t('sections.baseIdentity')}</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Nacimiento</h4>
-                      <p className="text-stone-700">{datos?.fechaNacimiento} a las {datos?.hora}</p>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">{t('labels.birth')}</h4>
+                      <p className="text-stone-700">{datos?.fechaNacimiento} {t('labels.atTime')} {datos?.hora}</p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Lugar</h4>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">{t('labels.place')}</h4>
                       <p className="text-stone-700">{datos?.lugar}</p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Género</h4>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">{t('labels.gender')}</h4>
                       <p className="text-stone-700">{datos?.genero}</p>
                     </div>
                   </div>
 
                   {/* Firma Galáctica (Kin Maya) */}
-                  {kinMaya && (
-                    <div className="mt-4 pt-4 border-t border-[#EAE2D6]">
-                      <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6]">
-                        <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{kinMaya.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Firma Galáctica</h4>
-                          <p className="text-stone-800 font-medium text-base">{kinMaya.descripcionCorta}</p>
-                          <p className="text-stone-500 text-sm mt-1 leading-relaxed">{kinMaya.rolComunitario}</p>
+                  {kinMaya && (() => {
+                    const sealName = t(`kin.seals.${kinMaya.selloIndex}`);
+                    const toneName = t(`kin.tones.${kinMaya.tonoIndex}`);
+                    const colorName = t(`kin.colors.${kinMaya.colorIndex}`);
+                    const roleText = t(`kin.roles.${kinMaya.selloIndex}`);
+                    const descKin = t('kin.format', { kin: kinMaya.kin, tone: toneName, seal: sealName, color: colorName });
+
+                    return (
+                      <div className="mt-4 pt-4 border-t border-[#EAE2D6]">
+                        <div className="flex items-start gap-4 bg-[#F9F7F1] rounded-2xl px-5 py-4 border border-[#EAE2D6]">
+                          <span className="text-3xl leading-none mt-0.5" aria-hidden="true">{kinMaya.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">{t('astral.galacticSignature')}</h4>
+                            <p className="text-stone-800 font-medium text-base">{descKin}</p>
+                            <p className="text-stone-500 text-sm mt-1 leading-relaxed">{roleText}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* 2. Tríada Comunitaria */}
                 <div className="space-y-6 md:col-span-2">
                   <div className="flex items-center gap-2 text-[#8A817C] border-b border-[#EAE2D6] pb-2">
                     <Sparkles className="w-5 h-5" />
-                    <h3 className="text-lg font-serif">Tríada Comunitaria</h3>
+                    <h3 className="text-lg font-serif">{t('sections.triad')}</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Ofrendas */}
                     <div className="space-y-2">
                       <h4 className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                        Ofrendas (Lo que aporto)
+                        {t('triad.offersFull')}
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
                         {triada.ofrendas.length > 0 ? (
@@ -508,7 +519,7 @@ export function FichaView() {
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs italic text-stone-400">Sin definir todavía.</span>
+                          <span className="text-xs italic text-stone-400">{t('triad.empty')}</span>
                         )}
                       </div>
                     </div>
@@ -516,7 +527,7 @@ export function FichaView() {
                     {/* Saberes */}
                     <div className="space-y-2">
                       <h4 className="text-xs font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider">
-                        Saberes y Habilidades
+                        {t('triad.skillsFull')}
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
                         {triada.saberes.length > 0 ? (
@@ -526,7 +537,7 @@ export function FichaView() {
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs italic text-stone-400">Sin definir todavía.</span>
+                          <span className="text-xs italic text-stone-400">{t('triad.empty')}</span>
                         )}
                       </div>
                     </div>
@@ -534,7 +545,7 @@ export function FichaView() {
                     {/* Necesidades */}
                     <div className="space-y-2">
                       <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                        Necesidades (Lo que requiero)
+                        {t('triad.needsFull')}
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
                         {triada.necesidades.length > 0 ? (
@@ -544,7 +555,7 @@ export function FichaView() {
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs italic text-stone-400">Sin definir todavía.</span>
+                          <span className="text-xs italic text-stone-400">{t('triad.empty')}</span>
                         )}
                       </div>
                     </div>
@@ -555,16 +566,16 @@ export function FichaView() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-[#6B705C] border-b border-[#EAE2D6] pb-2">
                     <Users className="w-5 h-5" />
-                    <h3 className="text-lg font-serif">Rol y convivencia</h3>
+                    <h3 className="text-lg font-serif">{t('sections.roleAndCoexistence')}</h3>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Participación en Kanarii</h4>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">{t('labels.kanariiRole')}</h4>
                       <p className="text-stone-700">{datos?.rol_comunidad}</p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Antigüedad</h4>
-                      <p className="text-stone-700">{datos?.antiguedad_anos}</p>
+                      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">{t('labels.antiquity')}</h4>
+                      <p className="text-stone-700">{t('labels.membershipDuration', { count: datos?.antiguedad_anos ?? 0 })}</p>
                     </div>
                   </div>
                 </div>
@@ -573,7 +584,7 @@ export function FichaView() {
                 <div className="space-y-4 md:col-span-2">
                   <div className="flex items-center gap-2 text-[#B58368] border-b border-[#EAE2D6] pb-2">
                     <HeartPulse className="w-5 h-5" />
-                    <h3 className="text-lg font-serif">Estado de tensión y cuidado</h3>
+                    <h3 className="text-lg font-serif">{t('sections.tension')}</h3>
                   </div>
                   <div className="bg-[#F9F7F1] p-5 rounded-2xl border border-[#EAE2D6]">
                     <p className="text-stone-700 italic text-lg leading-relaxed">{datos?.tension}</p>
@@ -584,7 +595,7 @@ export function FichaView() {
                 <div className="space-y-4 md:col-span-2 pt-6">
                   <div className="flex items-center gap-2 text-stone-400 justify-center text-sm">
                     <History className="w-4 h-4" />
-                    <span>Ficha actualizada el {displayFicha?.updatedAt ? new Date(displayFicha.updatedAt.toDate ? displayFicha.updatedAt.toDate() : displayFicha.updatedAt).toLocaleDateString() : 'hoy'}</span>
+                    <span>{t('labels.updatedAt', { date: displayFicha?.updatedAt ? new Date(displayFicha.updatedAt.toDate ? displayFicha.updatedAt.toDate() : displayFicha.updatedAt).toLocaleDateString() : 'hoy' })}</span>
                   </div>
                 </div>
 

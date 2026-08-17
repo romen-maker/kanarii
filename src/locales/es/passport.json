@@ -2,11 +2,49 @@
   "title": "Pasaporte Comunitario",
   "universalTitle": "Pasaporte Universal",
   "memberProfile": "Ficha de Miembro",
+  "myPassportTitle": "Tu Ficha Comunitaria",
+  "galacticBanner": {
+    "title": "¿Quieres descubrir tu Manual Galáctico Completo? 🔮",
+    "desc": "Tienes tu Perfil Básico en 1 minuto activo. Rellena tu fecha y lugar de nacimiento al editar para activar tu Kin Maya, Carta Astral y Diseño Humano.",
+    "button": "Completar Manual Galáctico"
+  },
+  "sections": {
+    "baseIdentity": "Identidad base",
+    "triad": "Tríada Comunitaria",
+    "roleAndCoexistence": "Rol y convivencia",
+    "tension": "Estado de tensión y cuidado"
+  },
+  "labels": {
+    "birth": "Nacimiento",
+    "atTime": "a las",
+    "place": "Lugar",
+    "gender": "Género",
+    "kanariiRole": "Participación en Kanarii",
+    "antiquity": "Antigüedad",
+    "membershipDuration_one": "{{count}} año",
+    "membershipDuration_other": "{{count}} años",
+    "updatedAt": "Ficha actualizada el {{date}}"
+  },
+  "buttons": {
+    "edit": "Editar",
+    "leaveCommunity": "Salir de la Comunidad"
+  },
+  "roleLabels": {
+    "owner": "Propietario/a",
+    "member": "Miembro",
+    "volunteer": "Voluntario/a",
+    "departed": "ya partió",
+    "until": "hasta {{date}}"
+  },
   "triad": {
     "title": "Tríada Comunitario-Galáctica",
     "offers": "Ofrendas",
+    "offersFull": "Ofrendas (Lo que aporto)",
     "skills": "Saberes y Conocimientos",
-    "needs": "Necesidades"
+    "skillsFull": "Saberes y Habilidades",
+    "needs": "Necesidades",
+    "needsFull": "Necesidades (Lo que requiero)",
+    "empty": "Sin definir todavía."
   },
   "contact": "Contacto rápido",
   "socials": "Redes sociales",
