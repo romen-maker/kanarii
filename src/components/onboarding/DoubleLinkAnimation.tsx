@@ -1,54 +1,45 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Users, 
   ArrowRight, 
   RotateCcw,
   RefreshCw,
-  UserCheck,
-  MessageCircle,
   Zap,
-  ArrowLeftRight,
   Shield,
   Send
 } from 'lucide-react';
-
-interface Step {
-  id: number;
-  title: string;
-  body: string;
-  label: string;
-}
-
-const STEPS: Step[] = [
-  {
-    id: 1,
-    title: "1. Evitando cuellos de botella",
-    body: "Para que la comunidad funcione, los grupos de trabajo deben comunicarse. Pero usar a una sola persona como \"jefe\" o enlace único sobrecarga a esa persona y crea cuellos de botella jerárquicos.",
-    label: "El problema del enlace único"
-  },
-  {
-    id: 2,
-    title: "2. El Coordinador",
-    body: "Una persona del grupo es elegida como Coordinador. Su rol principal es traer la visión general, los objetivos y las necesidades de toda la comunidad hacia su grupo de trabajo local.",
-    label: "Visión General -> Local"
-  },
-  {
-    id: 3,
-    title: "3. El Representante",
-    body: "Otra persona diferente es elegida como Representante. Su rol es llevar la voz, los límites y las propuestas de su grupo de vuelta al círculo general de la comunidad.",
-    label: "Voz Local -> General"
-  },
-  {
-    id: 4,
-    title: "4. El Doble Enlace",
-    body: "Igual que la energía no puede fluir en dos direcciones por un solo cable a la vez, usar dos personas crea un flujo de información bidireccional, transparente y sin jerarquías opresivas.",
-    label: "Flujo Bidireccional"
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function DoubleLinkAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [currentStep, setCurrentStep] = useState(0);
+
+  const STEPS = [
+    {
+      id: 1,
+      title: t('tour.animations.doubleLink.avoidBottlenecksTitle'),
+      body: t('tour.animations.doubleLink.avoidBottlenecksDesc'),
+      label: t('tour.animations.doubleLink.singleLinkProblem')
+    },
+    {
+      id: 2,
+      title: t('tour.animations.doubleLink.directLinkTitle'),
+      body: t('tour.animations.doubleLink.directLinkDesc'),
+      label: "Visión General -> Local"
+    },
+    {
+      id: 3,
+      title: t('tour.animations.doubleLink.repLinkTitle'),
+      body: t('tour.animations.doubleLink.repLinkDesc'),
+      label: "Voz Local -> General"
+    },
+    {
+      id: 4,
+      title: t('tour.animations.doubleLink.title'),
+      body: t('tour.animations.doubleLink.intro'),
+      label: t('tour.animations.doubleLink.twoWayFlow')
+    }
+  ];
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -76,7 +67,7 @@ export default function DoubleLinkAnimation({ onNext, onBack, progressTracker }:
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -134,7 +125,7 @@ export default function DoubleLinkAnimation({ onNext, onBack, progressTracker }:
                 onClick={nextStep}
                 className="group flex items-center gap-2 bg-[#5A5A40] text-[#FAF9F6] px-8 py-4 rounded-2xl font-semibold hover:bg-[#4A4A35] transition-all shadow-lg active:scale-95"
               >
-                Siguiente paso
+                <span>{t('tour.controls.nextStep')}</span>
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </button>
             ) : (
@@ -143,15 +134,15 @@ export default function DoubleLinkAnimation({ onNext, onBack, progressTracker }:
                   onClick={restart}
                   className="flex items-center gap-2 bg-[#D2B48C] text-white px-6 py-4 rounded-2xl font-semibold hover:bg-[#C1A37B] transition-all shadow-md active:scale-95"
                 >
-                  Reiniciar animación
+                  <span>{t('tour.controls.restart')}</span>
                   <RotateCcw size={18} />
                 </button>
                 {onNext && (
                   <button
                     onClick={onNext}
-                    className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
+                    className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg active:scale-95"
                   >
-                    Siguiente módulo
+                    <span>{t('tour.controls.nextModule')}</span>
                     <ArrowRight size={20} />
                   </button>
                 )}
@@ -166,6 +157,7 @@ export default function DoubleLinkAnimation({ onNext, onBack, progressTracker }:
 }
 
 function DoubleLinkVisualization({ step }: { step: number }) {
+  const { t } = useTranslation('welcome');
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
       
@@ -174,7 +166,7 @@ function DoubleLinkVisualization({ step }: { step: number }) {
         animate={{ x: -100 }}
         className="absolute w-32 h-32 rounded-full border-2 border-dashed border-[#5A5A40]/30 bg-[#5A5A40]/5 flex items-center justify-center"
       >
-        <span className="text-[10px] uppercase font-black text-[#5A5A40]/40 mt-16 font-mono">Círculo General</span>
+        <span className="text-[10px] uppercase font-black text-[#5A5A40]/40 mt-16 font-mono">{t('tour.animations.doubleLink.generalCircle')}</span>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1">
             {[1,2,3].map(i => <div key={i} className="w-4 h-4 bg-[#5A5A40]/20 rounded-full" />)}
         </div>
@@ -185,7 +177,7 @@ function DoubleLinkVisualization({ step }: { step: number }) {
         animate={{ x: 100 }}
         className="absolute w-32 h-32 rounded-full border-2 border-dashed border-[#D2B48C]/50 bg-[#D2B48C]/5 flex items-center justify-center"
       >
-        <span className="text-[10px] uppercase font-black text-[#D2B48C]/60 mt-16 font-mono text-center">Círculo de Trabajo</span>
+        <span className="text-[10px] uppercase font-black text-[#D2B48C]/60 mt-16 font-mono text-center">{t('tour.animations.doubleLink.workCircle')}</span>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1">
             {[1,2].map(i => <div key={i} className="w-4 h-4 bg-[#D2B48C]/40 rounded-full" />)}
         </div>
@@ -213,7 +205,7 @@ function DoubleLinkVisualization({ step }: { step: number }) {
                transition={{ duration: 1, repeat: Infinity }}
                className="absolute -top-4 w-full text-center text-xs font-bold text-red-500"
             >
-                ¡AGOBIO!
+                {t('tour.animations.doubleLink.overload')}
             </motion.div>
           </motion.div>
         )}
@@ -240,7 +232,7 @@ function DoubleLinkVisualization({ step }: { step: number }) {
                     <Shield size={20} />
                 </div>
             </div>
-            <div className="mt-2 text-center text-[9px] font-bold uppercase text-blue-600">Coordinador</div>
+            <div className="mt-2 text-center text-[9px] font-bold uppercase text-blue-600">{t('tour.animations.doubleLink.coordinator')}</div>
           </motion.div>
         )}
 
@@ -266,7 +258,7 @@ function DoubleLinkVisualization({ step }: { step: number }) {
                     <Send size={20} />
                 </div>
             </div>
-            <div className="mt-2 text-center text-[9px] font-bold uppercase text-orange-600">Representante</div>
+            <div className="mt-2 text-center text-[9px] font-bold uppercase text-orange-600">{t('tour.animations.doubleLink.representative')}</div>
           </motion.div>
         )}
       </div>

@@ -135,19 +135,133 @@
       "fullTour": "Hacer el recorrido completo"
     },
     "modules": {
-      "a1": { "title": "Toma de Decisiones", "desc": "Cómo decidimos sin votar." },
-      "a8": { "title": "Estructura S3", "desc": "Círculos anidados y autonomía." },
-      "a6": { "title": "Doble Enlace", "desc": "Flujo de información bidireccional." },
-      "a7": { "title": "Elecciones Consentimiento", "desc": "Asignación de roles por confianza." },
+      "a1": { "title": "Toma de Decisiones", "desc": "Cómo decidimos por consentimiento, no por votaciones." },
+      "a8": { "title": "Estructura de Círculos S3", "desc": "Círculos autorregulados con autoridad distribuida." },
+      "a6": { "title": "Doble Enlace", "desc": "Flujo bidireccional de información e influencia." },
+      "a7": { "title": "Elección de Roles", "desc": "Selección de personas para roles por consentimiento." },
       "a4": { "title": "Ritmo Flexible", "desc": "Plazos y participación asíncrona." },
       "a5": { "title": "Tu Compromiso", "desc": "Roles y niveles de implicación." },
-      "a2": { "title": "El Cruce", "desc": "Cruce de perfiles y necesidades." },
-      "a3": { "title": "La Ficha", "desc": "Tu pasaporte y dones ciudadanos." }
+      "a2": { "title": "El Cruce", "desc": "Conectando ofrendas, saberes y necesidades." },
+      "a3": { "title": "Tu Perfil", "desc": "Tu perfil comunitario: ofrendas, saberes y necesidades." }
     },
     "final": {
       "title": "¡Todo listo!",
-      "quote": "\"Recuerda que no buscamos la perfección, sino decisiones que sean lo suficientemente buenas por ahora y seguras para intentar.\"",
+      "quote": "\"Recuerda que no buscamos la perfección, sino decisiones que sean lo suficientemente buenas por ahora y seguras para probar.\"",
       "cta": "Entrar a mi comunidad"
+    },
+    "controls": {
+      "backIndex": "← Volver al índice",
+      "nextStep": "Siguiente paso",
+      "restart": "Reiniciar animación",
+      "nextModule": "Siguiente módulo"
+    },
+    "animations": {
+      "governance": {
+        "title": "Flujo de Toma de Decisiones",
+        "step1Title": "Apertura y Contexto",
+        "step1Status": "Paso 1: Apertura",
+        "step1Body": "El grupo se reúne en círculo. Se presenta la necesidad u oportunidad (Driver) sobre la que es necesario decidir.",
+        "step2Title": "Presentación del Driver",
+        "step2Status": "Paso 2: Presentando el Driver",
+        "step2Body": "Se explica claramente la tensión o motivación que impulsa la propuesta para asegurar que todos entienden el propósito.",
+        "step3Title": "Preguntas de Aclaración",
+        "step3Status": "Paso 3: Preguntas de Aclaración",
+        "step3Body": "Ronda exclusiva para resolver dudas de comprensión sobre la propuesta. No es momento de opinar aún.",
+        "step4Title": "Ronda de Reacciones",
+        "step4Status": "Paso 4: Ronda de Reacciones",
+        "step4Body": "Cada miembro expresa brevemente lo que piensa y siente sobre la propuesta, ofreciendo riqueza y perspectiva al autor.",
+        "step5Title": "Enmienda y Consentimiento",
+        "step5Status": "Paso 5: Enmienda y Consentimiento",
+        "step5Body": "Se pregunta si existe alguna Objeción argumentada (daño al círculo o impedimento para avanzar). Si no la hay, se aprueba por consentimiento.",
+        "step6Title": "Celebración e Integración",
+        "step6Status": "Paso 6: Celebración",
+        "step6Body": "La decisión queda registrada como acordada por consentimiento, lista para probarse de forma segura.",
+        "objection": "Objeción",
+        "resolveObjections": "Resolver objeciones"
+      },
+      "s3": {
+        "conceptTag": "CONCEPTO: ESTRUCTURA DINÁMICA",
+        "title": "De Pirámides a Círculos",
+        "intro": "Las organizaciones tradicionales concentran la decisión en la cúspide. En Kanarii, la autoridad se distribuye en círculos autorregulados.",
+        "centralAuth": "AUTORIDAD CENTRALIZADA",
+        "centralDesc": "Alguien decide por los demás. El resto ejecuta.",
+        "distribute": "Distribuir Autoridad",
+        "viewOld": "Ver Estructura Antigua",
+        "leader": "Líder",
+        "generalCircle": "General",
+        "operationalCircle": "Círculo Operativo",
+        "careCircle": "Cuidados",
+        "techCircle": "Técnico",
+        "gardenCircle": "Huerto"
+      },
+      "doubleLink": {
+        "title": "El Doble Enlace",
+        "intro": "Para evitar que los círculos queden aislados, la información y la influencia fluyen en ambas direcciones mediante dos roles diferenciados.",
+        "singleLinkProblem": "EL PROBLEMA DEL ENLACE ÚNICO",
+        "avoidBottlenecksTitle": "1. Evitando cuellos de botella",
+        "avoidBottlenecksDesc": "Para que la comunidad funcione, los grupos de trabajo deben comunicarse. Pero usar a una sola persona como \"jefe\" o enlace único sobrecarga a esa persona y crea cuellos de botella jerárquicos.",
+        "directLinkTitle": "Enlace Directo / Coordinador",
+        "directLinkDesc": "Lleva la visión y el contexto del Círculo General hacia el círculo local.",
+        "repLinkTitle": "Representante del Círculo",
+        "repLinkDesc": "Lleva las necesidades y la voz del círculo local hacia el Círculo General.",
+        "twoWayFlow": "Flujo Bidireccional de Información e Influencia",
+        "generalCircle": "CÍRCULO GENERAL",
+        "workCircle": "CÍRCULO DE TRABAJO",
+        "overload": "¡AGOBIO!",
+        "coordinator": "Coordinador",
+        "representative": "Representante"
+      },
+      "consentElection": {
+        "title": "Selección de Roles por Consentimiento",
+        "intro": "No hay autopromoción ni campañas. Elegimos a las personas para los roles mediante un proceso transparente basado en la confianza.",
+        "newRole": "Nuevo Rol",
+        "nominate": "Nomino a...",
+        "reason": "Porque tiene experiencia en...",
+        "nominationRound": "1. Ronda de Nominaciones",
+        "nominationDesc": "Cada persona propone a alguien justificando la idoneidad según el dominio del rol.",
+        "consensusRound": "2. Propuesta y Consentimiento",
+        "consensusDesc": "El facilitador propone un candidato y el grupo evalúa si existe alguna objeción."
+      },
+      "asynchronous": {
+        "title": "Participación Asíncrona y Ventanas de Tiempo",
+        "openProposal": "Propuesta Abierta • Ventana de 7 días",
+        "openDesc": "La propuesta se comparte para que todo el mundo la revise a su propio ritmo.",
+        "minThreshold": "Umbral acordado de participación",
+        "minThresholdDesc": "Los miembros activos ayudan a sostener el trabajo diario. Su participación se suma al umbral acordado para tomar decisiones, mientras que cualquier miembro puede aportar preguntas, inquietudes u objeciones.",
+        "chatClarify": "Puedes reservar tu respuesta hasta que la información se aclare en el chat.",
+        "agreed": "Acordada por Consentimiento 🎉"
+      },
+      "roles": {
+        "title": "Roles y Niveles de Implicación",
+        "facilitator": "Facilitador/a",
+        "facilitatorDesc": "Guía los procesos de toma de decisiones y mantiene el foco del círculo.",
+        "secretary": "Secretario/a",
+        "secretaryDesc": "Custodia la memoria, los acuerdos y la documentación del círculo.",
+        "timekeeper": "Guardián/a de Tiempos",
+        "timekeeperDesc": "Vigila la energía y el respeto a los plazos acordados.",
+        "activeMember": "Miembro Activo",
+        "activeMemberDesc": "Los miembros activos ayudan a sostener el trabajo diario. Su participación se suma al umbral acordado para tomar decisiones, mientras que cualquier miembro puede aportar preguntas, inquietudes u objeciones."
+      },
+      "crossing": {
+        "title": "El Cruce de Ofrendas y Necesidades",
+        "intro": "Superamos la lógica de mercado conectando perfiles: lo que alguien ofrece se cruza con lo que otra persona necesita.",
+        "marketLogic": "LÓGICA MERCADO",
+        "realTime": "Tiempo Real",
+        "reciprocity": "Reciprocidad",
+        "care": "Cuidado",
+        "offering": "OFRENDA",
+        "need": "NECESIDAD",
+        "connectProfiles": "El sistema conecta tus perfiles"
+      },
+      "passport": {
+        "conceptTag": "CONCEPTO: PERFIL COMUNITARIO",
+        "title": "Más que un currículum",
+        "intro": "Tu perfil comunitario muestra tus ofrendas, saberes y necesidades para compartir con el grupo.",
+        "offerings": "Ofrendas",
+        "skills": "Saberes y Habilidades",
+        "needs": "Necesito",
+        "purpose": "Propósito"
+      }
     }
   }
 }

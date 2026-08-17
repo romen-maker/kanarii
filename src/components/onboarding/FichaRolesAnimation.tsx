@@ -6,17 +6,16 @@ import {
   Heart, 
   Brain, 
   Pocket, 
-  Trash2, 
   Sparkles,
   RefreshCw,
   Award,
-  History,
   ArrowRight,
-  RotateCcw,
   UserCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function FichaRolesAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [isCV, setIsCV] = useState(true);
 
   const toggle = () => {
@@ -37,7 +36,7 @@ export default function FichaRolesAnimation({ onNext, onBack, progressTracker }:
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -59,7 +58,7 @@ export default function FichaRolesAnimation({ onNext, onBack, progressTracker }:
             {isCV ? (
               <CVCard key="cv" />
             ) : (
-              <FichaCard key="ficha" />
+              <FichaCard key="ficha" offeringsText={t('tour.animations.passport.offerings')} skillsText={t('tour.animations.passport.skills')} needsText={t('tour.animations.passport.needs')} purposeText={t('tour.animations.passport.purpose')} />
             )}
           </AnimatePresence>
         </div>
@@ -68,27 +67,21 @@ export default function FichaRolesAnimation({ onNext, onBack, progressTracker }:
         <div className="space-y-8">
           <motion.div layout className="space-y-6">
             <div className="inline-block px-3 py-1 bg-[#D2B48C]/20 rounded-full text-xs font-semibold uppercase tracking-wider text-[#8B4513]">
-              Concepto: La Ficha Comunitaria
+              {t('tour.animations.passport.conceptTag')}
             </div>
             
             <h2 className="text-3xl font-serif font-bold text-[#3E2723]">
-              Más que un currículum
+              {t('tour.animations.passport.title')}
             </h2>
             
             <p className="text-lg text-[#5D4037]/80 leading-relaxed font-serif italic">
-              {isCV 
-                ? "El CV tradicional se enfoca en el pasado, en títulos y en años de experiencia laboral."
-                : "La Ficha Kanarii se enfoca en el presente: en quién eres, qué amas hacer y qué necesitas del grupo."
-              }
+              {t('tour.animations.passport.intro')}
             </p>
 
             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-start gap-3">
               <Sparkles className="text-emerald-500 mt-1 shrink-0" size={20} />
               <p className="text-sm text-emerald-800 italic">
-                {isCV 
-                  ? "Observa cómo la jerarquía desaparece para dar paso a la humanidad."
-                  : '"Aquí tu valor no es lo que has logrado, sino cómo te integras en el tejido real."'
-                }
+                {t('tour.animations.passport.intro')}
               </p>
             </div>
           </motion.div>
@@ -102,7 +95,7 @@ export default function FichaRolesAnimation({ onNext, onBack, progressTracker }:
                   : "bg-amber-500 text-white hover:bg-amber-600"
               }`}
             >
-              {isCV ? "Transformar en Ficha" : "Ver CV Clásico"}
+              <span>{isCV ? t('tour.animations.passport.title') : t('tour.animations.passport.conceptTag')}</span>
               <RefreshCw size={20} className={isCV ? "" : "rotate-180"} />
             </button>
 
@@ -111,7 +104,7 @@ export default function FichaRolesAnimation({ onNext, onBack, progressTracker }:
                 onClick={onNext}
                 className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
               >
-                Siguiente módulo
+                <span>{t('tour.controls.nextModule')}</span>
                 <ArrowRight size={20} />
               </button>
             )}
@@ -164,7 +157,7 @@ function CVCard() {
   );
 }
 
-function FichaCard() {
+function FichaCard({ offeringsText, skillsText, needsText, purposeText }: { offeringsText: string, skillsText: string, needsText: string, purposeText: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
@@ -193,25 +186,25 @@ function FichaCard() {
       <div className="grid grid-cols-2 gap-4 mt-4">
         <FichaSection 
           icon={<Heart size={18} />} 
-          title="Ofrendas" 
+          title={offeringsText} 
           items={["Cocina", "Escucha"]} 
           color="bg-emerald-50 text-emerald-700" 
         />
         <FichaSection 
           icon={<Brain size={18} />} 
-          title="Saberes" 
+          title={skillsText} 
           items={["Maderas", "Teatro"]} 
           color="bg-amber-50 text-amber-700" 
         />
         <FichaSection 
           icon={<Pocket size={18} />} 
-          title="Necesito" 
+          title={needsText} 
           items={["Huerto", "Transporte"]} 
           color="bg-blue-50 text-blue-700" 
         />
         <FichaSection 
           icon={<Award size={18} />} 
-          title="Propósito" 
+          title={purposeText} 
           items={["Cuidar el bosque"]} 
           color="bg-purple-50 text-purple-700" 
         />

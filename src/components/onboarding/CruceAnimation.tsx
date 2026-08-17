@@ -4,55 +4,50 @@ import {
   ArrowRightLeft, 
   ArrowRight, 
   RotateCcw,
-  Sparkles,
-  Puzzle,
-  Lightbulb,
-  Shield,
-  Link,
-  Handshake,
   Clock,
   Sprout,
   Euro,
-  Share2
+  Handshake,
+  Sparkles,
+  Shield,
+  Share2,
+  Puzzle,
+  Lightbulb,
+  Link
 } from 'lucide-react';
-
-interface CruceStep {
-  id: number;
-  title: string;
-  body: string;
-  label: string;
-}
-
-const CRUCE_STEPS: CruceStep[] = [
-  {
-    id: 0,
-    title: "1. Pedir y Ofrecer",
-    body: "En Kanarii, tu perfil no es un currículum rígido, es un mapa vivo. Todos tenemos Necesidades en las que pedir apoyo, y todos tenemos Ofrendas y Saberes que regalar al grupo.",
-    label: "El rompecabezas humano"
-  },
-  {
-    id: 1,
-    title: "2. El Cruce de Perfiles",
-    body: "Nuestra herramienta \"El Cruce\" busca constantemente sinergias invisibles. Si tú necesitas aprender a cultivar y alguien en tu comunidad ofrece enseñar botánica, el sistema os cruzará para que la magia ocurra.",
-    label: "La magia del Match"
-  },
-  {
-    id: 2,
-    title: "3. Arquetipos S3",
-    body: "No solo cruzamos tareas, cruzamos energías. El sistema reconoce distintos Arquetipos: creadores que impulsan ideas, guardianes que cuidan los detalles o tejedores que unen a las personas.",
-    label: "Distintas energías"
-  },
-  {
-    id: 3,
-    title: "4. Una nueva economía",
-    body: "Al cruzar perfiles, pasamos de la fría lógica del mercado a la lógica del cuidado comunitario. Aquí el valor no lo dicta una moneda, lo dicta el tiempo, la reciprocidad y las conexiones reales.",
-    label: "El verdadero valor"
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function CruceAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [stage, setStage] = useState(0); 
-  
+
+  const CRUCE_STEPS = [
+    {
+      id: 0,
+      title: t('tour.animations.crossing.title'),
+      body: t('tour.animations.crossing.intro'),
+      label: t('tour.modules.a2.title')
+    },
+    {
+      id: 1,
+      title: t('tour.modules.a2.title'),
+      body: t('tour.animations.crossing.connectProfiles'),
+      label: t('tour.animations.crossing.offering')
+    },
+    {
+      id: 2,
+      title: t('tour.animations.crossing.title'),
+      body: t('tour.animations.crossing.intro'),
+      label: t('tour.animations.crossing.need')
+    },
+    {
+      id: 3,
+      title: t('tour.animations.crossing.marketLogic'),
+      body: t('tour.animations.crossing.intro'),
+      label: t('tour.animations.crossing.realTime')
+    }
+  ];
+
   const next = () => {
     if (stage < CRUCE_STEPS.length - 1) {
       setStage(prev => prev + 1);
@@ -81,7 +76,7 @@ export default function CruceAnimation({ onNext, onBack, progressTracker }: { on
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -107,7 +102,7 @@ export default function CruceAnimation({ onNext, onBack, progressTracker }: { on
         <div className="relative aspect-square bg-white rounded-[40px] border border-[#D2B48C]/20 shadow-xl overflow-hidden flex items-center justify-center p-8">
           <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#8B4513_1px,transparent_1px)] [background-size:24px_24px]" />
           
-          <CruceVisualization stage={stage} />
+          <CruceVisualization stage={stage} marketLogicText={t('tour.animations.crossing.marketLogic')} realTimeText={t('tour.animations.crossing.realTime')} reciprocityText={t('tour.animations.crossing.reciprocity')} careText={t('tour.animations.crossing.care')} offeringText={t('tour.animations.crossing.offering')} needText={t('tour.animations.crossing.need')} />
         </div>
 
         {/* Text Content */}
@@ -139,7 +134,7 @@ export default function CruceAnimation({ onNext, onBack, progressTracker }: { on
                 onClick={next}
                 className="group flex items-center gap-2 bg-[#5A5A40] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#4A4A35] transition-all shadow-lg active:scale-95"
               >
-                Siguiente paso
+                <span>{t('tour.controls.nextStep')}</span>
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
             ) : (
@@ -148,7 +143,7 @@ export default function CruceAnimation({ onNext, onBack, progressTracker }: { on
                   onClick={reset}
                   className="flex items-center gap-2 bg-[#D2B48C] text-white px-6 py-4 rounded-2xl font-semibold hover:bg-[#C1A37B] transition-all shadow-md active:scale-95"
                 >
-                  Reiniciar animación
+                  <span>{t('tour.controls.restart')}</span>
                   <RotateCcw size={18} />
                 </button>
                 {onNext && (
@@ -156,7 +151,7 @@ export default function CruceAnimation({ onNext, onBack, progressTracker }: { on
                     onClick={onNext}
                     className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
                   >
-                    Siguiente módulo
+                    <span>{t('tour.controls.nextModule')}</span>
                     <ArrowRight size={20} />
                   </button>
                 )}
@@ -170,214 +165,130 @@ export default function CruceAnimation({ onNext, onBack, progressTracker }: { on
   );
 }
 
-function CruceVisualization({ stage }: { stage: number }) {
-  // Arquetypes icons data
-  const arTypes = [
-    { icon: Share2, label: "Tejedor", color: "bg-blue-500", x: -60, y: -60 },
-    { icon: Lightbulb, label: "Creador", color: "bg-amber-500", x: 60, y: -60 },
-    { icon: Shield, label: "Guardián", color: "bg-emerald-500", x: 60, y: 60 },
-    { icon: Link, label: "Enlazador", color: "bg-purple-500", x: -60, y: 60 },
+function CruceVisualization({ stage, marketLogicText, realTimeText, reciprocityText, careText, offeringText, needText }: { stage: number, marketLogicText: string, realTimeText: string, reciprocityText: string, careText: string, offeringText: string, needText: string }) {
+  const arquetypes = [
+    { id: 1, label: "Creador", color: "bg-amber-100 border-amber-300 text-amber-700", icon: <Sparkles size={20} /> },
+    { id: 2, label: "Guardián", color: "bg-emerald-100 border-emerald-300 text-emerald-700", icon: <Shield size={20} /> },
+    { id: 3, label: "Tejedor", color: "bg-blue-100 border-blue-300 text-blue-700", icon: <Share2 size={20} /> },
   ];
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      
-      {/* Background elements */}
-      <AnimatePresence>
-        {stage === 1 && (
-           <motion.div
-             initial={{ opacity: 0, scale: 0.8 }}
-             animate={{ opacity: 0.1, scale: 1.2 }}
-             exit={{ opacity: 0 }}
-             className="absolute inset-0 flex items-center justify-center"
-           >
-             <div className="w-64 h-64 border-4 border-emerald-500 rounded-full animate-pulse" />
-           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Avatars Container */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        
-        {/* Avatar A: Need */}
-        <motion.div
-          animate={{
-            x: stage === 1 ? -60 : stage >= 2 ? -40 : -100,
-            y: stage >= 2 ? -20 : 0,
-            scale: stage === 1 ? 1.2 : 1,
-          }}
-          className="absolute z-20"
-        >
-          <div className="relative">
-            <div className="w-20 h-20 bg-[#D2B48C] rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden">
-               <motion.div
-                 animate={{ rotate: stage === 1 ? [0, 10, -10, 0] : 0 }}
-                 transition={{ repeat: Infinity, duration: 1 }}
-               >
-                 <ArrowRightLeft className="text-white opacity-40" size={40} />
-               </motion.div>
+      {/* Stage 0: Offerings & Needs */}
+      {stage === 0 && (
+        <div className="relative w-full h-full flex items-center justify-center gap-12">
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="w-24 h-24 bg-amber-50 border-2 border-amber-300 rounded-3xl shadow-lg flex items-center justify-center text-amber-700">
+              <Puzzle size={40} />
             </div>
-            
-            {/* Need Label & Piece */}
-            <AnimatePresence>
-              {stage === 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 10 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-                >
-                  <div className="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">NECESIDAD</div>
-                  <Puzzle size={24} className="text-red-400" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-800">{needText}</span>
+          </motion.div>
 
-            {/* Connecting Piece in Stage 1 */}
-            {stage === 1 && (
-               <motion.div 
-                 initial={{ x: 0 }}
-                 animate={{ x: 60 }}
-                 className="absolute top-1/2 -right-4 -translate-y-1/2 z-30"
-               >
-                 <Puzzle size={30} className="text-emerald-500 drop-shadow-lg" />
-               </motion.div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Avatar B: Offer */}
-        <motion.div
-          animate={{
-            x: stage === 1 ? 60 : stage >= 2 ? 40 : 100,
-            y: stage >= 2 ? 20 : 0,
-            scale: stage === 1 ? 1.2 : 1,
-          }}
-          className="absolute z-20"
-        >
-          <div className="relative">
-            <div className="w-20 h-20 bg-[#5A5A40] rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden text-white font-bold italic">
-               K
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="w-24 h-24 bg-emerald-50 border-2 border-emerald-300 rounded-3xl shadow-lg flex items-center justify-center text-emerald-700">
+              <Lightbulb size={40} />
             </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">{offeringText}</span>
+          </motion.div>
+        </div>
+      )}
 
-            {/* Offer Label & Piece */}
-            <AnimatePresence>
-              {stage === 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 10 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-                >
-                  <div className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">OFRENDA</div>
-                  <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity }}>
-                    <Puzzle size={24} className="text-emerald-400" />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+      {/* Stage 1: The Crossing Match */}
+      {stage === 1 && (
+        <div className="relative w-full h-full flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+            className="absolute w-64 h-64 border-2 border-dashed border-[#D2B48C]/40 rounded-full"
+          />
 
-             {/* Connecting Piece in Stage 1 */}
-             {stage === 1 && (
-               <motion.div 
-                 initial={{ x: 0 }}
-                 animate={{ x: -60 }}
-                 className="absolute top-1/2 -left-4 -translate-y-1/2 z-30"
-               >
-                 <div className="relative">
-                    <Puzzle size={30} className="text-emerald-500 fill-emerald-500 drop-shadow-lg" />
-                    <Sparkles className="absolute -top-2 -right-2 text-yellow-400" size={16} />
-                 </div>
-               </motion.div>
-            )}
-          </div>
-        </motion.div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="z-10 bg-emerald-500 text-white p-6 rounded-full shadow-2xl flex items-center justify-center"
+          >
+            <Link size={48} />
+          </motion.div>
+        </div>
+      )}
 
-        {/* Stage 1 Match Connection Line */}
-        {stage >= 1 && stage < 3 && (
+      {/* Stage 2: S3 Archetypes */}
+      {stage === 2 && (
+        <div className="relative w-full h-full flex items-center justify-center gap-6">
+          {arquetypes.map((arq, i) => (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: stage === 1 ? 120 : 80, opacity: 1 }}
-              className="absolute h-0.5 bg-emerald-500/40 z-10"
-            />
-        )}
+              key={arq.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.2 }}
+              className={`p-4 rounded-2xl border-2 ${arq.color} flex flex-col items-center gap-2 shadow-md`}
+            >
+              {arq.icon}
+              <span className="text-[10px] font-bold uppercase">{arq.label}</span>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-        {/* Stage 2: Arquetypes */}
-        {stage === 2 && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            {arTypes.map((ar, i) => (
-              <motion.div
-                key={ar.label}
-                initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                animate={{ opacity: 1, scale: 1, x: ar.x, y: ar.y }}
-                transition={{ delay: i * 0.1 }}
-                className="absolute flex flex-col items-center gap-1"
-              >
-                <div className={`w-10 h-10 ${ar.color} text-white rounded-xl shadow-lg flex items-center justify-center`}>
-                  <ar.icon size={18} />
-                </div>
-                <span className="text-[8px] font-bold uppercase tracking-widest text-[#5D4037]/60">{ar.label}</span>
-              </motion.div>
-            ))}
+      {/* Stage 3: New Economy Transformation */}
+      {stage === 3 && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 0, scale: 0.5, y: -40 }}
+            className="absolute text-red-400 flex flex-col items-center gap-1 opacity-20"
+          >
+            <Euro size={40} />
+            <span className="text-[10px] font-bold line-through">{marketLogicText}</span>
+          </motion.div>
+
+          <div className="flex gap-12 mt-10">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-emerald-500 border border-emerald-100 italic font-serif">
+                <Clock size={32} />
+              </div>
+              <span className="text-[10px] font-bold tracking-widest uppercase">{realTimeText}</span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-amber-600 border border-amber-100">
+                <Handshake size={32} />
+              </div>
+              <span className="text-[10px] font-bold tracking-widest uppercase">{reciprocityText}</span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-emerald-600 border border-emerald-100">
+                <Sprout size={32} />
+              </div>
+              <span className="text-[10px] font-bold tracking-widest uppercase">{careText}</span>
+            </motion.div>
           </div>
-        )}
-
-        {/* Stage 3: New Economy Transformation */}
-        {stage === 3 && (
-           <div className="absolute inset-0 flex items-center justify-center">
-             {/* Money Fading */}
-             <motion.div
-               initial={{ opacity: 1, scale: 1 }}
-               animate={{ opacity: 0, scale: 0.5, y: -40 }}
-               className="absolute text-red-400 flex flex-col items-center gap-1 opacity-20"
-             >
-               <Euro size={40} />
-               <span className="text-[10px] font-bold line-through">LÓGICA MERCADO</span>
-             </motion.div>
-
-             {/* New Economy Appearing */}
-             <div className="flex gap-12 mt-10">
-               <motion.div
-                 initial={{ opacity: 0, y: 40 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: 0.3 }}
-                 className="flex flex-col items-center gap-2"
-               >
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-emerald-500 border border-emerald-100 italic font-serif">
-                   <Clock size={32} />
-                 </div>
-                 <span className="text-[10px] font-bold tracking-widest uppercase">Tiempo Real</span>
-               </motion.div>
-
-               <motion.div
-                 initial={{ opacity: 0, y: 40 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: 0.5 }}
-                 className="flex flex-col items-center gap-2"
-               >
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-amber-600 border border-amber-100">
-                   <Handshake size={32} />
-                 </div>
-                 <span className="text-[10px] font-bold tracking-widest uppercase">Reciprocidad</span>
-               </motion.div>
-
-               <motion.div
-                 initial={{ opacity: 0, y: 40 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: 0.7 }}
-                 className="flex flex-col items-center gap-2"
-               >
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-emerald-600 border border-emerald-100">
-                   <Sprout size={32} />
-                 </div>
-                 <span className="text-[10px] font-bold tracking-widest uppercase">Cuidado</span>
-               </motion.div>
-             </div>
-           </div>
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
   );
 }
-

@@ -3,17 +3,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, 
   ChevronDown, 
-  Circle, 
   Share2, 
   RotateCcw,
   LayoutGrid,
-  Zap,
   ShieldCheck,
   ArrowRight,
   Layout
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ComunidadesCirculosAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [isHierarchy, setIsHierarchy] = useState(true);
 
   const toggle = () => {
@@ -34,7 +34,7 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -54,9 +54,9 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
           
           <AnimatePresence mode="wait">
             {isHierarchy ? (
-              <PyramidView key="pyramid" />
+              <PyramidView key="pyramid" leaderText={t('tour.animations.s3.leader')} />
             ) : (
-              <CirclesView key="circles" />
+              <CirclesView key="circles" generalText={t('tour.animations.s3.generalCircle')} careText={t('tour.animations.s3.careCircle')} techText={t('tour.animations.s3.techCircle')} gardenText={t('tour.animations.s3.gardenCircle')} />
             )}
           </AnimatePresence>
         </div>
@@ -65,18 +65,15 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
         <div className="space-y-8">
           <motion.div layout className="space-y-6">
             <div className="inline-block px-3 py-1 bg-[#D2B48C]/20 rounded-full text-xs font-semibold uppercase tracking-wider text-[#8B4513]">
-              Concepto: Estructura Dinámica
+              {t('tour.animations.s3.conceptTag')}
             </div>
             
             <h2 className="text-4xl font-serif font-bold text-[#3E2723] leading-tight">
-              De Pirámides a Círculos
+              {t('tour.animations.s3.title')}
             </h2>
             
             <p className="text-xl text-[#5D4037]/80 leading-relaxed font-serif italic">
-              {isHierarchy 
-                ? "Las organizaciones tradicionales se basan en jerarquías rígidas donde la información y el poder fluyen solo de arriba hacia abajo."
-                : "En Kanarii, nos organizamos en círculos anidados. Cada círculo tiene autonomía y autoridad en su dominio, pero están todos interconectados."
-              }
+              {t('tour.animations.s3.intro')}
             </p>
 
             <div className={`p-6 rounded-3xl transition-colors duration-500 flex items-start gap-4 ${isHierarchy ? "bg-gray-50 border border-gray-100" : "bg-emerald-50 border border-emerald-100"}`}>
@@ -85,12 +82,12 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
               </div>
               <div className="space-y-1">
                 <h4 className={`font-bold uppercase text-[10px] tracking-widest ${isHierarchy ? "text-gray-400" : "text-emerald-600"}`}>
-                  {isHierarchy ? "Autoridad Central" : "Autoridad Distribuida"}
+                  {isHierarchy ? t('tour.animations.s3.centralAuth') : t('tour.modules.a8.title')}
                 </h4>
                 <p className="text-sm text-[#5D4037]/70 italic">
                   {isHierarchy 
-                    ? "Alguien decide por los demás. El resto ejecuta."
-                    : "Cada subgrupo cuida una parte del todo con total soberanía y consentimiento."
+                    ? t('tour.animations.s3.centralDesc')
+                    : t('tour.modules.a8.desc')
                   }
                 </p>
               </div>
@@ -106,7 +103,7 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
                   : "bg-emerald-500 text-white hover:bg-emerald-600"
               }`}
             >
-              {isHierarchy ? "Distribuir Poder" : "Ver Estructura Antigua"}
+              <span>{isHierarchy ? t('tour.animations.s3.distribute') : t('tour.animations.s3.viewOld')}</span>
               <RotateCcw size={20} className="group-hover:rotate-45 transition-transform" />
             </button>
 
@@ -115,7 +112,7 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
                 onClick={onNext}
                 className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
               >
-                Siguiente módulo
+                <span>{t('tour.controls.nextModule')}</span>
                 <ArrowRight size={20} />
               </button>
             )}
@@ -127,9 +124,9 @@ export default function ComunidadesCirculosAnimation({ onNext, onBack, progressT
   );
 }
 
-function PyramidView() {
+function PyramidView({ leaderText }: { leaderText: string }) {
   const nodes = [
-    { id: 'ceo', x: 0, y: -100, label: 'Líder' },
+    { id: 'ceo', x: 0, y: -100, label: leaderText },
     { id: 'm1', x: -60, y: -20, label: 'M' },
     { id: 'm2', x: 60, y: -20, label: 'M' },
     { id: 's1', x: -100, y: 60, label: 'E' },
@@ -177,7 +174,7 @@ function PyramidView() {
   );
 }
 
-function CirclesView() {
+function CirclesView({ generalText, careText, techText, gardenText }: { generalText: string, careText: string, techText: string, gardenText: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 1.2 }}
@@ -190,13 +187,13 @@ function CirclesView() {
         animate={{ scale: 1 }}
         className="absolute w-72 h-72 border-2 border-emerald-500/30 bg-emerald-500/5 rounded-full flex items-center justify-center"
       >
-        <span className="absolute top-4 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">General</span>
+        <span className="absolute top-4 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{generalText}</span>
         
         {/* Sub-Circles */}
         <div className="relative w-full h-full flex items-center justify-center gap-4">
-          <SubCircle label="Cuidados" color="bg-amber-100 border-amber-400 text-amber-700" x={-60} y={-20} />
-          <SubCircle label="Técnico" color="bg-blue-100 border-blue-400 text-blue-700" x={60} y={-20} />
-          <SubCircle label="Huerto" color="bg-green-100 border-green-400 text-green-700" x={0} y={60} />
+          <SubCircle label={careText} color="bg-amber-100 border-amber-400 text-amber-700" x={-60} y={-20} />
+          <SubCircle label={techText} color="bg-blue-100 border-blue-400 text-blue-700" x={60} y={-20} />
+          <SubCircle label={gardenText} color="bg-green-100 border-green-400 text-green-700" x={0} y={60} />
         </div>
       </motion.div>
 

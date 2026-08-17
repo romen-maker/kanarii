@@ -135,19 +135,133 @@
       "fullTour": "Take the full tour"
     },
     "modules": {
-      "a1": { "title": "Decision-Making", "desc": "How we make decisions without voting." },
-      "a8": { "title": "S3 Structure", "desc": "Nested circles and distributed autonomy." },
-      "a6": { "title": "Double Linking", "desc": "Information flowing in both directions." },
-      "a7": { "title": "Consent Elections", "desc": "Assigning roles through trust." },
+      "a1": { "title": "Consent Decision-Making", "desc": "How we make decisions by consent, not by voting." },
+      "a8": { "title": "S3 Circle Structure", "desc": "Self-governing circles with distributed authority." },
+      "a6": { "title": "Double Linking", "desc": "Two-way flow of information and influence." },
+      "a7": { "title": "Role Selection", "desc": "Selecting people for roles by consent." },
       "a4": { "title": "Flexible Rhythm", "desc": "Timelines and asynchronous participation." },
       "a5": { "title": "Your Commitment", "desc": "Roles and levels of involvement." },
-      "a2": { "title": "The Crossing", "desc": "Connecting profiles and needs." },
-      "a3": { "title": "Your Profile", "desc": "Your passport and community gifts." }
+      "a2": { "title": "The Crossing", "desc": "Connecting offerings, skills and needs." },
+      "a3": { "title": "Your Profile", "desc": "Your community profile: offerings, skills and needs." }
     },
     "final": {
       "title": "All set!",
       "quote": "\"Remember we don't look for perfection, but decisions that are good enough for now and safe enough to try.\"",
       "cta": "Enter my community"
+    },
+    "controls": {
+      "backIndex": "← Back to index",
+      "nextStep": "Next step",
+      "restart": "Restart animation",
+      "nextModule": "Next module"
+    },
+    "animations": {
+      "governance": {
+        "title": "Consent Decision-Making Flow",
+        "step1Title": "Opening and Context",
+        "step1Status": "Step 1: Opening",
+        "step1Body": "The circle gathers. The need or opportunity (Driver) requiring a decision is presented.",
+        "step2Title": "Presenting the Driver",
+        "step2Status": "Step 2: Presenting the Driver",
+        "step2Body": "The motivation behind the proposal is clearly explained so everyone understands the purpose.",
+        "step3Title": "Clarifying Questions",
+        "step3Status": "Step 3: Clarifying Questions",
+        "step3Body": "A round dedicated exclusively to resolving questions of understanding. Not a time for opinions yet.",
+        "step4Title": "Reactions Round",
+        "step4Status": "Step 4: Reactions Round",
+        "step4Body": "Each member briefly shares their thoughts and feelings about the proposal, offering perspective to the author.",
+        "step5Title": "Amendment and Consent",
+        "step5Status": "Step 5: Amendment and Consent",
+        "step5Body": "The circle asks if there are any reasoned Objections (harm to the circle or impediment to progress). If none, it is agreed by consent.",
+        "step6Title": "Celebration and Integration",
+        "step6Status": "Step 6: Celebration",
+        "step6Body": "The decision is recorded as agreed by consent, ready to be tested safely.",
+        "objection": "Objection",
+        "resolveObjections": "Resolve Objections"
+      },
+      "s3": {
+        "conceptTag": "CONCEPT: DYNAMIC STRUCTURE",
+        "title": "From Pyramids to Circles",
+        "intro": "Traditional organizations concentrate decisions at the top. In Kanarii, authority is distributed into self-governing circles.",
+        "centralAuth": "CENTRALIZED AUTHORITY",
+        "centralDesc": "One decides for others. The rest execute.",
+        "distribute": "Distribute Authority",
+        "viewOld": "View Old Structure",
+        "leader": "Leader",
+        "generalCircle": "General",
+        "operationalCircle": "Operational Circle",
+        "careCircle": "Care",
+        "techCircle": "Tech",
+        "gardenCircle": "Garden"
+      },
+      "doubleLink": {
+        "title": "Double Linking",
+        "intro": "To prevent circles from becoming isolated, information and influence flow in both directions through two distinct roles.",
+        "singleLinkProblem": "THE SINGLE-LINK PROBLEM",
+        "avoidBottlenecksTitle": "1. Avoiding Bottlenecks",
+        "avoidBottlenecksDesc": "For a community to work, circles need to communicate. But relying on one person as a \"boss\" or sole link overloads them and creates hierarchical bottlenecks.",
+        "directLinkTitle": "Direct Link / Coordinator",
+        "directLinkDesc": "Brings the vision and context of the General Circle to the local circle.",
+        "repLinkTitle": "Circle Representative",
+        "repLinkDesc": "Brings the needs and voice of the local circle to the General Circle.",
+        "twoWayFlow": "Two-Way Flow of Information and Influence",
+        "generalCircle": "GENERAL CIRCLE",
+        "workCircle": "WORK CIRCLE",
+        "overload": "OVERLOAD!",
+        "coordinator": "Coordinator",
+        "representative": "Representative"
+      },
+      "consentElection": {
+        "title": "Role Selection by Consent",
+        "intro": "No self-promotion or campaigns. We select people for roles through a transparent process built on trust.",
+        "newRole": "New Role",
+        "nominate": "I nominate...",
+        "reason": "Because they have experience with...",
+        "nominationRound": "1. Nomination Round",
+        "nominationDesc": "Each person nominates someone explaining suitability based on the role domain.",
+        "consensusRound": "2. Proposal and Consent",
+        "consensusDesc": "The facilitator proposes a candidate and the group evaluates if there are any objections."
+      },
+      "asynchronous": {
+        "title": "Asynchronous Participation & Time Windows",
+        "openProposal": "Open Proposal • 7-day Window",
+        "openDesc": "The proposal is shared so everyone can review it at their own pace.",
+        "minThreshold": "Agreed participation threshold",
+        "minThresholdDesc": "Active members help sustain day-to-day work. Their participation counts toward the agreed threshold for decisions, while every member can still contribute questions, concerns and objections.",
+        "chatClarify": "You can hold your response until the information is clarified in the chat.",
+        "agreed": "Agreed by Consent 🎉"
+      },
+      "roles": {
+        "title": "Roles and Levels of Involvement",
+        "facilitator": "Facilitator",
+        "facilitatorDesc": "Guides decision-making processes and keeps circle focus.",
+        "secretary": "Secretary",
+        "secretaryDesc": "Custodians circle memory, agreements and documentation.",
+        "timekeeper": "Timekeeper",
+        "timekeeperDesc": "Monitors energy and respect for agreed timelines.",
+        "activeMember": "Active Member",
+        "activeMemberDesc": "Active members help sustain day-to-day work. Their participation counts toward the agreed threshold for decisions, while every member can still contribute questions, concerns and objections."
+      },
+      "crossing": {
+        "title": "Connecting Offerings and Needs",
+        "intro": "We transcend market logic by connecting profiles: what someone offers meets what another person needs.",
+        "marketLogic": "MARKET LOGIC",
+        "realTime": "Real Time",
+        "reciprocity": "Reciprocity",
+        "care": "Care",
+        "offering": "OFFERING",
+        "need": "NEED",
+        "connectProfiles": "the system connects your profiles"
+      },
+      "passport": {
+        "conceptTag": "CONCEPT: COMMUNITY PROFILE",
+        "title": "More Than a Résumé",
+        "intro": "Your community profile shows your offerings, skills and needs to share with the group.",
+        "offerings": "Offerings",
+        "skills": "Skills & Knowledge",
+        "needs": "Need",
+        "purpose": "Purpose"
+      }
     }
   }
 }

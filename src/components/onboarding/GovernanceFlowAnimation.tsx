@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Lightbulb, 
@@ -12,43 +12,50 @@ import {
   Sparkles,
   Users
 } from 'lucide-react';
-
-interface Step {
-  id: number;
-  title: string;
-  body: string;
-  status: string;
-}
-
-const STEPS: Step[] = [
-  {
-    id: 1,
-    title: "1. Todo nace de una tensión (Driver)",
-    body: "Alguien identifica una necesidad o problema en la comunidad y propone una solución. La propuesta se publica para que todos la lean.",
-    status: "Borrador ➡️ Abierta"
-  },
-  {
-    id: 2,
-    title: "2. Dudas y Preocupaciones no bloquean",
-    body: "Antes de decidir, puedes marcar Duda ❓ para que el autor te aclare algo. Si ves un riesgo menor, puedes marcar Preocupación ⚠️; el grupo la tendrá en cuenta, pero no frenará el avance de la propuesta.",
-    status: "Dudas y Preocupaciones"
-  },
-  {
-    id: 3,
-    title: "3. La Objeción es un regalo",
-    body: "Si crees que la propuesta causará un daño real al grupo, levantas una Objeción ⛔. ¡Una sola objeción detiene la propuesta! No hay mayorías que aplasten a minorías. El autor modificará la propuesta para integrar tu objeción y crear una versión mejor y más segura.",
-    status: "En Objeciones ➡️ Integrando"
-  },
-  {
-    id: 4,
-    title: "4. Consentimiento Alcanzado",
-    body: "Si se alcanza el tiempo límite, hay quórum de participación y nadie tiene objeciones, la decisión se aprueba. No buscamos la perfección unánime, buscamos algo que sea 'lo suficientemente bueno por ahora y seguro para intentar'.",
-    status: "Acordada 🎉"
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function GovernanceFlowAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [currentStep, setCurrentStep] = useState(0);
+
+  const STEPS = [
+    {
+      id: 1,
+      title: t('tour.animations.governance.step1Title'),
+      body: t('tour.animations.governance.step1Body'),
+      status: t('tour.animations.governance.step1Status')
+    },
+    {
+      id: 2,
+      title: t('tour.animations.governance.step2Title'),
+      body: t('tour.animations.governance.step2Body'),
+      status: t('tour.animations.governance.step2Status')
+    },
+    {
+      id: 3,
+      title: t('tour.animations.governance.step3Title'),
+      body: t('tour.animations.governance.step3Body'),
+      status: t('tour.animations.governance.step3Status')
+    },
+    {
+      id: 4,
+      title: t('tour.animations.governance.step4Title'),
+      body: t('tour.animations.governance.step4Body'),
+      status: t('tour.animations.governance.step4Status')
+    },
+    {
+      id: 5,
+      title: t('tour.animations.governance.step5Title'),
+      body: t('tour.animations.governance.step5Body'),
+      status: t('tour.animations.governance.step5Status')
+    },
+    {
+      id: 6,
+      title: t('tour.animations.governance.step6Title'),
+      body: t('tour.animations.governance.step6Body'),
+      status: t('tour.animations.governance.step6Status')
+    }
+  ];
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -76,7 +83,7 @@ export default function GovernanceFlowAnimation({ onNext, onBack, progressTracke
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -133,7 +140,7 @@ export default function GovernanceFlowAnimation({ onNext, onBack, progressTracke
                 onClick={nextStep}
                 className="group flex items-center gap-2 bg-[#5A5A40] text-[#FAF9F6] px-8 py-4 rounded-2xl font-semibold hover:bg-[#4A4A35] transition-all shadow-lg shadow-[#5A5A40]/20 active:scale-95"
               >
-                Siguiente paso
+                <span>{t('tour.controls.nextStep')}</span>
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </button>
             ) : (
@@ -142,7 +149,7 @@ export default function GovernanceFlowAnimation({ onNext, onBack, progressTracke
                   onClick={restart}
                   className="flex items-center gap-2 bg-[#D2B48C] text-white px-6 py-4 rounded-2xl font-semibold hover:bg-[#C1A37B] transition-all shadow-md active:scale-95"
                 >
-                  Reiniciar animación
+                  <span>{t('tour.controls.restart')}</span>
                   <RotateCcw size={18} />
                 </button>
                 {onNext && (
@@ -150,7 +157,7 @@ export default function GovernanceFlowAnimation({ onNext, onBack, progressTracke
                     onClick={onNext}
                     className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
                   >
-                    Siguiente módulo
+                    <span>{t('tour.controls.nextModule')}</span>
                     <ArrowRight size={20} />
                   </button>
                 )}

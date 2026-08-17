@@ -1,55 +1,47 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Users, 
   ArrowRight, 
   RotateCcw,
   UserCheck,
-  MessageCircle,
-  ThumbsUp,
+  PenTool,
+  Users,
   CheckCircle2,
   Sparkles,
-  PenTool,
-  Lightbulb,
   Heart
 } from 'lucide-react';
-
-interface Step {
-  id: number;
-  title: string;
-  body: string;
-  label: string;
-}
-
-const STEPS: Step[] = [
-  {
-    id: 1,
-    title: "1. La necesidad, no la campaña",
-    body: "Cuando hay que elegir a alguien para una responsabilidad, no hacemos campañas políticas ni votamos por mayoría. Nos centramos en qué necesita la comunidad para ese rol en este momento.",
-    label: "Selección por rol"
-  },
-  {
-    id: 2,
-    title: "2. Nominar con argumentos",
-    body: "Cada persona nomina a quien cree más capaz (¡incluso a sí misma!) y explica el porqué al grupo. Los argumentos y las razones importan mucho más que sumar mayorías numéricas.",
-    label: "Argumentos > Votos"
-  },
-  {
-    id: 3,
-    title: "3. Cambiar de opinión",
-    body: "Tras escuchar los argumentos de todos, puedes cambiar tu nominación. En lugar de competir por tener la razón, nos dejamos convencer por la sabiduría colectiva del grupo.",
-    label: "Sabiduría Colectiva"
-  },
-  {
-    id: 4,
-    title: "4. Elegidos por confianza",
-    body: "Se propone a la persona más adecuada basándose en los argumentos. Si nadie tiene una objeción real de que esa persona asuma el rol, ¡tenemos un acuerdo! La responsabilidad se delega por confianza.",
-    label: "Confianza Delegada"
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function ConsentElectionAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [currentStep, setCurrentStep] = useState(0);
+
+  const STEPS = [
+    {
+      id: 1,
+      title: t('tour.animations.consentElection.title'),
+      body: t('tour.animations.consentElection.intro'),
+      label: t('tour.modules.a7.title')
+    },
+    {
+      id: 2,
+      title: t('tour.animations.consentElection.nominationRound'),
+      body: t('tour.animations.consentElection.nominationDesc'),
+      label: t('tour.animations.consentElection.nominate')
+    },
+    {
+      id: 3,
+      title: t('tour.animations.consentElection.consensusRound'),
+      body: t('tour.animations.consentElection.consensusDesc'),
+      label: t('tour.animations.consentElection.reason')
+    },
+    {
+      id: 4,
+      title: t('tour.animations.consentElection.newRole'),
+      body: t('tour.animations.consentElection.intro'),
+      label: t('tour.animations.governance.objection')
+    }
+  ];
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -77,7 +69,7 @@ export default function ConsentElectionAnimation({ onNext, onBack, progressTrack
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -103,7 +95,7 @@ export default function ConsentElectionAnimation({ onNext, onBack, progressTrack
         <div className="relative aspect-square bg-white rounded-[40px] border border-[#D2B48C]/20 shadow-xl overflow-hidden flex items-center justify-center p-8">
           <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#8B4513_1px,transparent_1px)] [background-size:24px_24px]" />
           
-          <ElectionVisualization step={currentStep} />
+          <ElectionVisualization step={currentStep} nominateText={t('tour.animations.consentElection.nominate')} reasonText={t('tour.animations.consentElection.reason')} newRoleText={t('tour.animations.consentElection.newRole')} />
         </div>
 
         {/* Text Content Area */}
@@ -135,7 +127,7 @@ export default function ConsentElectionAnimation({ onNext, onBack, progressTrack
                 onClick={nextStep}
                 className="group flex items-center gap-2 bg-[#5A5A40] text-[#FAF9F6] px-8 py-4 rounded-2xl font-semibold hover:bg-[#4A4A35] transition-all shadow-lg active:scale-95"
               >
-                Siguiente paso
+                <span>{t('tour.controls.nextStep')}</span>
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </button>
             ) : (
@@ -144,7 +136,7 @@ export default function ConsentElectionAnimation({ onNext, onBack, progressTrack
                   onClick={restart}
                   className="flex items-center gap-2 bg-[#D2B48C] text-white px-6 py-4 rounded-2xl font-semibold hover:bg-[#C1A37B] transition-all shadow-md active:scale-95"
                 >
-                  Reiniciar animación
+                  <span>{t('tour.controls.restart')}</span>
                   <RotateCcw size={18} />
                 </button>
                 {onNext && (
@@ -152,7 +144,7 @@ export default function ConsentElectionAnimation({ onNext, onBack, progressTrack
                     onClick={onNext}
                     className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
                   >
-                    Siguiente módulo
+                    <span>{t('tour.controls.nextModule')}</span>
                     <ArrowRight size={20} />
                   </button>
                 )}
@@ -166,7 +158,7 @@ export default function ConsentElectionAnimation({ onNext, onBack, progressTrack
   );
 }
 
-function ElectionVisualization({ step }: { step: number }) {
+function ElectionVisualization({ step, nominateText, reasonText, newRoleText }: { step: number, nominateText: string, reasonText: string, newRoleText: string }) {
   const avatars = [
     { id: 1, x: -100, y: -40, nominates: 2 },
     { id: 2, x: 0, y: -100, nominates: 2 },
@@ -190,7 +182,7 @@ function ElectionVisualization({ step }: { step: number }) {
       >
         <div className="flex flex-col items-center">
              <PenTool size={32} />
-             <span className="text-[8px] uppercase font-bold mt-1">Nuevo Rol</span>
+             <span className="text-[8px] uppercase font-bold mt-1">{newRoleText}</span>
         </div>
       </motion.div>
 
@@ -214,7 +206,7 @@ function ElectionVisualization({ step }: { step: number }) {
                  animate={{ opacity: 1, scale: 1 }}
                  className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm text-[8px] font-bold whitespace-nowrap"
                >
-                 Nomino a...
+                 {nominateText}
                </motion.div>
             )}
 
@@ -224,7 +216,7 @@ function ElectionVisualization({ step }: { step: number }) {
                  animate={{ opacity: 1, y: -10 }}
                  className="absolute -top-16 left-1/2 -translate-x-1/2 bg-amber-50 p-2 rounded-2xl border border-amber-200 shadow-lg text-[7px] leading-tight w-24 font-serif italic text-[#5D4037]/80"
                >
-                 "Porque tiene experiencia en..."
+                 "{reasonText}"
                </motion.div>
             )}
 

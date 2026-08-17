@@ -1,55 +1,50 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Users, 
   UserPlus, 
-  Coffee, 
-  FileText, 
   ChevronRight, 
   RotateCcw,
-  Sparkles,
-  Lightbulb,
-  Heart,
+  ArrowRight,
   Zap,
-  ArrowRight
+  FileText,
+  Lightbulb,
+  Coffee,
+  Users,
+  Heart,
+  Sparkles
 } from 'lucide-react';
-
-interface Step {
-  id: number;
-  title: string;
-  body: string;
-  label: string;
-}
-
-const STEPS: Step[] = [
-  {
-    id: 1,
-    title: "1. Diferentes ritmos de vida",
-    body: "En Kanarii entendemos que no todos podemos dedicarle el mismo tiempo al grupo. Tu nivel de implicación puede variar según tu momento vital, ¡y eso es perfectamente normal!",
-    label: "Diversidad de ritmos"
-  },
-  {
-    id: 2,
-    title: "2. Miembros Activos",
-    body: "Son las personas que han asumido la responsabilidad de empujar los proyectos del día a día. Sus respuestas son las únicas que el sistema exige para saber si hemos alcanzado la participación mínima necesaria para aprobar algo.",
-    label: "Compromiso del día a día"
-  },
-  {
-    id: 3,
-    title: "3. Apoyo sin presiones",
-    body: "Como voluntario u observador, puedes leer, opinar y proponer ideas siempre que quieras. Sin embargo, si una temporada estás muy ocupado y no entras a la app, no pasa nada: tu silencio no frenará el trabajo de los demás.",
-    label: "Voluntarios y Observadores"
-  },
-  {
-    id: 4,
-    title: "4. Adaptándonos a ti",
-    body: "La vida cambia. Si necesitas un descanso, puedes pasar a ser observador un tiempo. Si quieres asumir más responsabilidad, puedes dar un paso al frente. La herramienta se adapta a la comunidad, no la comunidad a la herramienta.",
-    label: "Fluir entre roles"
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function RolesAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [currentStep, setCurrentStep] = useState(0);
+
+  const STEPS = [
+    {
+      id: 1,
+      title: t('tour.animations.roles.title'),
+      body: t('tour.animations.roles.activeMemberDesc'),
+      label: t('tour.modules.a5.title')
+    },
+    {
+      id: 2,
+      title: t('tour.animations.roles.activeMember'),
+      body: t('tour.animations.roles.activeMemberDesc'),
+      label: t('tour.animations.roles.activeMember')
+    },
+    {
+      id: 3,
+      title: t('tour.animations.roles.facilitator'),
+      body: t('tour.animations.roles.facilitatorDesc'),
+      label: t('tour.animations.roles.facilitator')
+    },
+    {
+      id: 4,
+      title: t('tour.animations.roles.secretary'),
+      body: t('tour.animations.roles.secretaryDesc'),
+      label: t('tour.animations.roles.secretary')
+    }
+  ];
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -77,7 +72,7 @@ export default function RolesAnimation({ onNext, onBack, progressTracker }: { on
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -135,7 +130,7 @@ export default function RolesAnimation({ onNext, onBack, progressTracker }: { on
                 onClick={nextStep}
                 className="group flex items-center gap-2 bg-[#5A5A40] text-[#FAF9F6] px-8 py-4 rounded-2xl font-semibold hover:bg-[#4A4A35] transition-all shadow-lg shadow-[#5A5A40]/20 active:scale-95"
               >
-                Siguiente paso
+                <span>{t('tour.controls.nextStep')}</span>
                 <ChevronRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </button>
             ) : (
@@ -144,7 +139,7 @@ export default function RolesAnimation({ onNext, onBack, progressTracker }: { on
                   onClick={restart}
                   className="flex items-center gap-2 bg-[#D2B48C] text-white px-6 py-4 rounded-2xl font-semibold hover:bg-[#C1A37B] transition-all shadow-md active:scale-95"
                 >
-                  Reiniciar animación
+                  <span>{t('tour.controls.restart')}</span>
                   <RotateCcw size={18} />
                 </button>
                 {onNext && (
@@ -152,7 +147,7 @@ export default function RolesAnimation({ onNext, onBack, progressTracker }: { on
                     onClick={onNext}
                     className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
                   >
-                    Siguiente módulo
+                    <span>{t('tour.controls.nextModule')}</span>
                     <ArrowRight size={20} />
                   </button>
                 )}

@@ -2,53 +2,49 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Clock, 
+  MessageSquare, 
+  RotateCcw,
+  Sparkles,
+  Zap,
+  ArrowRight,
   Users, 
   HelpCircle, 
   CheckCircle2, 
-  Hourglass, 
-  MessageSquare, 
-  ArrowRight, 
-  RotateCcw,
-  Sparkles,
+  Hourglass,
   BarChart3
 } from 'lucide-react';
-
-interface Step {
-  id: number;
-  title: string;
-  body: string;
-  label: string;
-}
-
-const STEPS: Step[] = [
-  {
-    id: 1,
-    title: "1. El tiempo para decidir",
-    body: "En nuestra comunidad no hace falta estar todos conectados a la vez. Cada propuesta tiene un plazo de varios días. Tienes tiempo de sobra para leerla, preguntar o dar tu apoyo desde el sofá de tu casa.",
-    label: "El tiempo para decidir"
-  },
-  {
-    id: 2,
-    title: "2. No necesitamos al 100%",
-    body: "Para que los proyectos no se queden atascados, no esperamos a que vote todo el mundo. Nos basta con que participe una cantidad mínima representativa de la comunidad.",
-    label: "Participación Flexible"
-  },
-  {
-    id: 3,
-    title: "3. Preguntar antes de opinar",
-    body: "Si no entiendes algo, levanta la tarjeta de Duda ❓. Tu voto se pausa hasta que el autor te aclare la información en el chat, asegurando que decidimos con claridad y sin malos entendidos.",
-    label: "Preguntar antes de opinar"
-  },
-  {
-    id: 4,
-    title: "4. El silencio también es confiar",
-    body: "Si se acaba el tiempo, participaron suficientes personas y no hay objeciones, la propuesta se aprueba. Si tú no pudiste participar, el sistema asume que confías en la sabiduría de tus compañeros.",
-    label: "El silencio también es confiar"
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function AsynchronousLogicAnimation({ onNext, onBack, progressTracker }: { onNext?: () => void, onBack?: () => void, progressTracker?: React.ReactNode }) {
+  const { t } = useTranslation('welcome');
   const [currentStep, setCurrentStep] = useState(0);
+
+  const STEPS = [
+    {
+      id: 1,
+      title: t('tour.animations.asynchronous.openProposal'),
+      body: t('tour.animations.asynchronous.openDesc'),
+      label: t('tour.animations.asynchronous.openProposal')
+    },
+    {
+      id: 2,
+      title: t('tour.animations.asynchronous.minThreshold'),
+      body: t('tour.animations.asynchronous.minThresholdDesc'),
+      label: t('tour.animations.asynchronous.minThreshold')
+    },
+    {
+      id: 3,
+      title: t('tour.animations.asynchronous.chatClarify'),
+      body: t('tour.animations.asynchronous.chatClarify'),
+      label: t('tour.animations.governance.step3Title')
+    },
+    {
+      id: 4,
+      title: t('tour.animations.asynchronous.agreed'),
+      body: t('tour.animations.governance.step6Body'),
+      label: t('tour.animations.asynchronous.agreed')
+    }
+  ];
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -76,7 +72,7 @@ export default function AsynchronousLogicAnimation({ onNext, onBack, progressTra
               onClick={onBack}
               className="text-xs font-bold uppercase tracking-wider text-[#5D4037]/40 hover:text-[#5A5A40] transition-colors flex items-center gap-1"
             >
-              ← Volver al índice
+              {t('tour.controls.backIndex')}
             </button>
           )}
           <div className="flex items-center gap-3">
@@ -102,7 +98,7 @@ export default function AsynchronousLogicAnimation({ onNext, onBack, progressTra
         <div className="relative aspect-square bg-white rounded-[48px] border border-[#D2B48C]/20 shadow-xl overflow-hidden flex items-center justify-center p-8">
           <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#8B4513_1px,transparent_1px)] [background-size:24px_24px]" />
           
-          <AsyncVisualization step={currentStep} />
+          <AsyncVisualization step={currentStep} openProposalText={t('tour.animations.asynchronous.openProposal')} minThresholdText={t('tour.animations.asynchronous.minThreshold')} agreedText={t('tour.animations.asynchronous.agreed')} />
         </div>
 
         {/* Text Content Area */}
@@ -134,7 +130,7 @@ export default function AsynchronousLogicAnimation({ onNext, onBack, progressTra
                 onClick={nextStep}
                 className="group flex items-center gap-2 bg-[#5A5A40] text-[#FAF9F6] px-8 py-4 rounded-2xl font-semibold hover:bg-[#4A4A35] transition-all shadow-lg shadow-[#5A5A40]/20 active:scale-95"
               >
-                Siguiente paso
+                <span>{t('tour.controls.nextStep')}</span>
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </button>
             ) : (
@@ -143,7 +139,7 @@ export default function AsynchronousLogicAnimation({ onNext, onBack, progressTra
                   onClick={restart}
                   className="flex items-center gap-2 bg-[#D2B48C] text-white px-6 py-4 rounded-2xl font-semibold hover:bg-[#C1A37B] transition-all shadow-md active:scale-95"
                 >
-                  Reiniciar animación
+                  <span>{t('tour.controls.restart')}</span>
                   <RotateCcw size={18} />
                 </button>
                 {onNext && (
@@ -151,7 +147,7 @@ export default function AsynchronousLogicAnimation({ onNext, onBack, progressTra
                         onClick={onNext}
                         className="flex items-center gap-2 bg-[#10B981] text-white px-8 py-4 rounded-2xl font-semibold hover:bg-[#059669] transition-all shadow-lg shadow-[#10B981]/20 active:scale-95"
                     >
-                        Siguiente módulo
+                        <span>{t('tour.controls.nextModule')}</span>
                         <ArrowRight size={20} />
                     </button>
                 )}
@@ -165,14 +161,14 @@ export default function AsynchronousLogicAnimation({ onNext, onBack, progressTra
   );
 }
 
-function AsyncVisualization({ step }: { step: number }) {
+function AsyncVisualization({ step, openProposalText, minThresholdText, agreedText }: { step: number, openProposalText: string, minThresholdText: string, agreedText: string }) {
   // Avatars positioning
   const avatars = [
-    { id: 1, x: -100, y: -80 },
-    { id: 2, x: 0, y: -110 },
-    { id: 3, x: 100, y: -80 },
-    { id: 4, x: -80, y: 40 },
-    { id: 5, x: 80, y: 40 },
+    { id: 1, x: -80, y: -40, label: "Ana" },
+    { id: 2, x: 0, y: -60, label: "Carlos" },
+    { id: 3, x: 80, y: -40, label: "Elena" },
+    { id: 4, x: -40, y: 50, label: "David" },
+    { id: 5, x: 40, y: 50, label: "Sofía" },
   ];
 
   return (
@@ -200,7 +196,7 @@ function AsyncVisualization({ step }: { step: number }) {
               className="bg-white px-4 py-2 border border-[#D2B48C]/30 rounded-xl shadow-lg flex items-center gap-2"
             >
               <Clock size={16} className="text-amber-500" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#5D4037]">Propuesta Abierta • 7 días</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#5D4037]">{openProposalText}</span>
             </motion.div>
           </motion.div>
         )}
@@ -231,7 +227,7 @@ function AsyncVisualization({ step }: { step: number }) {
             {/* Quorum Marker */}
             <div className={`absolute left-1/2 top-0 h-full w-0.5 z-10 ${step === 3 ? "bg-white/50" : "bg-amber-500/50"}`} />
           </div>
-          <div className="absolute top-16 text-[10px] uppercase font-black tracking-tighter text-amber-600/50">Participación mínima necesaria</div>
+          <div className="absolute top-16 text-[10px] uppercase font-black tracking-tighter text-amber-600/50">{minThresholdText}</div>
 
           {/* Avatars */}
           <div className="relative w-full h-full">
@@ -306,7 +302,7 @@ function AsyncVisualization({ step }: { step: number }) {
                 >
                   <Sparkles size={48} className="text-emerald-500" />
                 </motion.div>
-                <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Acordada 🎉</span>
+                <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">{agreedText}</span>
               </motion.div>
             )}
           </AnimatePresence>
