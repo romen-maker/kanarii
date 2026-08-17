@@ -52,6 +52,7 @@ Los campos de Firestore y las interfaces en `appService.ts` siguen las mismas co
 2. **Teach as you code**: Explica el *por qué* de tus decisiones arquitectónicas.
 3. **MVP > Perfection**: Construye rápido, marca "nice-to-haves" para el roadmap, pero nunca sacrifiques la arquitectura base.
 4. **No Diálogos Nativos**: Prohibido el uso de `window.confirm()`, `alert()` o `prompt()`. Usar siempre el hook `useToast` para notificaciones o componentes modales para confirmaciones.
+5. **i18n first en UI**: toda UI visible debe cumplir `.agents/rules/i18n-enforcement.md`.
 
 ### Patrón de Explicación
 

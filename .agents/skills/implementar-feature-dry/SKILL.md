@@ -28,6 +28,13 @@ Responde estas preguntas en orden. Si alguna es SÍ, adapta en lugar de crear:
 ### 5. Acciones y Mutaciones
 - ¿La acción (crear, editar, borrar) ya está contemplada en la capa de servicios o acciones para la entidad afectada? Si no existe, créala primero en su ubicación centralizada.
 
+### 6. Internacionalización (i18n)
+- Si la feature afecta a componentes o interfaces de UI:
+  - Clasifica el copy: ¿es **UI Fija** (a traducir) o **Contenido Dinámico de Usuario** (a conservar)?
+  - Elige el namespace apropiado (`common`, `welcome`, `auth`, `communities`, `passport`, `astrology`).
+  - Añade las claves **simultáneamente** en `es/[namespace].json` y `en/[namespace].json`.
+  - Diseña plantillas completas con interpolación para eventos dinámicos (`t('key', { user, task })`), nunca concatenes fragmentos ni spans.
+
 ## Modularidad
 - Si la feature afecta a **6 o más archivos** (nuevos o modificados), usa la skill `roadmap-a-tarea` para dividirla en tareas más pequeñas antes de empezar.
 
@@ -38,5 +45,12 @@ Responde estas preguntas en orden. Si alguna es SÍ, adapta en lugar de crear:
 
 ## Al terminar
 - Revisa que no queden `TODO`, logs de debug o archivos huérfanos.
+- Si la tarea afectó a la UI:
+  1. Ejecuta `npx tsx scripts/check-i18n-keys.ts` para verificar paridad 1:1.
+  2. Ejecuta `npx tsc --noEmit && npm run build && npm run lint`.
+  3. Realiza una búsqueda dirigida (`rg`/`grep`) de literales visibles en los componentes modificados y sus subcomponentes directos; clasifica las coincidencias como UI fija, contenido dinámico o excepción permitida según `.agents/rules/i18n-enforcement.md`.
+  4. Valida en runtime: cambio ES ↔ EN, recarga dura en EN (verificando persistencia en `localStorage`), ausencia de textos pegados o claves no resueltas.
+  5. Comprueba la adaptación responsive (320px, 375px, 390px) si cambió copy de longitud variable.
+  6. **Cumplir `.agents/rules/visual-confirm-before-commit.md`**: Esta verificación complementa, no sustituye, la confirmación visual obligatoria requerida antes de commitear.
 - Actualiza el archivo de la tarea (task file) con el estado `DONE`.
 - Activa la revisión de accesibilidad o UX si la feature tiene interfaz de usuario y el proyecto dispone de dicha skill.
