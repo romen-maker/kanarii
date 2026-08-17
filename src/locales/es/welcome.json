@@ -53,7 +53,9 @@
     "viewNode": "Ver Nodo",
     "caretakers_one": "Cuidador: 1",
     "caretakers_other": "Cuidadores: {{count}}",
-    "activeSpace": "Espacio activo"
+    "activeSpace": "Espacio activo",
+    "membersCount_one": "{{count}} miembro",
+    "membersCount_other": "{{count}} miembros"
   },
   "activity": {
     "title": "Pulso Comunitario Reciente",

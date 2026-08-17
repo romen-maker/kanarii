@@ -327,9 +327,9 @@ export default function WelcomeHeroSections({
                     <span className="text-[10px] font-bold uppercase text-[#6B705C] bg-emerald-50 px-2 py-0.5 rounded">
                       {node.tipo || 'Comunidad'}
                     </span>
-                    {node.miembrosCount && (
+                    {node.miembrosCount != null && (
                       <span className="text-xs text-[#A5A58D] font-mono">
-                        {node.miembrosCount} miembros
+                        {t('nodes.membersCount', { count: node.miembrosCount })}
                       </span>
                     )}
                   </div>

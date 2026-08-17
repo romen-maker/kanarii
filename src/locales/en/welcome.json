@@ -53,7 +53,9 @@
     "viewNode": "View Node",
     "caretakers_one": "Caretaker: 1",
     "caretakers_other": "Caretakers: {{count}}",
-    "activeSpace": "Active space"
+    "activeSpace": "Active space",
+    "membersCount_one": "{{count}} member",
+    "membersCount_other": "{{count}} members"
   },
   "activity": {
     "title": "Recent Community Pulse",
