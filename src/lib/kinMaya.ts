@@ -89,6 +89,9 @@ export const ROL_COMUNITARIO: Record<string, string> = {
 export interface KinData {
   kin: number;              // 1–260
   tono: number;             // 1–13
+  tonoIndex: number;        // 0–12
+  selloIndex: number;       // 0–19
+  colorIndex: number;       // 0–3
   nombreTono: string;
   sello: string;
   color: string;
@@ -177,6 +180,9 @@ export function calcularKin(fecha?: string | Date | null): KinData {
   return {
     kin: kinNum,
     tono,
+    tonoIndex,
+    selloIndex,
+    colorIndex,
     nombreTono,
     sello,
     color,
