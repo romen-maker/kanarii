@@ -25,8 +25,11 @@ import {
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '../components/language/LanguageSelector';
 
 export default function KanariiTourPage() {
+  const { t } = useTranslation('welcome');
   const { appUser } = useAuth();
   const navigate = useNavigate();
   
@@ -43,19 +46,19 @@ export default function KanariiTourPage() {
   } = useOnboarding(appUser?.uid);
 
   const modules = [
-    { id: 'a1', title: 'Toma de Decisiones', icon: Layout, color: 'bg-[#5A5A40]', desc: 'Cómo decidimos sin votar.' },
-    { id: 'a8', title: 'Estructura S3', icon: LayoutGrid, color: 'bg-[#10B981]', desc: 'Círculos anidados y autonomía.' },
-    { id: 'a6', title: 'Doble Enlace', icon: RefreshCw, color: 'bg-[#6366f1]', desc: 'Flujo de información bidireccional.' },
-    { id: 'a7', title: 'Elecciones Consentimiento', icon: UserCheck, color: 'bg-[#f59e0b]', desc: 'Asignación de roles por confianza.' },
-    { id: 'a4', title: 'Ritmo Flexible', icon: Timer, color: 'bg-[#D2B48C]', desc: 'Plazos y participación asíncrona.' },
-    { id: 'a5', title: 'Tu Compromiso', icon: UserPlus, color: 'bg-[#8B4513]', desc: 'Roles y niveles de implicación.' },
-    { id: 'a2', title: 'El Cruce', icon: ArrowRightLeft, color: 'bg-[#5D4037]', desc: 'Cruce de perfiles y necesidades.' },
-    { id: 'a3', title: 'La Ficha', icon: UserCircle, color: 'bg-[#3E2723]', desc: 'Tu pasaporte y dones ciudadanos.' },
+    { id: 'a1', title: t('tour.modules.a1.title'), icon: Layout, color: 'bg-[#5A5A40]', desc: t('tour.modules.a1.desc') },
+    { id: 'a8', title: t('tour.modules.a8.title'), icon: LayoutGrid, color: 'bg-[#10B981]', desc: t('tour.modules.a8.desc') },
+    { id: 'a6', title: t('tour.modules.a6.title'), icon: RefreshCw, color: 'bg-[#6366f1]', desc: t('tour.modules.a6.desc') },
+    { id: 'a7', title: t('tour.modules.a7.title'), icon: UserCheck, color: 'bg-[#f59e0b]', desc: t('tour.modules.a7.desc') },
+    { id: 'a4', title: t('tour.modules.a4.title'), icon: Timer, color: 'bg-[#D2B48C]', desc: t('tour.modules.a4.desc') },
+    { id: 'a5', title: t('tour.modules.a5.title'), icon: UserPlus, color: 'bg-[#8B4513]', desc: t('tour.modules.a5.desc') },
+    { id: 'a2', title: t('tour.modules.a2.title'), icon: ArrowRightLeft, color: 'bg-[#5D4037]', desc: t('tour.modules.a2.desc') },
+    { id: 'a3', title: t('tour.modules.a3.title'), icon: UserCircle, color: 'bg-[#3E2723]', desc: t('tour.modules.a3.desc') },
   ];
 
   const progressTracker = (
     <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md px-6 py-3 rounded-full border border-[#D2B48C]/20 shadow-lg w-fit mt-8 pb-6">
-      <span className="text-[10px] uppercase font-black tracking-widest text-[#5D4037]/40 mr-2">Progreso del tour</span>
+      <span className="text-[10px] uppercase font-black tracking-widest text-[#5D4037]/40 mr-2">{t('tour.progressLabel')}</span>
       {[0, 1, 2, 3, 4, 5].map(i => (
         <div 
           key={i} 
@@ -67,17 +70,16 @@ export default function KanariiTourPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#5D4037] font-sans selection:bg-[#D2B48C]/30 overflow-x-hidden">
-      <button
-        onClick={() => navigate(appUser ? '/ficha' : '/')}
-        className="fixed top-4 right-4 z-50 flex items-center gap-1.5 
-                   text-sm text-[#8A817C] hover:text-[#4A4E4D] 
-                   bg-white/80 backdrop-blur-sm border border-[#EAE2D6] 
-                   px-3 py-1.5 rounded-full shadow-sm 
-                   transition-all hover:shadow-md"
-      >
-        {appUser ? 'Ir a mi ficha' : 'Volver al inicio'}
-        <ArrowRight className="w-3.5 h-3.5" />
-      </button>
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <LanguageSelector />
+        <button
+          onClick={() => navigate(appUser ? '/ficha' : '/')}
+          className="flex items-center gap-1.5 text-sm text-[#8A817C] hover:text-[#4A4E4D] bg-white/80 backdrop-blur-sm border border-[#EAE2D6] px-3 py-1.5 rounded-xl shadow-sm transition-all hover:shadow-md font-medium"
+        >
+          <span>{appUser ? t('tour.navBackProfile') : t('tour.navBackHome')}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
       <AnimatePresence mode="wait">
         {view === 'intro' && (
@@ -97,18 +99,18 @@ export default function KanariiTourPage() {
             </motion.div>
             
             <h1 className="text-4xl md:text-6xl font-serif font-bold text-[#3E2723] mb-8 leading-tight">
-              Bienvenida a Kanarii
+              {t('tour.intro.title')}
             </h1>
             
             <p className="text-xl md:text-2xl text-[#5D4037]/80 leading-relaxed font-serif italic mb-12">
-              "Aquí hacemos las cosas de otra manera: sin votaciones que dividen, cuidando los tiempos de todos y respetando tu energía."
+              {t('tour.intro.quote')}
             </p>
             
             <button
               onClick={() => setView('menu')}
               className="flex items-center gap-3 bg-[#5A5A40] text-white px-12 py-6 rounded-[24px] font-bold text-xl hover:bg-[#4A4A35] transition-all shadow-xl active:scale-95 group"
             >
-              Comenzar recorrido
+              <span>{t('tour.intro.start')}</span>
               <ArrowRight className="group-hover:translate-x-2 transition-transform" />
             </button>
           </motion.div>
@@ -122,8 +124,8 @@ export default function KanariiTourPage() {
             exit={{ opacity: 0, y: -20 }}
             className="min-h-screen flex flex-col items-center justify-center p-8 max-w-6xl mx-auto py-20"
           >
-            <h2 className="text-4xl font-serif font-bold text-[#3E2723] mb-4 text-center">¿Qué te gustaría descubrir hoy?</h2>
-            <p className="text-[#5D4037]/60 mb-12 text-center max-w-md">Elige un tema específico o déjanos guiarte por todo el proceso.</p>
+            <h2 className="text-4xl font-serif font-bold text-[#3E2723] mb-4 text-center">{t('tour.menu.title')}</h2>
+            <p className="text-[#5D4037]/60 mb-12 text-center max-w-md">{t('tour.menu.subtitle')}</p>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full mb-16">
               {modules.map((mod) => (
@@ -140,7 +142,7 @@ export default function KanariiTourPage() {
                     <p className="text-xs text-[#5D4037]/70 leading-relaxed">{mod.desc}</p>
                   </div>
                   <div className="mt-auto pt-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#5A5A40] opacity-0 group-hover:opacity-100 transition-opacity">
-                    Explorar <ArrowRight size={12} />
+                    {t('tour.menu.explore')} <ArrowRight size={12} />
                   </div>
                 </button>
               ))}
@@ -150,7 +152,7 @@ export default function KanariiTourPage() {
               onClick={startTour}
               className="w-full md:w-auto bg-[#5A5A40] text-white px-12 py-6 rounded-[24px] font-bold text-xl hover:bg-[#4A4A35] transition-all shadow-xl flex items-center justify-center gap-3"
             >
-              Hacer el recorrido completo
+              <span>{t('tour.menu.fullTour')}</span>
               <Sparkles size={24} />
             </button>
           </motion.div>
@@ -197,18 +199,18 @@ export default function KanariiTourPage() {
             </motion.div>
             
             <h2 className="text-4xl md:text-6xl font-serif font-bold text-[#3E2723] mb-8 leading-tight">
-              ¡Todo listo! 
+              {t('tour.final.title')}
             </h2>
             
             <p className="text-xl md:text-2xl text-[#5D4037]/80 leading-relaxed font-serif italic mb-12">
-              "Recuerda que no buscamos la perfección, sino decisiones que sean lo suficientemente buenas por ahora y seguras para intentar."
+              {t('tour.final.quote')}
             </p>
             
             <button
               onClick={completeTour}
               className="flex items-center gap-4 bg-[#10B981] text-white px-12 py-6 rounded-[24px] font-bold text-xl hover:bg-[#059669] transition-all shadow-2xl active:scale-95"
             >
-              Entrar a mi comunidad
+              <span>{t('tour.final.cta')}</span>
               <Heart size={24} fill="currentColor" />
             </button>
           </motion.div>

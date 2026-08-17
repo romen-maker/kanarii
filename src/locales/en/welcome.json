@@ -118,5 +118,36 @@
     "s3Title": "S3 Structure",
     "s3Desc": "Interconnected circles and double links for transparent workflow.",
     "s3Tag": "Organization"
+  },
+  "tour": {
+    "navBackProfile": "Go to my profile",
+    "navBackHome": "Back to home",
+    "progressLabel": "Tour progress",
+    "intro": {
+      "title": "Welcome to Kanarii",
+      "quote": "\"Here we do things differently: no dividing votes, caring for everyone's time and respecting your energy.\"",
+      "start": "Start tour"
+    },
+    "menu": {
+      "title": "What would you like to discover today?",
+      "subtitle": "Choose a specific topic or let us guide you through the process.",
+      "explore": "Explore",
+      "fullTour": "Take the full tour"
+    },
+    "modules": {
+      "a1": { "title": "Decision-Making", "desc": "How we make decisions without voting." },
+      "a8": { "title": "S3 Structure", "desc": "Nested circles and distributed autonomy." },
+      "a6": { "title": "Double Linking", "desc": "Information flowing in both directions." },
+      "a7": { "title": "Consent Elections", "desc": "Assigning roles through trust." },
+      "a4": { "title": "Flexible Rhythm", "desc": "Timelines and asynchronous participation." },
+      "a5": { "title": "Your Commitment", "desc": "Roles and levels of involvement." },
+      "a2": { "title": "The Crossing", "desc": "Connecting profiles and needs." },
+      "a3": { "title": "Your Profile", "desc": "Your passport and community gifts." }
+    },
+    "final": {
+      "title": "All set!",
+      "quote": "\"Remember we don't look for perfection, but decisions that are good enough for now and safe enough to try.\"",
+      "cta": "Enter my community"
+    }
   }
 }

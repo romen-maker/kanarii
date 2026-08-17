@@ -118,5 +118,36 @@
     "s3Title": "Estructura S3",
     "s3Desc": "Círculos interconectados y enlaces dobles para un flujo transparente.",
     "s3Tag": "Organización"
+  },
+  "tour": {
+    "navBackProfile": "Ir a mi ficha",
+    "navBackHome": "Volver al inicio",
+    "progressLabel": "Progreso del tour",
+    "intro": {
+      "title": "Bienvenida a Kanarii",
+      "quote": "\"Aquí hacemos las cosas de otra manera: sin votaciones que dividen, cuidando los tiempos de todos y respetando tu energía.\"",
+      "start": "Comenzar recorrido"
+    },
+    "menu": {
+      "title": "¿Qué te gustaría descubrir hoy?",
+      "subtitle": "Elige un tema específico o déjanos guiarte por todo el proceso.",
+      "explore": "Explorar",
+      "fullTour": "Hacer el recorrido completo"
+    },
+    "modules": {
+      "a1": { "title": "Toma de Decisiones", "desc": "Cómo decidimos sin votar." },
+      "a8": { "title": "Estructura S3", "desc": "Círculos anidados y autonomía." },
+      "a6": { "title": "Doble Enlace", "desc": "Flujo de información bidireccional." },
+      "a7": { "title": "Elecciones Consentimiento", "desc": "Asignación de roles por confianza." },
+      "a4": { "title": "Ritmo Flexible", "desc": "Plazos y participación asíncrona." },
+      "a5": { "title": "Tu Compromiso", "desc": "Roles y niveles de implicación." },
+      "a2": { "title": "El Cruce", "desc": "Cruce de perfiles y necesidades." },
+      "a3": { "title": "La Ficha", "desc": "Tu pasaporte y dones ciudadanos." }
+    },
+    "final": {
+      "title": "¡Todo listo!",
+      "quote": "\"Recuerda que no buscamos la perfección, sino decisiones que sean lo suficientemente buenas por ahora y seguras para intentar.\"",
+      "cta": "Entrar a mi comunidad"
+    }
   }
 }
