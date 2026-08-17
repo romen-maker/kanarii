@@ -20,7 +20,7 @@ Internacionalizar la experiencia de entrada y superficies públicas de Kanarii (
 | T-124 | Soporte multilingüe estructurado y regeneración por idioma para perfiles generados por Gemini | M | ✅ Completada | `.agents/tasks/task-124.md` |
 | T-125 | Completar internacionalización de Welcome/Home y corregir composición de actividad | M | ✅ Completada | `.agents/tasks/task-125.md` |
 | T-126 | Formalizar guardrails e infraestructura de reglas i18n para agentes Antigravity (Fase 1) | S | ✅ Completada | `.agents/tasks/_archived/task-126.md` |
-| T-127 | Script auxiliar CLI de detección de copy hardcodeado en JSX en modo WARNING con allowlist (Fase 2) | M | ⬜ Pendiente | `.agents/tasks/task-127.md` |
+| T-127 | Script auxiliar CLI de detección de copy hardcodeado en JSX en modo WARNING con allowlist (Fase 2) | M | ✅ Completada | `.agents/tasks/_archived/task-127.md` |
 
 ## Estrategia de Trazabilidad y Fallback de Perfiles Gemini (T-124)
 - **Persistencia por Locale**: El objeto `perfilVisualByLocale?: { es?: FichaPerfilVisual; en?: FichaPerfilVisual }` permite almacenar en Firestore las interpretaciones generadas para cada idioma.

@@ -12,7 +12,8 @@
     "lint": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:rules": "bash scripts/run-rules-tests.sh"
+    "test:rules": "bash scripts/run-rules-tests.sh",
+    "check:i18n-literals": "tsx scripts/check-i18n-visible-literals.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
